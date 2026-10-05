@@ -55,11 +55,26 @@ TypeScript modules with **behaviour unchanged**. No new features.
 > playground ports; they are replaced in Phases 3–4 and are **not** part of the
 > shipped library surface (`src/index.ts`).
 
-### Phase 1 — Headless engine + serialization
-`EditorEngine` owning the PM state/view, a node/mark **registry** (schema built
-from it), an event bus, and the **command registry** (built-ins wrap PM
-commands; each command gains `isActive`/`isEnabled`/keys). The serialization
-layer: `toHTML` / `toJSON` / `toMarkdown` (+ inverses) driving `value`/`format`.
+### Phase 1 — Headless engine + serialization  ✅
+`EditorEngine` (`engine/editor-engine.ts`) owns the PM view/state, schema,
+command registry, and event bus, and exposes the serialization API.
+- `engine/event-emitter.ts` — typed event bus (`change`, `selectionUpdate`,
+  `transaction`, `ready`, `destroy`).
+- `engine/command-registry.ts` + `engine/default-commands.ts` — commands carry
+  `run` + optional `keys` / `isActive` / `isEnabled`; the registry builds the
+  keymap plugin. Structural keys (Enter/Tab) stay in `editor.ts`.
+- `engine/serialization/` — `html` + `json` (lossless round-trip), `markdown`
+  (prosemirror-markdown serializer for the full node set, tables via raw-HTML
+  fallback; markdown-it CommonMark parser for the core set). Public helpers
+  `serialize()` / `parse()`.
+- `schema.ts` refactored to `baseNodes` / `baseMarks` / `buildSchema()` — the
+  seam the plugin system grows into.
+- Dev playground dogfoods the engine (toolbar → `engine.commands`) and shows a
+  live HTML/Markdown/JSON output panel. 13 unit tests.
+
+> Known limitations (deferred): Markdown **import** does not parse tables or
+> blockquotes back into nodes (export emits tables as raw HTML). Schema is not
+> yet plugin-extensible at the engine boundary (Phase 5). HTML/JSON are lossless.
 
 ### Phase 2 — `<km-editor>` Web Component
 `BlissElement` shell over the engine: inputs (`mode`, `format`, `value`,
