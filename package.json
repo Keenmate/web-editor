@@ -1,0 +1,22 @@
+{
+  "name": "web-editor",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "KeenMate Web Editor monorepo — a framework-agnostic WYSIWYG / Markdown editor built on ProseMirror.",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @keenmate/web-editor",
+    "build": "npm run build --workspaces --if-present",
+    "build:types": "npm run build:types --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present"
+  },
+  "author": "Keenmate s.r.o.",
+  "license": "MIT",
+  "allowScripts": {
+    "esbuild@0.21.5": true
+  }
+}
