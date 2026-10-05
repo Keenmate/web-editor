@@ -100,10 +100,27 @@ artifact — the element is now the package's primary entry point.
 > re-serialized across a `format` switch mid-edit (the document is single-model,
 > so the lens just changes; no data loss).
 
-### Phase 3 — View modes & mounting (B1 core)
-`edit` / `split` (editor + live output panel, format-switchable) / `preview`
-(read-only) / `inline` (overlay chrome over a live-page element, using core's
-`overlay/` + `positioning/` primitives).
+### Phase 3 — View modes & mounting (B1 core)  ✅
+`src/ui/view-layout.ts` (`ViewLayout`) owns the shadow structure for all four
+modes; the element delegates to it and re-renders on `mode`/`anchor` change.
+- `edit` — editor surface alone.
+- `split` — editor + a live output panel with md/html/json tabs (independent of
+  the I/O `format`), refreshed on every engine `change`.
+- `preview` — editor surface, read-only (the element forces editable off).
+- `inline` — the host floats as an overlay card; with an `anchor` CSS-selector
+  input it tracks that live-page element via core `anchor()` (`@keenmate/
+  web-components-core/positioning`), else renders in normal flow.
+- The editor **mount node is persistent** — switching modes re-parents it, so the
+  live document + selection survive (covered by a test).
+- Component-scoped CSS (`:host` / `.km-*`, theme vars, `theme="dark"`) added to
+  `editor.css` (inert in the playground's light DOM). New `anchor` input.
+- Playground now dogfoods the shipped `<km-editor>` (mode / format / readonly /
+  theme controls + status line) above the raw-engine harness. 29 unit tests.
+
+> Known limitations (deferred): `inline` doesn't yet sync edits back to the
+> anchored target (consumers read `getValue()` on `change`) or trap focus /
+> dismiss on outside-click — that chrome lands with the overlay work in Phase 4.
+> Prism highlight CSS still JS-injects to the document head (Phase 5 plugin).
 
 ### Phase 4 — Toolbars & context menus (B1 UI)
 One command-driven item model consumed by three presenters: static toolbar,

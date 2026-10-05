@@ -12,6 +12,42 @@ import { schema } from '../schema';
 import { createFloatingToolbarPlugin } from '../plugins/floating-toolbar';
 import { createDebugPlugins, updateDebugPanel } from '../plugins/debug';
 import type { SerializationFormat } from '../engine/serialization';
+// Registers <km-editor> (the shipped element) + exposes the public surface.
+import { type KmEditorElement, type EditorMode } from '../index';
+
+// ── <km-editor> element showcase (Phase 2–3) ──────────────────────────────
+const km = document.querySelector('#km') as KmEditorElement | null;
+if (km) {
+  const status = document.querySelector('#km-status') as HTMLElement | null;
+  const setStatus = (msg: string) => {
+    if (status) status.textContent = msg;
+  };
+
+  km.addEventListener('ready', () => setStatus('ready'));
+  km.addEventListener('change', (e) => {
+    const detail = (e as CustomEvent).detail;
+    setStatus(`changed · ${detail.format} · ${detail.value.length} chars`);
+  });
+  km.addEventListener('mode-change', (e) => setStatus(`mode → ${(e as CustomEvent).detail.mode}`));
+
+  document.querySelector('#km-mode')?.addEventListener('change', (e) => {
+    km.setAttribute('mode', (e.target as HTMLSelectElement).value as EditorMode);
+  });
+  document.querySelector('#km-format')?.addEventListener('change', (e) => {
+    km.setAttribute('format', (e.target as HTMLSelectElement).value);
+  });
+  document.querySelector('#km-readonly')?.addEventListener('change', (e) => {
+    if ((e.target as HTMLInputElement).checked) km.setAttribute('readonly', '');
+    else km.removeAttribute('readonly');
+  });
+  document.querySelector('#km-theme')?.addEventListener('change', (e) => {
+    if ((e.target as HTMLInputElement).checked) km.setAttribute('theme', 'dark');
+    else km.removeAttribute('theme');
+  });
+
+  // Expose for console experimentation.
+  (window as any).km = km;
+}
 
 const mount = document.querySelector('#editor') as HTMLElement;
 

@@ -29,6 +29,7 @@ import {
 } from '@keenmate/web-components-core';
 import { EditorEngine, type EditorEngineOptions } from './engine/editor-engine';
 import type { SerializationFormat } from './engine/serialization';
+import { ViewLayout } from './ui/view-layout';
 import styles from './css/editor.css?inline';
 import { initLogger, contentLogger } from './logger';
 
@@ -88,6 +89,14 @@ const INPUTS: readonly InputDef[] = [
     on: 'update',
     description: 'Theme name, reflected to the host attribute for CSS theming (`:host([theme="…"])`).',
   },
+  {
+    configKey: 'anchor',
+    attribute: 'anchor',
+    converter: toText({ isNullable: true }),
+    on: 'update',
+    description:
+      'For `mode="inline"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow.',
+  },
 ];
 
 /** Outward events (core §12.5) — install managed `onChange`/`onReady`/`onModeChange`. */
@@ -130,7 +139,7 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
   declare onModeChange: ((e: CustomEvent<EditorModeChangeDetail>) => void) | null;
 
   #shadow: ShadowRoot;
-  #mount?: HTMLDivElement;
+  #layout: ViewLayout;
   #engine?: EditorEngine;
   #unsubscribe?: () => void;
   // The content source string, in `format`. Seeded from `value`, refreshed from
@@ -146,6 +155,12 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
     // CSSStyleSheet per string). Linked render-blocking in the playground; here it
     // rides the component so consumers need no separate <link>.
     adoptStyles(this.#shadow, styles);
+    // Owns the shadow structure + the persistent editor mount across view modes.
+    this.#layout = new ViewLayout({
+      shadow: this.#shadow,
+      host: this,
+      serialize: (fmt) => (this.#engine ? this.#engine.serialize(fmt) : ''),
+    });
   }
 
   // ── core lifecycle hooks ──────────────────────────────────────────────────
@@ -162,6 +177,11 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
   protected override update(partial: Record<string, unknown>): void {
     if ('readonly' in partial || 'mode' in partial) {
       this.#engine?.setEditable(this.#resolveEditable());
+    }
+    // Structural view-mode / anchor change: re-arrange the shadow layout in place
+    // (the persistent mount is re-parented, so the live document survives).
+    if ('mode' in partial || 'anchor' in partial) {
+      this.#applyLayout();
     }
     if ('mode' in partial) {
       this.emit('mode-change', { mode: this.config.mode as EditorMode });
@@ -195,20 +215,26 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
   }
 
   #buildEngine(): void {
-    this.#ensureMount();
     const format = this.#format();
+    // Seed the split output lens to the I/O format, then lay out the shadow so the
+    // persistent mount is attached before the view measures itself.
+    this.#layout.setDefaultOutputFormat(format);
+    this.#applyLayout();
+
     const options: EditorEngineOptions = {
-      mount: this.#mount!,
+      mount: this.#layout.mount,
       editable: this.#resolveEditable(),
     };
     this.#applyContentOption(options, format, this.#content);
 
     this.#engine = new EditorEngine(options);
 
-    // Bridge engine → outward events. Re-emit `change` in the active format.
+    // Bridge engine → outward events, and keep the split output panel live.
     this.#unsubscribe = this.#engine.events.on('change', () => {
+      this.#layout.refreshOutput();
       this.emit('change', this.#changeDetail());
     });
+    this.#layout.refreshOutput(); // initial fill (engine now exists)
 
     initLogger.debug(`<km-editor> engine built (format=${format}, editable=${options.editable}) v${
       typeof __VERSION__ !== 'undefined' ? __VERSION__ : 'dev'
@@ -229,13 +255,9 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
     this.#engine = undefined;
   }
 
-  #ensureMount(): void {
-    if (this.#mount) return;
-    const mount = document.createElement('div');
-    mount.className = 'km-editor';
-    mount.setAttribute('part', 'editor');
-    this.#shadow.appendChild(mount);
-    this.#mount = mount;
+  /** (Re)arrange the shadow layout for the current mode + anchor. */
+  #applyLayout(): void {
+    this.#layout.render(this.config.mode as EditorMode, (this.config.anchor as string | null) ?? null);
   }
 
   /** Map a content string + format onto the matching engine option. */
@@ -321,6 +343,7 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
 
   destroy(): void {
     this.#teardownEngine();
+    this.#layout.destroy();
   }
 }
 

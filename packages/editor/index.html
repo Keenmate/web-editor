@@ -12,7 +12,43 @@
   <body>
     <div class="container">
       <h1>KeenMate Web Editor</h1>
-      <p class="subtitle">Phase 0 dev playground — ported POC. Select text to see the floating toolbar.</p>
+      <p class="subtitle">Dev playground. The top section dogfoods the shipped <code>&lt;km-editor&gt;</code> element (Phase 2–3); below is the raw engine harness (Phase 0–1).</p>
+
+      <!-- ── <km-editor> element showcase (Phase 2–3) ───────────────────── -->
+      <section class="km-demo">
+        <div class="km-demo-controls">
+          <label>Mode:
+            <select id="km-mode">
+              <option value="edit">edit</option>
+              <option value="split" selected>split</option>
+              <option value="preview">preview</option>
+              <option value="inline">inline</option>
+            </select>
+          </label>
+          <label>I/O format:
+            <select id="km-format">
+              <option value="markdown" selected>markdown</option>
+              <option value="html">html</option>
+              <option value="json">json</option>
+            </select>
+          </label>
+          <label><input type="checkbox" id="km-readonly" /> readonly</label>
+          <label><input type="checkbox" id="km-theme" /> dark theme</label>
+          <span class="km-demo-status" id="km-status">—</span>
+        </div>
+
+        <km-editor id="km" mode="split" format="markdown"
+          value="# Hello from &lt;km-editor&gt;
+
+This is the **shipped** Web Component — one ProseMirror document, with Markdown / HTML / JSON as import&nbsp;/&nbsp;export at the edges.
+
+- Try the **mode** switch (edit / split / preview / inline)
+- Toggle **readonly** and the **dark theme**
+- Edit here and watch the live output panel"></km-editor>
+      </section>
+
+      <hr class="km-demo-divider" />
+      <h2 class="subtitle" style="margin-top: 24px;">Raw engine harness</h2>
 
       <!-- Floating text toolbar (appears on text selection) -->
       <div class="floating-toolbar" id="floating-toolbar">

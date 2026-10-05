@@ -5,9 +5,9 @@ A framework-agnostic WYSIWYG / Markdown editor, built on
 shared `@keenmate/web-components-core` runtime — the same model as the rest of
 the KeenMate component line.
 
-> **Status: Phase 2.** The headless engine + HTML/Markdown/JSON serialization
-> (Phase 1) and the `<km-editor>` Web Component (Phase 2) are in place — the
-> element is the primary entry point. View modes (`split`/`inline`), toolbars,
+> **Status: Phase 3.** The headless engine + HTML/Markdown/JSON serialization
+> (Phase 1), the `<km-editor>` Web Component (Phase 2), and the four view modes
+> — `edit` / `split` / `preview` / `inline` (Phase 3) — are in place. Toolbars,
 > context menus, and the plugin system are next. See [`PLAN.md`](./PLAN.md).
 
 ## Usage
@@ -30,8 +30,8 @@ editor.setAttribute('readonly', '');   // or mode="preview"
 ```
 
 Inputs: `value`, `format` (`markdown`|`html`|`json`), `mode`
-(`edit`|`split`|`preview`|`inline`), `readonly`, `theme`.
-Events: `change`, `ready`, `mode-change`.
+(`edit`|`split`|`preview`|`inline`), `readonly`, `theme`, `anchor` (CSS selector
+the `inline` card tracks). Events: `change`, `ready`, `mode-change`.
 
 ## Monorepo layout
 
