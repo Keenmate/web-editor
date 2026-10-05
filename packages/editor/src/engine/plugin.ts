@@ -17,7 +17,7 @@ import type { SchemaExtensions } from '../schema';
 import type { Command, EditorState, Plugin as PMPlugin } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import type { CommandSpec } from './command-registry';
-import type { ToolbarItem } from '../ui/items';
+import type { ToolbarItem, ToolGroup, StatusItem } from '../ui/items';
 
 /**
  * Markdown (de)serialization a plugin contributes for its own nodes/marks. The
@@ -66,10 +66,13 @@ export interface EditorPlugin {
   /** Raw ProseMirror plugins (decorations, input rules, node views, …). */
   pmPlugins?: (ctx: PluginContext) => PMPlugin[];
 
-  /** Items appended to the static toolbar / selection toolbar / context menu. */
-  toolbarItems?: readonly ToolbarItem[];
+  /** Tool groups appended to the static (zone) toolbar — each a draggable unit. */
+  toolbarGroups?: readonly ToolGroup[];
+  /** Flat items appended to the selection toolbar / context menu (not grouped). */
   selectionItems?: readonly ToolbarItem[];
   menuItems?: readonly ToolbarItem[];
+  /** Live indicators appended to the dedicated status bar. */
+  statusItems?: readonly StatusItem[];
 
   /** Run once after the view is created. */
   setup?: (ctx: SetupContext) => void;
@@ -125,11 +128,11 @@ export function mergeSchemaSpecs(plugins: readonly EditorPlugin[]): SchemaExtens
   return { nodes, marks };
 }
 
-type ItemKey = 'toolbarItems' | 'selectionItems' | 'menuItems';
+type ItemKey = 'selectionItems' | 'menuItems';
 
 /**
- * Assemble one presenter's item list: `leading` core items, then each plugin's
- * items (in plugin order), then `trailing` core items.
+ * Assemble one flat presenter list (selection toolbar / context menu): `leading`
+ * core items, then each plugin's items (in plugin order), then `trailing`.
  */
 export function assembleItems(
   plugins: readonly EditorPlugin[],
@@ -138,4 +141,21 @@ export function assembleItems(
   trailing: readonly ToolbarItem[] = []
 ): ToolbarItem[] {
   return [...leading, ...plugins.flatMap((p) => [...(p[key] ?? [])]), ...trailing];
+}
+
+/** Assemble the zone toolbar's groups: `leading` core groups + plugin groups + `trailing`. */
+export function assembleGroups(
+  plugins: readonly EditorPlugin[],
+  leading: readonly ToolGroup[] = [],
+  trailing: readonly ToolGroup[] = []
+): ToolGroup[] {
+  return [...leading, ...plugins.flatMap((p) => [...(p.toolbarGroups ?? [])]), ...trailing];
+}
+
+/** Assemble the status bar's items: `leading` core items + each plugin's. */
+export function assembleStatusItems(
+  plugins: readonly EditorPlugin[],
+  leading: readonly StatusItem[] = []
+): StatusItem[] {
+  return [...leading, ...plugins.flatMap((p) => [...(p.statusItems ?? [])])];
 }

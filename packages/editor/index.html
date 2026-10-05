@@ -33,7 +33,23 @@
             </select>
           </label>
           <label><input type="checkbox" id="km-readonly" /> readonly</label>
-          <label><input type="checkbox" id="km-toolbar" checked /> toolbar</label>
+          <label>Toolbar:
+            <select id="km-toolbar">
+              <option value="top" selected>top</option>
+              <option value="bottom">bottom</option>
+              <option value="start">start</option>
+              <option value="end">end</option>
+              <option value="none">none</option>
+            </select>
+          </label>
+          <label>Status bar:
+            <select id="km-statusbar">
+              <option value="none" selected>none</option>
+              <option value="bottom">bottom</option>
+              <option value="top">top</option>
+              <option value="both">both</option>
+            </select>
+          </label>
           <label><input type="checkbox" id="km-theme" /> dark theme</label>
           <span class="km-demo-status" id="km-status">—</span>
         </div>

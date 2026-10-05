@@ -15,7 +15,7 @@
  */
 import { anchor, type AnchorHandle } from '@keenmate/web-components-core/positioning';
 import type { SerializationFormat } from '../engine/serialization';
-import type { EditorMode } from '../web-component';
+import type { EditorMode, EditorToolbar, EditorStatusBar } from '../web-component';
 
 const OUTPUT_FORMATS: readonly SerializationFormat[] = ['markdown', 'html', 'json'];
 const OUTPUT_LABELS: Record<SerializationFormat, string> = {
@@ -35,9 +35,12 @@ export interface ViewLayoutOptions {
 export class ViewLayout {
   /** The persistent editor surface. The engine mounts its view here, once. */
   readonly mount: HTMLDivElement;
-  /** Persistent slot above the editor for the static toolbar (Phase 4). */
+  /** Persistent slot for the static (zone) toolbar. */
   readonly toolbarMount: HTMLDivElement;
-  /** Persistent shadow-local layer the floating presenters portal into (Phase 4). */
+  /** Persistent slots for the dedicated status bar(s) — top and bottom edges. */
+  readonly statusTopMount: HTMLDivElement;
+  readonly statusBottomMount: HTMLDivElement;
+  /** Persistent shadow-local layer the floating presenters portal into. */
   readonly overlayLayer: HTMLDivElement;
 
   #shadow: ShadowRoot;
@@ -68,6 +71,15 @@ export class ViewLayout {
     this.toolbarMount.className = 'km-toolbar';
     this.toolbarMount.setAttribute('part', 'toolbar');
 
+    // Status-bar slots — dedicated strips (top / bottom edges of the body),
+    // separate from the toolbar zones.
+    this.statusTopMount = document.createElement('div');
+    this.statusTopMount.className = 'km-status';
+    this.statusTopMount.setAttribute('part', 'status-top');
+    this.statusBottomMount = document.createElement('div');
+    this.statusBottomMount.className = 'km-status';
+    this.statusBottomMount.setAttribute('part', 'status-bottom');
+
     // Overlay layer — a sibling of the root (not re-rendered), so portaled
     // floating panels survive a view-mode change. Positioned panels are fixed,
     // so this layer itself takes no space.
@@ -82,16 +94,26 @@ export class ViewLayout {
   }
 
   /**
-   * (Re)build the shadow structure for `mode`. Re-parents the persistent mount;
-   * builds the output panel only for `split`; (re)anchors only for `inline`.
+   * (Re)build the shadow structure for `mode` + `toolbarSide`. The toolbar slot
+   * and the editor mount are wrapped in one bordered `.km-surface` frame (so the
+   * toolbar sits flush against the editor, with a divider, rather than floating as
+   * a separate card); `toolbarSide` sets which edge the toolbar occupies. Builds
+   * the output panel only for `split`; (re)anchors only for `inline`.
    */
-  render(mode: EditorMode, anchorSelector: string | null): void {
+  render(
+    mode: EditorMode,
+    anchorSelector: string | null,
+    toolbarSide: EditorToolbar = 'top',
+    statusSide: EditorStatusBar = 'none'
+  ): void {
     this.#mode = mode;
     this.#anchorSelector = anchorSelector;
     this.#teardownAnchor();
 
     // Detach the persistent nodes so replaceChildren() below can't destroy them.
     this.toolbarMount.remove();
+    this.statusTopMount.remove();
+    this.statusBottomMount.remove();
     this.mount.remove();
 
     if (!this.#root) {
@@ -105,8 +127,22 @@ export class ViewLayout {
     this.#outputTabs = undefined;
     this.#outputPre = undefined;
 
-    root.appendChild(this.toolbarMount);
-    root.appendChild(this.mount);
+    // The editor frame (surface) owns the border and docks the toolbar to its
+    // side. The status bar lives INSIDE, in the body group next to the editor —
+    // so it always hugs the content, with the toolbar on the outside.
+    const body = document.createElement('div');
+    body.className = 'km-body';
+    if (statusSide === 'top' || statusSide === 'both') body.appendChild(this.statusTopMount);
+    body.appendChild(this.mount);
+    if (statusSide === 'bottom' || statusSide === 'both') body.appendChild(this.statusBottomMount);
+
+    const surface = document.createElement('div');
+    surface.className = `km-surface km-tb-${toolbarSide}`;
+    surface.setAttribute('part', 'surface');
+    surface.appendChild(this.toolbarMount);
+    surface.appendChild(body);
+    root.appendChild(surface);
+
     if (mode === 'split') {
       root.appendChild(this.#buildOutputPanel());
       this.refreshOutput();

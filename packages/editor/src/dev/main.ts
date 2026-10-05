@@ -46,9 +46,10 @@ if (km) {
     else km.removeAttribute('readonly');
   });
   document.querySelector('#km-toolbar')?.addEventListener('change', (e) => {
-    // Checked → default ('top'); unchecked → explicitly hidden.
-    if ((e.target as HTMLInputElement).checked) km.removeAttribute('toolbar');
-    else km.setAttribute('toolbar', 'none');
+    km.setAttribute('toolbar', (e.target as HTMLSelectElement).value);
+  });
+  document.querySelector('#km-statusbar')?.addEventListener('change', (e) => {
+    km.setAttribute('statusbar', (e.target as HTMLSelectElement).value);
   });
   document.querySelector('#km-theme')?.addEventListener('change', (e) => {
     if ((e.target as HTMLInputElement).checked) km.setAttribute('theme', 'dark');

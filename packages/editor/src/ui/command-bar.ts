@@ -16,6 +16,8 @@ export type CommandBarVariant = 'bar' | 'menu';
 
 export interface CommandBarOptions {
   variant?: CommandBarVariant;
+  /** Override the wrapper class (e.g. `'km-group'` when used as a tool group). */
+  className?: string;
   /** Called after a command runs (e.g. to close a menu). */
   onRun?: (command: string) => void;
 }
@@ -39,7 +41,7 @@ export class CommandBar {
     const variant = opts.variant ?? 'bar';
 
     this.el = document.createElement('div');
-    this.el.className = variant === 'menu' ? 'km-menu' : 'km-command-bar';
+    this.el.className = opts.className ?? (variant === 'menu' ? 'km-menu' : 'km-command-bar');
     this.el.setAttribute('role', variant === 'menu' ? 'menu' : 'toolbar');
 
     for (const item of items) {

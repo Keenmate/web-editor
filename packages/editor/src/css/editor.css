@@ -13,6 +13,7 @@
   --km-border: #ddd;
   --km-bg: #fff;
   --km-muted-bg: #f5f5f5;
+  --km-muted-fg: #666;
   --km-radius: 6px;
   --km-gap: 16px;
   --km-min-height: 160px;
@@ -30,19 +31,57 @@
   min-height: 0;
 }
 
-/* Editor surface (the persistent mount). */
-.km-editor {
+/* Editor frame — one bordered box owning the border/radius. `km-tb-<side>` docks
+   the toolbar to that edge via flex direction (toolbar is always first in the
+   DOM); the body group (status bar + editor) is the other flex child. So
+   toolbar + status + editor read as one widget, not detached cards. */
+.km-surface {
+  display: flex;
+  min-width: 0;
+  min-height: var(--km-min-height);
   background: var(--km-bg);
   border: 1px solid var(--km-border);
   border-radius: var(--km-radius);
+  overflow: hidden;
+}
+
+.km-surface.km-tb-top,
+.km-surface.km-tb-none {
+  flex-direction: column;
+}
+.km-surface.km-tb-bottom {
+  flex-direction: column-reverse;
+}
+.km-surface.km-tb-start {
+  flex-direction: row;
+}
+.km-surface.km-tb-end {
+  flex-direction: row-reverse;
+}
+
+/* Body group — the editor plus its hugging status bar; fills the surface
+   alongside the toolbar. */
+.km-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
   min-height: var(--km-min-height);
+}
+
+/* Editor mount — flush inside the frame (the frame owns the border/radius). */
+.km-editor {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: var(--km-min-height);
+  background: transparent;
 }
 
 .km-editor .ProseMirror {
   min-height: var(--km-min-height);
 }
 
-/* ── split: editor + live output side by side ── */
+/* ── split: editor frame + live output side by side ── */
 .km-root.km-split {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -107,7 +146,7 @@
 }
 
 /* ── preview: read-only render ── */
-.km-root.km-preview .km-editor {
+.km-root.km-preview .km-surface {
   background: var(--km-muted-bg);
 }
 
@@ -128,35 +167,76 @@
   box-shadow: none;
 }
 
-/* ── Phase 4: command toolbar / selection toolbar / context menu ── */
+/* ── zone toolbar (tool groups) / status bar / selection toolbar / context menu ── */
 
-/* Toolbar slot (empty → zero height). In split it spans both columns. */
-.km-toolbar {
-  display: block;
+/* Toolbar + status slots — layout-transparent; their presenter is the real flex
+   item, so it orders/flushes directly against the editor / shell. */
+.km-toolbar,
+.km-status {
+  display: contents;
 }
 
-.km-root.km-split .km-toolbar {
-  grid-column: 1 / -1;
-}
-
-/* Shared command button bar (static + selection toolbars). */
-.km-command-bar {
+/* The zone toolbar — a wrapping row (top/bottom) or column (start/end) of tool
+   groups, flush against the editor with a divider on the toolbar's edge. */
+.km-toolbar-zone {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 2px;
+  align-items: flex-start;
+  gap: 4px;
   padding: 6px;
-  margin-bottom: 8px;
   background: var(--km-muted-bg);
-  border: 1px solid var(--km-border);
-  border-radius: var(--km-radius);
 }
 
-.km-command-bar[hidden] {
+.km-toolbar-zone[hidden] {
   display: none;
 }
 
-.km-command-bar .km-cmd {
+.km-surface.km-tb-top .km-toolbar-zone {
+  border-bottom: 1px solid var(--km-border);
+}
+.km-surface.km-tb-bottom .km-toolbar-zone {
+  border-top: 1px solid var(--km-border);
+}
+.km-surface.km-tb-start .km-toolbar-zone,
+.km-surface.km-tb-end .km-toolbar-zone {
+  flex-direction: column;
+  align-items: stretch;
+}
+.km-surface.km-tb-start .km-toolbar-zone {
+  border-right: 1px solid var(--km-border);
+}
+.km-surface.km-tb-end .km-toolbar-zone {
+  border-left: 1px solid var(--km-border);
+}
+
+/* A tool group — one contiguous button cluster (the drag-and-drop unit). */
+.km-group {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 2px;
+}
+.km-surface.km-tb-start .km-group,
+.km-surface.km-tb-end .km-group {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* Divider between groups (vertical in a row zone, horizontal in a column zone). */
+.km-group-sep {
+  align-self: stretch;
+  width: 1px;
+  margin: 2px;
+  background: var(--km-border);
+}
+.km-surface.km-tb-start .km-group-sep,
+.km-surface.km-tb-end .km-group-sep {
+  width: auto;
+  height: 1px;
+}
+
+/* Command buttons — shared by the zone groups + the selection toolbar. */
+.km-cmd {
   padding: 5px 9px;
   min-width: 30px;
   border: 1px solid transparent;
@@ -168,27 +248,65 @@
   font-size: 13px;
   line-height: 1.2;
 }
-
-.km-command-bar .km-cmd:hover:not(:disabled) {
+.km-cmd:hover:not(:disabled) {
   background: rgba(128, 128, 128, 0.18);
 }
-
-.km-command-bar .km-cmd.active {
+.km-cmd.active {
   background: var(--km-accent);
   border-color: var(--km-accent);
   color: #fff;
 }
-
-.km-command-bar .km-cmd:disabled {
+.km-cmd:disabled {
   opacity: 0.4;
   cursor: default;
 }
 
+/* Selection toolbar's inner flat bar. */
+.km-command-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+}
+.km-command-bar[hidden] {
+  display: none;
+}
 .km-command-bar .km-sep {
   align-self: stretch;
   width: 1px;
   margin: 2px 4px;
   background: var(--km-border);
+}
+
+/* Status bar — a dedicated strip, divider toward the editor. */
+.km-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 3px 10px;
+  background: var(--km-muted-bg);
+  font-size: 12px;
+  color: var(--km-muted-fg);
+}
+.km-statusbar[hidden] {
+  display: none;
+}
+.km-body > .km-status:first-child .km-statusbar {
+  border-bottom: 1px solid var(--km-border);
+}
+.km-body > .km-status:last-child .km-statusbar {
+  border-top: 1px solid var(--km-border);
+}
+.km-status-start,
+.km-status-end {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.km-status-item {
+  white-space: nowrap;
 }
 
 /* Floating panels (portaled into the shadow overlay layer). */
@@ -202,14 +320,13 @@
   z-index: 1100;
   border-radius: var(--km-radius);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.22);
+  overflow: hidden; /* clip the inner bar/menu to the rounded corners */
 }
 
 /* Selection toolbar — a dark pill over the selection. */
 .km-selection-toolbar .km-command-bar {
-  margin-bottom: 0;
   padding: 4px 6px;
   background: #1e1e1e;
-  border-color: #000;
   color: #eee;
 }
 
@@ -279,6 +396,7 @@
   --km-border: #3d3d3d;
   --km-bg: #1e1e1e;
   --km-muted-bg: #2d2d2d;
+  --km-muted-fg: #999;
   --km-accent: #4ea1ff;
   color: #d4d4d4;
 }

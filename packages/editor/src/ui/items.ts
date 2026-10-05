@@ -1,13 +1,14 @@
 /**
- * Toolbar / menu item model (Phase 4).
+ * Toolbar / menu / status item model.
  *
- * ONE command-driven item list is consumed by all three presenters — the static
- * toolbar, the selection floating toolbar, and the context menu. An item either
- * references a command id (whose `isActive` / `isEnabled` the presenter reflects)
- * or is a separator. Display metadata (icon / label / title) lives on the item,
- * not the command, so the same command reads as a compact icon in a toolbar and
- * as a full label in a menu.
+ * A command-driven item references a command id (whose `isActive` / `isEnabled` a
+ * presenter reflects) or is a separator. Items cluster into {@link ToolGroup}s —
+ * the self-contained unit a zone toolbar lays out (and the future drag-and-drop
+ * handle). {@link StatusItem}s are a SEPARATE kind: live state indicators
+ * (`Words: 234`) for the dedicated status bar — never command buttons, never
+ * draggable.
  */
+import type { EditorState } from 'prosemirror-state';
 
 export interface CommandItem {
   type: 'command';
@@ -78,6 +79,84 @@ export const coreMenuHistoryItems: readonly ToolbarItem[] = [
   sep,
   { type: 'command', command: 'undo', label: 'Undo' },
   { type: 'command', command: 'redo', label: 'Redo' },
+];
+
+// ── Tool groups (the zone-toolbar unit) ──────────────────────────────────────
+
+/**
+ * A named cluster of command items — the unit a zone toolbar lays out as one
+ * contiguous button group (groups are divider-separated and wrap as a whole),
+ * and the unit future drag-and-drop reorders. `label` is metadata for a
+ * customization UI / accessibility, not necessarily rendered.
+ */
+export interface ToolGroup {
+  id: string;
+  label?: string;
+  items: readonly CommandItem[];
+}
+
+const cmd = (command: string, label: string, icon: string, title?: string): CommandItem => ({
+  type: 'command',
+  command,
+  label,
+  icon,
+  title: title ?? label,
+});
+
+/** Core tool groups (leading). Plugin groups slot in after these. */
+export const coreToolbarGroups: readonly ToolGroup[] = [
+  {
+    id: 'format',
+    label: 'Format',
+    items: [
+      cmd('bold', 'Bold', 'B', 'Bold (Ctrl+B)'),
+      cmd('italic', 'Italic', 'I', 'Italic (Ctrl+I)'),
+      cmd('underline', 'Underline', 'U', 'Underline (Ctrl+U)'),
+    ],
+  },
+  { id: 'block', label: 'Block', items: [cmd('heading', 'Heading', 'H1', 'Heading 1'), cmd('paragraph', 'Paragraph', 'P')] },
+  {
+    id: 'list',
+    label: 'Lists',
+    items: [cmd('bullet-list', 'Bullet list', '• List'), cmd('ordered-list', 'Ordered list', '1. List')],
+  },
+  { id: 'insert', label: 'Insert', items: [cmd('insert-code-block', 'Code block', '</>', 'Insert code block')] },
+];
+
+/** Core tool groups (trailing — history sits after plugin groups). */
+export const coreHistoryGroups: readonly ToolGroup[] = [
+  { id: 'history', label: 'History', items: [cmd('undo', 'Undo', '↶', 'Undo (Ctrl+Z)'), cmd('redo', 'Redo', '↷', 'Redo (Ctrl+Y)')] },
+];
+
+// ── Status items (the dedicated status-bar unit) ─────────────────────────────
+
+/**
+ * A live state indicator for the status bar. `render` is called with the current
+ * editor state on every change; it returns text or a node. Status items are not
+ * commands and are never draggable.
+ */
+export interface StatusItem {
+  id: string;
+  render: (state: EditorState) => string | Node;
+  /** Which end of the status bar to dock to. Default `'start'`. */
+  align?: 'start' | 'end';
+  /**
+   * Which strip to render in when the status bar is `'both'`. Default `'bottom'`.
+   * Ignored for single-edge status bars (`'top'`/`'bottom'`), which show every item.
+   */
+  bar?: 'top' | 'bottom';
+  title?: string;
+}
+
+function wordCount(state: EditorState): number {
+  const text = state.doc.textBetween(0, state.doc.content.size, ' ', ' ').trim();
+  return text ? text.split(/\s+/).length : 0;
+}
+
+/** Core status items — a word count and a character count (docked end). */
+export const coreStatusItems: readonly StatusItem[] = [
+  { id: 'words', align: 'end', render: (s) => `Words: ${wordCount(s)}` },
+  { id: 'chars', align: 'end', render: (s) => `Chars: ${s.doc.textContent.length}` },
 ];
 
 /** The default static toolbar — the full editing command set. */

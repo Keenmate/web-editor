@@ -65,13 +65,16 @@ describe('custom plugin', () => {
     marks: { strike: { parseDOM: [{ tag: 's' }, { tag: 'del' }], toDOM: () => ['s', 0] } },
     markdown: { marks: { strike: { open: '~~', close: '~~', mixable: true } } },
     commands: ({ schema }) => [{ id: 'strike', run: toggleMark(schema.marks.strike) }],
-    toolbarItems: [{ type: 'command', command: 'strike', label: 'Strikethrough', icon: 'S' }],
+    toolbarGroups: [
+      { id: 'strike', items: [{ type: 'command', command: 'strike', label: 'Strikethrough', icon: 'S' }] },
+    ],
   });
 
-  it('merges schema, command, item, and Markdown serializer', () => {
+  it('merges schema, command, group, and Markdown serializer', () => {
     const engine = new EditorEngine({ mount: mount(), editorPlugins: [strike] });
     expect(engine.schema.marks.strike).toBeTruthy();
     expect(engine.commands.has('strike')).toBe(true);
+    expect(engine.toolbarGroups.some((g) => g.id === 'strike')).toBe(true);
     expect(
       engine.toolbarItems.some((i) => i.type === 'command' && i.command === 'strike')
     ).toBe(true);

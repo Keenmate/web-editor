@@ -77,9 +77,14 @@ export const linkPlugin = definePlugin({
       isEnabled: (s) => !s.selection.empty,
     },
   ],
-  toolbarItems: [
-    { type: 'separator' },
-    { type: 'command', command: 'insert-link', label: 'Link', icon: '🔗', title: 'Insert link (select text first)' },
+  toolbarGroups: [
+    {
+      id: 'link',
+      label: 'Link',
+      items: [
+        { type: 'command', command: 'insert-link', label: 'Link', icon: '🔗', title: 'Insert link (select text first)' },
+      ],
+    },
   ],
   selectionItems: [
     { type: 'separator' },

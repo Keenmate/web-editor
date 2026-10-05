@@ -83,9 +83,12 @@ export const tablePlugin = definePlugin({
     { id: 'toggle-header-column', run: toggleHeaderColumn },
     { id: 'delete-table', run: deleteTable },
   ],
-  toolbarItems: [
-    { type: 'separator' },
-    { type: 'command', command: 'insert-table', label: 'Table', icon: '⊞', title: 'Insert table' },
+  toolbarGroups: [
+    {
+      id: 'table',
+      label: 'Table',
+      items: [{ type: 'command', command: 'insert-table', label: 'Table', icon: '⊞', title: 'Insert table' }],
+    },
   ],
   menuItems: [{ type: 'command', command: 'insert-table', label: 'Insert table' }],
 });

@@ -27,16 +27,21 @@ import {
   orderPlugins,
   mergeSchemaSpecs,
   assembleItems,
+  assembleGroups,
+  assembleStatusItems,
 } from './plugin';
 import { defaultPlugins } from './default-plugins';
 import { buildMarkdownIO, type MarkdownIO } from './markdown-io';
 import {
-  coreToolbarItems,
-  coreHistoryItems,
+  coreToolbarGroups,
+  coreHistoryGroups,
   coreSelectionItems,
   coreMenuItems,
   coreMenuHistoryItems,
+  coreStatusItems,
   type ToolbarItem,
+  type ToolGroup,
+  type StatusItem,
 } from '../ui/items';
 import {
   docToHTML,
@@ -78,10 +83,13 @@ export class EditorEngine {
   readonly schema: Schema;
   readonly commands: CommandRegistry;
   readonly events = new EventEmitter<EngineEventMap>();
-  /** Assembled presenter item lists (core + plugin items), consumed by the chrome. */
+  /** Assembled presenter lists (core + plugin), consumed by the chrome. */
+  readonly toolbarGroups: ToolGroup[];
+  /** Flattened toolbar commands (groups → items), for consumers wanting a flat list. */
   readonly toolbarItems: ToolbarItem[];
   readonly selectionItems: ToolbarItem[];
   readonly menuItems: ToolbarItem[];
+  readonly statusItems: StatusItem[];
   view: EditorView;
 
   private editable: boolean;
@@ -108,10 +116,12 @@ export class EditorEngine {
       if (specs) this.commands.registerMany(specs);
     }
 
-    // Presenter item lists: core-leading + plugin items + core-trailing.
-    this.toolbarItems = assembleItems(plugins, 'toolbarItems', coreToolbarItems, coreHistoryItems);
+    // Presenter lists: core-leading + plugin + core-trailing.
+    this.toolbarGroups = assembleGroups(plugins, coreToolbarGroups, coreHistoryGroups);
+    this.toolbarItems = this.toolbarGroups.flatMap((g) => [...g.items]);
     this.selectionItems = assembleItems(plugins, 'selectionItems', coreSelectionItems);
     this.menuItems = assembleItems(plugins, 'menuItems', coreMenuItems, coreMenuHistoryItems);
+    this.statusItems = assembleStatusItems(plugins, coreStatusItems);
 
     this.editable = options.editable ?? true;
 

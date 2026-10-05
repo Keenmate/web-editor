@@ -153,6 +153,30 @@ engine's `CommandRegistry` and reflecting `isActive` / `isEnabled`:
 > ports remain for the raw-engine harness and are still out of the shipped
 > surface.
 
+#### Phase 4.1 — Zones, tool groups & status bar  ✅
+Generalised the single static toolbar into **edge zones** + a dedicated **status
+bar**:
+- The `toolbar` input gained all four edges (`top`/`bottom`/`start`/`end`/`none`);
+  the toolbar + editor are wrapped in one bordered `.km-shell` frame so the
+  toolbar sits flush (a divider, not a detached card). `start`/`end` render a
+  vertical strip.
+- The toolbar lays out **tool groups** (`ToolGroup`): contiguous, divider-separated
+  button clusters that wrap into rows/columns — the Word-style grouped toolbar and
+  the self-contained unit a future drag-and-drop will reorder. `ToolbarZone`
+  renders one `CommandBar` (class `km-group`) per group.
+- New **status bar** (`statusbar` input: `none`/`top`/`bottom`/`both`) — a
+  dedicated strip of live `StatusItem` indicators (`Words`/`Chars`, + plugin
+  items) that **hugs the editor body** (toolbar stays on the outside), deliberately
+  separate from the tool zones so group drag-and-drop never has to exclude
+  non-draggable status. `both` renders two strips, split by `item.bar`.
+- Plugins contribute `toolbarGroups` / `statusItems` (alongside
+  `selectionItems`/`menuItems`); the engine assembles + exposes
+  `toolbarGroups`/`statusItems`/… and the chrome consumes them. 52 tests.
+
+> Deferred: drag-and-drop reordering of groups (groups are already the unit);
+> multiple simultaneous toolbar zones (one toolbar edge + one status edge today);
+> cursor line/col status item.
+
 ### Phase 5 — Plugin system (B2)  ✅
 `definePlugin({ name, dependencies?, nodes?, marks?, markdown?, commands?,
 keymap?, pmPlugins?, toolbarItems?, selectionItems?, menuItems?, setup?,

@@ -32,14 +32,24 @@ editor.setAttribute('readonly', '');   // or mode="preview"
 ```
 
 Inputs: `value`, `format` (`markdown`|`html`|`json`), `mode`
-(`edit`|`split`|`preview`|`inline`), `readonly`, `toolbar` (`top`|`none`),
-`theme`, `anchor` (CSS selector the `inline` card tracks). Events: `change`,
-`ready`, `mode-change`.
+(`edit`|`split`|`preview`|`inline`), `readonly`, `toolbar`
+(`top`|`bottom`|`start`|`end`|`none` — which edge the toolbar docks to),
+`statusbar` (`none`|`top`|`bottom`|`both`), `theme`, `anchor` (CSS selector the
+`inline` card tracks). Events: `change`, `ready`, `mode-change`.
 
-A command-driven **static toolbar** (above the editor), a **selection toolbar**
-(floats over a text selection), and a **context menu** (right-click) all reflect
-each command's active / enabled state. The toolbar item lists are assembled from
-the active plugin set (core items + each plugin's items).
+The chrome is organised into **edge zones** and a **status bar**:
+
+- A **zone toolbar** docks to any editor edge (`toolbar`), laying out **tool
+  groups** — contiguous, divider-separated button clusters that wrap into
+  multiple rows/columns. A group is the self-contained unit (and the future
+  drag-and-drop handle).
+- A **selection toolbar** (floats over a text selection) and a **context menu**
+  (right-click) reflect the same commands' active / enabled state.
+- A dedicated **status bar** (`statusbar`) holds live indicators (`Words: 234`,
+  `Chars: …`) — separate from the tool zones, so it's never draggable.
+
+All of these are assembled from the active plugin set: a plugin contributes
+`toolbarGroups`, `selectionItems`, `menuItems`, and/or `statusItems`.
 
 ## Plugins
 

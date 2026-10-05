@@ -53,8 +53,12 @@ export const imagePlugin = definePlugin({
   commands: ({ schema }): CommandSpec[] => [
     { id: 'insert-image', run: promptForImage(schema), isEnabled: () => true },
   ],
-  toolbarItems: [
-    { type: 'command', command: 'insert-image', label: 'Image', icon: '🖼', title: 'Insert image' },
+  toolbarGroups: [
+    {
+      id: 'image',
+      label: 'Image',
+      items: [{ type: 'command', command: 'insert-image', label: 'Image', icon: '🖼', title: 'Insert image' }],
+    },
   ],
   menuItems: [{ type: 'command', command: 'insert-image', label: 'Insert image' }],
 });

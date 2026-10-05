@@ -41,12 +41,15 @@ declare const __VERSION__: string;
 export type EditorMode = 'edit' | 'split' | 'preview' | 'inline';
 /** The serialization lens used for content I/O. */
 export type EditorFormat = SerializationFormat; // 'html' | 'markdown' | 'json'
-/** Static toolbar placement (`'none'` hides it). */
-export type EditorToolbar = 'top' | 'none';
+/** Static toolbar placement — which edge of the editor it occupies (`'none'` hides it). */
+export type EditorToolbar = 'top' | 'bottom' | 'start' | 'end' | 'none';
+/** Status-bar placement — a dedicated strip docked top, bottom, or both (`'none'` hides it). */
+export type EditorStatusBar = 'none' | 'top' | 'bottom' | 'both';
 
 const MODES = ['edit', 'split', 'preview', 'inline'] as const;
 const FORMATS = ['markdown', 'html', 'json'] as const;
-const TOOLBARS = ['top', 'none'] as const;
+const TOOLBARS = ['top', 'bottom', 'start', 'end', 'none'] as const;
+const STATUSBARS = ['none', 'top', 'bottom', 'both'] as const;
 
 // ============================================================================
 // INPUT TABLE — the whole <km-editor> public attribute/property surface.
@@ -92,7 +95,16 @@ const INPUTS: readonly InputDef[] = [
     reflect: true,
     on: 'update',
     description:
-      "Static toolbar: 'top' (default) shows the command toolbar above the editor; 'none' hides it. The selection toolbar and context menu are always available while editing (independent of this).",
+      "Static toolbar edge: 'top' (default), 'bottom', 'start', or 'end' places the command toolbar flush against that side of the editor; 'none' hides it. The selection toolbar and context menu are always available while editing (independent of this).",
+  },
+  {
+    configKey: 'statusbar',
+    attribute: 'statusbar',
+    converter: toEnum(STATUSBARS, { default: 'none' }),
+    reflect: true,
+    on: 'update',
+    description:
+      "Status bar edge: 'none' (default), 'top', 'bottom', or 'both'. A dedicated strip of live indicators (word/char count, plus any plugin status items), hugging the editor body — separate from the toolbar zones and shown in read-only too. With 'both', items split across the two strips by their `bar` ('top'/'bottom', default 'bottom').",
   },
   {
     configKey: 'theme',
@@ -194,11 +206,11 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
     }
     // Structural view-mode / anchor change: re-arrange the shadow layout in place
     // (the persistent mount is re-parented, so the live document survives).
-    if ('mode' in partial || 'anchor' in partial) {
+    if ('mode' in partial || 'anchor' in partial || 'toolbar' in partial || 'statusbar' in partial) {
       this.#applyLayout();
     }
-    // Editing availability or the toolbar toggle changed: re-apply chrome state.
-    if ('readonly' in partial || 'mode' in partial || 'toolbar' in partial) {
+    // Editing availability or the toolbar / status-bar toggle changed.
+    if ('readonly' in partial || 'mode' in partial || 'toolbar' in partial || 'statusbar' in partial) {
       this.#applyChromeState();
     }
     if ('mode' in partial) {
@@ -254,16 +266,10 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
     });
     this.#layout.refreshOutput(); // initial fill (engine now exists)
 
-    // Command-driven chrome (static toolbar + selection toolbar + context menu).
-    // Bound to this engine's view/registry, so it is rebuilt with the engine; the
-    // item lists are the ones the engine assembled from its plugin set.
-    this.#chrome = new EditorChrome({
-      engine: this.#engine,
-      layout: this.#layout,
-      toolbarItems: this.#engine.toolbarItems,
-      selectionItems: this.#engine.selectionItems,
-      contextMenuItems: this.#engine.menuItems,
-    });
+    // Command-driven chrome (zone toolbar + status bar + selection toolbar +
+    // context menu). Bound to this engine's view/registry and the lists it
+    // assembled from its plugin set, so it is rebuilt with the engine.
+    this.#chrome = new EditorChrome({ engine: this.#engine, layout: this.#layout });
     this.#applyChromeState();
 
     initLogger.debug(`<km-editor> engine built (format=${format}, editable=${options.editable}) v${
@@ -287,16 +293,22 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
     this.#engine = undefined;
   }
 
-  /** (Re)arrange the shadow layout for the current mode + anchor. */
+  /** (Re)arrange the shadow layout for the current mode + anchor + toolbar + status side. */
   #applyLayout(): void {
-    this.#layout.render(this.config.mode as EditorMode, (this.config.anchor as string | null) ?? null);
+    this.#layout.render(
+      this.config.mode as EditorMode,
+      (this.config.anchor as string | null) ?? null,
+      this.config.toolbar as EditorToolbar,
+      this.config.statusbar as EditorStatusBar
+    );
   }
 
-  /** Push the current editable + toolbar settings into the chrome. */
+  /** Push the current editable + toolbar + status-bar settings into the chrome. */
   #applyChromeState(): void {
     this.#chrome?.setState({
       editable: this.#resolveEditable(),
       showToolbar: (this.config.toolbar as EditorToolbar) !== 'none',
+      status: this.config.statusbar as EditorStatusBar,
     });
   }
 

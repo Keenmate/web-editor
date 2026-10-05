@@ -19,18 +19,26 @@ export type {
   EditorMode,
   EditorFormat,
   EditorToolbar,
+  EditorStatusBar,
   EditorChangeDetail,
   EditorModeChangeDetail,
 } from './web-component';
 
-// Command-driven toolbar / menu item model (Phase 4) — override the defaults to
-// customise the static toolbar, selection toolbar, or context menu.
+// Toolbar zones / tool groups / status items model. Override the core groups or
+// contribute via plugins to customise the zone toolbar, selection toolbar,
+// context menu, or status bar.
 export {
   defaultToolbarItems,
   defaultSelectionItems,
   defaultContextMenuItems,
+  coreToolbarGroups,
+  coreHistoryGroups,
+  coreSelectionItems,
+  coreMenuItems,
+  coreMenuHistoryItems,
+  coreStatusItems,
 } from './ui/items';
-export type { ToolbarItem, CommandItem, SeparatorItem } from './ui/items';
+export type { ToolbarItem, CommandItem, SeparatorItem, ToolGroup, StatusItem } from './ui/items';
 
 // Logging controls
 export {
@@ -56,7 +64,14 @@ export { EventEmitter } from './engine/event-emitter';
 export { registerCoreCommands } from './engine/default-commands';
 
 // Plugin system (Phase 5)
-export { definePlugin, orderPlugins, assembleItems, mergeSchemaSpecs } from './engine/plugin';
+export {
+  definePlugin,
+  orderPlugins,
+  assembleItems,
+  assembleGroups,
+  assembleStatusItems,
+  mergeSchemaSpecs,
+} from './engine/plugin';
 export type { EditorPlugin, PluginContext, SetupContext, MarkdownContribution } from './engine/plugin';
 export { defaultPlugins } from './engine/default-plugins';
 export { buildMarkdownIO, mergeMarkdown } from './engine/markdown-io';
