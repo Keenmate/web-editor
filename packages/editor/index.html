@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>KeenMate Web Editor — Dev Playground</title>
+    <!-- Linked (not JS-imported) so it's render-blocking and paints styled on the
+         first frame — avoids the reload FOUC that JS-injected CSS causes in dev.
+         The shipped library emits a separate style.css consumers link the same way. -->
+    <link rel="stylesheet" href="/src/css/editor.css" />
   </head>
   <body>
     <div class="container">

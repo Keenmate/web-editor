@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "@floating-ui/dom": "^1.6.0",
+    "@keenmate/web-components-core": "1.0.0-rc10",
     "markdown-it": "^14.1.0",
     "prismjs": "^1.29.0",
     "prosemirror-commands": "^1.5.2",

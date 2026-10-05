@@ -37,6 +37,8 @@ export interface EditorEngineOptions {
   plugins?: Plugin[];
   /** Override the document schema (defaults to the built-in schema). */
   schema?: Schema;
+  /** Start read-only (no editing). Defaults to editable. */
+  editable?: boolean;
 }
 
 export interface EngineEventMap {
@@ -52,9 +54,11 @@ export class EditorEngine {
   readonly commands: CommandRegistry;
   readonly events = new EventEmitter<EngineEventMap>();
   view: EditorView;
+  private editable: boolean;
 
   constructor(options: EditorEngineOptions) {
     this.schema = options.schema ?? defaultSchema;
+    this.editable = options.editable ?? true;
     this.commands = new CommandRegistry(() => this.view);
     registerDefaultCommands(this.commands, this.schema);
 
@@ -66,6 +70,7 @@ export class EditorEngine {
 
     this.view = new EditorView(options.mount, {
       state,
+      editable: () => this.editable,
       dispatchTransaction: (tr) => {
         const newState = this.view.state.apply(tr);
         this.view.updateState(newState);
@@ -131,6 +136,19 @@ export class EditorEngine {
 
   focus(): void {
     this.view.focus();
+  }
+
+  /** Whether the editor currently accepts input. */
+  isEditable(): boolean {
+    return this.editable;
+  }
+
+  /** Toggle read-only. Re-evaluates the view's `editable` prop in place. */
+  setEditable(editable: boolean): void {
+    if (editable === this.editable) return;
+    this.editable = editable;
+    // Force the view to re-read the `editable` prop (it's a function of this field).
+    this.view.setProps({ editable: () => this.editable });
   }
 
   destroy(): void {

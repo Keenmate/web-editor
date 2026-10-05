@@ -2,9 +2,11 @@
  * Dev playground bootstrap. Dogfoods the Phase 1 `EditorEngine`: toolbar clicks
  * route through `engine.commands`, and the output panel renders the live
  * serialization (`engine.serialize`). NOT part of the shipped library.
+ *
+ * NOTE: editor.css is linked render-blocking from index.html (not imported here)
+ * to avoid a first-paint FOUC on reload. The library path (src/index.ts) still
+ * imports it, so packaged consumers get the CSS bundled as before.
  */
-import '../css/editor.css';
-
 import { EditorEngine } from '../engine/editor-engine';
 import { schema } from '../schema';
 import { createFloatingToolbarPlugin } from '../plugins/floating-toolbar';

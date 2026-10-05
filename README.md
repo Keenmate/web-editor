@@ -5,16 +5,39 @@ A framework-agnostic WYSIWYG / Markdown editor, built on
 shared `@keenmate/web-components-core` runtime — the same model as the rest of
 the KeenMate component line.
 
-> **Status: Phase 0.** The monorepo is scaffolded and the original `web-wysiwyg`
-> POC has been ported to TypeScript modules. The `<km-editor>` Web Component and
-> the HTML/Markdown/JSON serialization API land in Phases 1–2. See
-> [`PLAN.md`](./PLAN.md).
+> **Status: Phase 2.** The headless engine + HTML/Markdown/JSON serialization
+> (Phase 1) and the `<km-editor>` Web Component (Phase 2) are in place — the
+> element is the primary entry point. View modes (`split`/`inline`), toolbars,
+> context menus, and the plugin system are next. See [`PLAN.md`](./PLAN.md).
+
+## Usage
+
+```html
+<script type="module" src="@keenmate/web-editor"></script>
+<link rel="stylesheet" href="@keenmate/web-editor/style.css" />
+
+<km-editor value="# Hello" format="markdown"></km-editor>
+```
+
+```js
+const editor = document.querySelector('km-editor');
+editor.addEventListener('change', (e) => console.log(e.detail.value)); // in `format`
+editor.addEventListener('ready', () => editor.focus());
+
+editor.getMarkdown();          // live content (getValue reads live edits, not the `value` attr)
+editor.setValue('## New', 'markdown');
+editor.setAttribute('readonly', '');   // or mode="preview"
+```
+
+Inputs: `value`, `format` (`markdown`|`html`|`json`), `mode`
+(`edit`|`split`|`preview`|`inline`), `readonly`, `theme`.
+Events: `change`, `ready`, `mode-change`.
 
 ## Monorepo layout
 
 | Package | Description |
 | --- | --- |
-| [`packages/editor`](./packages/editor) — `@keenmate/web-editor` | Editor engine + (upcoming) `<km-editor>` element |
+| [`packages/editor`](./packages/editor) — `@keenmate/web-editor` | Editor engine + `<km-editor>` element |
 
 ## Develop
 

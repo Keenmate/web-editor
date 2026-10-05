@@ -1,11 +1,38 @@
 /**
  * `@keenmate/web-editor` — public surface.
  *
- * Phase 1 exposes the headless engine and serialization layer. The `<km-editor>`
- * Web Component (BlissElement shell on `@keenmate/web-components-core`) arrives in
- * Phase 2 and will become the primary entry point.
+ * Importing this module registers the `<km-editor>` custom element (the primary
+ * entry point, a BlissElement shell on `@keenmate/web-components-core`) and
+ * re-exports the headless engine + serialization layer for programmatic use.
  */
+// Produces the shipped dist/style.css via Vite, and feeds the inlined stylesheet
+// the element adopts into its shadow root.
 import './css/editor.css';
+
+import { registerComponent } from '@keenmate/web-components-core';
+import { KmEditorElement } from './web-component';
+import { logging } from './logger';
+
+// ── Web Component ─────────────────────────────────────────────────────────
+export { KmEditorElement } from './web-component';
+export type {
+  EditorMode,
+  EditorFormat,
+  EditorChangeDetail,
+  EditorModeChangeDetail,
+} from './web-component';
+
+// Logging controls
+export {
+  enableLogging,
+  disableLogging,
+  setLogLevel,
+  setCategoryLevel,
+  LOGGING_CATEGORIES,
+  initLogger,
+  contentLogger,
+  uiLogger,
+} from './logger';
 
 // Headless engine
 export { EditorEngine } from './engine/editor-engine';
@@ -43,3 +70,32 @@ export {
   type CreateEditorStateOptions,
 } from './editor';
 export { syntaxHighlightPlugin } from './plugins/syntax-highlight';
+
+// ── Registration ────────────────────────────────────────────────────────────
+// Defines the element, publishes build metadata + the flattened logging controls
+// on window.components['km-editor'], and wires getInstances() to the live-instance
+// registry BlissElement maintains. Idempotent with the define in web-component.ts.
+declare const __PACKAGE_NAME__: string;
+declare const __VERSION__: string;
+declare const __AUTHOR__: string;
+declare const __LICENSE__: string;
+declare const __REPOSITORY__: string;
+declare const __HOMEPAGE__: string;
+
+registerComponent('km-editor', KmEditorElement as unknown as CustomElementConstructor, {
+  config: {
+    name: typeof __PACKAGE_NAME__ !== 'undefined' ? __PACKAGE_NAME__ : '@keenmate/web-editor',
+    version: typeof __VERSION__ !== 'undefined' ? __VERSION__ : '0.0.0',
+    author: typeof __AUTHOR__ !== 'undefined' ? __AUTHOR__ : 'Keenmate s.r.o.',
+    license: typeof __LICENSE__ !== 'undefined' ? __LICENSE__ : 'MIT',
+    repository: typeof __REPOSITORY__ !== 'undefined' ? __REPOSITORY__ : '',
+    homepage: typeof __HOMEPAGE__ !== 'undefined' ? __HOMEPAGE__ : '',
+  },
+  logging,
+});
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'km-editor': KmEditorElement;
+  }
+}

@@ -76,10 +76,29 @@ command registry, and event bus, and exposes the serialization API.
 > blockquotes back into nodes (export emits tables as raw HTML). Schema is not
 > yet plugin-extensible at the engine boundary (Phase 5). HTML/JSON are lossless.
 
-### Phase 2 — `<km-editor>` Web Component
-`BlissElement` shell over the engine: inputs (`mode`, `format`, `value`,
-`readonly`, `theme`), events (`change`, `ready`, `mode-change`), `adoptStyles`
-theming, `createLoggers`, `registerComponent`. First shippable artifact.
+### Phase 2 — `<km-editor>` Web Component  ✅
+`BlissElement` shell over the engine (`src/web-component.ts`). First shippable
+artifact — the element is now the package's primary entry point.
+- **Inputs** (`static inputs` table): `value` (content source, `reinit`),
+  `format` (markdown/html/json I/O lens, `update`, reflected), `mode`
+  (edit/split/preview/inline, `update`, reflected), `readonly` (`update`),
+  `theme` (`update`, reflected). `preview` forces read-only.
+- **Events** (`static events` → managed `onChange`/`onReady`/`onModeChange`):
+  `change` (`{ value, format }`), `ready`, `mode-change` (`{ mode }`).
+- **Content API** (not inputs, since core's input accessors shadow a subclass
+  getter): `getValue()/getContent()/getHTML()/getMarkdown()/getJSON()`,
+  `setValue()`, `engine`, `isReady`, `focus()`, `destroy()`.
+- Engine gained `editable` option + `setEditable()`/`isEditable()`.
+- Shadow DOM + `adoptStyles` (editor.css inlined), `createLoggers('EDITOR')`
+  shim, `registerComponent('km-editor', …)` with build metadata. 10 element
+  unit tests (23 total).
+
+> Known limitations (deferred): `split`/`inline` modes store + reflect + announce
+> only — real layouts land in Phase 3. Prism code-highlight CSS is still
+> JS-injected into the document head, so token colours don't reach the shadow
+> root yet (fixed when highlighting becomes a plugin in Phase 5). Content isn't
+> re-serialized across a `format` switch mid-edit (the document is single-model,
+> so the lens just changes; no data loss).
 
 ### Phase 3 — View modes & mounting (B1 core)
 `edit` / `split` (editor + live output panel, format-switchable) / `preview`
