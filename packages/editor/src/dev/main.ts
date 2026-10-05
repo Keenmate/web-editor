@@ -12,8 +12,10 @@ import { schema } from '../schema';
 import { createFloatingToolbarPlugin } from '../plugins/floating-toolbar';
 import { createDebugPlugins, updateDebugPanel } from '../plugins/debug';
 import type { SerializationFormat } from '../engine/serialization';
-// Registers <km-editor> (the shipped element) + exposes the public surface.
-import { type KmEditorElement, type EditorMode } from '../index';
+// Registers <km-editor> (side-effect import — must NOT be type-only, or esbuild
+// elides it and the element is never defined). Types come separately.
+import '../index';
+import type { KmEditorElement, EditorMode } from '../index';
 
 // ── <km-editor> element showcase (Phase 2–3) ──────────────────────────────
 const km = document.querySelector('#km') as KmEditorElement | null;
@@ -24,6 +26,9 @@ if (km) {
   };
 
   km.addEventListener('ready', () => setStatus('ready'));
+  // The element upgrades during the `../index` import above — before these
+  // listeners attach — so `ready` may have already fired. Reflect it now.
+  if (km.isReady) setStatus('ready');
   km.addEventListener('change', (e) => {
     const detail = (e as CustomEvent).detail;
     setStatus(`changed · ${detail.format} · ${detail.value.length} chars`);
