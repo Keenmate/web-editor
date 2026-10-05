@@ -28,7 +28,7 @@
     "directory": "packages/editor"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 21113",
     "build": "npm run clean && vite build",
     "build:types": "tsc",
     "preview": "vite preview",

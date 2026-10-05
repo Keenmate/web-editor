@@ -1,5 +1,6 @@
 node_modules/
 dist/
+.makefile.env
 *.tgz
 *.log
 .DS_Store
