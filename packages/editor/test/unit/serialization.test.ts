@@ -2,7 +2,12 @@ import { describe, it, expect } from 'vitest';
 import { schema } from '../../src/schema';
 import { docToHTML, htmlToDoc } from '../../src/engine/serialization/html';
 import { docToJSON, jsonToDoc } from '../../src/engine/serialization/json';
-import { docToMarkdown, markdownToDoc } from '../../src/engine/serialization/markdown';
+// Markdown needs the plugins' serializers, so go through the public helpers,
+// which assemble a default Markdown I/O (core + link/image/table).
+import { serialize, parse } from '../../src/engine/serialization';
+
+const toMarkdown = (doc: Parameters<typeof docToHTML>[0]) => serialize(doc, schema, 'markdown');
+const fromMarkdown = (md: string) => parse(md, schema, 'markdown');
 
 const SAMPLE_HTML =
   '<h2>Title</h2>' +
@@ -27,7 +32,7 @@ describe('JSON serialization', () => {
 
 describe('Markdown serialization', () => {
   it('serializes blocks and marks', () => {
-    const md = docToMarkdown(sample);
+    const md = toMarkdown(sample);
     expect(md).toContain('## Title');
     expect(md).toContain('**world**');
     expect(md).toContain('*emphasis*');
@@ -37,20 +42,20 @@ describe('Markdown serialization', () => {
   });
 
   it('parses the CommonMark core back into nodes', () => {
-    const doc = markdownToDoc('# Heading\n\nHello **b** and *i*\n\n- a\n- b\n', schema);
+    const doc = fromMarkdown('# Heading\n\nHello **b** and *i*\n\n- a\n- b\n');
     expect(doc.firstChild?.type.name).toBe('heading');
     expect(doc.firstChild?.attrs.level).toBe(1);
     // bold/italic marks survive
-    const md = docToMarkdown(doc);
+    const md = toMarkdown(doc);
     expect(md).toContain('**b**');
     expect(md).toContain('*i*');
   });
 
   it('round-trips a fenced code block with language', () => {
-    const doc = markdownToDoc('```ts\nconst a = 1;\n```\n', schema);
+    const doc = fromMarkdown('```ts\nconst a = 1;\n```\n');
     const code = doc.firstChild;
     expect(code?.type.name).toBe('code_block');
     expect(code?.attrs.language).toBe('ts');
-    expect(docToMarkdown(doc)).toContain('```ts');
+    expect(toMarkdown(doc)).toContain('```ts');
   });
 });

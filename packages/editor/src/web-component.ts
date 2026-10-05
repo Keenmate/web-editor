@@ -30,6 +30,7 @@ import {
 import { EditorEngine, type EditorEngineOptions } from './engine/editor-engine';
 import type { SerializationFormat } from './engine/serialization';
 import { ViewLayout } from './ui/view-layout';
+import { EditorChrome } from './ui/chrome';
 import styles from './css/editor.css?inline';
 import { initLogger, contentLogger } from './logger';
 
@@ -40,9 +41,12 @@ declare const __VERSION__: string;
 export type EditorMode = 'edit' | 'split' | 'preview' | 'inline';
 /** The serialization lens used for content I/O. */
 export type EditorFormat = SerializationFormat; // 'html' | 'markdown' | 'json'
+/** Static toolbar placement (`'none'` hides it). */
+export type EditorToolbar = 'top' | 'none';
 
 const MODES = ['edit', 'split', 'preview', 'inline'] as const;
 const FORMATS = ['markdown', 'html', 'json'] as const;
+const TOOLBARS = ['top', 'none'] as const;
 
 // ============================================================================
 // INPUT TABLE — the whole <km-editor> public attribute/property surface.
@@ -80,6 +84,15 @@ const INPUTS: readonly InputDef[] = [
     converter: toBool('default-false'),
     on: 'update',
     description: 'Make the editor read-only (no input). `mode="preview"` also forces this on.',
+  },
+  {
+    configKey: 'toolbar',
+    attribute: 'toolbar',
+    converter: toEnum(TOOLBARS, { default: 'top' }),
+    reflect: true,
+    on: 'update',
+    description:
+      "Static toolbar: 'top' (default) shows the command toolbar above the editor; 'none' hides it. The selection toolbar and context menu are always available while editing (independent of this).",
   },
   {
     configKey: 'theme',
@@ -141,6 +154,7 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
   #shadow: ShadowRoot;
   #layout: ViewLayout;
   #engine?: EditorEngine;
+  #chrome?: EditorChrome;
   #unsubscribe?: () => void;
   // The content source string, in `format`. Seeded from `value`, refreshed from
   // the live engine before a teardown so a reconnect rebuild keeps the edits.
@@ -182,6 +196,10 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
     // (the persistent mount is re-parented, so the live document survives).
     if ('mode' in partial || 'anchor' in partial) {
       this.#applyLayout();
+    }
+    // Editing availability or the toolbar toggle changed: re-apply chrome state.
+    if ('readonly' in partial || 'mode' in partial || 'toolbar' in partial) {
+      this.#applyChromeState();
     }
     if ('mode' in partial) {
       this.emit('mode-change', { mode: this.config.mode as EditorMode });
@@ -236,6 +254,18 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
     });
     this.#layout.refreshOutput(); // initial fill (engine now exists)
 
+    // Command-driven chrome (static toolbar + selection toolbar + context menu).
+    // Bound to this engine's view/registry, so it is rebuilt with the engine; the
+    // item lists are the ones the engine assembled from its plugin set.
+    this.#chrome = new EditorChrome({
+      engine: this.#engine,
+      layout: this.#layout,
+      toolbarItems: this.#engine.toolbarItems,
+      selectionItems: this.#engine.selectionItems,
+      contextMenuItems: this.#engine.menuItems,
+    });
+    this.#applyChromeState();
+
     initLogger.debug(`<km-editor> engine built (format=${format}, editable=${options.editable}) v${
       typeof __VERSION__ !== 'undefined' ? __VERSION__ : 'dev'
     }`);
@@ -249,6 +279,8 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
   }
 
   #teardownEngine(): void {
+    this.#chrome?.destroy();
+    this.#chrome = undefined;
     this.#unsubscribe?.();
     this.#unsubscribe = undefined;
     this.#engine?.destroy();
@@ -258,6 +290,14 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
   /** (Re)arrange the shadow layout for the current mode + anchor. */
   #applyLayout(): void {
     this.#layout.render(this.config.mode as EditorMode, (this.config.anchor as string | null) ?? null);
+  }
+
+  /** Push the current editable + toolbar settings into the chrome. */
+  #applyChromeState(): void {
+    this.#chrome?.setState({
+      editable: this.#resolveEditable(),
+      showToolbar: (this.config.toolbar as EditorToolbar) !== 'none',
+    });
   }
 
   /** Map a content string + format onto the matching engine option. */

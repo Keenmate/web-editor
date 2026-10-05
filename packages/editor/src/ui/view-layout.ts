@@ -35,6 +35,10 @@ export interface ViewLayoutOptions {
 export class ViewLayout {
   /** The persistent editor surface. The engine mounts its view here, once. */
   readonly mount: HTMLDivElement;
+  /** Persistent slot above the editor for the static toolbar (Phase 4). */
+  readonly toolbarMount: HTMLDivElement;
+  /** Persistent shadow-local layer the floating presenters portal into (Phase 4). */
+  readonly overlayLayer: HTMLDivElement;
 
   #shadow: ShadowRoot;
   #host: HTMLElement;
@@ -57,6 +61,19 @@ export class ViewLayout {
     this.mount = document.createElement('div');
     this.mount.className = 'km-editor';
     this.mount.setAttribute('part', 'editor');
+
+    // Toolbar slot — placed at the top of the root on every render; the chrome
+    // fills it with the static toolbar (empty + zero-height until it does).
+    this.toolbarMount = document.createElement('div');
+    this.toolbarMount.className = 'km-toolbar';
+    this.toolbarMount.setAttribute('part', 'toolbar');
+
+    // Overlay layer — a sibling of the root (not re-rendered), so portaled
+    // floating panels survive a view-mode change. Positioned panels are fixed,
+    // so this layer itself takes no space.
+    this.overlayLayer = document.createElement('div');
+    this.overlayLayer.className = 'km-overlays';
+    this.#shadow.appendChild(this.overlayLayer);
   }
 
   /** Seed the split output lens (before the user clicks a tab). */
@@ -73,7 +90,8 @@ export class ViewLayout {
     this.#anchorSelector = anchorSelector;
     this.#teardownAnchor();
 
-    // Detach the mount so replaceChildren() below can't destroy it.
+    // Detach the persistent nodes so replaceChildren() below can't destroy them.
+    this.toolbarMount.remove();
     this.mount.remove();
 
     if (!this.#root) {
@@ -87,6 +105,7 @@ export class ViewLayout {
     this.#outputTabs = undefined;
     this.#outputPre = undefined;
 
+    root.appendChild(this.toolbarMount);
     root.appendChild(this.mount);
     if (mode === 'split') {
       root.appendChild(this.#buildOutputPanel());
@@ -103,6 +122,7 @@ export class ViewLayout {
 
   destroy(): void {
     this.#teardownAnchor();
+    this.overlayLayer.remove();
     this.#root?.remove();
     this.#root = undefined;
   }

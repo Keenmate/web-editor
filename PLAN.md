@@ -122,18 +122,65 @@ modes; the element delegates to it and re-renders on `mode`/`anchor` change.
 > dismiss on outside-click — that chrome lands with the overlay work in Phase 4.
 > Prism highlight CSS still JS-injects to the document head (Phase 5 plugin).
 
-### Phase 4 — Toolbars & context menus (B1 UI)
-One command-driven item model consumed by three presenters: static toolbar,
-selection floating toolbar, context menu. All reflect command `isActive` /
-`isEnabled`. Replaces the provisional Phase 0 toolbar/debug plugins.
+### Phase 4 — Toolbars & context menus (B1 UI)  ✅
+One command-driven item model (`ui/items.ts`: `ToolbarItem` = command ref +
+display metadata, or separator) consumed by three presenters, all binding to the
+engine's `CommandRegistry` and reflecting `isActive` / `isEnabled`:
+- `ui/command-bar.ts` — the shared renderer (`variant: 'bar'` icons / `'menu'`
+  labels); `refresh()` toggles `active` + `disabled` per command.
+- `ui/toolbar` (static) — a `CommandBar` in the layout's persistent `toolbarMount`
+  slot (new `toolbar` input: `top` | `none`; hidden in read-only / preview).
+- `ui/selection-toolbar.ts` — floating formatting bar over a non-empty text
+  selection, positioned via core `createPopover` against a live selection-rect
+  virtual element; suppressed in code blocks / when not editable.
+- `ui/context-menu.ts` — right-click editing menu at the cursor (core
+  `createPopover` point reference), dismiss on outside-pointerdown / Escape / run;
+  suppressed when not editable (native menu shows through).
+- `ui/chrome.ts` (`EditorChrome`) — owns the three presenters, refreshes them on
+  `selectionUpdate` / `change`; lifetime tied to the engine (rebuilt with it). The
+  floating panels portal into a persistent shadow `overlayLayer` (theme-scoped,
+  survives view-mode re-renders).
+- `default-commands.ts` — prompt-driven commands (`insert-link`/`-image`/
+  `-code-block`, `change-code-language`) gained explicit `isEnabled` so a toolbar
+  refresh never dry-runs them into a `prompt()`/`alert()`; list commands gained
+  `isActive`. 11 new unit tests (40 total).
 
-### Phase 5 — Plugin system (B2)
-`definePlugin({ name, nodes?, marks?, commands?, toolbarItems?, menuItems?,
-keymap?, pmPlugins?, serializers, setup?, destroy? })`. Engine merges schema,
-commands, PM plugins, and serializers in dependency order. **Contract rule:**
-every custom node/mark must declare its serializer for each output target
-(html/markdown/json) — the gap that made tui.editor's outputs drift. Dogfood by
-moving tables + code-highlight + links/images into first-party plugins.
+> Known limitations (deferred): the selection toolbar + context menu are always
+> on while editing (no per-presenter input yet). Insert commands still use
+> `prompt()` dialogs (real link/image popovers are a later pass). Context menu is
+> a fixed general-editing list — not yet context-aware (e.g. table-row ops in a
+> table). The provisional Phase 0 `floating-toolbar.ts` / `debug.ts` playground
+> ports remain for the raw-engine harness and are still out of the shipped
+> surface.
+
+### Phase 5 — Plugin system (B2)  ✅
+`definePlugin({ name, dependencies?, nodes?, marks?, markdown?, commands?,
+keymap?, pmPlugins?, toolbarItems?, selectionItems?, menuItems?, setup?,
+destroy? })` (`engine/plugin.ts`). The engine assembles itself from a plugin set
+(`editorPlugins`, default `defaultPlugins()`) in dependency order
+(`orderPlugins`, topological): schema (`buildSchema(mergeSchemaSpecs(...))`),
+commands (core + plugin), ProseMirror plugins + structural keymaps, Markdown I/O,
+and toolbar/selection/menu item lists are all merged.
+- **Contract rule, enforced.** HTML + JSON are schema-driven (a node/mark's
+  `toDOM`/`parseDOM` already serve them); Markdown is the one target needing
+  explicit wiring. `engine/markdown-io.ts` (`buildMarkdownIO`) merges the core
+  Markdown maps with each plugin's `markdown` contribution and **throws at engine
+  assembly** if any schema node/mark lacks a Markdown serializer — the gap that
+  made tui.editor's outputs drift, now a loud failure.
+- **Dogfooded.** Links, images, tables, and code-highlight are first-party
+  plugins (`src/plugins/{link,image,tables,code-highlight}.ts`); `schema.ts` is
+  split into `coreNodes`/`coreMarks` + the feature specs the plugins contribute.
+  The default plugin set reproduces the full editor exactly (48 tests, incl. 8 new
+  plugin-system tests: ordering, contract enforcement, a custom `strike` plugin,
+  a trimmed set, default parity).
+- The chrome consumes the engine-assembled `toolbarItems`/`selectionItems`/
+  `menuItems`, so a custom plugin set drives the toolbars automatically.
+
+> Known limitations (deferred): Markdown *import* still doesn't parse tables back
+> into nodes (export is the raw-HTML fallback; HTML/JSON round-trip losslessly).
+> `setup`/`destroy` are called but there's no per-plugin state container yet. The
+> back-compat `schema` singleton / `createEditorState` still expose the full set
+> directly (used only by the provisional playground harness).
 
 ### Phase 6 — Hardening
 cem manifest (web-types/vscode), THEMING.md, examples, e2e — the web-multiselect

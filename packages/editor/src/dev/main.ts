@@ -45,6 +45,11 @@ if (km) {
     if ((e.target as HTMLInputElement).checked) km.setAttribute('readonly', '');
     else km.removeAttribute('readonly');
   });
+  document.querySelector('#km-toolbar')?.addEventListener('change', (e) => {
+    // Checked → default ('top'); unchecked → explicitly hidden.
+    if ((e.target as HTMLInputElement).checked) km.removeAttribute('toolbar');
+    else km.setAttribute('toolbar', 'none');
+  });
   document.querySelector('#km-theme')?.addEventListener('change', (e) => {
     if ((e.target as HTMLInputElement).checked) km.setAttribute('theme', 'dark');
     else km.removeAttribute('theme');

@@ -2,25 +2,48 @@
  * EditorEngine — the headless core.
  *
  * Owns the ProseMirror view/state, the document schema, the command registry,
- * and the event bus, and exposes the HTML/Markdown/JSON serialization API. It
- * has no UI-framework dependency; the `<km-editor>` Web Component (Phase 2) is a
- * thin shell over this class.
+ * and the event bus, and exposes the HTML/Markdown/JSON serialization API. In
+ * Phase 5 it ASSEMBLES itself from a plugin set (`editorPlugins`, defaulting to
+ * the first-party plugins): schema, commands, ProseMirror plugins, keymaps,
+ * Markdown I/O, and toolbar/menu items are all merged from the plugins in
+ * dependency order. It has no UI-framework dependency; the `<km-editor>` Web
+ * Component is a thin shell over this class.
  */
 import { EditorState, type Plugin, type Transaction } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { Node as PMNode, type Schema } from 'prosemirror-model';
+import { history } from 'prosemirror-history';
+import { keymap } from 'prosemirror-keymap';
+import { baseKeymap } from 'prosemirror-commands';
+import { splitListItem, liftListItem, sinkListItem } from 'prosemirror-schema-list';
 
-import { schema as defaultSchema } from '../schema';
-import { createEditorState, createDefaultDoc } from '../editor';
+import { buildSchema } from '../schema';
+import { createDefaultDoc } from '../editor';
 import { EventEmitter } from './event-emitter';
 import { CommandRegistry } from './command-registry';
-import { registerDefaultCommands } from './default-commands';
+import { registerCoreCommands } from './default-commands';
 import {
-  serialize,
-  parse,
+  type EditorPlugin,
+  orderPlugins,
+  mergeSchemaSpecs,
+  assembleItems,
+} from './plugin';
+import { defaultPlugins } from './default-plugins';
+import { buildMarkdownIO, type MarkdownIO } from './markdown-io';
+import {
+  coreToolbarItems,
+  coreHistoryItems,
+  coreSelectionItems,
+  coreMenuItems,
+  coreMenuHistoryItems,
+  type ToolbarItem,
+} from '../ui/items';
+import {
   docToHTML,
+  htmlToDoc,
   docToJSON,
   docToMarkdown,
+  markdownToDoc,
   type DocJSON,
   type SerializationFormat,
 } from './serialization';
@@ -33,9 +56,11 @@ export interface EditorEngineOptions {
   html?: string;
   markdown?: string;
   json?: DocJSON;
-  /** Extra ProseMirror plugins appended after the core stack. */
+  /** Extra raw ProseMirror plugins appended after the assembled stack. */
   plugins?: Plugin[];
-  /** Override the document schema (defaults to the built-in schema). */
+  /** Editor plugin set (schema/commands/serializers/…). Defaults to the first-party set. */
+  editorPlugins?: EditorPlugin[];
+  /** Override the document schema (defaults to one assembled from `editorPlugins`). */
   schema?: Schema;
   /** Start read-only (no editing). Defaults to editable. */
   editable?: boolean;
@@ -53,19 +78,66 @@ export class EditorEngine {
   readonly schema: Schema;
   readonly commands: CommandRegistry;
   readonly events = new EventEmitter<EngineEventMap>();
+  /** Assembled presenter item lists (core + plugin items), consumed by the chrome. */
+  readonly toolbarItems: ToolbarItem[];
+  readonly selectionItems: ToolbarItem[];
+  readonly menuItems: ToolbarItem[];
   view: EditorView;
+
   private editable: boolean;
+  #plugins: EditorPlugin[];
+  #markdown: MarkdownIO;
 
   constructor(options: EditorEngineOptions) {
-    this.schema = options.schema ?? defaultSchema;
-    this.editable = options.editable ?? true;
-    this.commands = new CommandRegistry(() => this.view);
-    registerDefaultCommands(this.commands, this.schema);
+    const plugins = orderPlugins(options.editorPlugins ?? defaultPlugins());
+    this.#plugins = plugins;
 
-    const doc = this.resolveInitialDoc(options);
-    const state = createEditorState({
+    const schema = options.schema ?? buildSchema(mergeSchemaSpecs(plugins));
+    this.schema = schema;
+    const ctx = { schema };
+
+    // Markdown I/O — enforces the serializer contract (throws if a node/mark has
+    // no Markdown serializer).
+    this.#markdown = buildMarkdownIO(schema, plugins);
+
+    // Commands: core + each plugin's.
+    this.commands = new CommandRegistry(() => this.view);
+    registerCoreCommands(this.commands, schema);
+    for (const plugin of plugins) {
+      const specs = plugin.commands?.(ctx);
+      if (specs) this.commands.registerMany(specs);
+    }
+
+    // Presenter item lists: core-leading + plugin items + core-trailing.
+    this.toolbarItems = assembleItems(plugins, 'toolbarItems', coreToolbarItems, coreHistoryItems);
+    this.selectionItems = assembleItems(plugins, 'selectionItems', coreSelectionItems);
+    this.menuItems = assembleItems(plugins, 'menuItems', coreMenuItems, coreMenuHistoryItems);
+
+    this.editable = options.editable ?? true;
+
+    const doc = this.resolveInitialDoc(options, schema);
+    const state = EditorState.create({
+      schema,
       doc,
-      plugins: [this.commands.keymap(), ...(options.plugins ?? [])],
+      plugins: [
+        history(),
+        this.commands.keymap(),
+        // Plugin ProseMirror plugins (table editing, decorations, …).
+        ...plugins.flatMap((p) => p.pmPlugins?.(ctx) ?? []),
+        // Plugin structural keymaps (e.g. table Tab) — before the core list keymap
+        // so an in-table Tab wins and a list Tab falls through.
+        ...plugins.flatMap((p) => {
+          const km = p.keymap?.(ctx);
+          return km ? [keymap(km)] : [];
+        }),
+        keymap({
+          Enter: splitListItem(schema.nodes.list_item),
+          Tab: sinkListItem(schema.nodes.list_item),
+          'Shift-Tab': liftListItem(schema.nodes.list_item),
+        }),
+        keymap(baseKeymap),
+        ...(options.plugins ?? []),
+      ],
     });
 
     this.view = new EditorView(options.mount, {
@@ -80,15 +152,19 @@ export class EditorEngine {
       },
     });
 
+    for (const plugin of plugins) {
+      plugin.setup?.({ schema, view: this.view, getState: () => this.view.state });
+    }
+
     this.events.emit('ready', this);
   }
 
-  private resolveInitialDoc(options: EditorEngineOptions): PMNode {
+  private resolveInitialDoc(options: EditorEngineOptions, schema: Schema): PMNode {
     if (options.doc) return options.doc;
-    if (options.html != null) return parse(options.html, this.schema, 'html');
-    if (options.markdown != null) return parse(options.markdown, this.schema, 'markdown');
-    if (options.json != null) return PMNode.fromJSON(this.schema, options.json);
-    return createDefaultDoc();
+    if (options.html != null) return htmlToDoc(options.html, schema);
+    if (options.markdown != null) return markdownToDoc(options.markdown, this.#markdown.parser);
+    if (options.json != null) return PMNode.fromJSON(schema, options.json);
+    return createDefaultDoc(schema);
   }
 
   get state(): EditorState {
@@ -100,28 +176,37 @@ export class EditorEngine {
     return docToHTML(this.state.doc, this.schema);
   }
   getMarkdown(): string {
-    return docToMarkdown(this.state.doc);
+    return docToMarkdown(this.state.doc, this.#markdown.serializer);
   }
   getJSON(): DocJSON {
     return docToJSON(this.state.doc);
   }
   /** Serialize to a string in any format (JSON pretty-printed). */
   serialize(format: SerializationFormat): string {
-    return serialize(this.state.doc, this.schema, format);
+    switch (format) {
+      case 'html':
+        return this.getHTML();
+      case 'markdown':
+        return this.getMarkdown();
+      case 'json':
+        return JSON.stringify(this.getJSON(), null, 2);
+    }
   }
 
   // ── Serialization (write) ─────────────────────────────────────────────
   setHTML(html: string): void {
-    this.replaceDoc(parse(html, this.schema, 'html'));
+    this.replaceDoc(htmlToDoc(html, this.schema));
   }
   setMarkdown(markdown: string): void {
-    this.replaceDoc(parse(markdown, this.schema, 'markdown'));
+    this.replaceDoc(markdownToDoc(markdown, this.#markdown.parser));
   }
   setJSON(json: DocJSON): void {
     this.replaceDoc(PMNode.fromJSON(this.schema, json));
   }
   setContent(value: string, format: SerializationFormat): void {
-    this.replaceDoc(parse(value, this.schema, format));
+    if (format === 'html') this.setHTML(value);
+    else if (format === 'markdown') this.setMarkdown(value);
+    else this.setJSON(JSON.parse(value) as DocJSON);
   }
 
   private replaceDoc(doc: PMNode): void {
@@ -147,12 +232,12 @@ export class EditorEngine {
   setEditable(editable: boolean): void {
     if (editable === this.editable) return;
     this.editable = editable;
-    // Force the view to re-read the `editable` prop (it's a function of this field).
     this.view.setProps({ editable: () => this.editable });
   }
 
   destroy(): void {
     this.events.emit('destroy', this);
+    for (const plugin of this.#plugins) plugin.destroy?.();
     this.view.destroy();
     this.events.clear();
   }

@@ -1,31 +1,22 @@
 /**
  * Document schema — the grammar of the editor.
  *
- * The node/mark specs are exposed as `baseNodes` / `baseMarks`, and `buildSchema`
- * assembles a schema from them plus any extras. This is the seam the plugin
- * system (Phase 5) grows into: plugins contribute node/mark specs that get
- * merged here. Specs are the behaviour-preserving port of the web-wysiwyg POC.
+ * The specs are grouped into the CORE set (`coreNodes` / `coreMarks` — always
+ * present) and the FEATURE specs (`imageNodeSpec`, `tableNodeSpecs`,
+ * `linkMarkSpec`) that the first-party plugins (Phase 5) contribute. `buildSchema`
+ * assembles a schema from the core set plus whatever a plugin set adds — the seam
+ * the engine grows its schema through.
+ *
+ * `baseNodes` / `baseMarks` / `schema` remain the FULL set (core + the default
+ * features) for back-compat and standalone use; the default plugin set reproduces
+ * exactly this schema.
  */
 import { Schema } from 'prosemirror-model';
 import type { NodeSpec, MarkSpec } from 'prosemirror-model';
 import { tableNodes } from 'prosemirror-tables';
 
-// Table node specs from prosemirror-tables.
-const tableNodeSpecs = tableNodes({
-  tableGroup: 'block',
-  cellContent: 'block+',
-  cellAttributes: {
-    background: {
-      default: null,
-      getFromDOM: (dom) => dom.style.backgroundColor || null,
-      setDOMAttr: (value, attrs) => {
-        if (value) attrs.style = (attrs.style || '') + `background-color: ${value};`;
-      },
-    },
-  },
-});
-
-export const baseNodes: Record<string, NodeSpec> = {
+// ── Core nodes ──────────────────────────────────────────────────────────────
+export const coreNodes: Record<string, NodeSpec> = {
   doc: {
     content: 'block+',
   },
@@ -110,43 +101,6 @@ export const baseNodes: Record<string, NodeSpec> = {
     },
   },
 
-  // Table nodes (from prosemirror-tables).
-  ...tableNodeSpecs,
-
-  image: {
-    inline: true,
-    attrs: {
-      src: {},
-      alt: { default: null },
-      title: { default: null },
-      width: { default: null },
-      height: { default: null },
-    },
-    group: 'inline',
-    draggable: true,
-    parseDOM: [
-      {
-        tag: 'img[src]',
-        getAttrs: (dom) => ({
-          src: dom.getAttribute('src'),
-          alt: dom.getAttribute('alt'),
-          title: dom.getAttribute('title'),
-          width: dom.getAttribute('width'),
-          height: dom.getAttribute('height'),
-        }),
-      },
-    ],
-    toDOM(node) {
-      const { src, alt, title, width, height } = node.attrs;
-      const attrs: Record<string, any> = { src };
-      if (alt) attrs.alt = alt;
-      if (title) attrs.title = title;
-      if (width) attrs.width = width;
-      if (height) attrs.height = height;
-      return ['img', attrs];
-    },
-  },
-
   hard_break: {
     inline: true,
     group: 'inline',
@@ -162,7 +116,58 @@ export const baseNodes: Record<string, NodeSpec> = {
   },
 };
 
-export const baseMarks: Record<string, MarkSpec> = {
+// ── Feature specs (contributed by the first-party plugins) ───────────────────
+export const imageNodeSpec: NodeSpec = {
+  inline: true,
+  attrs: {
+    src: {},
+    alt: { default: null },
+    title: { default: null },
+    width: { default: null },
+    height: { default: null },
+  },
+  group: 'inline',
+  draggable: true,
+  parseDOM: [
+    {
+      tag: 'img[src]',
+      getAttrs: (dom) => ({
+        src: dom.getAttribute('src'),
+        alt: dom.getAttribute('alt'),
+        title: dom.getAttribute('title'),
+        width: dom.getAttribute('width'),
+        height: dom.getAttribute('height'),
+      }),
+    },
+  ],
+  toDOM(node) {
+    const { src, alt, title, width, height } = node.attrs;
+    const attrs: Record<string, any> = { src };
+    if (alt) attrs.alt = alt;
+    if (title) attrs.title = title;
+    if (width) attrs.width = width;
+    if (height) attrs.height = height;
+    return ['img', attrs];
+  },
+};
+
+/** Table node specs from prosemirror-tables (`table` / `table_row` / `table_cell` / `table_header`). */
+export const tableNodeSpecs: Record<string, NodeSpec> = tableNodes({
+  tableGroup: 'block',
+  cellContent: 'block+',
+  cellAttributes: {
+    background: {
+      default: null,
+      getFromDOM: (dom) => dom.style.backgroundColor || null,
+      setDOMAttr: (value, attrs) => {
+        if (value) attrs.style = (attrs.style || '') + `background-color: ${value};`;
+      },
+    },
+  },
+});
+
+// ── Core marks ────────────────────────────────────────────────────────────
+export const coreMarks: Record<string, MarkSpec> = {
   bold: {
     parseDOM: [{ tag: 'strong' }, { tag: 'b' }, { style: 'font-weight=bold' }],
     toDOM() {
@@ -184,20 +189,6 @@ export const baseMarks: Record<string, MarkSpec> = {
     },
   },
 
-  link: {
-    attrs: { href: {}, title: { default: null } },
-    inclusive: false,
-    parseDOM: [
-      {
-        tag: 'a[href]',
-        getAttrs: (dom) => ({ href: dom.getAttribute('href'), title: dom.getAttribute('title') }),
-      },
-    ],
-    toDOM(node) {
-      return ['a', { href: node.attrs.href, title: node.attrs.title }, 0];
-    },
-  },
-
   code: {
     parseDOM: [{ tag: 'code' }],
     toDOM() {
@@ -206,16 +197,47 @@ export const baseMarks: Record<string, MarkSpec> = {
   },
 };
 
+export const linkMarkSpec: MarkSpec = {
+  attrs: { href: {}, title: { default: null } },
+  inclusive: false,
+  parseDOM: [
+    {
+      tag: 'a[href]',
+      getAttrs: (dom) => ({ href: dom.getAttribute('href'), title: dom.getAttribute('title') }),
+    },
+  ],
+  toDOM(node) {
+    return ['a', { href: node.attrs.href, title: node.attrs.title }, 0];
+  },
+};
+
+// ── Full (back-compat) base = core + default features ────────────────────────
+export const baseNodes: Record<string, NodeSpec> = {
+  ...coreNodes,
+  ...tableNodeSpecs,
+  image: imageNodeSpec,
+};
+
+export const baseMarks: Record<string, MarkSpec> = {
+  ...coreMarks,
+  link: linkMarkSpec,
+};
+
 export interface SchemaExtensions {
   nodes?: Record<string, NodeSpec>;
   marks?: Record<string, MarkSpec>;
 }
 
+/** Build a schema from the CORE set plus a plugin set's node/mark specs. */
 export function buildSchema(extra: SchemaExtensions = {}): Schema {
   return new Schema({
-    nodes: { ...baseNodes, ...(extra.nodes || {}) },
-    marks: { ...baseMarks, ...(extra.marks || {}) },
+    nodes: { ...coreNodes, ...(extra.nodes || {}) },
+    marks: { ...coreMarks, ...(extra.marks || {}) },
   });
 }
 
-export const schema = buildSchema();
+/** The full default schema (core + default features). */
+export const schema = buildSchema({
+  nodes: { ...tableNodeSpecs, image: imageNodeSpec },
+  marks: { link: linkMarkSpec },
+});

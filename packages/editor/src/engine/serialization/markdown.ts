@@ -1,148 +1,130 @@
 /**
  * Markdown serialization — import/export at the edges (single-model design).
  *
- * Export covers the full node set. Tables have no portable Markdown form in our
- * schema, so they are emitted as raw HTML (valid in GFM) — a deliberate,
- * documented fallback rather than a lossy conversion.
+ * This module is the LOW-LEVEL, plugin-agnostic layer: the CORE node/mark
+ * serializers + parse specs, and the `buildMarkdownSerializer` /
+ * `buildMarkdownParser` factories the engine uses to fold in each plugin's
+ * Markdown contribution (`engine/markdown-io.ts`). Feature Markdown (links,
+ * images, the table raw-HTML fallback) lives in those plugins, not here.
  *
- * Import uses markdown-it (CommonMark preset) for the core block/inline set.
- * Known Phase-1 limitation: Markdown *tables* and *blockquotes* are not parsed
- * back into nodes yet (the schema has no blockquote; table token→node mapping is
- * deferred to the plugin work in Phase 5). HTML/JSON remain fully lossless.
+ * Export covers the core block/inline set. Import uses markdown-it (CommonMark
+ * preset) — plugins re-enable the markdown-it rules they need.
  */
 import { DOMSerializer } from 'prosemirror-model';
 import type { Node as PMNode, Schema } from 'prosemirror-model';
 import { MarkdownSerializer, MarkdownParser } from 'prosemirror-markdown';
 import MarkdownIt from 'markdown-it';
 
-function nodeToHTML(node: PMNode, schema: Schema): string {
+/** Serialize a single node to HTML (used by the table Markdown fallback). */
+export function nodeToHTML(node: PMNode, schema: Schema): string {
   const dom = DOMSerializer.fromSchema(schema).serializeNode(node, { document });
   const container = document.createElement('div');
   container.appendChild(dom);
   return container.innerHTML;
 }
 
-export const markdownSerializer = new MarkdownSerializer(
-  {
-    text(state, node) {
-      state.text(node.text || '');
-    },
-    paragraph(state, node) {
-      state.renderInline(node);
-      state.closeBlock(node);
-    },
-    heading(state, node) {
-      state.write(state.repeat('#', node.attrs.level) + ' ');
-      state.renderInline(node);
-      state.closeBlock(node);
-    },
-    code_block(state, node) {
-      state.write('```' + (node.attrs.language || '') + '\n');
-      state.text(node.textContent, false);
-      state.ensureNewLine();
-      state.write('```');
-      state.closeBlock(node);
-    },
-    bullet_list(state, node) {
-      state.renderList(node, '  ', () => '- ');
-    },
-    ordered_list(state, node) {
-      const start = node.attrs.order || 1;
-      state.renderList(node, '   ', (i) => `${start + i}. `);
-    },
-    list_item(state, node) {
-      state.renderContent(node);
-    },
-    image(state, node) {
-      const title = node.attrs.title ? ` "${String(node.attrs.title).replace(/"/g, '\\"')}"` : '';
-      state.write(`![${state.esc(node.attrs.alt || '')}](${node.attrs.src}${title})`);
-    },
-    hard_break(state, node, parent, index) {
-      for (let i = index + 1; i < parent.childCount; i++) {
-        if (parent.child(i).type !== node.type) {
-          state.write('\\\n');
-          return;
-        }
-      }
-    },
-    // Tables → raw HTML fallback (see module docblock). Children are not
-    // recursed into, so the row/cell serializers below are never reached; they
-    // exist only to satisfy completeness.
-    table(state, node) {
-      state.write(nodeToHTML(node, node.type.schema));
-      state.closeBlock(node);
-    },
-    table_row() {},
-    table_cell() {},
-    table_header() {},
+type NodeSerializers = Record<string, (state: any, node: any, parent: any, index: number) => void>;
+type MarkSerializers = Record<string, any>;
+type ParseSpecs = Record<string, any>;
+
+/** Core node serializers (paragraph, heading, lists, code block, text, break). */
+export const coreMarkdownNodes: NodeSerializers = {
+  text(state, node) {
+    state.text(node.text || '');
   },
-  {
-    bold: { open: '**', close: '**', mixable: true, expelEnclosingWhitespace: true },
-    italic: { open: '*', close: '*', mixable: true, expelEnclosingWhitespace: true },
-    underline: { open: '<u>', close: '</u>', mixable: true },
-    code: { open: '`', close: '`', escape: false },
-    link: {
-      open: '[',
-      close(_state, mark) {
-        const href = mark.attrs.href || '';
-        const title = mark.attrs.title ? ` "${String(mark.attrs.title).replace(/"/g, '\\"')}"` : '';
-        return `](${href}${title})`;
-      },
-    },
-  }
-);
+  paragraph(state, node) {
+    state.renderInline(node);
+    state.closeBlock(node);
+  },
+  heading(state, node) {
+    state.write(state.repeat('#', node.attrs.level) + ' ');
+    state.renderInline(node);
+    state.closeBlock(node);
+  },
+  code_block(state, node) {
+    state.write('```' + (node.attrs.language || '') + '\n');
+    state.text(node.textContent, false);
+    state.ensureNewLine();
+    state.write('```');
+    state.closeBlock(node);
+  },
+  bullet_list(state, node) {
+    state.renderList(node, '  ', () => '- ');
+  },
+  ordered_list(state, node) {
+    const start = node.attrs.order || 1;
+    state.renderList(node, '   ', (i: number) => `${start + i}. `);
+  },
+  list_item(state, node) {
+    state.renderContent(node);
+  },
+  hard_break(state, node, parent, index) {
+    for (let i = index + 1; i < parent.childCount; i++) {
+      if (parent.child(i).type !== node.type) {
+        state.write('\\\n');
+        return;
+      }
+    }
+  },
+};
 
-const parsers = new WeakMap<Schema, MarkdownParser>();
+/** Core mark serializers (bold, italic, underline, inline code). */
+export const coreMarkdownMarks: MarkSerializers = {
+  bold: { open: '**', close: '**', mixable: true, expelEnclosingWhitespace: true },
+  italic: { open: '*', close: '*', mixable: true, expelEnclosingWhitespace: true },
+  underline: { open: '<u>', close: '</u>', mixable: true },
+  code: { open: '`', close: '`', escape: false },
+};
 
-function getParser(schema: Schema): MarkdownParser {
-  let parser = parsers.get(schema);
-  if (parser) return parser;
+/** Core token→node/mark parse specs. */
+export const coreMarkdownParse: ParseSpecs = {
+  paragraph: { block: 'paragraph' },
+  heading: { block: 'heading', getAttrs: (tok: any) => ({ level: +tok.tag.slice(1) }) },
+  bullet_list: { block: 'bullet_list' },
+  ordered_list: {
+    block: 'ordered_list',
+    getAttrs: (tok: any) => ({ order: +(tok.attrGet('start') || 1) }),
+  },
+  list_item: { block: 'list_item' },
+  fence: {
+    block: 'code_block',
+    getAttrs: (tok: any) => ({ language: tok.info ? tok.info.trim().split(/\s+/)[0] : 'javascript' }),
+  },
+  code_block: { block: 'code_block', getAttrs: () => ({ language: 'javascript' }) },
+  hardbreak: { node: 'hard_break' },
+  em: { mark: 'italic' },
+  strong: { mark: 'bold' },
+  code_inline: { mark: 'code' },
+};
 
+/** Build a MarkdownSerializer from merged node/mark maps. */
+export function buildMarkdownSerializer(
+  nodes: NodeSerializers,
+  marks: MarkSerializers
+): MarkdownSerializer {
+  return new MarkdownSerializer(nodes, marks);
+}
+
+/**
+ * Build a MarkdownParser for `schema` from merged parse specs. Starts from the
+ * CommonMark preset with `blockquote` / `hr` disabled (the core schema has no
+ * such nodes); `enableRules` re-enables markdown-it rules a plugin needs.
+ */
+export function buildMarkdownParser(
+  schema: Schema,
+  parseSpecs: ParseSpecs,
+  enableRules: readonly string[] = []
+): MarkdownParser {
   const md = MarkdownIt('commonmark', { html: false });
-  // Our schema has no blockquote / thematic-break nodes; drop those rules so the
-  // parser never emits tokens it cannot map.
   md.disable(['blockquote', 'hr']);
-
-  parser = new MarkdownParser(schema, md, {
-    paragraph: { block: 'paragraph' },
-    heading: { block: 'heading', getAttrs: (tok) => ({ level: +tok.tag.slice(1) }) },
-    bullet_list: { block: 'bullet_list' },
-    ordered_list: {
-      block: 'ordered_list',
-      getAttrs: (tok) => ({ order: +(tok.attrGet('start') || 1) }),
-    },
-    list_item: { block: 'list_item' },
-    fence: {
-      block: 'code_block',
-      getAttrs: (tok) => ({ language: tok.info ? tok.info.trim().split(/\s+/)[0] : 'javascript' }),
-    },
-    code_block: { block: 'code_block', getAttrs: () => ({ language: 'javascript' }) },
-    image: {
-      node: 'image',
-      getAttrs: (tok) => ({
-        src: tok.attrGet('src'),
-        title: tok.attrGet('title') || null,
-        alt: (tok.children?.[0] && tok.children[0].content) || null,
-      }),
-    },
-    hardbreak: { node: 'hard_break' },
-    em: { mark: 'italic' },
-    strong: { mark: 'bold' },
-    code_inline: { mark: 'code' },
-    link: {
-      mark: 'link',
-      getAttrs: (tok) => ({ href: tok.attrGet('href'), title: tok.attrGet('title') || null }),
-    },
-  });
-
-  parsers.set(schema, parser);
-  return parser;
+  if (enableRules.length) md.enable([...enableRules]);
+  return new MarkdownParser(schema, md, parseSpecs);
 }
 
-export function docToMarkdown(doc: PMNode): string {
-  return markdownSerializer.serialize(doc);
+export function docToMarkdown(doc: PMNode, serializer: MarkdownSerializer): string {
+  return serializer.serialize(doc);
 }
 
-export function markdownToDoc(markdown: string, schema: Schema): PMNode {
-  return getParser(schema).parse(markdown);
+export function markdownToDoc(markdown: string, parser: MarkdownParser): PMNode {
+  return parser.parse(markdown);
 }

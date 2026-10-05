@@ -18,9 +18,19 @@ export { KmEditorElement } from './web-component';
 export type {
   EditorMode,
   EditorFormat,
+  EditorToolbar,
   EditorChangeDetail,
   EditorModeChangeDetail,
 } from './web-component';
+
+// Command-driven toolbar / menu item model (Phase 4) — override the defaults to
+// customise the static toolbar, selection toolbar, or context menu.
+export {
+  defaultToolbarItems,
+  defaultSelectionItems,
+  defaultContextMenuItems,
+} from './ui/items';
+export type { ToolbarItem, CommandItem, SeparatorItem } from './ui/items';
 
 // Logging controls
 export {
@@ -43,7 +53,18 @@ export type {
 export { CommandRegistry } from './engine/command-registry';
 export type { CommandSpec } from './engine/command-registry';
 export { EventEmitter } from './engine/event-emitter';
-export { registerDefaultCommands } from './engine/default-commands';
+export { registerCoreCommands } from './engine/default-commands';
+
+// Plugin system (Phase 5)
+export { definePlugin, orderPlugins, assembleItems, mergeSchemaSpecs } from './engine/plugin';
+export type { EditorPlugin, PluginContext, SetupContext, MarkdownContribution } from './engine/plugin';
+export { defaultPlugins } from './engine/default-plugins';
+export { buildMarkdownIO, mergeMarkdown } from './engine/markdown-io';
+export type { MarkdownIO, MergedMarkdown } from './engine/markdown-io';
+export { linkPlugin } from './plugins/link';
+export { imagePlugin } from './plugins/image';
+export { tablePlugin } from './plugins/tables';
+export { codeHighlightPlugin } from './plugins/code-highlight';
 
 // Serialization layer
 export {
@@ -55,15 +76,27 @@ export {
   jsonToDoc,
   docToMarkdown,
   markdownToDoc,
-  markdownSerializer,
+  nodeToHTML,
+  buildMarkdownSerializer,
+  buildMarkdownParser,
   type SerializationFormat,
   type DocJSON,
 } from './engine/serialization';
 
 // Schema + building blocks
-export { schema, buildSchema, baseNodes, baseMarks } from './schema';
+export {
+  schema,
+  buildSchema,
+  baseNodes,
+  baseMarks,
+  coreNodes,
+  coreMarks,
+  linkMarkSpec,
+  imageNodeSpec,
+  tableNodeSpecs,
+} from './schema';
 export type { SchemaExtensions } from './schema';
-export { commands } from './commands';
+export { insertCodeBlock, promptForCodeBlock, changeCodeBlockLanguage } from './commands';
 export {
   createEditorState,
   createDefaultDoc,

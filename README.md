@@ -5,10 +5,12 @@ A framework-agnostic WYSIWYG / Markdown editor, built on
 shared `@keenmate/web-components-core` runtime — the same model as the rest of
 the KeenMate component line.
 
-> **Status: Phase 3.** The headless engine + HTML/Markdown/JSON serialization
-> (Phase 1), the `<km-editor>` Web Component (Phase 2), and the four view modes
-> — `edit` / `split` / `preview` / `inline` (Phase 3) — are in place. Toolbars,
-> context menus, and the plugin system are next. See [`PLAN.md`](./PLAN.md).
+> **Status: Phase 5.** The headless engine + HTML/Markdown/JSON serialization
+> (Phase 1), the `<km-editor>` Web Component (Phase 2), the four view modes —
+> `edit` / `split` / `preview` / `inline` (Phase 3), the command-driven toolbars +
+> context menu (Phase 4), and the plugin system (Phase 5) are in place. Only
+> hardening (cem manifest / theming docs / examples / e2e) remains. See
+> [`PLAN.md`](./PLAN.md).
 
 ## Usage
 
@@ -30,8 +32,39 @@ editor.setAttribute('readonly', '');   // or mode="preview"
 ```
 
 Inputs: `value`, `format` (`markdown`|`html`|`json`), `mode`
-(`edit`|`split`|`preview`|`inline`), `readonly`, `theme`, `anchor` (CSS selector
-the `inline` card tracks). Events: `change`, `ready`, `mode-change`.
+(`edit`|`split`|`preview`|`inline`), `readonly`, `toolbar` (`top`|`none`),
+`theme`, `anchor` (CSS selector the `inline` card tracks). Events: `change`,
+`ready`, `mode-change`.
+
+A command-driven **static toolbar** (above the editor), a **selection toolbar**
+(floats over a text selection), and a **context menu** (right-click) all reflect
+each command's active / enabled state. The toolbar item lists are assembled from
+the active plugin set (core items + each plugin's items).
+
+## Plugins
+
+The editor assembles itself from a **plugin set**. Links, images, tables, and code
+highlighting are first-party plugins; the engine uses them by default. A plugin
+contributes schema nodes/marks, commands, keybindings, ProseMirror plugins,
+toolbar/menu items — and, for every node/mark it adds, a **Markdown serializer**
+(HTML + JSON come from the schema). That serializer contract is enforced at engine
+assembly: a node/mark with no Markdown form throws immediately, rather than
+silently dropping on export.
+
+```js
+import { definePlugin, defaultPlugins, EditorEngine } from '@keenmate/web-editor';
+import { toggleMark } from 'prosemirror-commands';
+
+const strike = definePlugin({
+  name: 'strike',
+  marks: { strike: { parseDOM: [{ tag: 's' }], toDOM: () => ['s', 0] } },
+  markdown: { marks: { strike: { open: '~~', close: '~~' } } },
+  commands: ({ schema }) => [{ id: 'strike', run: toggleMark(schema.marks.strike) }],
+  toolbarItems: [{ type: 'command', command: 'strike', label: 'Strike', icon: 'S' }],
+});
+
+const engine = new EditorEngine({ mount, editorPlugins: [...defaultPlugins(), strike] });
+```
 
 ## Monorepo layout
 

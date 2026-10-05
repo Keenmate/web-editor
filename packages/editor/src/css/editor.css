@@ -128,6 +128,152 @@
   box-shadow: none;
 }
 
+/* ── Phase 4: command toolbar / selection toolbar / context menu ── */
+
+/* Toolbar slot (empty → zero height). In split it spans both columns. */
+.km-toolbar {
+  display: block;
+}
+
+.km-root.km-split .km-toolbar {
+  grid-column: 1 / -1;
+}
+
+/* Shared command button bar (static + selection toolbars). */
+.km-command-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding: 6px;
+  margin-bottom: 8px;
+  background: var(--km-muted-bg);
+  border: 1px solid var(--km-border);
+  border-radius: var(--km-radius);
+}
+
+.km-command-bar[hidden] {
+  display: none;
+}
+
+.km-command-bar .km-cmd {
+  padding: 5px 9px;
+  min-width: 30px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  border-radius: 4px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.km-command-bar .km-cmd:hover:not(:disabled) {
+  background: rgba(128, 128, 128, 0.18);
+}
+
+.km-command-bar .km-cmd.active {
+  background: var(--km-accent);
+  border-color: var(--km-accent);
+  color: #fff;
+}
+
+.km-command-bar .km-cmd:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.km-command-bar .km-sep {
+  align-self: stretch;
+  width: 1px;
+  margin: 2px 4px;
+  background: var(--km-border);
+}
+
+/* Floating panels (portaled into the shadow overlay layer). */
+.km-overlays {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.km-floating {
+  z-index: 1100;
+  border-radius: var(--km-radius);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.22);
+}
+
+/* Selection toolbar — a dark pill over the selection. */
+.km-selection-toolbar .km-command-bar {
+  margin-bottom: 0;
+  padding: 4px 6px;
+  background: #1e1e1e;
+  border-color: #000;
+  color: #eee;
+}
+
+.km-selection-toolbar .km-cmd {
+  color: #ddd;
+}
+
+.km-selection-toolbar .km-cmd:hover:not(:disabled) {
+  background: #3a3a3a;
+  color: #fff;
+}
+
+.km-selection-toolbar .km-cmd.active {
+  background: var(--km-accent);
+  color: #fff;
+}
+
+.km-selection-toolbar .km-sep {
+  background: #444;
+}
+
+/* Context menu — a labelled vertical menu. */
+.km-context-menu .km-menu {
+  display: flex;
+  flex-direction: column;
+  min-width: 190px;
+  padding: 4px;
+  background: var(--km-bg);
+  border: 1px solid var(--km-border);
+  border-radius: var(--km-radius);
+}
+
+.km-menu-item {
+  padding: 6px 10px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  border-radius: 4px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+}
+
+.km-menu-item:hover:not(:disabled) {
+  background: var(--km-accent);
+  color: #fff;
+}
+
+.km-menu-item.active {
+  font-weight: 600;
+}
+
+.km-menu-item:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.km-menu-sep {
+  height: 1px;
+  margin: 4px 2px;
+  background: var(--km-border);
+}
+
 /* ── dark theme (opt-in via theme="dark") ── */
 :host([theme='dark']) {
   --km-border: #3d3d3d;
