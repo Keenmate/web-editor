@@ -28,6 +28,8 @@ import {
   type InputDef,
 } from '@keenmate/web-components-core';
 import { EditorEngine, type EditorEngineOptions } from './engine/editor-engine';
+import { defaultPlugins } from './engine/default-plugins';
+import type { EditorPlugin } from './engine/plugin';
 import type { SerializationFormat } from './engine/serialization';
 import { ViewLayout } from './ui/view-layout';
 import { EditorChrome } from './ui/chrome';
@@ -168,6 +170,9 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
   #engine?: EditorEngine;
   #chrome?: EditorChrome;
   #unsubscribe?: () => void;
+  // Custom editor plugin set. `undefined` → the engine's defaultPlugins(). Not an
+  // attribute input (plugins are objects); set via the `plugins` property.
+  #customPlugins?: EditorPlugin[];
   // The content source string, in `format`. Seeded from `value`, refreshed from
   // the live engine before a teardown so a reconnect rebuild keeps the edits.
   #content: string | null = null;
@@ -254,6 +259,7 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
     const options: EditorEngineOptions = {
       mount: this.#layout.mount,
       editable: this.#resolveEditable(),
+      editorPlugins: this.#customPlugins, // undefined → engine uses defaultPlugins()
     };
     this.#applyContentOption(options, format, this.#content);
 
@@ -374,6 +380,29 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
     if (this.#engine) {
       if (fmt === 'json') this.#engine.setJSON(JSON.parse(value));
       else this.#engine.setContent(value, fmt);
+    }
+  }
+
+  /**
+   * The editor plugin set. Assign to customise — compose with `defaultPlugins()`
+   * to keep the built-ins, and order the array to control conflict precedence
+   * (later plugins override earlier by id). Reassigning rebuilds the engine on the
+   * new set, preserving the live content. Reading returns the active set.
+   *
+   * ```js
+   * import { defaultPlugins } from '@keenmate/web-editor';
+   * el.plugins = [...defaultPlugins(), myPlugin];
+   * ```
+   */
+  get plugins(): EditorPlugin[] {
+    return this.#customPlugins ? [...this.#customPlugins] : defaultPlugins();
+  }
+  set plugins(value: EditorPlugin[] | null | undefined) {
+    this.#customPlugins = value ?? undefined;
+    if (this.#engine) {
+      // Snapshot live content, then rebuild on the new plugin set.
+      this.#content = this.#engine.serialize(this.#format());
+      this.#rebuildEngine();
     }
   }
 

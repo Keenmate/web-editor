@@ -70,11 +70,25 @@ const strike = definePlugin({
   marks: { strike: { parseDOM: [{ tag: 's' }], toDOM: () => ['s', 0] } },
   markdown: { marks: { strike: { open: '~~', close: '~~' } } },
   commands: ({ schema }) => [{ id: 'strike', run: toggleMark(schema.marks.strike) }],
-  toolbarItems: [{ type: 'command', command: 'strike', label: 'Strike', icon: 'S' }],
+  toolbarGroups: [
+    { id: 'strike', items: [{ type: 'command', command: 'strike', label: 'Strike', icon: 'S' }] },
+  ],
 });
 
 const engine = new EditorEngine({ mount, editorPlugins: [...defaultPlugins(), strike] });
+
+// On the element, set the `plugins` property (compose with the built-ins):
+document.querySelector('km-editor').plugins = [...defaultPlugins(), strike];
 ```
+
+**Order & overriding.** The set is assembled core → plugins → core-trailing, with
+plugins resolved in array order (refined by each plugin's `dependencies`, a stable
+topological sort). Toolbar **groups** and **status items** are keyed by `id`: a
+plugin entry with a matching id **replaces** the existing one in place (later
+plugins win), a new id slots in, and `removeToolbarGroups` / `removeStatusItems`
+drop one (including a core `words`/`chars`). So a plugin can redefine — not just
+append to — the toolbar or status bar, and conflict precedence is whatever order
+you put the plugins in.
 
 ## Monorepo layout
 
@@ -98,6 +112,10 @@ npm run dev        -w @keenmate/web-editor
 npm run build      -w @keenmate/web-editor
 npm run test:unit  -w @keenmate/web-editor
 ```
+
+## Changelog
+
+See [`CHANGELOG.md`](./CHANGELOG.md).
 
 ## License
 

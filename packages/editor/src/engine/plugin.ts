@@ -66,13 +66,26 @@ export interface EditorPlugin {
   /** Raw ProseMirror plugins (decorations, input rules, node views, …). */
   pmPlugins?: (ctx: PluginContext) => PMPlugin[];
 
-  /** Tool groups appended to the static (zone) toolbar — each a draggable unit. */
+  /**
+   * Tool groups added to the static (zone) toolbar — each a draggable unit. A
+   * group whose `id` matches an existing one (core or an earlier plugin) REPLACES
+   * it in place (last plugin wins); a new id slots in after the core leading
+   * groups. Use {@link removeToolbarGroups} to drop one.
+   */
   toolbarGroups?: readonly ToolGroup[];
+  /** Ids of toolbar groups to remove from the assembled toolbar (incl. core). */
+  removeToolbarGroups?: readonly string[];
   /** Flat items appended to the selection toolbar / context menu (not grouped). */
   selectionItems?: readonly ToolbarItem[];
   menuItems?: readonly ToolbarItem[];
-  /** Live indicators appended to the dedicated status bar. */
+  /**
+   * Live indicators added to the status bar. Same id semantics as
+   * {@link toolbarGroups}: a matching `id` replaces in place (last wins), a new id
+   * is appended. Use {@link removeStatusItems} to drop one (e.g. a core `words`).
+   */
   statusItems?: readonly StatusItem[];
+  /** Ids of status items to remove from the assembled status bar (incl. core). */
+  removeStatusItems?: readonly string[];
 
   /** Run once after the view is created. */
   setup?: (ctx: SetupContext) => void;
@@ -143,19 +156,69 @@ export function assembleItems(
   return [...leading, ...plugins.flatMap((p) => [...(p[key] ?? [])]), ...trailing];
 }
 
-/** Assemble the zone toolbar's groups: `leading` core groups + plugin groups + `trailing`. */
+/** Collapse duplicate ids among a plugin contribution: last value wins, first slot kept. */
+function dedupeLastWins<T extends { id: string }>(items: readonly T[]): T[] {
+  const out: T[] = [];
+  const at = new Map<string, number>();
+  for (const item of items) {
+    const i = at.get(item.id);
+    if (i === undefined) {
+      at.set(item.id, out.length);
+      out.push(item);
+    } else {
+      out[i] = item;
+    }
+  }
+  return out;
+}
+
+/**
+ * Layer plugin contributions over the core `leading`/`trailing`:
+ * - a plugin entry whose id matches a core one REPLACES it in place,
+ * - a brand-new id is inserted between leading and trailing,
+ * - later plugins win over earlier ones (by id),
+ * - ids in `removed` are dropped last.
+ */
+function layerById<T extends { id: string }>(
+  leading: readonly T[],
+  middle: readonly T[],
+  trailing: readonly T[],
+  removed: ReadonlySet<string>
+): T[] {
+  const mid = dedupeLastWins(middle);
+  const byId = new Map(mid.map((x) => [x.id, x]));
+  const used = new Set<string>();
+  const take = (x: T): T => {
+    const override = byId.get(x.id);
+    if (override) {
+      used.add(x.id);
+      return override;
+    }
+    return x;
+  };
+  const lead = leading.map(take);
+  const trail = trailing.map(take);
+  const fresh = mid.filter((x) => !used.has(x.id));
+  return [...lead, ...fresh, ...trail].filter((x) => !removed.has(x.id));
+}
+
+/** Assemble the zone toolbar's groups: core `leading`/`trailing` layered with plugin groups. */
 export function assembleGroups(
   plugins: readonly EditorPlugin[],
   leading: readonly ToolGroup[] = [],
   trailing: readonly ToolGroup[] = []
 ): ToolGroup[] {
-  return [...leading, ...plugins.flatMap((p) => [...(p.toolbarGroups ?? [])]), ...trailing];
+  const middle = plugins.flatMap((p) => [...(p.toolbarGroups ?? [])]);
+  const removed = new Set(plugins.flatMap((p) => [...(p.removeToolbarGroups ?? [])]));
+  return layerById(leading, middle, trailing, removed);
 }
 
-/** Assemble the status bar's items: `leading` core items + each plugin's. */
+/** Assemble the status bar's items: core `leading` layered with each plugin's. */
 export function assembleStatusItems(
   plugins: readonly EditorPlugin[],
   leading: readonly StatusItem[] = []
 ): StatusItem[] {
-  return [...leading, ...plugins.flatMap((p) => [...(p.statusItems ?? [])])];
+  const middle = plugins.flatMap((p) => [...(p.statusItems ?? [])]);
+  const removed = new Set(plugins.flatMap((p) => [...(p.removeStatusItems ?? [])]));
+  return layerById(leading, middle, [], removed);
 }

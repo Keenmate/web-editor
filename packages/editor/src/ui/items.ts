@@ -153,10 +153,14 @@ function wordCount(state: EditorState): number {
   return text ? text.split(/\s+/).length : 0;
 }
 
-/** Core status items — a word count and a character count (docked end). */
+/**
+ * Core status items — a word count and a character count (docked end). They're
+ * placed on different edges (`bar`), so `statusbar="both"` shows a populated strip
+ * on each; single-edge status bars (`top`/`bottom`) show every item regardless.
+ */
 export const coreStatusItems: readonly StatusItem[] = [
-  { id: 'words', align: 'end', render: (s) => `Words: ${wordCount(s)}` },
-  { id: 'chars', align: 'end', render: (s) => `Chars: ${s.doc.textContent.length}` },
+  { id: 'words', align: 'end', bar: 'bottom', render: (s) => `Words: ${wordCount(s)}` },
+  { id: 'chars', align: 'end', bar: 'top', render: (s) => `Chars: ${s.doc.textContent.length}` },
 ];
 
 /** The default static toolbar — the full editing command set. */

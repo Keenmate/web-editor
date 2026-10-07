@@ -102,6 +102,34 @@ describe('trimmed plugin set', () => {
   });
 });
 
+describe('status item override / remove (by id)', () => {
+  it('a matching id replaces a core item in place', () => {
+    const p = definePlugin({ name: 'ovr', statusItems: [{ id: 'words', render: () => 'W!' }] });
+    const engine = new EditorEngine({ mount: mount(), editorPlugins: [p] });
+    const words = engine.statusItems.filter((i) => i.id === 'words');
+    expect(words.length).toBe(1); // not duplicated
+    expect(words[0].render(engine.view.state)).toBe('W!'); // plugin's render wins
+    const ids = engine.statusItems.map((i) => i.id);
+    expect(ids.indexOf('words')).toBeLessThan(ids.indexOf('chars')); // original slot kept
+  });
+
+  it('removeStatusItems drops a core item', () => {
+    const p = definePlugin({ name: 'rm', removeStatusItems: ['chars'] });
+    const engine = new EditorEngine({ mount: mount(), editorPlugins: [p] });
+    expect(engine.statusItems.some((i) => i.id === 'chars')).toBe(false);
+    expect(engine.statusItems.some((i) => i.id === 'words')).toBe(true);
+  });
+
+  it('later plugin wins on an id conflict', () => {
+    const a = definePlugin({ name: 'a', statusItems: [{ id: 'x', render: () => 'A' }] });
+    const b = definePlugin({ name: 'b', statusItems: [{ id: 'x', render: () => 'B' }] });
+    const engine = new EditorEngine({ mount: mount(), editorPlugins: [a, b] });
+    const x = engine.statusItems.filter((i) => i.id === 'x');
+    expect(x.length).toBe(1);
+    expect(x[0].render(engine.view.state)).toBe('B');
+  });
+});
+
 describe('default plugins', () => {
   it('reproduce the full editor (link/image/table + round-trip)', () => {
     const engine = new EditorEngine({

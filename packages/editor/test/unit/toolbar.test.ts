@@ -8,6 +8,8 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { TextSelection } from 'prosemirror-state';
 import type { KmEditorElement } from '../../src/web-component';
 import { EditorEngine } from '../../src/engine/editor-engine';
+import { definePlugin } from '../../src/engine/plugin';
+import { defaultPlugins } from '../../src/engine/default-plugins';
 import { CommandBar } from '../../src/ui/command-bar';
 import { SelectionToolbar } from '../../src/ui/selection-toolbar';
 import { ContextMenu } from '../../src/ui/context-menu';
@@ -104,17 +106,35 @@ describe('<km-editor> status bar', () => {
     expect(el.shadowRoot!.querySelector('.km-body .km-toolbar')).toBeNull();
   });
 
-  it('supports a status bar on both edges', async () => {
+  it('supports a status bar on both edges (Chars top, Words bottom)', async () => {
     const el = await mount({ value: 'hi there', statusbar: 'both' });
     const body = el.shadowRoot!.querySelector('.km-body')!;
     const slots = Array.from(body.children).filter((c) => c.classList.contains('km-status'));
     expect(slots.length).toBe(2); // top + bottom slots both present
-    // Core items default to the bottom strip; the empty top strip is hidden.
-    const visible = Array.from(el.shadowRoot!.querySelectorAll<HTMLElement>('.km-statusbar')).filter(
-      (b) => !b.hidden
-    );
-    expect(visible.length).toBe(1);
-    expect(visible[0].querySelector('[data-status="words"]')?.textContent).toBe('Words: 2');
+    const [top, bottom] = slots.map((s) => s.querySelector('.km-statusbar') as HTMLElement);
+    expect(top.hidden).toBe(false);
+    expect(bottom.hidden).toBe(false);
+    // Top strip shows Chars; Words is hidden there. Bottom strip shows Words.
+    const topChars = top.querySelector('[data-status="chars"]') as HTMLElement;
+    expect(topChars.hidden).toBe(false);
+    expect(topChars.textContent).toBe(`Chars: ${'hi there'.length}`);
+    expect((top.querySelector('[data-status="words"]') as HTMLElement).hidden).toBe(true);
+    const bottomWords = bottom.querySelector('[data-status="words"]') as HTMLElement;
+    expect(bottomWords.hidden).toBe(false);
+    expect(bottomWords.textContent).toBe('Words: 2');
+  });
+
+  it('accepts custom plugins via the `plugins` property', async () => {
+    const el = await mount({ value: 'x', statusbar: 'bottom' });
+    const p = definePlugin({
+      name: 'custom-status',
+      statusItems: [{ id: 'custom', align: 'start', render: () => 'CUSTOM' }],
+    });
+    el.plugins = [...defaultPlugins(), p];
+    await el.whenSettled();
+    expect(el.engine!.statusItems.some((i) => i.id === 'custom')).toBe(true);
+    const node = el.shadowRoot!.querySelector('.km-status-item[data-status="custom"]');
+    expect(node?.textContent).toBe('CUSTOM');
   });
 
   it('hides the toolbar in preview (read-only) mode', async () => {
