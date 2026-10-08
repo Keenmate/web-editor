@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KeenMate Web Editor — Pipeline Visualizer</title>
+    <link rel="stylesheet" href="/src/css/editor.css" />
+    <style>
+      body { margin: 0; font: 14px/1.5 system-ui, sans-serif; background: #141414; color: #e6e6e6; }
+      .pv-page { display: grid; grid-template-columns: 1fr 460px; gap: 20px; padding: 20px; min-height: 100vh; box-sizing: border-box; }
+      .pv-col h1 { font-size: 18px; margin: 0 0 4px; }
+      .pv-col .sub { color: #999; font-size: 12px; margin: 0 0 16px; }
+      km-editor { display: block; transition: opacity .15s; }
+
+      /* Gating async run — editor truly locked (setEditable(false)) + dimmed. */
+      .pv-lock-badge { display: none; font-size: 12px; font-weight: 400; color: #fbbf24; margin-left: 8px; }
+      #pv-editor-col.pv-locked km-editor { opacity: .5; pointer-events: none; }
+      #pv-editor-col.pv-locked .pv-lock-badge { display: inline; }
+
+      .pv-controls { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-bottom: 14px; font-size: 13px; color: #bbb; }
+      #pv-delay { width: 120px; vertical-align: middle; }
+      #pv-simulate { padding: 6px 12px; border-radius: 7px; border: 1px solid #3a3a3a; background: #262626; color: #e6e6e6; cursor: pointer; font-size: 12px; }
+      #pv-simulate:hover { background: #303030; border-color: #4a4a4a; }
+      .pv-hint { color: #888; font-size: 12px; margin: 0 0 16px; }
+      .pv-hint code { background: #262626; padding: 1px 5px; border-radius: 4px; color: #ddd; }
+
+      .pv-lane { background: #1c1c1c; border: 1px solid #2d2d2d; border-radius: 12px; padding: 14px; margin-bottom: 16px; }
+      .pv-lane-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+      .pv-lane-name { font-weight: 700; font-size: 14px; }
+      .pv-badge { font: 11px ui-monospace, monospace; color: #9aa; background: #232323; border: 1px solid #333; border-radius: 6px; padding: 2px 7px; }
+      .pv-lane-status { margin-left: auto; font: 12px ui-monospace, monospace; color: #888; }
+      .pv-lane-status[data-phase="ready"] { color: #4ade80; }
+      .pv-lane-status[data-phase="pending"] { color: #fbbf24; }
+      .pv-lane-status[data-phase="halted"] { color: #f59e0b; }
+      .pv-lane-status[data-phase="error"] { color: #f87171; }
+
+      .pv-stages { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+      .pv-arrow { color: #555; }
+      .pv-stage {
+        padding: 6px 11px; border-radius: 9px; border: 1px solid #333; background: #242424;
+        color: #9a9a9a; font: 12px ui-monospace, monospace; min-width: 64px; text-align: center;
+        transition: background .2s, color .2s, border-color .2s;
+      }
+      .pv-stage.pv-running { background: #16a34a; color: #fff; border-color: #22c55e; animation: pv-pulse 1s ease-in-out infinite; }
+      .pv-stage.pv-done { animation: pv-fade 1.8s ease-out forwards; }
+      .pv-stage.pv-skipped { border-style: dashed; color: #6b7280; }
+      .pv-stage.pv-halted { background: #b45309; color: #fff; border-color: #f59e0b; }
+      .pv-stage.pv-error { background: #b91c1c; color: #fff; border-color: #ef4444; animation: pv-shake .3s; }
+      .pv-stage.pv-aborted { background: #242424; color: #666; text-decoration: line-through; }
+
+      .pv-extra { margin: 12px 0 0; background: #121212; border: 1px solid #2a2a2a; border-radius: 8px;
+        padding: 10px; font: 11px/1.45 ui-monospace, monospace; color: #cbd5e1; white-space: pre-wrap; word-break: break-word; }
+
+      @keyframes pv-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+      @keyframes pv-fade { 0% { background: #16a34a; color: #fff; border-color: #22c55e; } 100% { background: #242424; color: #888; border-color: #333; } }
+      @keyframes pv-shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+
+      .pv-modal { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: grid; place-items: center; z-index: 9999; }
+      .pv-modal-card { background: #fff; color: #111; min-width: 300px; max-width: 420px; padding: 18px; border-radius: 12px; box-shadow: 0 12px 48px rgba(0,0,0,.4); }
+      .pv-modal-title { font-weight: 700; margin-bottom: 6px; }
+      .pv-modal-msg { color: #555; margin-bottom: 12px; }
+      .pv-modal-card select { width: 100%; padding: 7px; margin-bottom: 14px; }
+      .pv-modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+      .pv-modal-actions button { padding: 6px 12px; border-radius: 6px; border: 1px solid #ccc; cursor: pointer; }
+      .pv-modal-actions .primary { font-weight: 600; background: #16a34a; color: #fff; border-color: #16a34a; }
+    </style>
+  </head>
+  <body>
+    <div class="pv-page">
+      <div class="pv-col" id="pv-editor-col">
+        <h1>Editor <span class="pv-lock-badge">⏳ locked — pipeline running</span></h1>
+        <p class="sub">Type here — the derive pipelines run off the <code>change</code> event (debounced). A gating async paste locks the editor until it finishes.</p>
+        <km-editor id="km" mode="edit" format="markdown" toolbar="top"
+          value="# Pipeline visualizer
+
+Type to trigger the pipelines on the right.
+
+Watch each step blink green, then fade to gray.
+
+Try typing the word secret to halt the policy step, or forbidden to error it."></km-editor>
+      </div>
+
+      <div class="pv-col">
+        <h1>Pipelines</h1>
+        <p class="sub">One lane per pipeline. Stages: <b>green</b>=running → fades gray=ok, <b>amber</b>=halt, <b>red</b>=error, dashed=skip, struck=aborted.</p>
+        <div class="pv-controls">
+          <label>stage delay: <span id="pv-delay-label">900</span>ms
+            <input type="range" id="pv-delay" min="0" max="3000" step="100" value="900" />
+          </label>
+          <label>paste mode:
+            <select id="pv-paste-mode">
+              <option value="sync" selected>sync (clean inline)</option>
+              <option value="async">async (cancel + modal + insert)</option>
+            </select>
+          </label>
+          <label><input type="checkbox" id="pv-classify" /> enable <code>classify</code> dialog (modal)</label>
+          <button id="pv-simulate">Simulate paste (sync)</button>
+          <button id="pv-simulate-async">Simulate paste (async)</button>
+        </div>
+        <p class="pv-hint">
+          • <b>Sync paste</b> (<code>transformPastedHTML</code>): cleans and inserts immediately — can't await. Try <b>Simulate paste (sync)</b>, or real Ctrl+V with paste mode = sync.<br />
+          • <b>Async paste</b> (<code>handlePaste</code>): cancels the native paste, awaits <code>fetch-meta</code> (watch the delay slider), pauses on the <b>confirm-import</b> modal, then inserts via a transaction. Try <b>Simulate paste (async)</b>, or set paste mode = async then Ctrl+V. Cancel the modal → nothing is inserted.<br />
+          • Type <code>secret</code> → <b>policy</b> halts (amber); <code>forbidden</code> → errors (red).<br />
+          • Enable classify, then type → modal pauses the <b>idle</b> lane.<br />
+          • Type fast during a run → in-flight stage is struck through (aborted / superseded).<br />
+          • Sync-paste something containing <code>&lt;script&gt;</code> → <b>guard-scripts</b> halts (blocked).
+        </p>
+        <div id="pv-lanes"></div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/dev/pipeline-viz.ts"></script>
+  </body>
+</html>
