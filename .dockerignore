@@ -1,0 +1,25 @@
+# Keep the build context small and force a clean, in-container build.
+node_modules
+**/node_modules
+dist
+**/dist
+dist-examples
+**/dist-examples
+*.tgz
+
+# Test / tooling output
+coverage
+**/coverage
+test-results
+playwright-report
+
+# VCS & editor
+.git
+.gitignore
+.claude
+.vscode
+.idea
+
+# Docker itself
+Dockerfile
+.dockerignore

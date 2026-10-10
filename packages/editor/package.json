@@ -30,6 +30,7 @@
   "scripts": {
     "dev": "vite --port 21113",
     "build": "npm run clean && vite build",
+    "build:examples": "rimraf dist-examples && vite build -c vite.examples.config.ts",
     "build:types": "tsc",
     "preview": "vite preview",
     "clean": "rimraf dist",
