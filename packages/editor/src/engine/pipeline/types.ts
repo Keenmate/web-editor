@@ -25,8 +25,25 @@ export type StageOutcome =
   | { action: 'halt'; reason?: string }
   | { action: 'skip' };
 
+/**
+ * Write port into the live editor — the bridge a stage uses to actually change
+ * the document (the `insert` stage of a cloud-image pipeline, the command a
+ * wrapped command-pipeline runs). Present when a pipeline is run by the engine;
+ * absent in pure unit runs (a stage that writes must tolerate their absence).
+ *
+ * PM types are kept loose (`any`) to avoid leaking ProseMirror across this seam.
+ */
+export interface StageServices {
+  /** The live `EditorView` (read `view.state`, `view.state.schema`, …). */
+  view?: any;
+  /** Dispatch a ProseMirror transaction against the live view. */
+  dispatch?: (tr: any) => void;
+  /** Run a ProseMirror `Command` against the live view; returns whether it applied. */
+  runCommand?: (command: (state: any, dispatch?: any, view?: any) => boolean) => boolean;
+}
+
 /** Per-run services handed to a stage. */
-export interface StageRuntime {
+export interface StageRuntime extends StageServices {
   /** Aborted when a newer run supersedes this one — cancel in-flight work. */
   signal: AbortSignal;
   /** Host-injected modal port (headless engine; the host renders the UI). */
@@ -41,6 +58,26 @@ export interface PipelineStage {
   /** Opens a modal — allowed only in suspendable (deferred) pipelines. */
   interactive?: boolean;
 }
+
+/**
+ * How a plugin contributes a stage into an existing pipeline (keyed by pipeline
+ * name in `EditorPlugin.stages`). This is the universal extension bus: a late
+ * plugin splices a stage into another's pipeline by anchor, without either
+ * importing the other.
+ *
+ * - `{ stage, before }` / `{ stage, after }` — insert relative to an existing id.
+ * - `{ stage }` — replace-in-place if its id already exists, else append.
+ * - `{ remove }` — drop a stage by id.
+ *
+ * A `before`/`after`/`remove` naming a missing stage throws at assembly (a silent
+ * no-op would hide a broken hook — same load-bearing strictness as the Markdown
+ * serializer contract).
+ */
+export type StageContribution =
+  | { stage: PipelineStage; before: string }
+  | { stage: PipelineStage; after: string }
+  | { stage: PipelineStage }
+  | { remove: string };
 
 /**
  * `sync` pipelines ride the browser's synchronous native events (paste/copy/key)
@@ -84,6 +121,20 @@ export interface StageReport {
 
 /** Optional observer that sees each stage transition as a run progresses. */
 export type StageReporter = (report: StageReport) => void;
+
+/**
+ * A run event emitted by the {@link PipelineRegistry} for a named pipeline —
+ * everything an observer (a visualizer, a progress UI) needs to follow a run:
+ * `start` (reset), `stage` (per-step), `status` (run-level), `result` (final
+ * merged context). Listeners subscribe per pipeline name.
+ */
+export type PipelineEvent =
+  | { type: 'start'; generation: number }
+  | { type: 'stage'; report: StageReport }
+  | { type: 'status'; status: RunStatus }
+  | { type: 'result'; context: PipelineContext };
+
+export type PipelineListener = (event: PipelineEvent) => void;
 
 // ── Interaction port ────────────────────────────────────────────────────────
 

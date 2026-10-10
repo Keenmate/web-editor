@@ -80,6 +80,38 @@ export { linkPlugin } from './plugins/link';
 export { imagePlugin } from './plugins/image';
 export { tablePlugin } from './plugins/tables';
 export { codeHighlightPlugin } from './plugins/code-highlight';
+export { imageBrowserPlugin } from './plugins/image-browser';
+export type { CloudAsset, ImageBrowserOptions } from './plugins/image-browser';
+export { imageBase64Plugin } from './plugins/image-base64';
+
+// Pipeline layer (Phase 7) — named, trigger/command-bound stage chains. Commands
+// auto-wrap into one-stage sync pipelines; plugins declare pipelines and splice
+// stages by anchor. See PIPELINES.md.
+export { runStages, runStagesSync, DeferredRunner } from './engine/pipeline/runner';
+export type { RunResult, DeferredRunnerDeps } from './engine/pipeline/runner';
+export { assemblePipelines, wrapCommandAsPipeline } from './engine/pipeline/assemble';
+export { PipelineRegistry, defaultInteractionHost } from './engine/pipeline/registry';
+export type { PipelineRegistryDeps } from './engine/pipeline/registry';
+export type {
+  Pipeline,
+  PipelineStage,
+  PipelineContext,
+  PipelinePolicy,
+  Timing,
+  StageOutcome,
+  StageRuntime,
+  StageServices,
+  StageContribution,
+  StageReport,
+  StageReporter,
+  StagePhase,
+  RunStatus,
+  PipelineEvent,
+  PipelineListener,
+  InteractionHost,
+  InteractionRequest,
+  InteractionResult,
+} from './engine/pipeline/types';
 
 // Serialization layer
 export {

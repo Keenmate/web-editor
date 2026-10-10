@@ -18,6 +18,7 @@ import type { Command, EditorState, Plugin as PMPlugin } from 'prosemirror-state
 import type { EditorView } from 'prosemirror-view';
 import type { CommandSpec } from './command-registry';
 import type { ToolbarItem, ToolGroup, StatusItem } from '../ui/items';
+import type { Pipeline, StageContribution } from './pipeline/types';
 
 /**
  * Markdown (de)serialization a plugin contributes for its own nodes/marks. The
@@ -86,6 +87,20 @@ export interface EditorPlugin {
   statusItems?: readonly StatusItem[];
   /** Ids of status items to remove from the assembled status bar (incl. core). */
   removeStatusItems?: readonly string[];
+
+  /**
+   * Pipelines this plugin DECLARES (named, trigger/command-bound stage chains).
+   * A name matching a command wrapper overrides it (last plugin wins). See
+   * PIPELINES.md — "commands ARE pipelines".
+   */
+  pipelines?: Pipeline[];
+  /**
+   * Stage contributions INTO other pipelines, keyed by pipeline name — the
+   * universal extension bus. Each entry inserts (before/after an id), replaces
+   * in place, or removes a stage, without importing the owning plugin. An
+   * unknown pipeline name or a missing anchor throws at assembly.
+   */
+  stages?: Record<string, StageContribution[]>;
 
   /** Run once after the view is created. */
   setup?: (ctx: SetupContext) => void;

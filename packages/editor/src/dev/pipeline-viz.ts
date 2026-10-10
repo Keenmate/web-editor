@@ -21,6 +21,9 @@ import type {
 } from '../engine/pipeline/types';
 import '../index';
 import type { KmEditorElement } from '../index';
+import { defaultPlugins } from '../engine/default-plugins';
+import { imageBrowserPlugin } from '../plugins/image-browser';
+import { imageBase64Plugin } from '../plugins/image-base64';
 
 function delay(ms: number, signal: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -46,23 +49,43 @@ function fakeSummary(doc: any): string {
   return s.length > 60 ? s.slice(0, 60) + '…' : s;
 }
 
-/** A mock modal host: a real DOM overlay, abort-aware (superseded run closes it). */
+/** A tiny "cloud library" the picker offers (public picsum images). */
+const CLOUD_IMAGES = [
+  { url: 'https://picsum.photos/id/1025/480/320', name: 'pup' },
+  { url: 'https://picsum.photos/id/1039/480/320', name: 'falls' },
+  { url: 'https://picsum.photos/id/1062/480/320', name: 'shore' },
+];
+
+/** Stand-in for a real upload: wait (watch the slider), then return the src. */
+function fakeUpload(asset: { url: string; name?: string }, signal: AbortSignal): Promise<string> {
+  return delay(settings.delayMs, signal).then(() => asset.url);
+}
+
+/** A mock modal host: a real DOM overlay, abort-aware (superseded run closes it).
+ * Branches on the request kind — a thumbnail picker for `cloud-picker`, a
+ * sensitivity select otherwise (classify / confirm-import). */
 function createMockInteractionHost(): InteractionHost {
   return {
     request(req, signal) {
       return new Promise((resolve) => {
         const overlay = document.createElement('div');
         overlay.className = 'pv-modal';
+        const body =
+          req.kind === 'cloud-picker'
+            ? `<div class="pv-picker">${CLOUD_IMAGES.map(
+                (img, i) => `<img data-pick="${i}" src="${img.url}" alt="${img.name}" title="${img.name}" />`
+              ).join('')}</div>`
+            : `<select data-role="value">
+                 <option>Public</option><option>Internal</option><option>Confidential</option>
+               </select>`;
         overlay.innerHTML = `
           <div class="pv-modal-card">
             <div class="pv-modal-title">${req.title}</div>
             <div class="pv-modal-msg">${req.message ?? ''}</div>
-            <select data-role="value">
-              <option>Public</option><option>Internal</option><option>Confidential</option>
-            </select>
+            ${body}
             <div class="pv-modal-actions">
               <button data-role="cancel">Cancel (halt)</button>
-              <button data-role="ok" class="primary">OK (resolve)</button>
+              ${req.kind === 'cloud-picker' ? '' : '<button data-role="ok" class="primary">OK (resolve)</button>'}
             </div>
           </div>`;
         const close = () => {
@@ -71,6 +94,14 @@ function createMockInteractionHost(): InteractionHost {
         };
         const onAbort = () => { close(); resolve({ cancelled: true }); };
         signal.addEventListener('abort', onAbort);
+        // Cloud picker: clicking a thumbnail resolves with that asset.
+        overlay.querySelectorAll('[data-pick]').forEach((el) => {
+          el.addEventListener('click', () => {
+            const asset = CLOUD_IMAGES[Number((el as HTMLElement).dataset.pick)];
+            close();
+            resolve({ cancelled: false, value: asset });
+          });
+        });
         overlay.querySelector('[data-role=ok]')?.addEventListener('click', () => {
           const value = (overlay.querySelector('[data-role=value]') as HTMLSelectElement).value;
           close();
@@ -439,8 +470,29 @@ async function runAsyncPaste(engine: any, lane: Lane, html: string, ui: Interact
   }
 }
 
+// One host for every interactive stage (paste confirm, classify, cloud picker).
+const ui = createMockInteractionHost();
+// Whether the image:browser:pick pipeline inlines picked images as base64
+// (toggling it adds/removes the imageBase64Plugin → rebuilds the engine).
+const base64 = { on: false };
+
+// Engine-bound wiring is torn down + rebuilt whenever the plugin set changes
+// (the <km-editor> rebuilds its engine on a `plugins` reassignment).
+let disposers: Array<() => void> = [];
+let activeRunners: DeferredRunner[] = [];
+const laneRefs: { sync?: Lane; async?: Lane } = {};
+
+function teardownWiring() {
+  disposers.forEach((off) => off());
+  disposers = [];
+  activeRunners.forEach((r) => r.dispose());
+  activeRunners = [];
+  lanesHost.innerHTML = '';
+}
+
+/** Bind the engine-bound lanes, runners, and observers to a (freshly built) engine. */
 function wire(engine: any) {
-  const ui = createMockInteractionHost();
+  teardownWiring();
 
   // Paste lanes. Sync rides transformPastedHTML (clean inline, insert immediately).
   // Async intercepts via handlePaste: cancels the native paste, awaits (modal),
@@ -449,6 +501,8 @@ function wire(engine: any) {
   lanesHost.appendChild(syncPasteLane.root);
   const asyncPasteLane = buildLane(asyncPastePipeline);
   lanesHost.appendChild(asyncPasteLane.root);
+  laneRefs.sync = syncPasteLane;
+  laneRefs.async = asyncPasteLane;
 
   engine.view.setProps({
     transformPastedHTML: (html: string) => runPaste(engine, syncPasteLane, html),
@@ -464,56 +518,117 @@ function wire(engine: any) {
     },
   });
 
+  // Command-triggered pipeline lane: image:browser:pick (toolbar ☁ button or the
+  // page's "Insert cloud image"). The lane is built from the ASSEMBLED pipeline,
+  // so with base64 on you can see the hooked `to-base64` chip appear before insert.
+  const imgPipeline = engine.pipelines.get('image:browser:pick');
+  if (imgPipeline) {
+    const lane = buildLane(imgPipeline);
+    lanesHost.appendChild(lane.root);
+    disposers.push(
+      engine.pipelines.on('image:browser:pick', (ev: any) => {
+        if (ev.type === 'start') lane.onStart();
+        else if (ev.type === 'stage') lane.onStage(ev.report);
+        else if (ev.type === 'status') lane.onStatus(ev.status);
+        else if (ev.type === 'result') {
+          const e = ev.context.extra;
+          lane.onResult({ ...e, src: typeof e.src === 'string' ? squish(e.src) : e.src });
+        }
+      })
+    );
+  }
+  // Reflect the real engine lock (setEditable(false) during a gating run) as the
+  // page dim + badge — this is the engine locking itself, not a page-level trick.
+  disposers.push(
+    engine.events.on('lock', (e: any) => {
+      (document.querySelector('#pv-editor-col') as HTMLElement | null)?.classList.toggle('pv-locked', e.locked);
+    })
+  );
+
+  // Deferred lanes — driven (debounced) by the change event.
+  for (const pipeline of [idlePipeline, deepCheckPipeline]) {
+    const lane = buildLane(pipeline);
+    lanesHost.appendChild(lane.root);
+    activeRunners.push(
+      new DeferredRunner(pipeline, {
+        getContext: (): PipelineContext => ({ doc: engine.state.doc, extra: {} }),
+        ui,
+        onStart: () => lane.onStart(),
+        onStage: (r) => lane.onStage(r),
+        onStatus: (s) => lane.onStatus(s),
+        onResult: (ctx) => lane.onResult(ctx.extra),
+      })
+    );
+  }
+  const scheduleAll = () => activeRunners.forEach((r) => r.schedule());
+  disposers.push(engine.events.on('change', scheduleAll));
+  scheduleAll();
+  (window as any).pipelineRunners = activeRunners;
+}
+
+/** The dev plugin set: defaults + the cloud-image browser, plus base64 when on. */
+function pluginSet() {
+  const set = [...defaultPlugins(), imageBrowserPlugin({ upload: fakeUpload })];
+  if (base64.on) set.push(imageBase64Plugin);
+  return set;
+}
+
+/** Rebuild the editor on the current plugin set, re-inject the host, and re-wire. */
+function applyPlugins() {
+  if (!km) return;
+  km.plugins = pluginSet(); // rebuilds the engine synchronously, preserving content
+  const engine = km.engine;
+  if (!engine) return;
+  engine.setInteractionHost(ui);
+  wire(engine);
+}
+
+/** Bind the page controls ONCE (they reach the live engine / lanes at click time). */
+function wireControlsOnce() {
   document.querySelector('#pv-simulate')?.addEventListener('click', () => {
-    const cleaned = runPaste(engine, syncPasteLane, WORD_SAMPLE);
+    const engine = km?.engine;
+    if (!engine || !laneRefs.sync) return;
+    const cleaned = runPaste(engine, laneRefs.sync, WORD_SAMPLE);
     if (cleaned) insertHTML(engine, cleaned);
   });
   document.querySelector('#pv-simulate-async')?.addEventListener('click', () => {
-    void runAsyncPaste(engine, asyncPasteLane, WORD_SAMPLE, ui);
+    const engine = km?.engine;
+    if (engine && laneRefs.async) void runAsyncPaste(engine, laneRefs.async, WORD_SAMPLE, ui);
   });
+  document.querySelector('#pv-simulate-image')?.addEventListener('click', () => {
+    km?.engine?.run('image:browser:pick');
+  });
+
   const pasteModeSel = document.querySelector('#pv-paste-mode') as HTMLSelectElement | null;
   pasteModeSel?.addEventListener('change', () => {
     pasteMode.mode = pasteModeSel.value as 'sync' | 'async';
   });
-
-  // Deferred lanes — driven (debounced) by the change event.
-  const deferred = [idlePipeline, deepCheckPipeline];
-  const runners: DeferredRunner[] = [];
-  for (const pipeline of deferred) {
-    const lane = buildLane(pipeline);
-    lanesHost.appendChild(lane.root);
-    const runner = new DeferredRunner(pipeline, {
-      getContext: (): PipelineContext => ({ doc: engine.state.doc, extra: {} }),
-      ui,
-      onStart: () => lane.onStart(),
-      onStage: (r) => lane.onStage(r),
-      onStatus: (s) => lane.onStatus(s),
-      onResult: (ctx) => lane.onResult(ctx.extra),
-    });
-    runners.push(runner);
-  }
-
-  const scheduleAll = () => runners.forEach((r) => r.schedule());
-  engine.events.on('change', scheduleAll);
+  const base64Toggle = document.querySelector('#pv-base64') as HTMLInputElement | null;
+  base64Toggle?.addEventListener('change', () => {
+    base64.on = base64Toggle.checked;
+    applyPlugins(); // rebuild with / without the base64 stage
+  });
 
   // Delay slider — scales every async stage so you can watch them pulse.
   const delayInput = document.querySelector('#pv-delay') as HTMLInputElement | null;
   const delayLabel = document.querySelector('#pv-delay-label') as HTMLElement | null;
   if (delayInput) {
-    const sync = () => {
+    const syncDelay = () => {
       settings.delayMs = Number(delayInput.value);
       if (delayLabel) delayLabel.textContent = String(settings.delayMs);
-      scheduleAll(); // re-run so the new delay is visible without typing
+      activeRunners.forEach((r) => r.schedule()); // re-run so the new delay shows
     };
-    delayInput.addEventListener('input', sync);
-    sync();
+    delayInput.addEventListener('input', syncDelay);
+    syncDelay();
   }
+}
 
-  scheduleAll();
-  (window as any).pipelineRunners = runners;
+function start() {
+  wireControlsOnce();
+  applyPlugins();
 }
 
 if (km) {
-  if (km.isReady && km.engine) wire(km.engine);
-  else km.addEventListener('ready', () => wire(km.engine));
+  if (km.isReady && km.engine) start();
+  else km.addEventListener('ready', () => start());
 }

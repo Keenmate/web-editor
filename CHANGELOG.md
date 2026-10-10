@@ -50,6 +50,27 @@ released to a registry yet.
 - **`<km-editor>.plugins` property** — register a custom plugin set on the element
   (compose with `defaultPlugins()`); reassigning rebuilds the engine and preserves
   the live content.
+- **Pipeline layer (Phase 7) — "commands ARE pipelines".** A named, trigger/
+  command-bound chain of async-by-default stages threading a context `{ doc, extra }`
+  (outcomes `resolve` / `halt` / `skip`). The engine assembles one `PipelineRegistry`:
+  every `CommandSpec` auto-wraps into a one-stage **sync** pipeline named by its id,
+  so a toolbar button, a keybinding, and `engine.run(name)` all fire the same named
+  pipeline — and anything triggerable is extensible the same way. Plugins declare
+  pipelines (`EditorPlugin.pipelines`) and splice stages into any pipeline by anchor
+  (`EditorPlugin.stages` — `before` / `after` / replace-in-place / `remove`); an
+  unknown pipeline or a missing anchor throws at assembly (same strictness as the
+  serializer contract). **Deferred** pipelines get the async machinery (abort /
+  supersede, loader threshold, optional surface **lock** via `setEditable(false)`)
+  and a host-injected `InteractionHost` for interactive (modal) stages; a stage
+  writes to the document through `rt.dispatch` / `rt.runCommand`. New engine surface:
+  `engine.pipelines`, `engine.run(name)`, `engine.setInteractionHost(host)`, a `lock`
+  event, and an `interactionHost` option.
+- **Cloud-image plugins** — `imageBrowserPlugin({ upload })` (a deferred, locking
+  `image:browser:pick` pipeline: pick → upload → insert, with a toolbar ☁ button)
+  and `imageBase64Plugin` (splices a `to-base64` stage **before** `insert` without
+  importing the browser plugin — the extension-bus proof). Dev visualizer page
+  (`pipelines.html`) gains a command-triggered image lane, a cloud picker, and a
+  base64 toggle.
 - Categorised logging (`EDITOR:*`) via the shared core logging module.
 
 ### Notes

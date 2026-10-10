@@ -14,6 +14,7 @@ import type {
   RunStatus,
   StageOutcome,
   StageReporter,
+  StageServices,
 } from './types';
 
 export interface RunResult {
@@ -38,7 +39,8 @@ const NO_INTERACTION: InteractionHost = {
 export function runStagesSync(
   pipeline: Pipeline,
   context: PipelineContext,
-  report?: StageReporter
+  report?: StageReporter,
+  services?: StageServices
 ): RunResult {
   let ctx = context;
   for (const stage of pipeline.stages) {
@@ -48,7 +50,7 @@ export function runStagesSync(
     report?.({ stageId: stage.id, phase: 'running' });
     let outcome: StageOutcome;
     try {
-      const result = stage.run(ctx, { signal: NEVER_ABORT, ui: NO_INTERACTION, generation: 0 });
+      const result = stage.run(ctx, { signal: NEVER_ABORT, ui: NO_INTERACTION, generation: 0, ...services });
       if (result && typeof (result as Promise<StageOutcome>).then === 'function') {
         throw new Error(`Sync pipeline "${pipeline.name}" stage "${stage.id}" returned a Promise.`);
       }

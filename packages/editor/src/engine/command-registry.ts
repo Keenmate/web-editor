@@ -23,8 +23,17 @@ export interface CommandSpec {
 
 export class CommandRegistry {
   private map = new Map<string, CommandSpec>();
+  /** When set, `run(id)` delegates to this (the engine's PipelineRegistry), so
+   * every command fires through its pipeline (hooks apply). Falls back to a
+   * direct command run when unset (standalone registry use / tests). */
+  private runner?: (id: string) => boolean;
 
   constructor(private readonly getView: () => EditorView | undefined) {}
+
+  /** Route `run(id)` through a pipeline runner (set by the engine). */
+  attachRunner(runner: (id: string) => boolean): void {
+    this.runner = runner;
+  }
 
   /** Register (or overwrite) a command. */
   register(spec: CommandSpec): void {
@@ -47,11 +56,18 @@ export class CommandRegistry {
     return [...this.map.keys()];
   }
 
-  /** Execute a command by id against the live view, then refocus. */
+  /** Execute a command by id against the live view, then refocus. Delegates to
+   * the pipeline runner when one is attached (so hooked stages run too). */
   run(id: string): boolean {
     const view = this.getView();
+    if (!view) return false;
+    if (this.runner) {
+      const ok = this.runner(id);
+      view.focus();
+      return ok;
+    }
     const spec = this.map.get(id);
-    if (!view || !spec) return false;
+    if (!spec) return false;
     const ok = spec.run(view.state, view.dispatch, view);
     view.focus();
     return ok;

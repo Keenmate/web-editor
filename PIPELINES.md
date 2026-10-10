@@ -1,9 +1,14 @@
-# Pipelines — design note (proposed Phase 7)
+# Pipelines — design note (Phase 7)
 
-> Status: **design + demo**. This describes a content-processing pipeline layer
-> for the editor. The full design is below; the **Demo slice** at the end is what
-> we build first (dev-playground only) to prove the mechanics before committing
-> the engine surface.
+> Status: **implemented in the engine**. This describes the content-processing
+> pipeline layer. The design is below; the "commands ARE pipelines" decision and
+> the cloud-image worked example are now live in `src/engine/pipeline/`
+> (`types` / `runner` / `assemble` / `registry`), wired into `EditorEngine`
+> (`engine.pipelines`, `engine.run`, `engine.setInteractionHost`, the `lock`
+> event) and exported from `index.ts`. The first-party `imageBrowserPlugin` /
+> `imageBase64Plugin` and the `pipelines.html` visualizer exercise it end to end.
+> The **Demo slice** at the end records the dev-playground proof that preceded the
+> engine integration.
 
 ## The idea in one paragraph
 
@@ -155,13 +160,103 @@ commands, chrome, `pmPlugins`, …). Pipelines are a **new contribution channel*
 interface EditorPlugin {
   // …existing…
   pipelines?: Pipeline[];                               // declare new pipelines
-  stages?: Record<string /*pipeline name*/, PipelineStage[]>; // add stages to any pipeline
+  stages?: Record<string /*pipeline name*/, StageContribution[]>; // add stages to any pipeline
 }
 ```
 
 Stage ordering reuses `orderPlugins` + the `layerById` id-layering already in
 `engine/plugin.ts`, so a late plugin can insert / replace / remove a stage in
 another plugin's pipeline.
+
+## Decision — commands ARE pipelines (the universal extension bus)
+
+A toolbar button, a context-menu entry, and a keybinding all already target a
+single **id** through the `CommandRegistry`. We make that id a **pipeline name**:
+firing a button runs the pipeline of the same name. This collapses "command" and
+"pipeline" into one model, so *everything a user can trigger is extensible the
+same way* — a late plugin hooks a stage into `set-color-green` exactly as it
+hooks one into `image:browser:pick`.
+
+The weight worry ("a pipeline for *set green*?") dissolves because **cost scales
+with timing + policy, not with being a pipeline**:
+
+- A **command is sugar for a one-stage `sync` pipeline.** The engine auto-wraps
+  every `CommandSpec` into a pipeline named by its id, whose single stage dispatches
+  the PM `Command`. It runs through `runStagesSync` — no promise, no timer, still
+  returns synchronously (keybinding-safe). Overhead over a bare command: ~nil.
+- A **heavy action declares a `deferred` pipeline** and pays for the machinery
+  (debounce / threshold / abort / lock / `InteractionHost`) only because it uses it.
+
+Authors keep writing one-liner `commands`. Extensibility is **available on every
+one of them, imposed on none.** The registry becomes: *every id is a pipeline;
+most are trivial sync one-stagers; a few are rich async chains.*
+
+### The one new primitive — anchored stage contribution
+
+Today's `layerById` is replace-in-place + remove (match an id → swap/drop). Stage
+insertion also needs **relative placement** so `image:toBase64Converter` can say
+"before the `insert` stage" without owning the pipeline:
+
+```ts
+type StageContribution =
+  | { stage: PipelineStage; before: string }   // insert before an existing stage id
+  | { stage: PipelineStage; after: string }     // insert after
+  | { stage: PipelineStage }                     // replace-in-place (id match) or append
+  | { remove: string };                          // drop a stage by id
+```
+
+Assembly stays the same spine: `orderPlugins` fixes plugin order, then for each
+pipeline we fold its contributions — `before`/`after` resolve against the current
+stage ids, a bare `stage` with a matching id replaces in place (last plugin wins,
+as groups do now), a new id appends, `remove` drops. A `before`/`after` naming a
+missing anchor **throws at assembly** (same load-bearing strictness as the
+Markdown serializer contract — a silent no-op would hide a broken hook).
+
+### Worked example — the cloud-image story this enables
+
+Two independent plugins, neither importing the other:
+
+```ts
+// Plugin A — declares the action as a deferred pipeline.
+definePlugin({
+  name: 'image:browser',
+  pipelines: [{
+    name: 'image:browser:pick',
+    timing: 'deferred',
+    policy: { lock: true },                 // gating: locks the editor for the run
+    stages: [
+      { id: 'pick',   interactive: true, run: (c, rt) => rt.ui.request({ kind: 'cloud-picker', title: 'Choose image' })
+                                                           .then(r => r.cancelled ? { action: 'halt' }
+                                                                                  : { action: 'resolve', patch: { file: r.value } }) },
+      { id: 'upload', run: async (c, rt) => ({ action: 'resolve', patch: { src: await uploadToCloud(c.extra.file, rt.signal) } }) },
+      { id: 'insert', run: (c, rt) => { rt.dispatch(insertImageNode(c.extra.src)); return { action: 'resolve' }; } },
+    ],
+  }],
+  toolbarGroups: [{ id: 'image', label: 'Image',
+    items: [{ type: 'command', command: 'image:browser:pick', label: 'Image', icon: '🖼' }] }],
+});
+
+// Plugin B — knows nothing of A's internals; just slots a stage in by name+anchor.
+definePlugin({
+  name: 'image:toBase64Converter',
+  dependencies: ['image:browser'],
+  stages: {
+    'image:browser:pick': [
+      { before: 'insert', stage: { id: 'to-base64', run: (c) => ({ action: 'resolve', patch: { src: toDataUri(c.extra.src) } }) } },
+    ],
+  },
+});
+```
+
+Drop B into the plugin set and every cloud image now inlines as a data URI —
+`image:browser` never changed. Pull B out and uploads go back to returning cloud
+URLs. That is the extensibility you were after, and it falls out of the existing
+`orderPlugins` + id-layering with only the `before`/`after` anchor added.
+
+> Note the `insert` stage needs `rt.dispatch` (a view-write port) — the gating
+> `lock` guarantees no edit raced the upload, so the position stays valid without
+> mapping. That `dispatch` port is the command→pipeline bridge the auto-wrap uses
+> too: the sugar wrapper's single stage is just `(c, rt) => (rt.dispatchCommand(spec.run), { action: 'resolve' })`.
 
 ## The four motivating features, mapped
 
