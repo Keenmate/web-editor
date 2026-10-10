@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Playground & Raw Harness — Web Editor</title>
+    <!-- Shared example chrome (page + header + nav), then the component styles and
+         the dev-only playground/harness styles. Linked (not JS-imported) so they're
+         render-blocking and paint styled on the first frame. -->
+    <link rel="stylesheet" href="examples-shared.css" />
+    <link rel="stylesheet" href="/src/css/editor.css" />
+    <link rel="stylesheet" href="/src/dev/playground.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <a href="index.html" class="back-link">← Back to Examples</a>
+        <h1>Playground &amp; Raw Harness</h1>
+        <p class="subtitle">The dev kitchen sink: the top section dogfoods the shipped <code>&lt;km-editor&gt;</code> element; below is the raw engine harness (floating toolbars, live output panel, debug).</p>
+      </header>
+
+      <!-- ── <km-editor> element showcase (Phase 2–3) ───────────────────── -->
+      <section class="km-demo">
+        <div class="km-demo-controls">
+          <label>Mode:
+            <select id="km-mode">
+              <option value="edit">edit</option>
+              <option value="split" selected>split</option>
+              <option value="preview">preview</option>
+              <option value="inline">inline</option>
+            </select>
+          </label>
+          <label>I/O format:
+            <select id="km-format">
+              <option value="markdown" selected>markdown</option>
+              <option value="html">html</option>
+              <option value="json">json</option>
+            </select>
+          </label>
+          <label><input type="checkbox" id="km-readonly" /> readonly</label>
+          <label>Toolbar:
+            <select id="km-toolbar">
+              <option value="top" selected>top</option>
+              <option value="bottom">bottom</option>
+              <option value="start">start</option>
+              <option value="end">end</option>
+              <option value="none">none</option>
+            </select>
+          </label>
+          <label>Status bar:
+            <select id="km-statusbar">
+              <option value="none" selected>none</option>
+              <option value="bottom">bottom</option>
+              <option value="top">top</option>
+              <option value="both">both</option>
+            </select>
+          </label>
+          <label><input type="checkbox" id="km-theme" /> dark theme</label>
+          <span class="km-demo-status" id="km-status">—</span>
+        </div>
+
+        <km-editor id="km" mode="split" format="markdown"
+          value="# Hello from &lt;km-editor&gt;
+
+This is the **shipped** Web Component — one ProseMirror document, with Markdown / HTML / JSON as import&nbsp;/&nbsp;export at the edges.
+
+- Try the **mode** switch (edit / split / preview / inline)
+- Toggle **readonly** and the **dark theme**
+- Edit here and watch the live output panel"></km-editor>
+      </section>
+
+      <hr class="km-demo-divider" />
+      <h2 class="subtitle" style="margin-top: 24px;">Raw engine harness</h2>
+
+      <!-- Floating text toolbar (appears on text selection) -->
+      <div class="floating-toolbar" id="floating-toolbar">
+        <button data-command="bold" title="Bold (Ctrl+B)"><b>B</b></button>
+        <button data-command="italic" title="Italic (Ctrl+I)"><i>I</i></button>
+        <button data-command="underline" title="Underline (Ctrl+U)"><u>U</u></button>
+        <span class="separator"></span>
+        <button data-command="insert-link" title="Insert/Remove Link">🔗</button>
+        <span class="separator"></span>
+        <button data-command="heading" title="Heading">H1</button>
+        <button data-command="paragraph" title="Paragraph">P</button>
+        <div class="floating-toolbar-arrow" id="floating-toolbar-arrow"></div>
+      </div>
+
+      <!-- Floating code toolbar (appears when cursor is in code block) -->
+      <div class="floating-toolbar code-toolbar" id="code-toolbar">
+        <span class="toolbar-label" id="code-language-label">javascript</span>
+        <button data-command="change-code-language" title="Change Language">Change</button>
+        <div class="floating-toolbar-arrow" id="code-toolbar-arrow"></div>
+      </div>
+
+      <!-- Floating table toolbar (appears when cursor is in table) -->
+      <div class="floating-toolbar table-toolbar" id="table-toolbar">
+        <div class="toolbar-group">
+          <span class="toolbar-label">Row</span>
+          <button data-command="add-row-before" title="Add row above">+↑</button>
+          <button data-command="add-row-after" title="Add row below">+↓</button>
+          <button data-command="delete-row" title="Delete row" class="danger">−</button>
+        </div>
+        <span class="separator"></span>
+        <div class="toolbar-group">
+          <span class="toolbar-label">Col</span>
+          <button data-command="add-column-before" title="Add column left">+←</button>
+          <button data-command="add-column-after" title="Add column right">+→</button>
+          <button data-command="delete-column" title="Delete column" class="danger">−</button>
+        </div>
+        <span class="separator"></span>
+        <div class="toolbar-group">
+          <span class="toolbar-label">Cell</span>
+          <button data-command="merge-cells" title="Merge cells">⊞</button>
+          <button data-command="split-cell" title="Split cell">⊟</button>
+        </div>
+        <span class="separator"></span>
+        <button data-command="toggle-header-row" title="Toggle header row">H Row</button>
+        <button data-command="delete-table" title="Delete table" class="danger">🗑</button>
+        <div class="floating-toolbar-arrow" id="table-toolbar-arrow"></div>
+      </div>
+
+      <!-- Static toolbar (always visible) -->
+      <div class="toolbar" id="toolbar">
+        <button data-command="bold" title="Bold (Ctrl+B)"><b>B</b></button>
+        <button data-command="italic" title="Italic (Ctrl+I)"><i>I</i></button>
+        <button data-command="underline" title="Underline (Ctrl+U)"><u>U</u></button>
+        <span class="separator"></span>
+        <button data-command="bullet-list" title="Bullet List">• List</button>
+        <button data-command="ordered-list" title="Ordered List">1. List</button>
+        <span class="separator"></span>
+        <button data-command="heading" title="Heading">H1</button>
+        <button data-command="paragraph" title="Paragraph">P</button>
+        <span class="separator"></span>
+        <button data-command="insert-link" title="Insert Link (select text first)">🔗 Link</button>
+        <button data-command="insert-image" title="Insert Image">🖼 Image</button>
+        <button data-command="insert-code-block" title="Insert Code Block">&lt;/&gt; Code</button>
+        <button data-command="insert-table" title="Insert Table">⊞ Table</button>
+        <span class="separator"></span>
+        <button data-command="undo" title="Undo (Ctrl+Z)">Undo</button>
+        <button data-command="redo" title="Redo (Ctrl+Y)">Redo</button>
+      </div>
+
+      <div id="editor"></div>
+
+      <div class="output-panel">
+        <div class="output-tabs" id="output-tabs">
+          <button data-format="markdown" class="active">Markdown</button>
+          <button data-format="html">HTML</button>
+          <button data-format="json">JSON</button>
+        </div>
+        <pre id="output"></pre>
+      </div>
+
+      <div class="debug-panel">
+        <h3>Debug Panel</h3>
+
+        <div class="debug-section">
+          <h4>Selection State</h4>
+          <pre id="selection-info">Click in editor...</pre>
+        </div>
+
+        <div class="debug-section">
+          <h4>Document Structure</h4>
+          <pre id="doc-structure"></pre>
+        </div>
+
+        <div class="debug-section">
+          <h4>Last Transaction</h4>
+          <pre id="last-transaction">No transactions yet</pre>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/dev/main.ts"></script>
+  </body>
+</html>

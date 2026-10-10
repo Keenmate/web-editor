@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Usage — Web Editor</title>
+
+    <!-- Shared example styles -->
+    <link rel="stylesheet" href="examples-shared.css">
+</head>
+<body class="dark-output">
+    <div class="container">
+        <header>
+            <a href="index.html" class="back-link">← Back to Examples</a>
+            <h1>Basic Usage</h1>
+            <p class="subtitle">The shipped <code>&lt;km-editor&gt;</code> element — each input as ONE live editor you drive with control switches: view mode &amp; read-only, the I/O format lens, toolbar &amp; status-bar placement, theme, and a declarative no-JavaScript setup.</p>
+        </header>
+
+        <!-- ============================================================= -->
+        <!-- EB01 · View mode & editing                                     -->
+        <!-- ============================================================= -->
+        <div class="card">
+            <h2>EB01 · View Mode &amp; Editing</h2>
+            <p>
+                One document, four presentations. <code>mode</code> switches between
+                <code>edit</code>, <code>split</code> (editor + live output), <code>preview</code>
+                (read-only render), and <code>inline</code>. <code>readonly</code> blocks input;
+                <code>preview</code> forces it on. The mount is persistent, so the document and
+                selection survive a mode switch.
+            </p>
+
+            <div class="controls">
+                <span><code>mode</code>:</span>
+                <label><input type="radio" name="eb01-mode" value="edit" checked> edit</label>
+                <label><input type="radio" name="eb01-mode" value="split"> split</label>
+                <label><input type="radio" name="eb01-mode" value="preview"> preview</label>
+                <label><input type="radio" name="eb01-mode" value="inline"> inline</label>
+            </div>
+            <div class="controls">
+                <label><input type="checkbox" id="eb01-readonly"> <code>readonly</code></label>
+            </div>
+
+            <div class="demo-area">
+                <km-editor id="eb01" mode="edit" format="markdown" toolbar="top" value="# View modes
+
+Edit me, then flip the **mode** switch above. Switch to *split* to see the live
+output, or *preview* for the read-only render.
+
+- One ProseMirror document
+- Markdown in / out at the edge"></km-editor>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- EB02 · I/O format lens                                          -->
+        <!-- ============================================================= -->
+        <div class="card">
+            <h2>EB02 · I/O Format Lens</h2>
+            <p>
+                <code>format</code> is only the serialization lens for content I/O — switching it
+                re-reports the SAME document as <code>markdown</code>, <code>html</code>, or
+                <code>json</code>; it never rebuilds the document. The readout below is the live
+                <code>change</code> event's <code>detail.value</code> in the chosen format.
+            </p>
+
+            <div class="controls">
+                <span><code>format</code>:</span>
+                <label><input type="radio" name="eb02-format" value="markdown" checked> markdown</label>
+                <label><input type="radio" name="eb02-format" value="html"> html</label>
+                <label><input type="radio" name="eb02-format" value="json"> json</label>
+            </div>
+
+            <div class="demo-area">
+                <km-editor id="eb02" mode="edit" format="markdown" toolbar="top" value="## Format lens
+
+Type here and watch the **output** below change format without rebuilding the
+document. Add a [link](https://keenmate.com) or some `code`."></km-editor>
+                <div class="output">
+                    <div class="output-label">live <code>change</code> → <code>detail.value</code></div>
+                    <pre id="eb02-out"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- EB03 · Toolbar & status-bar placement                           -->
+        <!-- ============================================================= -->
+        <div class="card">
+            <h2>EB03 · Toolbar &amp; Status Bar</h2>
+            <p>
+                The static toolbar docks to any edge (<code>toolbar</code>) flush against the
+                editor; <code>none</code> hides it (the selection toolbar and context menu stay
+                available while editing). The <code>statusbar</code> is a dedicated strip of live
+                indicators (word / char count) that hugs the editor body — <code>both</code> splits
+                items across two strips.
+            </p>
+
+            <div class="controls">
+                <span><code>toolbar</code>:</span>
+                <label><input type="radio" name="eb03-toolbar" value="top" checked> top</label>
+                <label><input type="radio" name="eb03-toolbar" value="bottom"> bottom</label>
+                <label><input type="radio" name="eb03-toolbar" value="start"> start</label>
+                <label><input type="radio" name="eb03-toolbar" value="end"> end</label>
+                <label><input type="radio" name="eb03-toolbar" value="none"> none</label>
+            </div>
+            <div class="controls">
+                <span><code>statusbar</code>:</span>
+                <label><input type="radio" name="eb03-status" value="none" checked> none</label>
+                <label><input type="radio" name="eb03-status" value="bottom"> bottom</label>
+                <label><input type="radio" name="eb03-status" value="top"> top</label>
+                <label><input type="radio" name="eb03-status" value="both"> both</label>
+            </div>
+
+            <div class="demo-area">
+                <km-editor id="eb03" mode="edit" format="markdown" toolbar="top" statusbar="none" value="### Chrome placement
+
+Move the **toolbar** to any edge, or hide it and use the selection toolbar.
+Turn on the **status bar** to see the live Words / Chars counters."></km-editor>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- EB04 · Theme                                                    -->
+        <!-- ============================================================= -->
+        <div class="card">
+            <h2>EB04 · Theme</h2>
+            <p>
+                <code>theme</code> reflects to the host attribute (<code>:host([theme="…"])</code>),
+                the hook consumers style against. Flip it to see the element restyle in place — the
+                document is untouched.
+            </p>
+
+            <div class="controls">
+                <span><code>theme</code>:</span>
+                <label><input type="radio" name="eb04-theme" value="" checked> default</label>
+                <label><input type="radio" name="eb04-theme" value="dark"> dark</label>
+            </div>
+
+            <div class="demo-area">
+                <km-editor id="eb04" mode="edit" format="markdown" toolbar="top" statusbar="bottom" value="#### Theming
+
+The `theme` attribute is reflected to the host for CSS theming. Switch it above."></km-editor>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- EB05 · Declarative (no JavaScript)                              -->
+        <!-- ============================================================= -->
+        <div class="card">
+            <h2>EB05 · Declarative Setup</h2>
+            <p>
+                No JavaScript — just the element with attributes. Everything below is configured in
+                markup: the initial <code>value</code>, the <code>format</code>, the
+                <code>toolbar</code> edge, and <code>statusbar="both"</code>.
+            </p>
+
+            <div class="demo-area">
+                <km-editor
+                    mode="edit"
+                    format="markdown"
+                    toolbar="top"
+                    statusbar="both"
+                    value="# Declarative
+
+This editor was set up entirely in **HTML** — no script wired it.
+
+1. Attributes in, content out
+2. Nothing to initialize"></km-editor>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register the <km-editor> element (Vite dev serves the TS source). -->
+    <script type="module" src="/src/index.ts"></script>
+
+    <!-- Page wiring: bind each card's control switches to its editor. -->
+    <script type="module">
+        import { persistControls } from './examples-controls-store.js';
+
+        // Toggle a boolean attribute on/off.
+        const setBool = (el, name, on) => on ? el.setAttribute(name, '') : el.removeAttribute(name);
+        // Checked radio value for a group.
+        const radio = (name) => document.querySelector(`input[name="${name}"]:checked`)?.value;
+        const onRadio = (name, fn) =>
+            document.querySelectorAll(`input[name="${name}"]`).forEach((r) =>
+                r.addEventListener('change', (e) => { if (e.target.checked) fn(e.target.value); }));
+
+        function wire() {
+            // EB01 — mode + readonly
+            const eb01 = document.getElementById('eb01');
+            onRadio('eb01-mode', (v) => eb01.setAttribute('mode', v));
+            document.getElementById('eb01-readonly').addEventListener('change', (e) =>
+                setBool(eb01, 'readonly', e.target.checked));
+
+            // EB02 — format lens + live output readout
+            const eb02 = document.getElementById('eb02');
+            const out = document.getElementById('eb02-out');
+            const refresh = () => { out.textContent = eb02.getValue?.() ?? ''; };
+            onRadio('eb02-format', (v) => { eb02.setAttribute('format', v); refresh(); });
+            eb02.addEventListener('change', refresh);
+            if (eb02.isReady) refresh(); else eb02.addEventListener('ready', refresh);
+
+            // EB03 — toolbar + status-bar placement
+            const eb03 = document.getElementById('eb03');
+            onRadio('eb03-toolbar', (v) => eb03.setAttribute('toolbar', v));
+            onRadio('eb03-status', (v) => eb03.setAttribute('statusbar', v));
+
+            // EB04 — theme (empty = remove the attribute)
+            const eb04 = document.getElementById('eb04');
+            onRadio('eb04-theme', (v) => v ? eb04.setAttribute('theme', v) : eb04.removeAttribute('theme'));
+
+            // Persist the switches across reloads (restores + re-applies via our listeners).
+            persistControls('basic');
+        }
+
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire);
+        else wire();
+    </script>
+
+    <script type="module" src="examples-copy-link.js"></script>
+    <script type="module" src="examples-chapter-nav.js"></script>
+</body>
+</html>

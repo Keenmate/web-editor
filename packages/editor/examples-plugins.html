@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plugins & Pipelines — Web Editor</title>
+
+    <link rel="stylesheet" href="examples-shared.css">
+    <style>
+        /* The cloud-picker modal the example's InteractionHost renders — part of
+           the example code (there is no shared modal). Layout only; buttons/inline
+           code inherit the shared styles. */
+        .pick-modal { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: grid; place-items: center; z-index: 9999; }
+        .pick-card { background: #fff; border-radius: 12px; padding: 1.25rem; max-width: 460px; box-shadow: 0 12px 48px rgba(0,0,0,.4); }
+        .pick-title { font-weight: 700; margin-bottom: .75rem; }
+        .pick-grid { display: flex; gap: .5rem; margin-bottom: .75rem; }
+        .pick-grid img { width: 120px; height: 84px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
+        .pick-grid img:hover { border-color: #16a34a; }
+        .pick-actions { display: flex; justify-content: flex-end; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="index.html" class="back-link">← Back to Examples</a>
+            <h1>Plugins &amp; Pipelines</h1>
+            <p class="subtitle">Compose a custom plugin set on the element, layer toolbar groups by id, and drive the command-triggered cloud-image pipeline — then splice a stage into it from a second plugin without touching the first.</p>
+        </header>
+
+        <!-- ============================================================= -->
+        <!-- EP01 · Cloud-image pipeline                                     -->
+        <!-- ============================================================= -->
+        <div class="card">
+            <h2>EP01 · Cloud-Image Pipeline</h2>
+            <p>
+                The <code>imageBrowserPlugin</code> declares a deferred, <b>locking</b> pipeline
+                <code>image:browser:pick</code> (pick → upload → insert), fired by the toolbar ☁
+                button or the one below. It opens a host-provided picker (an interactive stage via
+                the injected <code>InteractionHost</code>), awaits a fake upload, then inserts — the
+                editor is locked for the whole run. Toggle <b>base64</b> to drop in
+                <code>imageBase64Plugin</code>, which splices a <code>to-base64</code> stage
+                <i>before</i> <code>insert</code> — the browser plugin is never touched.
+            </p>
+
+            <div class="controls">
+                <label><input type="checkbox" id="ep01-base64"> inline images as <code>base64</code> (adds the <code>to-base64</code> stage)</label>
+                <button type="button" id="ep01-insert">Insert cloud image</button>
+            </div>
+
+            <div class="demo-area">
+                <km-editor id="ep01" mode="edit" format="markdown" toolbar="top" value="# Cloud image
+
+Click the ☁ button in the toolbar (or **Insert cloud image**). The editor locks
+(becomes read-only) while the pipeline runs — pick → upload → insert."></km-editor>
+            </div>
+            <p class="muted">Pipeline <code>image:browser:pick</code> — <span id="ep01-lock">idle</span></p>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- EP02 · Layer toolbar groups by id                               -->
+        <!-- ============================================================= -->
+        <div class="card">
+            <h2>EP02 · Override / Remove by Id</h2>
+            <p>
+                A plugin's <code>toolbarGroups</code> / <code>statusItems</code> are keyed by
+                <code>id</code>: a matching id replaces in place (later plugins win), a new id slots
+                in, and <code>removeToolbarGroups</code> drops one. Toggle a tiny inline plugin that
+                removes the <code>list</code> group and adds a custom status item — the engine
+                rebuilds on the new plugin set and preserves the live content.
+            </p>
+
+            <div class="controls">
+                <label><input type="checkbox" id="ep02-trim"> apply <code>trim</code> plugin (remove <code>list</code> group + add a status item)</label>
+            </div>
+
+            <div class="demo-area">
+                <km-editor id="ep02" mode="edit" format="markdown" toolbar="top" statusbar="bottom" value="## Id layering
+
+Toggle the switch — the bullet/ordered **list** group disappears from the toolbar
+and a custom status item appears, without rebuilding the document."></km-editor>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register the element. -->
+    <script type="module" src="/src/index.ts"></script>
+
+    <!-- Page wiring: build custom plugin sets + the injected picker host. -->
+    <script type="module">
+        import { defaultPlugins, definePlugin, imageBrowserPlugin, imageBase64Plugin } from '/src/index.ts';
+        import { persistControls } from './examples-controls-store.js';
+
+        const CLOUD_IMAGES = [
+            { url: 'https://picsum.photos/id/1025/480/320', name: 'pup' },
+            { url: 'https://picsum.photos/id/1039/480/320', name: 'falls' },
+            { url: 'https://picsum.photos/id/1062/480/320', name: 'shore' },
+        ];
+
+        // A host-injected modal: a thumbnail picker for the `cloud-picker` request,
+        // honouring the abort signal (a superseded run closes it).
+        const pickerHost = {
+            request(req, signal) {
+                return new Promise((resolve) => {
+                    const overlay = document.createElement('div');
+                    overlay.className = 'pick-modal';
+                    overlay.innerHTML =
+                        '<div class="pick-card"><div class="pick-title">' + req.title + '</div>' +
+                        '<div class="pick-grid">' +
+                        CLOUD_IMAGES.map((img, i) => '<img data-i="' + i + '" src="' + img.url + '" alt="' + img.name + '">').join('') +
+                        '</div><div class="pick-actions"><button data-cancel>Cancel</button></div></div>';
+                    const close = () => { signal.removeEventListener('abort', onAbort); overlay.remove(); };
+                    const onAbort = () => { close(); resolve({ cancelled: true }); };
+                    signal.addEventListener('abort', onAbort);
+                    overlay.querySelectorAll('[data-i]').forEach((el) =>
+                        el.addEventListener('click', () => { close(); resolve({ cancelled: false, value: CLOUD_IMAGES[+el.dataset.i] }); }));
+                    overlay.querySelector('[data-cancel]').addEventListener('click', () => { close(); resolve({ cancelled: true }); });
+                    document.body.appendChild(overlay);
+                });
+            },
+        };
+
+        // Fake upload: wait a beat (so the lock is visible), then return the url.
+        const fakeUpload = (asset) => new Promise((r) => setTimeout(() => r(asset.url), 700));
+
+        function wireEp01() {
+            const el = document.getElementById('ep01');
+            const lockStatus = document.getElementById('ep01-lock');
+            const base64 = document.getElementById('ep01-base64');
+            let unlock = null;
+
+            const apply = () => {
+                const set = [...defaultPlugins(), imageBrowserPlugin({ upload: fakeUpload })];
+                if (base64.checked) set.push(imageBase64Plugin);
+                el.plugins = set;               // rebuilds the engine, preserves content
+                const engine = el.engine;
+                engine.setInteractionHost(pickerHost);
+                if (unlock) unlock();
+                unlock = engine.events.on('lock', (e) => {
+                    lockStatus.textContent = e.locked ? '⏳ editor locked — pipeline running' : 'idle';
+                });
+            };
+
+            base64.addEventListener('change', apply);
+            document.getElementById('ep01-insert').addEventListener('click', () => el.engine?.run('image:browser:pick'));
+            apply();
+        }
+
+        function wireEp02() {
+            const el = document.getElementById('ep02');
+            const trim = document.getElementById('ep02-trim');
+            // Inline plugin: remove the list group + add a custom status item (id-layering).
+            const trimPlugin = definePlugin({
+                name: 'trim',
+                removeToolbarGroups: ['list'],
+                statusItems: [{ id: 'demo', align: 'end', render: () => '✎ trim plugin active' }],
+            });
+            const apply = () => { el.plugins = trim.checked ? [...defaultPlugins(), trimPlugin] : defaultPlugins(); };
+            trim.addEventListener('change', apply);
+            apply();
+        }
+
+        function start() {
+            wireEp01();
+            wireEp02();
+            persistControls('plugins');
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+        else start();
+    </script>
+
+    <script type="module" src="examples-copy-link.js"></script>
+    <script type="module" src="examples-chapter-nav.js"></script>
+</body>
+</html>

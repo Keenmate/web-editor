@@ -3,13 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>KeenMate Web Editor — Pipeline Visualizer</title>
+    <title>Pipeline Visualizer — Web Editor</title>
+    <link rel="stylesheet" href="examples-shared.css" />
     <link rel="stylesheet" href="/src/css/editor.css" />
     <style>
-      body { margin: 0; font: 14px/1.5 system-ui, sans-serif; background: #141414; color: #e6e6e6; }
-      .pv-page { display: grid; grid-template-columns: 1fr 460px; gap: 20px; padding: 20px; min-height: 100vh; box-sizing: border-box; }
-      .pv-col h1 { font-size: 18px; margin: 0 0 4px; }
-      .pv-col .sub { color: #999; font-size: 12px; margin: 0 0 16px; }
+      /* The visualizer's own CSS — part of the example: the two-column layout, the
+         per-stage lane chips (green/gray/amber/red), the lock badge, the modal.
+         Page chrome (body / header / .container) comes from examples-shared.css. */
+      .pv-page { display: grid; grid-template-columns: 1fr 460px; gap: 20px; align-items: start; }
+      .pv-col h2 { font-size: 18px; margin: 0 0 4px; display: block; }
+      .pv-col .sub { color: #64748b; font-size: 12px; margin: 0 0 16px; }
       km-editor { display: block; transition: opacity .15s; }
 
       /* Gating async run — editor truly locked (setEditable(false)) + dimmed. */
@@ -17,11 +20,11 @@
       #pv-editor-col.pv-locked km-editor { opacity: .5; pointer-events: none; }
       #pv-editor-col.pv-locked .pv-lock-badge { display: inline; }
 
-      .pv-controls { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-bottom: 14px; font-size: 13px; color: #bbb; }
+      .pv-controls { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-bottom: 14px; font-size: 13px; color: #475569; }
       #pv-delay { width: 120px; vertical-align: middle; }
       #pv-simulate { padding: 6px 12px; border-radius: 7px; border: 1px solid #3a3a3a; background: #262626; color: #e6e6e6; cursor: pointer; font-size: 12px; }
       #pv-simulate:hover { background: #303030; border-color: #4a4a4a; }
-      .pv-hint { color: #888; font-size: 12px; margin: 0 0 16px; }
+      .pv-hint { color: #64748b; font-size: 12px; margin: 0 0 16px; }
       .pv-hint code { background: #262626; padding: 1px 5px; border-radius: 4px; color: #ddd; }
 
       .pv-lane { background: #1c1c1c; border: 1px solid #2d2d2d; border-radius: 12px; padding: 14px; margin-bottom: 16px; }
@@ -63,12 +66,21 @@
       .pv-modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
       .pv-modal-actions button { padding: 6px 12px; border-radius: 6px; border: 1px solid #ccc; cursor: pointer; }
       .pv-modal-actions .primary { font-weight: 600; background: #16a34a; color: #fff; border-color: #16a34a; }
+      .pv-picker { display: flex; gap: 8px; margin-bottom: 14px; }
+      .pv-picker img { width: 120px; height: 84px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
+      .pv-picker img:hover { border-color: #16a34a; }
     </style>
   </head>
   <body>
-    <div class="pv-page">
+    <div class="container">
+      <header>
+        <a href="index.html" class="back-link">← Back to Examples</a>
+        <h1>Pipeline Visualizer</h1>
+        <p class="subtitle">The content-pipeline layer under a microscope — an editor beside one lane per pipeline, each stage chip blinking green → gray → amber → red by state.</p>
+      </header>
+      <div class="pv-page">
       <div class="pv-col" id="pv-editor-col">
-        <h1>Editor <span class="pv-lock-badge">⏳ locked — pipeline running</span></h1>
+        <h2>Editor <span class="pv-lock-badge">⏳ locked — pipeline running</span></h2>
         <p class="sub">Type here — the derive pipelines run off the <code>change</code> event (debounced). A gating async paste locks the editor until it finishes.</p>
         <km-editor id="km" mode="edit" format="markdown" toolbar="top"
           value="# Pipeline visualizer
@@ -81,7 +93,7 @@ Try typing the word secret to halt the policy step, or forbidden to error it."><
       </div>
 
       <div class="pv-col">
-        <h1>Pipelines</h1>
+        <h2>Pipelines</h2>
         <p class="sub">One lane per pipeline. Stages: <b>green</b>=running → fades gray=ok, <b>amber</b>=halt, <b>red</b>=error, dashed=skip, struck=aborted.</p>
         <div class="pv-controls">
           <label>stage delay: <span id="pv-delay-label">900</span>ms
@@ -94,18 +106,22 @@ Try typing the word secret to halt the policy step, or forbidden to error it."><
             </select>
           </label>
           <label><input type="checkbox" id="pv-classify" /> enable <code>classify</code> dialog (modal)</label>
+          <label><input type="checkbox" id="pv-base64" /> inline images as <code>base64</code> (adds <code>to-base64</code> stage)</label>
           <button id="pv-simulate">Simulate paste (sync)</button>
           <button id="pv-simulate-async">Simulate paste (async)</button>
+          <button id="pv-simulate-image">Insert cloud image</button>
         </div>
         <p class="pv-hint">
           • <b>Sync paste</b> (<code>transformPastedHTML</code>): cleans and inserts immediately — can't await. Try <b>Simulate paste (sync)</b>, or real Ctrl+V with paste mode = sync.<br />
           • <b>Async paste</b> (<code>handlePaste</code>): cancels the native paste, awaits <code>fetch-meta</code> (watch the delay slider), pauses on the <b>confirm-import</b> modal, then inserts via a transaction. Try <b>Simulate paste (async)</b>, or set paste mode = async then Ctrl+V. Cancel the modal → nothing is inserted.<br />
+          • <b>Cloud image</b> (<code>image:browser:pick</code>, a command-triggered deferred pipeline): the toolbar ☁ button or <b>Insert cloud image</b> opens a picker (modal), <code>upload</code>s (watch the delay), then inserts — the editor is <b>locked</b> for the whole run. Toggle <code>base64</code> and watch a <code>to-base64</code> stage appear <i>before</i> <code>insert</code> (a second plugin splicing into the pipeline).<br />
           • Type <code>secret</code> → <b>policy</b> halts (amber); <code>forbidden</code> → errors (red).<br />
           • Enable classify, then type → modal pauses the <b>idle</b> lane.<br />
           • Type fast during a run → in-flight stage is struck through (aborted / superseded).<br />
           • Sync-paste something containing <code>&lt;script&gt;</code> → <b>guard-scripts</b> halts (blocked).
         </p>
         <div id="pv-lanes"></div>
+      </div>
       </div>
     </div>
 
