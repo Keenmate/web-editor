@@ -258,6 +258,384 @@ URLs. That is the extensibility you were after, and it falls out of the existing
 > mapping. That `dispatch` port is the command→pipeline bridge the auto-wrap uses
 > too: the sugar wrapper's single stage is just `(c, rt) => (rt.dispatchCommand(spec.run), { action: 'resolve' })`.
 
+## Ordering & configuration — phases, the propose/dispose ladder, the config cell
+
+> Status: **design, not yet implemented.** The anchored-contribution primitive
+> above (`before`/`after`/`remove`) is live. Everything in *this* section —
+> phases, per-phase order, `assign`, the config cell, `rt.config` — is an agreed
+> design extension on top of it, not yet in `types.ts` / `assemble.ts` / the
+> engine config. Captured here so we can keep exploring it against something
+> written down.
+
+### The problem the anchor primitive leaves open
+
+Anchors give **absolute placement against a concrete id** (`before: 'insert'`).
+That is exactly enough for a structural anchor, and exactly *not* enough for the
+case where two independent plugins carry a hidden ordering constraint between
+*each other*:
+
+- `image-compress` and `image-base64` both legitimately want `before: 'insert'`.
+- But compress must run **before** base64 (compress the bytes, *then* encode to a
+  data URI — encoding first would mean compressing a base64 string, which is
+  wrong).
+- Neither should have to `import` the other or hardcode the other's id — they are
+  independent plugins a user mixes freely.
+
+Today their relative order falls out of plugin load order: silent, and fragile.
+We need a way to express "these run in this order" that neither plugin owns.
+
+### Why not the usual suspects
+
+- **Ordered list / "configure them properly"** (Express/Koa/redux middleware) —
+  works only for a small curated set hand-ordered by one person; breaks the moment
+  a dependency adds a plugin the user didn't order.
+- **Numeric priority / weight** — everyone picks `100`; collisions are invisible;
+  the number carries no meaning. Avoid.
+- **Capability dataflow** (`consumes`/`produces`, à la Bazel/Nix/make) — most
+  principled, but leaks data-shape into the type system; heavier than we need.
+
+The mature answer is a blend of **phases** (coarse, declarative) and **declared
+relative constraints** (the stubborn pair), with the **app owner** holding the
+final word. Full automation is a holy grail whose *shape only the owner knows* —
+plugins can try the most logical path; they cannot know the product's intent.
+
+### Phases — the coarse, declarative order
+
+The **pipeline** (not the contributing plugins) owns an **ordered vocabulary of
+phase names** — the canonical processing order for *that* pipeline. Each stage
+declares which phase it belongs to; the assembler orders by phase index.
+
+```ts
+// image:browser:pick's canonical order
+phases: ['acquire', 'geometry', 'optimize', 'annotate', 'encode', 'insert']
+//         pick        crop        compress    watermark   base64    write
+//         upload      resize
+//                     orient
+```
+
+Because `optimize` is defined before `annotate`, "the watermark goes on the
+already-compressed image" is automatic — no plugin names another. A new
+`image-watermark` plugin just declares `phase: 'annotate'` and slots in without
+touching compress or base64. This is the Rollup bet: a fixed, well-known order
+that plugins pick a slot in.
+
+**Granularity is the real lever.** A flat `transform` bucket is too coarse —
+crop, compress, and watermark aren't one phase, they're a *sequence* with a real,
+stable order (crop first → fewer pixels to compress; watermark last → the overlay
+stays crisp, not degraded by compression). Phases should be as fine as the order
+is stable and semantic. The phase list is an **editorial decision** about the
+domain's canonical order, made once, by the pipeline owner — it's a human-curated,
+readable stand-in for a dataflow graph, without the data-shape leakage.
+
+### Intra-phase order — deterministic default + soft anchors
+
+Two stages *will* legitimately land in the same phase with a real order between
+them. Within a phase:
+
+- **Default: declared / load order.** Predictable, never random — this alone
+  kills the silent load-order bug.
+- **Soft anchor when it matters:** `afterIfPresent` / `beforeIfPresent` — order
+  relative to a named peer *only if it's present*, skip silently if not. Distinct
+  from the hard `before: 'insert'` (which throws on a missing anchor — correct for
+  a structural anchor, wrong for an optional peer).
+
+### Propose / dispose — plugins propose, the owner disposes
+
+Plugins declare a sensible default (phase + optional soft anchors) — the "most
+logical path." The **app owner** has the final, authoritative word, set at engine
+config, and it must **not** require listing every stage (that would be brittle to
+plugin churn). The override is **additive and partial**:
+
+```ts
+new EditorEngine({
+  plugins: [imageBrowserPlugin({ upload }), cropPlugin(), imageBase64Plugin],
+  pipelines: {
+    'image:browser:pick': {
+      // coarse: the ordered vocabulary for THIS app (across-phase order)
+      phases: ['acquire', 'geometry', 'optimize', 'annotate', 'encode', 'insert'],
+      // surgical: within-phase order, KEYED BY PHASE — unambiguous and partial.
+      // Only the stages you name are pinned; everything else keeps its phase default,
+      // so adding a plugin tomorrow doesn't touch this.
+      order: { geometry: ['orient', 'crop', 'resize'] },
+    },
+  },
+})
+```
+
+Two **orthogonal, each-unambiguous** levers:
+
+- **`phases`** — ordering *across* phases (the vocabulary itself).
+- **`order`, keyed by phase** — ordering *within* a phase. Keying by phase answers
+  "which phase does this order belong to?" explicitly — a flat `order: [...]`
+  array is underspecified (is it a global relative sequence, or within one
+  phase?). You never need a cross-phase `order`; that's what `phases` is for.
+
+**Relocation is deliberate, never implicit.** If the owner lists a stage under a
+phase its plugin didn't declare, that is a conflict. Default: **throw** ("`crop`
+is in phase `optimize`, not `geometry`") — catches typos. An explicit opt-in moves
+it: `assign: { crop: 'geometry' }`. So a misspelled stage id never silently
+teleports across phases.
+
+**What throws at assembly** (same load-bearing strictness as the serializer
+contract): unknown phase name, a cycle in soft anchors, an `order` that contradicts
+a stage's **hard** anchor (`before: 'insert'`), or an `order`/`assign` naming a
+stage not in the named phase. The owner can override a *preference*; they cannot
+silently break a structural contract — to really mean it, drop/replace that stage
+explicitly.
+
+### Configuration — a property of the (stage × pipeline) cell
+
+A stage like `crop` needs *behavioral* config (allowed aspect ratios, default
+ratio, min/max dimensions), separate from *where* it runs. **Config is not a
+property of the plugin — it's a property of the (stage × pipeline) cell.** One
+`cropPlugin`, but two pipelines crop differently:
+
+```ts
+new EditorEngine({
+  plugins: [imageBrowserPlugin({ upload }), cropPlugin(), imageBase64Plugin],
+  pipelines: {
+    'image:portrait:pick': {               // a manager's portrait
+      phases: ['acquire', 'geometry', 'encode', 'insert'],
+      order:  { geometry: ['orient', 'crop'] },
+      config: { crop: { aspect: '3:4', defaultAspect: '3:4' } },
+    },
+    'image:gallery:pick': {                // little squares
+      phases: ['acquire', 'geometry', 'encode', 'insert'],
+      order:  { geometry: ['crop'] },
+      config: { crop: { aspect: '1:1', min: [256, 256] } },
+    },
+  },
+})
+```
+
+Same single crop plugin, two behaviors — factory config alone can't express this
+without duplicating the plugin into two instances for what is genuinely *one*
+capability used two ways. So config must live at the pipeline level, per stage.
+
+**The config is an opaque blob keyed by stage id.** The engine just routes it to
+the stage; the *plugin* interprets it — exactly as factory options are opaque to
+the engine today. No coupling: storing config is not understanding config.
+
+**Config ladder** (later layer wins; shallow-merge by top-level key):
+
+1. **Plugin built-in default** — crop's sensible fallback. The "most logical path"
+   for config.
+2. **Factory override** — app-wide invariant (`cropPlugin({ min: [320,320] })`,
+   "never below 320px anywhere"). Still useful; now optional.
+3. **Per-pipeline, per-stage config** — the owner, in the pipeline block, keyed by
+   stage id. The home for the portrait-vs-gallery distinction. Wins.
+
+Config has **no collision problem** (unlike order — crop's ratio is entirely
+crop's own business, no other plugin competes over it), which is why it needs a
+precedence *ladder* but not the arbitration machinery order needs.
+
+**The stage reads its resolved config at runtime** via `rt.config` — the assembler
+resolves the ladder per `(pipeline, stage)` and hands each stage *its own* merged
+blob (the runner knows which stage it's running):
+
+```ts
+// crop stage — author writes this once, never cares which layer won
+run(ctx, rt) {
+  const { aspect, min } = rt.config as CropConfig;   // resolved for THIS pipeline
+  const r = await rt.ui.request(
+    { kind: 'crop', title: 'Crop', payload: { src: ctx.extra.src, aspect, min } },
+    rt.signal,
+  );
+  return r.cancelled ? { action: 'halt' } : { action: 'resolve', patch: { src: r.value } };
+}
+```
+
+Three things crop touches, kept distinct:
+
+- **config** — construction/assembly-time, via the ladder, read as `rt.config`.
+  Stable for the run.
+- **data** — runtime, via `ctx.extra` (the image the previous stage produced).
+  Changes every run.
+- **UI** — runtime, via `rt.ui.request(...)` (crop is `interactive`: it opens the
+  cropper; the host renders it). The host's job, not config.
+
+### The model, in one frame
+
+- **phases** (vocabulary, owned by the pipeline) + **per-phase `order`** +
+  **`assign`** → *structure*; plugins propose, **owner disposes**.
+- **config ladder** (plugin default → factory → per-pipeline cell), read via
+  **`rt.config`** → *behavior*; varies per pipeline, opaque to the engine.
+- **soft anchors** (`afterIfPresent` / `beforeIfPresent`) → the stubborn
+  intra-phase pair, without cross-plugin coupling.
+- Hard `before`/`after`/`remove` anchors stay for true structural placement.
+
+### Open threads (to explore further)
+
+- **Deferred:** letting a *plugin* introduce a new phase (reintroduces the
+  ordering problem recursively — where does the new phase go?). Start with a fixed,
+  pipeline-owned phase list; stages only join existing phases. If a plugin truly
+  needs a new phase later, anchor the phase relative to an existing one (same
+  soft-anchor idea, one level up).
+- **Merge semantics for the config ladder** — shallow (predictable, owner replaces
+  a whole key) vs. deep. Leaning shallow.
+- **`assign` vs. throw** default — leaning throw-by-default with explicit `assign`
+  to relocate.
+- Whether `phases` on the pipeline is required or defaults to a single implicit
+  phase (absent `phases` = today's flat behavior).
+
+## Interactive vs automated, data currency, planner/executor, plugin-API wrappers
+
+> Status: **design, not yet implemented** — continues the section above. These are
+> the use cases we intend to build next "just to see what we missed," so the
+> intent here is to be concrete enough to implement against, then correct the doc
+> from what the code teaches us.
+
+### Interactive (A) vs automated (B) — when composition even applies
+
+The phase/order/composition machinery is **not always-on**. It's the toolkit for
+the *automated* path. The interactive path opts out by being a single stage, and
+that's correct — not a compromise.
+
+- **A — a human drives a full editor.** You pick a cloud image, a rich editor
+  opens in a dialog (crop, resize, rotate, filters, even its own compression), the
+  user does everything, and the stage returns the result. This is **one
+  `interactive` stage that does the whole job**; the pipeline collapses to
+  `pick → edit → encode → insert`. There's nothing to compose *around* it and you
+  wouldn't want to — the human already handled it. The only thing you "give up" is
+  splicing a stage *inside* the editor (between its crop and resize), which nothing
+  realistic wants, because the canonical phase order already sequences every other
+  operation (compress, watermark, encode) *after* geometry. So: full editor = one
+  self-contained stage, no tradeoff.
+- **B — automated, headless, often per-image.** No human in the loop, so
+  independent operations must be sequenced and extended programmatically. *This* is
+  where phases, order, the planner/executor split, batch, and wrappers earn their
+  keep (compress-before-base64, watermark-in-`annotate`, per-image plans, …).
+
+Scope discipline for A: a fused editor should stay within its phase's remit
+(geometry). If it *also* compresses internally, it's doing `optimize` work inside a
+`geometry` stage, and a later `annotate` watermark lands on the internally
+compressed image — fine if intended, surprising if not. That's an author choice,
+not a model flaw.
+
+### Data currency — a `Blob` on the blackboard, not a dataURI string
+
+crop / resize / compress / watermark all operate on **bytes**. Carry a `Blob` (or
+`ImageBitmap`) through `extra` as the working representation; convert only at the
+edges — URL→blob once at ingress (`fetch`→`blob`), blob→dataURI/upload once at
+egress (`encode`/`insert`). Round-tripping through base64 strings between stages
+would waste work.
+
+The **one coupling that remains** is the `extra` **key schema**: stages don't
+import each other, but they *do* agree on key names and shapes (`extra.blob: Blob`,
+`extra.cropPlan: CropPlan`, `extra.processed: ProcessedItem[]`). That's the
+blackboard contract — the deliberate seam, same spirit as agreeing on a pipeline
+name + anchor id. A plugin should publish the `extra` keys it reads/writes as part
+of its public surface.
+
+### Planner / executor split (the other half of B)
+
+"Instead of editing each image by hand" doesn't require a stage to *do* the work —
+it can emit **instructions** another stage executes.
+
+- **B1 — intent on the blackboard (this is the pattern).** A detector stage writes
+  an intent into `extra` (`extra.cropPlan = { aspect: '1:1', focus: [x, y] }`); the
+  crop stage **reads the plan and runs headless** instead of opening its dialog.
+  The detector neither does the crop nor imports crop — it drops a well-known key;
+  crop picks it up. The elegant payoff: **the same crop stage serves both A and B**
+  by choosing its mode from whether a plan is present:
+
+  ```ts
+  run(ctx, rt) {
+    const plan = ctx.extra.cropPlan as CropPlan | undefined;
+    if (plan) return { action: 'resolve', patch: { blob: await applyCrop(ctx.extra.blob, plan) } }; // headless
+    const r = await rt.ui.request({ kind: 'crop', payload: { ...rt.config, blob: ctx.extra.blob } }, rt.signal);
+    return r.cancelled ? { action: 'halt' } : { action: 'resolve', patch: { blob: r.value } };
+  }
+  ```
+
+  For batch, the detector emits **one plan per image** and crop applies them all
+  without a single prompt — which is the whole point of "not one by one."
+
+- **B2 — a stage rewrites the running pipeline (rejected).** Possible in principle,
+  but it breaks what makes phases/order/assign analyzable: assembly is static, you
+  can read a pipeline and know its stages. Runtime graph mutation makes "what will
+  run?" unanswerable without executing, and it fights owner-disposes (whose order
+  wins — the owner's, or the injected stage's?). **Get the dynamism from data, not
+  from graph surgery:** a static crop stage whose *behavior* is driven by
+  `extra.cropPlan` gives everything B2 would, while staying static and ownable.
+
+### Plugin API as a contract; wrappers & adapters
+
+The decisive generalization: **a plugin's public API is a first-class contract,
+and the pipeline is only *one* consumer of it.** When two plugins don't line up —
+one has a stale API, expects a different data shape, or was built for single-file
+use — you don't modify either; you write a thin **wrapper plugin** that calls the
+public API and re-exposes the capability in the shape the pipeline (or the next
+plugin) needs. Ports-and-adapters / facade / decorator, applied to plugins — the
+Unix "small tools glued by adapters" philosophy.
+
+This splits a plugin into **two orthogonal surfaces**:
+
+```ts
+interface EditorPlugin {
+  // …existing…
+  api?: unknown;                                       // what I expose to OTHER plugins (callable)
+  pipelines?: Pipeline[];                              // how I declare pipelines
+  stages?: Record<string, StageContribution[]>;        // how I join pipelines
+}
+```
+
+A plugin can have either or both. A superb-but-old single-file processor can be
+**pipeline-unaware** — pure `api`, no stages — and a wrapper is what gives it a
+stage. Requirements this places on the conventions:
+
+1. **Resolve another plugin's API by name.** `dependencies: ['image-processor']`
+   already establishes the edge; we add API resolution on top (a plugin registry
+   keyed by name → its `api`, handed to the wrapper at assembly/runtime, loose-typed,
+   consumer casts — same posture as `rt.config`).
+2. **The wrapper owns lifecycle translation.** A stage calling another plugin's API
+   is responsible for turning that plugin's promises/errors/abort into
+   `StageOutcome`s (`halt`/`error`) and honoring `rt.signal` across the loop. The
+   wrapped plugin stays unaware it's in a pipeline.
+
+The worked gallery flow:
+
+```
+[image-processor]   single-file, superb, stale API, pipeline-unaware (api only)
+      ▲ wrapper calls its public API per image (abort + concurrency cap)
+[batch-wrapper]     stage: reads extra.images: Blob[] → writes extra.processed: ProcessedItem[]
+      ▼
+[reformat OR gallery-wrapper]   bridges the shape mismatch (two strategies)
+      ▼
+[gallery-maker]     consumes the corrected shape, builds the gallery
+```
+
+**Two adapter strategies for the shape mismatch:**
+
+- **Stage-level reformatter** — a plugin adding a stage that reads `extra.processed`
+  and writes `extra.galleryInput`. The glue is *visible on the blackboard*:
+  reorderable, removable, inspectable. Prefer this when unsure — it keeps the glue a
+  first-class, debuggable pipeline citizen rather than buried in a facade.
+- **API-level wrapper (facade)** — a plugin wrapping `gallery-maker`'s API and
+  calling it with corrected data. The glue is *encapsulated*; the pipeline sees only
+  the wrapper's stage. Prefer this when the wrapped tool should stay invisible.
+
+**The API is a versioned contract, and the wrapper is the seam that absorbs
+drift.** "Getting old in terms of public API" is exactly what wrappers exist for:
+when the processor's v2 breaks its API, you adjust *one* wrapper and every
+downstream consumer is insulated — churn is contained at the adapter, never rippled
+through the pipeline.
+
+Cost to stay honest about: wrappers add indirection, and wrappers-of-wrappers get
+deep. What keeps it traceable is the **blackboard** — every wrapper's input and
+output still land as named `extra` keys, so the data flow stays visible even when
+the call stack is wrapped three deep.
+
+### Batch — resolved as a wrapper concern, not a core primitive
+
+The earlier open question ("does the context model need first-class batch /
+fan-out?") is **largely answered: no.** The batch-wrapper *is* the fan-out — it maps
+over `extra.images[]` in userland and collects results. The core stays
+single-context; batching is a composition concern a wrapper owns. The only reason
+to revisit a core primitive is if batch needs **engine-level per-item
+progress/abort/UI** — one modal per image, a progress bar across N. Pure data batch
+doesn't; it's a loop inside one stage honoring one `rt.signal`.
+
 ## The four motivating features, mapped
 
 | Feature | Pipeline | Timing | Writes | Notes |
