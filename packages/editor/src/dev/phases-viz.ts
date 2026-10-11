@@ -166,7 +166,7 @@ function scenarioConfigCell(): HTMLElement {
     ])
   );
   return card(
-    '1 · The config cell — one crop plugin, two behaviours',
+    'PC01 · The config cell — one crop plugin, two behaviours',
     'The <b>same</b> <code>cropPlugin</code> in two pipelines. Config is a property of the <b>(stage × pipeline)</b> cell, not the plugin — run each side and watch <code>crop</code> report a different <code>aspect</code> from <code>rt.config</code>.',
     grid
   );
@@ -214,7 +214,7 @@ function scenarioPhaseOrder(): HTMLElement {
   rerender();
 
   return card(
-    '2 · Phase ordering — independent plugins, zero cross-imports',
+    'PC02 · Phase ordering — independent plugins, zero cross-imports',
     'Five plugins, none importing another, each declaring a <code>phase</code>. Because <code>optimize</code> precedes <code>annotate</code> precedes <code>encode</code>, <b>compress runs before base64</b> and <b>watermark lands on the compressed image</b> — automatically. Toggle plugins in/out; the order recomputes, the others never change.',
     body
   );
@@ -249,7 +249,7 @@ function scenarioOverride(): HTMLElement {
     ])
   );
   return card(
-    '3 · Propose / dispose — soft anchor &amp; owner override',
+    'PC03 · Propose / dispose — soft anchor &amp; owner override',
     'Plugins propose; the owner disposes. Left: the <code>resize.afterIfPresent="crop"</code> soft anchor keeps resize after crop even though it was declared first. Right: the owner <code>order</code> pins the exact geometry sequence — surgically, without touching any plugin.',
     grid
   );
@@ -302,7 +302,7 @@ function scenarioErrors(): HTMLElement {
     list.append(el('div', { class: 'ph-errrow' }, [el('b', {}, [label]), el('pre', { class: 'ph-err' }, [`THROWS → ${msg}`])]));
   }
   return card(
-    '4 · Load-bearing strictness — what throws at assembly',
+    'PC04 · Load-bearing strictness — what throws at assembly',
     'A broken hook must fail loudly, like the serializer contract. Unknown phase, an <code>order</code> naming the wrong phase or a missing stage, and ordering cycles all throw during assembly — never silently misbehave.',
     list
   );

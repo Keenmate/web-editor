@@ -17,10 +17,10 @@
         </header>
 
         <!-- ============================================================= -->
-        <!-- EB01 · View mode & editing                                     -->
+        <!-- BU01 · View mode & editing                                     -->
         <!-- ============================================================= -->
         <div class="card">
-            <h2>EB01 · View Mode &amp; Editing</h2>
+            <h2>BU01 · View Mode &amp; Editing</h2>
             <p>
                 One document, four presentations. <code>mode</code> switches between
                 <code>edit</code>, <code>split</code> (editor + live output), <code>preview</code>
@@ -52,10 +52,10 @@ output, or *preview* for the read-only render.
         </div>
 
         <!-- ============================================================= -->
-        <!-- EB02 · I/O format lens                                          -->
+        <!-- BU02 · I/O format lens                                          -->
         <!-- ============================================================= -->
         <div class="card">
-            <h2>EB02 · I/O Format Lens</h2>
+            <h2>BU02 · I/O Format Lens</h2>
             <p>
                 <code>format</code> is only the serialization lens for content I/O — switching it
                 re-reports the SAME document as <code>markdown</code>, <code>html</code>, or
@@ -83,10 +83,10 @@ document. Add a [link](https://keenmate.com) or some `code`."></km-editor>
         </div>
 
         <!-- ============================================================= -->
-        <!-- EB03 · Toolbar & status-bar placement                           -->
+        <!-- BU03 · Toolbar & status-bar placement                           -->
         <!-- ============================================================= -->
         <div class="card">
-            <h2>EB03 · Toolbar &amp; Status Bar</h2>
+            <h2>BU03 · Toolbar &amp; Status Bar</h2>
             <p>
                 The static toolbar docks to any edge (<code>toolbar</code>) flush against the
                 editor; <code>none</code> hides it (the selection toolbar and context menu stay
@@ -120,10 +120,10 @@ Turn on the **status bar** to see the live Words / Chars counters."></km-editor>
         </div>
 
         <!-- ============================================================= -->
-        <!-- EB04 · Theme                                                    -->
+        <!-- BU04 · Theme                                                    -->
         <!-- ============================================================= -->
         <div class="card">
-            <h2>EB04 · Theme</h2>
+            <h2>BU04 · Theme</h2>
             <p>
                 <code>theme</code> reflects to the host attribute (<code>:host([theme="…"])</code>),
                 the hook consumers style against. Flip it to see the element restyle in place — the
@@ -144,10 +144,10 @@ The `theme` attribute is reflected to the host for CSS theming. Switch it above.
         </div>
 
         <!-- ============================================================= -->
-        <!-- EB05 · Declarative (no JavaScript)                              -->
+        <!-- BU05 · Declarative (no JavaScript)                              -->
         <!-- ============================================================= -->
         <div class="card">
-            <h2>EB05 · Declarative Setup</h2>
+            <h2>BU05 · Declarative Setup</h2>
             <p>
                 No JavaScript — just the element with attributes. Everything below is configured in
                 markup: the initial <code>value</code>, the <code>format</code>, the
@@ -186,13 +186,13 @@ This editor was set up entirely in **HTML** — no script wired it.
                 r.addEventListener('change', (e) => { if (e.target.checked) fn(e.target.value); }));
 
         function wire() {
-            // EB01 — mode + readonly
+            // BU01 — mode + readonly
             const eb01 = document.getElementById('eb01');
             onRadio('eb01-mode', (v) => eb01.setAttribute('mode', v));
             document.getElementById('eb01-readonly').addEventListener('change', (e) =>
                 setBool(eb01, 'readonly', e.target.checked));
 
-            // EB02 — format lens + live output readout
+            // BU02 — format lens + live output readout
             const eb02 = document.getElementById('eb02');
             const out = document.getElementById('eb02-out');
             const refresh = () => { out.textContent = eb02.getValue?.() ?? ''; };
@@ -200,12 +200,12 @@ This editor was set up entirely in **HTML** — no script wired it.
             eb02.addEventListener('change', refresh);
             if (eb02.isReady) refresh(); else eb02.addEventListener('ready', refresh);
 
-            // EB03 — toolbar + status-bar placement
+            // BU03 — toolbar + status-bar placement
             const eb03 = document.getElementById('eb03');
             onRadio('eb03-toolbar', (v) => eb03.setAttribute('toolbar', v));
             onRadio('eb03-status', (v) => eb03.setAttribute('statusbar', v));
 
-            // EB04 — theme (empty = remove the attribute)
+            // BU04 — theme (empty = remove the attribute)
             const eb04 = document.getElementById('eb04');
             onRadio('eb04-theme', (v) => v ? eb04.setAttribute('theme', v) : eb04.removeAttribute('theme'));
 

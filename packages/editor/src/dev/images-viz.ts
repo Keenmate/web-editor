@@ -269,7 +269,7 @@ function scenarioPick(): HTMLElement {
   ]);
 
   return card(
-    'A + B1 · pick → (interactive crop | planned headless crop) → compress → watermark → encode → insert',
+    'IP01 · A + B1 — pick → (interactive crop | planned headless crop) → compress → watermark → encode → insert',
     'Run it: a <b>cloud picker</b> opens, then (A) the <b>crop editor</b> modal — one stage does the whole interactive job and returns a blob. Turn on <b>planner</b> and run again: an <code>auto-plan</code> stage writes <code>extra.cropPlan</code> and the <b>same</b> crop stage runs <b>headless</b>, no dialog. Blob is the currency throughout; compress shrinks it, watermark lands on the compressed image, base64 serializes once at the edge.',
     el('div', {}, [controls, run, log, result])
   );
@@ -286,7 +286,7 @@ function scenarioGallery(): HTMLElement {
   }, ['▶ run gallery:build']);
 
   return card(
-    'wrappers + batch + adapter · pick-many → batch-process → adapt → assemble',
+    'IP02 · wrappers + batch + adapter — pick-many → batch-process → adapt → assemble',
     'Pick <b>several</b> images. A pipeline-<b>unaware</b> single-file <code>image-processor</code> (API only, no stages) is wrapped by <code>image-batch</code>, which calls its public <code>process()</code> per image. <code>image-adapt</code> reshapes <code>{id,name,blob}</code> → <code>{src,caption}</code>, and <code>gallery-maker</code> builds the gallery via its own public <code>build()</code> API. No plugin imports another — they meet on the <code>extra</code> blackboard and by named API.',
     el('div', {}, [run, log, result])
   );
