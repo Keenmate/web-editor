@@ -30,7 +30,7 @@ Blazor, or plain HTML.
 ## Demos & docs
 
 - 🧪 [Live examples](https://examples.web-editor.keenmate.dev) — the hosted example
-  site (basic usage, plugins, the pipeline visualizer, and the playground).
+  site (basic usage, rich content, plugins, the pipeline lab, and the playground).
 - 📘 [Pipelines guide](./docs/pipelines/README.md) — how pipelines work, with diagrams.
 - 📚 [Examples guide](./EXAMPLES.md) — the example-site convention.
 

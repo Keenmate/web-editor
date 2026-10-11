@@ -16,7 +16,14 @@
         .pick-grid { display: flex; gap: .5rem; margin-bottom: .75rem; }
         .pick-grid img { width: 120px; height: 84px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
         .pick-grid img:hover { border-color: #16a34a; }
-        .pick-actions { display: flex; justify-content: flex-end; }
+        .pick-actions { display: flex; justify-content: flex-end; gap: .5rem; }
+
+        /* PP03 crop dialog — a preview + aspect picker. Layout only; buttons use
+           the shared vocabulary. */
+        .pick-grid img.sel { border-color: #16a34a; }
+        .crop-prev { max-width: 100%; max-height: 220px; border-radius: 8px; display: block; margin-bottom: .75rem; }
+        .crop-row { display: flex; align-items: center; gap: .5rem; margin-bottom: .75rem; font-size: 13px; }
+        .crop-row select { padding: 4px 7px; border: 1px solid #cbd5e0; border-radius: 6px; }
     </style>
 </head>
 <body>
@@ -80,6 +87,33 @@ Toggle the switch — the bullet/ordered **list** group disappears from the tool
 and a custom status item appears, without rebuilding the document."></km-editor>
             </div>
         </div>
+
+        <!-- ============================================================= -->
+        <!-- PP03 · Cloud image → crop → insert                              -->
+        <!-- ============================================================= -->
+        <div class="card">
+            <h2>PP03 · Cloud Image → Crop → Insert</h2>
+            <p>
+                The real end-to-end image flow, landing in the editor. A second plugin splices an
+                interactive <code>crop</code> stage <i>after</i> <code>upload</code> (and before
+                <code>insert</code>) into <code>image:browser:pick</code> — the browser plugin is
+                never touched. Pick a cloud image, crop it in the dialog, and the <b>cropped</b>
+                image is inserted. The editor is locked for the whole run.
+            </p>
+
+            <div class="controls">
+                <button type="button" id="ep03-insert">Pick &amp; crop a cloud image</button>
+                <span class="muted">pipeline <code>image:browser:pick</code> — pick → upload → <b>crop</b> → insert</span>
+            </div>
+
+            <div class="demo-area">
+                <km-editor id="ep03" mode="edit" format="markdown" toolbar="top" value="# Crop then insert
+
+Click **Pick & crop a cloud image** (or the ☁ toolbar button), choose an image,
+pick an aspect ratio, and apply — the cropped result lands here."></km-editor>
+            </div>
+            <p class="muted">The cropped image inserts as a data URL — <span id="ep03-lock">idle</span></p>
+        </div>
     </div>
 
     <!-- Register the element. -->
@@ -122,6 +156,132 @@ and a custom status item appears, without rebuilding the document."></km-editor>
         // Fake upload: wait a beat (so the lock is visible), then return the url.
         const fakeUpload = (asset) => new Promise((r) => setTimeout(() => r(asset.url), 700));
 
+        // ── PP03 crop flow ───────────────────────────────────────────────────
+        // A CORS-safe local "cloud catalog": generated swatches as data URLs, so
+        // the crop stage can draw them to a canvas and read the pixels back
+        // (a remote cross-origin image would taint the canvas).
+        function swatch(name, color, w, h) {
+            const c = document.createElement('canvas');
+            c.width = w; c.height = h;
+            const g = c.getContext('2d');
+            g.fillStyle = color; g.fillRect(0, 0, w, h);
+            const u = Math.min(w, h);
+            g.fillStyle = 'rgba(255,255,255,.95)';
+            g.textAlign = 'center'; g.textBaseline = 'middle';
+            g.font = `bold ${Math.round(u / 6)}px system-ui, sans-serif`;
+            g.fillText(name, w / 2, h / 2 - u / 14);
+            g.font = `${Math.round(u / 12)}px ui-monospace, monospace`;
+            g.fillText(`${w}×${h}`, w / 2, h / 2 + u / 9);
+            return { url: c.toDataURL('image/png'), name, w, h };
+        }
+        const CROP_CATALOG = [
+            swatch('Sunset', '#f59e0b', 640, 400),
+            swatch('Forest', '#16a34a', 400, 600),
+            swatch('Ocean', '#0ea5e9', 800, 450),
+            swatch('Berry', '#db2777', 500, 500),
+        ];
+
+        // Crop a data-URL image to `aspect` ('free' | 'W:H'), centered → new data URL.
+        function cropToAspect(src, aspect) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    let cw = img.width, ch = img.height;
+                    if (aspect !== 'free') {
+                        const [aw, ah] = aspect.split(':').map(Number);
+                        const target = aw / ah;
+                        if (cw / ch > target) cw = Math.round(ch * target);
+                        else ch = Math.round(cw / target);
+                    }
+                    const sx = Math.round((img.width - cw) / 2);
+                    const sy = Math.round((img.height - ch) / 2);
+                    const c = document.createElement('canvas');
+                    c.width = cw; c.height = ch;
+                    c.getContext('2d').drawImage(img, sx, sy, cw, ch, 0, 0, cw, ch);
+                    resolve({ src: c.toDataURL('image/png'), w: cw, h: ch });
+                };
+                img.src = src;
+            });
+        }
+
+        // A late plugin that splices an interactive `crop` stage AFTER `upload`
+        // (so before `insert`) into image:browser:pick — the browser plugin is
+        // never imported or modified. This is the universal extension bus.
+        const cropPlugin = definePlugin({
+            name: 'image-crop',
+            stages: {
+                'image:browser:pick': [
+                    {
+                        after: 'upload',
+                        stage: {
+                            id: 'crop',
+                            interactive: true,
+                            run: async (c, rt) => {
+                                const res = await rt.ui.request(
+                                    { kind: 'crop-editor', title: 'Crop image', payload: { src: c.extra.src } },
+                                    rt.signal
+                                );
+                                if (res.cancelled || !res.value) return { action: 'halt', reason: 'crop cancelled' };
+                                return { action: 'resolve', patch: { src: res.value.src } };
+                            },
+                        },
+                    },
+                ],
+            },
+        });
+
+        // Host for PP03: a swatch picker + a crop editor (preview + aspect picker).
+        const cropHost = {
+            request(req, signal) {
+                if (req.kind === 'cloud-picker') {
+                    return new Promise((resolve) => {
+                        const overlay = document.createElement('div');
+                        overlay.className = 'pick-modal';
+                        overlay.innerHTML =
+                            '<div class="pick-card"><div class="pick-title">' + req.title + '</div>' +
+                            '<div class="pick-grid">' +
+                            CROP_CATALOG.map((img, i) => '<img data-i="' + i + '" src="' + img.url + '" alt="' + img.name + '" title="' + img.name + ' · ' + img.w + '×' + img.h + '">').join('') +
+                            '</div><div class="pick-actions"><button class="btn-outline" data-cancel>Cancel</button></div></div>';
+                        const close = () => { signal.removeEventListener('abort', onAbort); overlay.remove(); };
+                        const onAbort = () => { close(); resolve({ cancelled: true }); };
+                        signal.addEventListener('abort', onAbort);
+                        overlay.querySelectorAll('[data-i]').forEach((el) =>
+                            el.addEventListener('click', () => { close(); resolve({ cancelled: false, value: CROP_CATALOG[+el.dataset.i] }); }));
+                        overlay.querySelector('[data-cancel]').addEventListener('click', () => { close(); resolve({ cancelled: true }); });
+                        document.body.appendChild(overlay);
+                    });
+                }
+
+                if (req.kind === 'crop-editor') {
+                    return new Promise((resolve) => {
+                        const src = req.payload.src;
+                        const overlay = document.createElement('div');
+                        overlay.className = 'pick-modal';
+                        overlay.innerHTML =
+                            '<div class="pick-card"><div class="pick-title">' + req.title + '</div>' +
+                            '<img class="crop-prev" src="' + src + '" alt="preview">' +
+                            '<div class="crop-row">aspect: <select data-role=aspect>' +
+                            ['free', '1:1', '3:4', '16:9'].map((o) => '<option value="' + o + '">' + o + '</option>').join('') +
+                            '</select></div>' +
+                            '<div class="pick-actions"><button class="btn-outline" data-cancel>Cancel</button><button data-role=apply>Apply crop</button></div></div>';
+                        const close = () => { signal.removeEventListener('abort', onAbort); overlay.remove(); };
+                        const onAbort = () => { close(); resolve({ cancelled: true }); };
+                        signal.addEventListener('abort', onAbort);
+                        overlay.querySelector('[data-cancel]').addEventListener('click', () => { close(); resolve({ cancelled: true }); });
+                        overlay.querySelector('[data-role=apply]').addEventListener('click', async () => {
+                            const aspect = overlay.querySelector('[data-role=aspect]').value;
+                            const out = await cropToAspect(src, aspect);
+                            close();
+                            resolve({ cancelled: false, value: out });
+                        });
+                        document.body.appendChild(overlay);
+                    });
+                }
+
+                return Promise.resolve({ cancelled: true });
+            },
+        };
+
         function wireEp01() {
             const el = document.getElementById('ep01');
             const lockStatus = document.getElementById('ep01-lock');
@@ -159,9 +319,24 @@ and a custom status item appears, without rebuilding the document."></km-editor>
             apply();
         }
 
+        function wireEp03() {
+            const el = document.getElementById('ep03');
+            const lockStatus = document.getElementById('ep03-lock');
+            // Browser plugin (default upload = use the picked url as-is) + the
+            // crop plugin that splices its interactive stage in.
+            el.plugins = [...defaultPlugins(), imageBrowserPlugin(), cropPlugin];
+            const engine = el.engine;
+            engine.setInteractionHost(cropHost);
+            engine.events.on('lock', (e) => {
+                lockStatus.textContent = e.locked ? '⏳ editor locked — pipeline running' : 'idle';
+            });
+            document.getElementById('ep03-insert').addEventListener('click', () => engine.run('image:browser:pick'));
+        }
+
         function start() {
             wireEp01();
             wireEp02();
+            wireEp03();
             persistControls('plugins');
         }
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);

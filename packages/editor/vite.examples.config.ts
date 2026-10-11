@@ -34,9 +34,8 @@ export default defineConfig({
       input: {
         index: resolve(__dirname, 'index.html'),
         basic: resolve(__dirname, 'examples-basic.html'),
+        content: resolve(__dirname, 'examples-content.html'),
         plugins: resolve(__dirname, 'examples-plugins.html'),
-        phases: resolve(__dirname, 'examples-phases.html'),
-        imageCases: resolve(__dirname, 'examples-image-cases.html'),
         pipelines: resolve(__dirname, 'examples-pipelines.html'),
         playground: resolve(__dirname, 'examples-playground.html'),
       },

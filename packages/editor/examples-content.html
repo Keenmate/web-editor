@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rich Content — Web Editor</title>
+
+    <!-- Shared example styles -->
+    <link rel="stylesheet" href="examples-shared.css" />
+    <style>
+        /* Small, focused editors: each card is one feature, so the editor stays
+           compact and the effect is easy to see. Layout only — the editor ships
+           its own (shadow-DOM) styling. */
+        .demo-area km-editor { min-height: 150px; }
+        /* The two-column "editor + live Markdown" layout the cards use. */
+        .rc-split { display: grid; grid-template-columns: 1fr minmax(0, 320px); gap: 16px; align-items: start; }
+        .rc-split .output { margin-top: 0; }
+        @media (max-width: 760px) { .rc-split { grid-template-columns: 1fr; } }
+        .controls input[type="url"] { flex: 1 1 220px; min-width: 160px; padding: 6px 9px; border: 1px solid #cbd5e0; border-radius: 7px; font: inherit; }
+        .controls select { padding: 5px 8px; border: 1px solid #cbd5e0; border-radius: 7px; background: #fff; font: inherit; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="index.html" class="back-link">← Back to Examples</a>
+            <h1>Rich Content</h1>
+            <p class="subtitle">The first-party content plugins on a small live <code>&lt;km-editor&gt;</code> — links, images, tables, and code with syntax highlighting. Each card shows the feature landing in the document, with its live serialization beside it so you can see exactly what the editor produced.</p>
+        </header>
+
+        <!-- Page-wide output lens. The editors hold ONE document; this only
+             changes which serialization the readout panels show. -->
+        <div class="card rc-lens-bar">
+            <div class="controls">
+                <span><b>Output lens</b> — read the same document in any format:</span>
+                <label><input type="radio" name="rc-lens" value="markdown" checked> Markdown</label>
+                <label><input type="radio" name="rc-lens" value="html"> HTML</label>
+                <label><input type="radio" name="rc-lens" value="json"> JSON</label>
+            </div>
+            <p class="muted">
+                <code>format</code> is just a lens on one ProseMirror document. <b>HTML</b> and
+                <b>JSON</b> round-trip losslessly; <b>Markdown</b> is lossy at the edges — flip to
+                HTML on the table card to see the same table go from a raw-HTML blob to a clean
+                <code>&lt;table&gt;</code>.
+            </p>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- RC01 · Links                                                    -->
+        <!-- ============================================================= -->
+        <div class="card">
+            <h2>RC01 · Links</h2>
+            <p>
+                The <code>link</code> plugin adds a <code>link</code> mark, the
+                <code>insert-link</code> command (bound to <kbd>Mod-K</kbd>), and the 🔗 toolbar
+                button. Select some text, then apply a link — the Markdown
+                <code>[text](url)</code> appears on the right.
+            </p>
+            <div class="controls">
+                <input type="url" id="rc01-url" value="https://keenmate.com" aria-label="Link URL" />
+                <button type="button" id="rc01-apply">Apply link to selection</button>
+                <span class="muted">or select text and press <kbd>Mod-K</kbd> / click 🔗</span>
+            </div>
+            <div class="rc-split">
+                <div class="demo-area">
+                    <km-editor id="rc01" mode="edit" format="markdown" toolbar="top" data-out="rc01-out" value="# Links
+
+Select the words **KeenMate website** and apply a link, or select any other
+text and use the toolbar 🔗 button."></km-editor>
+                </div>
+                <div class="output">
+                    <div class="output-label">Live Markdown</div>
+                    <pre id="rc01-out"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- RC02 · Images                                                   -->
+        <!-- ============================================================= -->
+        <div class="card">
+            <h2>RC02 · Images</h2>
+            <p>
+                The <code>image</code> plugin adds an inline <code>image</code> node (🖼 toolbar
+                button). Drop a URL in and insert it at the cursor — it serializes to Markdown as
+                <code>![alt](src)</code>.
+            </p>
+            <div class="controls">
+                <input type="url" id="rc02-url" value="https://picsum.photos/id/1025/320/200" aria-label="Image URL" />
+                <button type="button" id="rc02-insert">Insert image at cursor</button>
+            </div>
+            <div class="rc-split">
+                <div class="demo-area">
+                    <km-editor id="rc02" mode="edit" format="markdown" toolbar="top" data-out="rc02-out" value="# Images
+
+Put your cursor on an empty line, then insert an image. The toolbar 🖼 button
+prompts for a URL; the button above inserts one directly."></km-editor>
+                </div>
+                <div class="output">
+                    <div class="output-label">Live Markdown</div>
+                    <pre id="rc02-out"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- RC03 · Tables                                                   -->
+        <!-- ============================================================= -->
+        <div class="card">
+            <h2>RC03 · Tables</h2>
+            <p>
+                The <code>tables</code> plugin adds an editable table (⊞ toolbar button) with
+                row/column commands. One thing worth seeing: a table <b>exports as a raw-HTML GFM
+                fallback</b> and does <b>not</b> parse back into nodes on Markdown import — watch the
+                live output switch to an HTML <code>&lt;table&gt;</code> block.
+            </p>
+            <div class="controls">
+                <button type="button" id="rc03-insert">Insert table</button>
+                <span class="muted">right-click a cell for row / column / header commands</span>
+            </div>
+            <div class="rc-split">
+                <div class="demo-area">
+                    <km-editor id="rc03" mode="edit" format="markdown" toolbar="top" data-out="rc03-out" value="# Tables
+
+Click **Insert table**, then type into the cells. Right-click for row and
+column operations."></km-editor>
+                </div>
+                <div class="output">
+                    <div class="output-label">Live Markdown (raw-HTML fallback)</div>
+                    <pre id="rc03-out"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- RC04 · Code & syntax highlighting                               -->
+        <!-- ============================================================= -->
+        <div class="card">
+            <h2>RC04 · Code &amp; Syntax Highlighting</h2>
+            <p>
+                The <code>code-highlight</code> plugin adds a <code>code_block</code> node with a
+                language attribute and live Prism highlighting. Pick a language, insert a block, then
+                type — it serializes to a fenced <code>```lang</code> block.
+            </p>
+            <div class="controls">
+                <label>language:
+                    <select id="rc04-lang">
+                        <option value="javascript">javascript</option>
+                        <option value="typescript">typescript</option>
+                        <option value="python">python</option>
+                        <option value="css">css</option>
+                        <option value="html">html</option>
+                        <option value="json">json</option>
+                        <option value="bash">bash</option>
+                        <option value="sql">sql</option>
+                        <option value="yaml">yaml</option>
+                        <option value="markdown">markdown</option>
+                    </select>
+                </label>
+                <button type="button" id="rc04-insert">Insert code block</button>
+            </div>
+            <div class="rc-split">
+                <div class="demo-area">
+                    <km-editor id="rc04" mode="edit" format="markdown" toolbar="top" data-out="rc04-out" value="# Code blocks
+
+Pick a language and insert a block, then type some code. The highlighting is
+live inside the editor."></km-editor>
+                </div>
+                <div class="output">
+                    <div class="output-label">Live Markdown</div>
+                    <pre id="rc04-out"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register the element. -->
+    <script type="module" src="/src/index.ts"></script>
+
+    <!-- Page wiring: real inserts through the engine's write port + a live
+         Markdown readout per editor (the shipped `change` event). -->
+    <script type="module">
+        import { insertCodeBlock } from '/src/index.ts';
+        import { persistControls } from './examples-controls-store.js';
+
+        // Run `fn(view)` once the editor is mounted (its view exists).
+        function withView(el, fn) {
+            const go = () => { const v = el.engine?.view; if (v) fn(v); };
+            if (el.isReady) go(); else el.addEventListener('ready', go);
+        }
+
+        // The active output lens — one document, read in any serialization.
+        let lens = 'markdown';
+        const LENS_NAME = { markdown: 'Markdown', html: 'HTML', json: 'JSON' };
+
+        function labelFor(el) {
+            if (el.id === 'rc03' && lens === 'markdown') return 'Live Markdown (raw-HTML fallback)';
+            return 'Live ' + LENS_NAME[lens];
+        }
+
+        // Mirror every editor's live content — in the active lens — into its
+        // `data-out` target, and keep its panel label in sync.
+        function wireOutputs() {
+            const editors = [...document.querySelectorAll('km-editor[data-out]')];
+            const refreshOne = (el) => {
+                const out = document.getElementById(el.getAttribute('data-out'));
+                if (!out) return;
+                out.textContent = el.getValue?.(lens) ?? '';
+                const label = out.closest('.output')?.querySelector('.output-label');
+                if (label) label.textContent = labelFor(el);
+            };
+            editors.forEach((el) => {
+                const refresh = () => refreshOne(el);
+                el.addEventListener('change', refresh);
+                if (el.isReady) refresh(); else el.addEventListener('ready', refresh);
+            });
+            // Flip every readout to the chosen lens.
+            document.querySelectorAll('input[name="rc-lens"]').forEach((r) =>
+                r.addEventListener('change', (e) => {
+                    if (!e.target.checked) return;
+                    lens = e.target.value;
+                    editors.forEach(refreshOne);
+                }));
+        }
+
+        function wire() {
+            wireOutputs();
+
+            // RC01 — apply a link mark to the current selection (no native prompt).
+            const rc01 = document.getElementById('rc01');
+            document.getElementById('rc01-apply').addEventListener('click', () => {
+                withView(rc01, (view) => {
+                    const { from, to, empty } = view.state.selection;
+                    if (empty) { alert('Select some text first.'); return; }
+                    const href = document.getElementById('rc01-url').value || '#';
+                    const mark = view.state.schema.marks.link.create({ href, title: null });
+                    view.dispatch(view.state.tr.addMark(from, to, mark));
+                    view.focus();
+                });
+            });
+
+            // RC02 — insert an image node at the cursor.
+            const rc02 = document.getElementById('rc02');
+            document.getElementById('rc02-insert').addEventListener('click', () => {
+                withView(rc02, (view) => {
+                    const src = document.getElementById('rc02-url').value;
+                    if (!src) return;
+                    const node = view.state.schema.nodes.image.create({ src, alt: '', title: '' });
+                    view.dispatch(view.state.tr.replaceSelectionWith(node).scrollIntoView());
+                    view.focus();
+                });
+            });
+
+            // RC03 — insert a table via the shipped command pipeline.
+            const rc03 = document.getElementById('rc03');
+            document.getElementById('rc03-insert').addEventListener('click', () => {
+                rc03.engine?.run('insert-table');
+                rc03.engine?.focus();
+            });
+
+            // RC04 — insert a code block in the chosen language.
+            const rc04 = document.getElementById('rc04');
+            document.getElementById('rc04-insert').addEventListener('click', () => {
+                withView(rc04, (view) => {
+                    const lang = document.getElementById('rc04-lang').value;
+                    insertCodeBlock(lang)(view.state, view.dispatch);
+                    view.focus();
+                });
+            });
+
+            persistControls('content');
+        }
+
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire);
+        else wire();
+    </script>
+
+    <script type="module" src="examples-copy-link.js"></script>
+    <script type="module" src="examples-chapter-nav.js"></script>
+</body>
+</html>

@@ -154,31 +154,24 @@
                 description: 'The shipped <km-editor> element — each input as ONE live editor you configure with control switches: view mode (edit / split / preview / inline), I/O format (markdown / html / json), read-only, toolbar edge, status bar, and theme — plus a declarative, no-JavaScript setup.'
             },
             {
+                href: 'examples-content.html',
+                icon: '✍️',
+                title: 'Rich Content',
+                badge: 'New',
+                description: 'The first-party content plugins on a small live editor — links, images, tables, and code with syntax highlighting. Each card shows the feature landing in the document, with the live Markdown serialization beside it (including the raw-HTML table fallback).'
+            },
+            {
                 href: 'examples-plugins.html',
                 icon: '🔌',
                 title: 'Plugins & Pipelines',
                 badge: 'New',
-                description: 'Compose a custom plugin set on the element, override/remove toolbar groups by id, and watch the cloud-image pipeline (pick → upload → insert, editor locked) — then drop in the base64 plugin and see it splice a stage into that pipeline without touching it.'
-            },
-            {
-                href: 'examples-phases.html',
-                icon: '🧱',
-                title: 'Phases & Config Cell',
-                badge: 'New',
-                description: 'A prototype of the phase-based assembly model: independent plugins declare a phase, the pipeline owns the ordered vocabulary, the app owner disposes via order/assign, and config resolves per (stage × pipeline) cell to rt.config. Shows the config cell (one crop plugin → two behaviours), automatic compress-before-base64 ordering, soft anchors, and the assembly throw cases.'
-            },
-            {
-                href: 'examples-image-cases.html',
-                icon: '🖼️',
-                title: 'Image Pipeline Use Cases',
-                badge: 'New',
-                description: 'The cloud-image use cases running end to end with real Blobs: (A) an interactive crop-editor stage returning a blob, (B1) a planner driving the same crop stage headless, and the plugin-API wrapper + batch + adapter flow — a pipeline-unaware single-file processor wrapped for batch, a shape adapter, and a gallery maker called via its public API.'
+                description: 'Compose a custom plugin set on the element, override/remove toolbar groups by id, and watch the cloud-image pipeline (pick → upload → insert, editor locked) — then drop in the base64 plugin, or splice an interactive crop stage, without touching the browser plugin.'
             },
             {
                 href: 'examples-pipelines.html',
                 icon: '🧪',
-                title: 'Pipeline Visualizer',
-                description: 'The content-pipeline layer under a microscope: an editor beside one lane per pipeline (paste sync/async, idle derivations, deep checks), each stage chip blinking green → gray → amber → red by state. Sliders for stage delay; a modal host; the gating editor lock.'
+                title: 'Pipeline Lab',
+                description: 'The content-pipeline layer under a microscope: a live run visualizer (one lane per pipeline, each stage chip blinking green → gray → amber → red), plus the design-stage phase/config-cell assembly model and the image use cases running end to end on real Blobs.'
             },
             {
                 href: 'examples-playground.html',

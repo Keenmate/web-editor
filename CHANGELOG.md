@@ -73,11 +73,23 @@ released to a registry yet.
   base64 toggle.
 - Categorised logging (`EDITOR:*`) via the shared core logging module.
 - **Examples site + `EXAMPLES.md`** — a hub `index.html` (page registry → cards +
-  a floating jump-nav) with per-feature pages (Basic Usage, Plugins & Pipelines,
-  Pipeline Visualizer, Playground) on a shared skeleton (`examples-shared.css` +
+  a floating jump-nav) with per-feature pages (Basic Usage, Rich Content, Plugins &
+  Pipelines, Pipeline Lab, Playground) on a shared skeleton (`examples-shared.css` +
   self-initializing JS: chapter-nav / copy-link / controls-store). A multi-page
   Vite build (`build:examples` → `dist-examples/`) packages it as a self-contained
   static site; `EXAMPLES.md` is the portable guide for reproducing the convention.
+- **Real-editor example pages.** A new **Rich Content** page puts the first-party
+  content plugins on a small live `<km-editor>` — links, images, tables, and code
+  with syntax highlighting — each card showing the feature land in the document,
+  with a page-wide **Markdown / HTML / JSON output-lens toggle** on the readouts
+  (one document, any serialization; the table card shows the raw-HTML-vs-clean-
+  `<table>` contrast, HTML/JSON lossless). **Plugins & Pipelines** gains PP03
+  **Cloud image → crop → insert**: a second plugin splices an interactive `crop`
+  stage after `upload` into `image:browser:pick` (the browser plugin untouched),
+  landing the cropped image in the editor. The former **Pipeline Visualizer** page
+  becomes the **Pipeline Lab** — the run visualizer plus the (design-stage)
+  phase/config-cell and image use-case prototypes folded in as sections; the two
+  standalone prototype pages are removed.
 - **Static examples image** — a two-stage `Dockerfile` (node build → nginx serve)
   + `nginx.conf` that serves `dist-examples/` and silently drops vulnerability-
   scanner traffic.
@@ -89,8 +101,9 @@ released to a registry yet.
   as a property of the `(stage × pipeline)` pair, resolved default ← factory ←
   per-pipeline and read by a stage as `rt.config`. Also: plugin **public API** as a
   first-class contract with wrapper/adapter plugins, and batch-as-a-wrapper. Two
-  dev-only example pages prototype it end to end against the real assembler without
-  touching the shipped engine — **Phases & Config Cell** (ordering + config
+  dev-only visualizations (now sections of the **Pipeline Lab** example page)
+  prototype it end to end against the real assembler without touching the shipped
+  engine — **Phases & Config Cell** (ordering + config
   resolution + the assembly throw cases) and **Image Pipeline Use Cases** (an
   interactive crop-editor stage, a planner driving the same crop stage headless,
   and the API-wrapper + batch + gallery flow, with real `Blob`s). Not yet promoted
