@@ -72,6 +72,29 @@ released to a registry yet.
   (`pipelines.html`) gains a command-triggered image lane, a cloud picker, and a
   base64 toggle.
 - Categorised logging (`EDITOR:*`) via the shared core logging module.
+- **Examples site + `EXAMPLES.md`** — a hub `index.html` (page registry → cards +
+  a floating jump-nav) with per-feature pages (Basic Usage, Plugins & Pipelines,
+  Pipeline Visualizer, Playground) on a shared skeleton (`examples-shared.css` +
+  self-initializing JS: chapter-nav / copy-link / controls-store). A multi-page
+  Vite build (`build:examples` → `dist-examples/`) packages it as a self-contained
+  static site; `EXAMPLES.md` is the portable guide for reproducing the convention.
+- **Static examples image** — a two-stage `Dockerfile` (node build → nginx serve)
+  + `nginx.conf` that serves `dist-examples/` and silently drops vulnerability-
+  scanner traffic.
+- **Pipeline ordering & configuration — design + dev prototype (design-stage).**
+  `PIPELINES.md` gains the phase model: a pipeline-owned ordered **phase**
+  vocabulary; the **propose/dispose** ladder (a plugin proposes a stage's `phase`,
+  the app owner disposes via per-phase `order` / `assign`); soft intra-phase
+  anchors (`afterIfPresent` / `beforeIfPresent`); and the **config cell** — config
+  as a property of the `(stage × pipeline)` pair, resolved default ← factory ←
+  per-pipeline and read by a stage as `rt.config`. Also: plugin **public API** as a
+  first-class contract with wrapper/adapter plugins, and batch-as-a-wrapper. Two
+  dev-only example pages prototype it end to end against the real assembler without
+  touching the shipped engine — **Phases & Config Cell** (ordering + config
+  resolution + the assembly throw cases) and **Image Pipeline Use Cases** (an
+  interactive crop-editor stage, a planner driving the same crop stage headless,
+  and the API-wrapper + batch + gallery flow, with real `Blob`s). Not yet promoted
+  into the engine.
 
 ### Notes
 
