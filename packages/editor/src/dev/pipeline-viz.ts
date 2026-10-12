@@ -541,7 +541,7 @@ function wire(engine: any) {
   // page dim + badge — this is the engine locking itself, not a page-level trick.
   disposers.push(
     engine.events.on('lock', (e: any) => {
-      (document.querySelector('#pv-editor-col') as HTMLElement | null)?.classList.toggle('pv-locked', e.locked);
+      (document.querySelector('#pv-editor-col') as HTMLElement | null)?.classList.toggle('pv-locked', e.isLocked);
     })
   );
 

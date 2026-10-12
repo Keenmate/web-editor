@@ -156,6 +156,16 @@ export class ViewLayout {
     this.#outputPre.textContent = this.#serialize(this.#outputFormat);
   }
 
+  /**
+   * Release live positioning resources without tearing down the structure.
+   * The element calls this on `disconnect()` so a detached-but-held `inline`
+   * editor doesn't keep a floating-ui `autoUpdate` loop running against its
+   * detached host; a reconnect re-anchors via `render()`.
+   */
+  deactivate(): void {
+    this.#teardownAnchor();
+  }
+
   destroy(): void {
     this.#teardownAnchor();
     this.overlayLayer.remove();

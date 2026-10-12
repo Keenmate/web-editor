@@ -71,7 +71,7 @@ export interface EditorEngineOptions {
   /** Override the document schema (defaults to one assembled from `editorPlugins`). */
   schema?: Schema;
   /** Start read-only (no editing). Defaults to editable. */
-  editable?: boolean;
+  isEditable?: boolean;
   /** Host modal bridge for interactive pipeline stages. Defaults to a
    * `window.confirm`-backed host; inject a richer picker via this or
    * `setInteractionHost`. */
@@ -85,7 +85,7 @@ export interface EngineEventMap {
   ready: EditorEngine;
   destroy: EditorEngine;
   /** A gating pipeline locked / unlocked the surface for the duration of a run. */
-  lock: { engine: EditorEngine; locked: boolean };
+  lock: { engine: EditorEngine; isLocked: boolean };
 }
 
 export class EditorEngine {
@@ -101,13 +101,13 @@ export class EditorEngine {
   readonly statusItems: StatusItem[];
   view: EditorView;
 
-  private editable: boolean;
+  #isEditable: boolean;
   #plugins: EditorPlugin[];
   #markdown: MarkdownIO;
   #pipelines: PipelineRegistry;
   #interactionHost: InteractionHost;
   /** Editability to restore when a gating lock releases. */
-  #preLockEditable?: boolean;
+  #preLockIsEditable?: boolean;
 
   constructor(options: EditorEngineOptions) {
     const plugins = orderPlugins(options.editorPlugins ?? defaultPlugins());
@@ -155,7 +155,7 @@ export class EditorEngine {
     this.menuItems = assembleItems(plugins, 'menuItems', coreMenuItems, coreMenuHistoryItems);
     this.statusItems = assembleStatusItems(plugins, coreStatusItems);
 
-    this.editable = options.editable ?? true;
+    this.#isEditable = options.isEditable ?? true;
 
     const doc = this.resolveInitialDoc(options, schema);
     const state = EditorState.create({
@@ -186,7 +186,7 @@ export class EditorEngine {
 
     this.view = new EditorView(options.mount, {
       state,
-      editable: () => this.editable,
+      editable: () => this.#isEditable,
       dispatchTransaction: (tr) => {
         const newState = this.view.state.apply(tr);
         this.view.updateState(newState);
@@ -241,16 +241,16 @@ export class EditorEngine {
   }
 
   /** Lock / unlock editing for a gating run, remembering the pre-lock state. */
-  #setLock(locked: boolean): void {
-    if (locked) {
-      if (this.#preLockEditable === undefined) this.#preLockEditable = this.editable;
+  #setLock(isLocked: boolean): void {
+    if (isLocked) {
+      if (this.#preLockIsEditable === undefined) this.#preLockIsEditable = this.#isEditable;
       this.setEditable(false);
     } else {
-      const restore = this.#preLockEditable ?? true;
-      this.#preLockEditable = undefined;
+      const restore = this.#preLockIsEditable ?? true;
+      this.#preLockIsEditable = undefined;
       this.setEditable(restore);
     }
-    this.events.emit('lock', { engine: this, locked });
+    this.events.emit('lock', { engine: this, isLocked });
   }
 
   // ── Serialization (read) ──────────────────────────────────────────────
@@ -307,14 +307,14 @@ export class EditorEngine {
 
   /** Whether the editor currently accepts input. */
   isEditable(): boolean {
-    return this.editable;
+    return this.#isEditable;
   }
 
   /** Toggle read-only. Re-evaluates the view's `editable` prop in place. */
-  setEditable(editable: boolean): void {
-    if (editable === this.editable) return;
-    this.editable = editable;
-    this.view.setProps({ editable: () => this.editable });
+  setEditable(isEditable: boolean): void {
+    if (isEditable === this.#isEditable) return;
+    this.#isEditable = isEditable;
+    this.view.setProps({ editable: () => this.#isEditable });
   }
 
   destroy(): void {

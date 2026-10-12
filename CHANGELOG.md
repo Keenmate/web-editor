@@ -17,7 +17,7 @@ released to a registry yet.
   (`serialize` / `parse`, lossless HTML+JSON; Markdown import/export at the edges).
 - **`<km-editor>` Web Component** on `@keenmate/web-components-core` (`BlissElement`,
   shadow DOM, adopted styles). Inputs: `value`, `format` (`markdown`/`html`/`json`),
-  `mode`, `readonly`, `toolbar`, `statusbar`, `theme`, `anchor`. Events: `change`,
+  `mode`, `isReadonly` (attribute `readonly`), `toolbar`, `statusbar`, `theme`, `anchor`. Events: `change`,
   `ready`, `mode-change`. Content API: `getValue`/`getHTML`/`getMarkdown`/`getJSON`,
   `setValue`, `focus`, `engine`, `isReady`.
 - **View modes** — `edit`, `split` (editor + live md/html/json output), `preview`

@@ -141,7 +141,7 @@ describe('EditorEngine pipeline integration', () => {
       interactionHost: host,
     });
     const locks: boolean[] = [];
-    engine.events.on('lock', (e) => locks.push(e.locked));
+    engine.events.on('lock', (e) => locks.push(e.isLocked));
     const result = new Promise<void>((res) => {
       engine.pipelines.on('image:browser:pick', (e) => { if (e.type === 'result') res(); });
     });

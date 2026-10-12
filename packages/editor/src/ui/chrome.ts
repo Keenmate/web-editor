@@ -34,9 +34,9 @@ export interface EditorChromeOptions {
 
 export interface ChromeState {
   /** Whether editing is on — gates the toolbar + selection toolbar + context menu. */
-  editable: boolean;
-  /** Whether the static toolbar is wanted (the `toolbar` input, independent of `editable`). */
-  showToolbar: boolean;
+  isEditable: boolean;
+  /** Whether the static toolbar is wanted (the `toolbar` input, independent of `isEditable`). */
+  isToolbarShown: boolean;
   /** Which status-bar edge(s) to show (the `statusbar` input; shows read-only too). */
   status: EditorStatusBar;
 }
@@ -95,9 +95,9 @@ export class EditorChrome {
 
   /** Apply presentation state (editable + whether the toolbar / status bar(s) are wanted). */
   setState(state: ChromeState): void {
-    const showToolbar = state.editable && state.showToolbar;
-    this.#toolbar.setVisible(showToolbar);
-    if (showToolbar) this.#toolbar.refresh();
+    const isToolbarShown = state.isEditable && state.isToolbarShown;
+    this.#toolbar.setVisible(isToolbarShown);
+    if (isToolbarShown) this.#toolbar.refresh();
 
     const top = state.status === 'top' || state.status === 'both';
     const bottom = state.status === 'bottom' || state.status === 'both';
@@ -115,8 +115,8 @@ export class EditorChrome {
     if (top) this.#statusTop.refresh();
     if (bottom) this.#statusBottom.refresh();
 
-    this.#selection.setEnabled(state.editable);
-    this.#menu.setEnabled(state.editable);
+    this.#selection.setEnabled(state.isEditable);
+    this.#menu.setEnabled(state.isEditable);
   }
 
   destroy(): void {

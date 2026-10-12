@@ -6,7 +6,7 @@
  *
  * Reactivity (per input `on:`):
  *   - `reinit` — content source changed (`value`) → rebuild the engine.
- *   - `update` — `mode` / `readonly` / `theme` / `format` → patch in place
+ *   - `update` — `mode` / `isReadonly` / `theme` / `format` → patch in place
  *                (toggle editable, reflect the attribute, re-report content).
  *
  * The content model is ONE ProseMirror document (the engine's). `format` is the
@@ -84,7 +84,7 @@ const INPUTS: readonly InputDef[] = [
       "Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the mode is stored, reflected, and announced via `mode-change`.",
   },
   {
-    configKey: 'readonly',
+    configKey: 'isReadonly',
     attribute: 'readonly',
     converter: toBool('default-false'),
     on: 'update',
@@ -206,7 +206,7 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
 
   /** Cosmetic/behavioural change: patch the live engine without a rebuild. */
   protected override update(partial: Record<string, unknown>): void {
-    if ('readonly' in partial || 'mode' in partial) {
+    if ('isReadonly' in partial || 'mode' in partial) {
       this.#engine?.setEditable(this.#resolveEditable());
     }
     // Structural view-mode / anchor change: re-arrange the shadow layout in place
@@ -215,7 +215,7 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
       this.#applyLayout();
     }
     // Editing availability or the toolbar / status-bar toggle changed.
-    if ('readonly' in partial || 'mode' in partial || 'toolbar' in partial || 'statusbar' in partial) {
+    if ('isReadonly' in partial || 'mode' in partial || 'toolbar' in partial || 'statusbar' in partial) {
       this.#applyChromeState();
     }
     if ('mode' in partial) {
@@ -238,6 +238,10 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
   protected override disconnect(): void {
     if (this.#engine) this.#content = this.#engine.serialize(this.#format());
     this.#teardownEngine();
+    // Release the inline anchor's floating-ui autoUpdate loop (symmetric with the
+    // re-anchor on reconnect via #applyLayout()); otherwise a detached-but-held
+    // editor keeps tracking its detached host.
+    this.#layout.deactivate();
   }
 
   // ── engine lifecycle ────────────────────────────────────────────────────────
@@ -258,7 +262,7 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
 
     const options: EditorEngineOptions = {
       mount: this.#layout.mount,
-      editable: this.#resolveEditable(),
+      isEditable: this.#resolveEditable(),
       editorPlugins: this.#customPlugins, // undefined → engine uses defaultPlugins()
     };
     this.#applyContentOption(options, format, this.#content);
@@ -278,7 +282,7 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
     this.#chrome = new EditorChrome({ engine: this.#engine, layout: this.#layout });
     this.#applyChromeState();
 
-    initLogger.debug(`<km-editor> engine built (format=${format}, editable=${options.editable}) v${
+    initLogger.debug(`<km-editor> engine built (format=${format}, editable=${options.isEditable}) v${
       typeof __VERSION__ !== 'undefined' ? __VERSION__ : 'dev'
     }`);
 
@@ -312,8 +316,8 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
   /** Push the current editable + toolbar + status-bar settings into the chrome. */
   #applyChromeState(): void {
     this.#chrome?.setState({
-      editable: this.#resolveEditable(),
-      showToolbar: (this.config.toolbar as EditorToolbar) !== 'none',
+      isEditable: this.#resolveEditable(),
+      isToolbarShown: (this.config.toolbar as EditorToolbar) !== 'none',
       status: this.config.statusbar as EditorStatusBar,
     });
   }
@@ -331,9 +335,9 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
   }
 
   #resolveEditable(): boolean {
-    const readonly = this.config.readonly === true;
+    const isReadonly = this.config.isReadonly === true;
     const previewing = this.config.mode === 'preview';
-    return !readonly && !previewing;
+    return !isReadonly && !previewing;
   }
 
   #format(): EditorFormat {
