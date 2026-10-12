@@ -1,0 +1,9 @@
+# Repo-specific make targets (included by the generated Makefile).
+
+.PHONY: test-unit test-unit-watch
+
+test-unit: ## Run vitest unit tests
+	npm run test:unit
+
+test-unit-watch: ## Run vitest in watch mode
+	npm run test:unit:watch

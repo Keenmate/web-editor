@@ -143,15 +143,17 @@ Modern evergreen browsers — anything with native `customElements` and Shadow D
 ## Develop
 
 ```bash
-npm install                 # from the repo root (npm workspaces)
-npm run dev   -w @keenmate/web-editor   # dev playground (Vite)
-npm run build -w @keenmate/web-editor   # library build
-npm test      -w @keenmate/web-editor   # unit tests (Vitest)
+npm install
+npm run dev                 # examples hub + pages on http://localhost:12700
+npm run build               # CEM analyze + library build (dist/)
+npm test                    # unit tests (Vitest)
+npm run test:e2e            # e2e tests (Playwright)
 ```
 
-The example site (hub + per-feature pages) is described in
-[`EXAMPLES.md`](./EXAMPLES.md); `npm run build:examples -w @keenmate/web-editor`
-produces the static `dist-examples/` site.
+The example site (hub + per-feature pages) runs on
+[`@keenmate/web-components-devkit`](https://github.com/keenmate/web-components):
+`npm run build:examples` produces the static `dist-examples/` site, and `make
+image-build` packages it with nginx. `make` lists every target.
 
 ## License
 

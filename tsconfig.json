@@ -10,9 +10,9 @@
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": false,
+    "noEmit": true,
 
-    /* Linting (loose — mirrors the rest of the KeenMate component line) */
+    /* Linting (loose — mirrors the rest of the Keenmate component line) */
     "strict": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
@@ -20,9 +20,8 @@
     "strictNullChecks": false,
     "noImplicitAny": false,
 
-    /* Declaration */
-    "declaration": true,
-    "emitDeclarationOnly": true,
     "skipLibCheck": true
-  }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "src/dev", "test"]
 }

@@ -1,0 +1,174 @@
+{
+  "$schema": "https://raw.githubusercontent.com/JetBrains/web-types/master/schema/web-types.json",
+  "name": "@keenmate/web-editor",
+  "version": "0.0.1",
+  "description-markup": "markdown",
+  "contributions": {
+    "html": {
+      "elements": [
+        {
+          "name": "km-editor",
+          "description": "\n\n---\n\n\n### **Events:**\n - **change** - The document changed. `detail.value` is the content serialized in the active `format`; `detail.format` is that format.\n- **ready** - The engine was built and mounted (once per element lifetime). No detail beyond readiness.\n- **mode-change** - The `mode` attribute/property changed. `detail.mode` is the new mode.\n\n### **Methods:**\n \n\n\n\n- **getValue(format: _EditorFormat_): _string_** - Live content serialized in the active `format` (or an explicit one).\n- **getContent(format: _EditorFormat_): _string_** - Alias for getValue — reads live content, not the assigned `value` input.\n- **setValue(value: _string_, format: _EditorFormat_): _void_** - Replace the document with `value`, parsed in `format` (defaults to the active one).",
+          "doc-url": "",
+          "attributes": [
+            {
+              "name": "value",
+              "description": "Initial content to load, interpreted per `format`. Reassigning replaces the document. Reading `el.value` returns this assigned value, NOT live edits — use `getValue()` for that.",
+              "value": { "type": "string | null" }
+            },
+            {
+              "name": "format",
+              "description": "Serialization lens for content I/O (`value`, `getValue()`, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document.",
+              "value": {
+                "type": "'markdown' | 'html' | 'json'",
+                "default": "'markdown'"
+              }
+            },
+            {
+              "name": "mode",
+              "description": "Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the mode is stored, reflected, and announced via `mode-change`.",
+              "value": {
+                "type": "'edit' | 'split' | 'preview' | 'inline'",
+                "default": "'edit'"
+              }
+            },
+            {
+              "name": "readonly",
+              "description": "Make the editor read-only (no input). `mode=\"preview\"` also forces this on.",
+              "value": { "type": "boolean" }
+            },
+            {
+              "name": "toolbar",
+              "description": "Static toolbar edge: 'top' (default), 'bottom', 'start', or 'end' places the command toolbar flush against that side of the editor; 'none' hides it. The selection toolbar and context menu are always available while editing (independent of this).",
+              "value": {
+                "type": "'top' | 'bottom' | 'start' | 'end' | 'none'",
+                "default": "'top'"
+              }
+            },
+            {
+              "name": "statusbar",
+              "description": "Status bar edge: 'none' (default), 'top', 'bottom', or 'both'. A dedicated strip of live indicators (word/char count, plus any plugin status items), hugging the editor body — separate from the toolbar zones and shown in read-only too. With 'both', items split across the two strips by their `bar` ('top'/'bottom', default 'bottom').",
+              "value": {
+                "type": "'none' | 'top' | 'bottom' | 'both'",
+                "default": "'none'"
+              }
+            },
+            {
+              "name": "theme",
+              "description": "Theme name, reflected to the host attribute for CSS theming (`:host([theme=\"…\"])`).",
+              "value": { "type": "string | null" }
+            },
+            {
+              "name": "anchor",
+              "description": "For `mode=\"inline\"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow.",
+              "value": { "type": "string | null" }
+            }
+          ],
+          "events": [
+            {
+              "name": "change",
+              "description": "The document changed. `detail.value` is the content serialized in the active `format`; `detail.format` is that format."
+            },
+            {
+              "name": "ready",
+              "description": "The engine was built and mounted (once per element lifetime). No detail beyond readiness."
+            },
+            {
+              "name": "mode-change",
+              "description": "The `mode` attribute/property changed. `detail.mode` is the new mode."
+            }
+          ],
+          "js": {
+            "properties": [
+              {
+                "name": "onChange",
+                "type": "((e: CustomEvent<EditorChangeDetail>) => void) | null"
+              },
+              {
+                "name": "onReady",
+                "type": "((e: CustomEvent<undefined>) => void) | null"
+              },
+              {
+                "name": "onModeChange",
+                "type": "((e: CustomEvent<EditorModeChangeDetail>) => void) | null"
+              },
+              {
+                "name": "plugins",
+                "description": "The editor plugin set. Assign to customise — compose with `defaultPlugins()`\nto keep the built-ins, and order the array to control conflict precedence\n(later plugins override earlier by id). Reassigning rebuilds the engine on the\nnew set, preserving the live content. Reading returns the active set.\n\n```js\nimport { defaultPlugins } from '@keenmate/web-editor';\nel.plugins = [...defaultPlugins(), myPlugin];\n```",
+                "type": "EditorPlugin[]"
+              },
+              {
+                "name": "engine",
+                "description": "The underlying headless engine (null before the first build / after teardown).",
+                "type": "EditorEngine | null"
+              },
+              {
+                "name": "isReady",
+                "description": "Whether the engine has been built and `ready` has fired.",
+                "type": "boolean"
+              },
+              {
+                "name": "value",
+                "description": "Initial content to load, interpreted per `format`. Reassigning replaces the document. Reading `el.value` returns this assigned value, NOT live edits — use `getValue()` for that.",
+                "type": "string | null"
+              },
+              {
+                "name": "format",
+                "description": "Serialization lens for content I/O (`value`, `getValue()`, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document.",
+                "type": "'markdown' | 'html' | 'json'"
+              },
+              {
+                "name": "mode",
+                "description": "Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the mode is stored, reflected, and announced via `mode-change`.",
+                "type": "'edit' | 'split' | 'preview' | 'inline'"
+              },
+              {
+                "name": "isReadonly",
+                "description": "Make the editor read-only (no input). `mode=\"preview\"` also forces this on.",
+                "type": "boolean"
+              },
+              {
+                "name": "toolbar",
+                "description": "Static toolbar edge: 'top' (default), 'bottom', 'start', or 'end' places the command toolbar flush against that side of the editor; 'none' hides it. The selection toolbar and context menu are always available while editing (independent of this).",
+                "type": "'top' | 'bottom' | 'start' | 'end' | 'none'"
+              },
+              {
+                "name": "statusbar",
+                "description": "Status bar edge: 'none' (default), 'top', 'bottom', or 'both'. A dedicated strip of live indicators (word/char count, plus any plugin status items), hugging the editor body — separate from the toolbar zones and shown in read-only too. With 'both', items split across the two strips by their `bar` ('top'/'bottom', default 'bottom').",
+                "type": "'none' | 'top' | 'bottom' | 'both'"
+              },
+              {
+                "name": "theme",
+                "description": "Theme name, reflected to the host attribute for CSS theming (`:host([theme=\"…\"])`).",
+                "type": "string | null"
+              },
+              {
+                "name": "anchor",
+                "description": "For `mode=\"inline\"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow.",
+                "type": "string | null"
+              }
+            ],
+            "events": [
+              {
+                "name": "change",
+                "description": "The document changed. `detail.value` is the content serialized in the active `format`; `detail.format` is that format."
+              },
+              {
+                "name": "ready",
+                "description": "The engine was built and mounted (once per element lifetime). No detail beyond readiness."
+              },
+              {
+                "name": "mode-change",
+                "description": "The `mode` attribute/property changed. `detail.mode` is the new mode."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "css": {
+      "properties": [],
+      "pseudo-elements": []
+    }
+  }
+}
