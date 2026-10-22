@@ -11,6 +11,8 @@ released to a registry yet.
 
 ### Changed
 
+- **Built on `@keenmate/web-components-core` 1.0.0-rc15** — the input table uses its renamed
+  `shouldReflect` flag. No change to the element's attributes, properties or events.
 - **Moved onto `@keenmate/web-components-devkit` and flattened to a single-package
   repo.** The npm-workspaces layout had one package (`packages/editor`); `src/`,
   `test/`, the example pages and the configs now live at the root (moved with

@@ -69,7 +69,7 @@ const INPUTS: readonly InputDef[] = [
     configKey: 'format',
     attribute: 'format',
     converter: toEnum(FORMATS, { default: 'markdown' }),
-    reflect: true,
+    shouldReflect: true,
     on: 'update',
     description:
       "Serialization lens for content I/O (`value`, `getValue()`, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document.",
@@ -78,7 +78,7 @@ const INPUTS: readonly InputDef[] = [
     configKey: 'mode',
     attribute: 'mode',
     converter: toEnum(MODES, { default: 'edit' }),
-    reflect: true,
+    shouldReflect: true,
     on: 'update',
     description:
       "Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the mode is stored, reflected, and announced via `mode-change`.",
@@ -94,7 +94,7 @@ const INPUTS: readonly InputDef[] = [
     configKey: 'toolbar',
     attribute: 'toolbar',
     converter: toEnum(TOOLBARS, { default: 'top' }),
-    reflect: true,
+    shouldReflect: true,
     on: 'update',
     description:
       "Static toolbar edge: 'top' (default), 'bottom', 'start', or 'end' places the command toolbar flush against that side of the editor; 'none' hides it. The selection toolbar and context menu are always available while editing (independent of this).",
@@ -103,7 +103,7 @@ const INPUTS: readonly InputDef[] = [
     configKey: 'statusbar',
     attribute: 'statusbar',
     converter: toEnum(STATUSBARS, { default: 'none' }),
-    reflect: true,
+    shouldReflect: true,
     on: 'update',
     description:
       "Status bar edge: 'none' (default), 'top', 'bottom', or 'both'. A dedicated strip of live indicators (word/char count, plus any plugin status items), hugging the editor body — separate from the toolbar zones and shown in read-only too. With 'both', items split across the two strips by their `bar` ('top'/'bottom', default 'bottom').",
@@ -112,7 +112,7 @@ const INPUTS: readonly InputDef[] = [
     configKey: 'theme',
     attribute: 'theme',
     converter: toText({ isNullable: true }),
-    reflect: true,
+    shouldReflect: true,
     on: 'update',
     description: 'Theme name, reflected to the host attribute for CSS theming (`:host([theme="…"])`).',
   },
