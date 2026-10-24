@@ -11,6 +11,23 @@ Target: **1.0.0-rc01** (first release).
 Pre-1.0, pre-publish. Everything below is the work to date; nothing has been
 released to a registry yet.
 
+### Fixed
+
+- **A DOM move no longer destroys the editor** (core build-once + activate/deactivate
+  model). Moving / re-parenting a `<km-editor>` used to tear the engine down and
+  rebuild it from a markdown snapshot: tables were lost (their markdown is raw HTML,
+  which the parser ignores), and undo history and selection were reset. The engine
+  now stays alive across `disconnect()` → `connect()`; only live resources pause
+  (ProseMirror's document `selectionchange` listener, the inline anchor, open
+  floating panels), so content, tables, undo history and selection survive, and a
+  detached editor still answers `getValue()` / `getHTML()` / … (ED-1, ED-2).
+- **`plugins` reassignment keeps tables** — the live content is carried over as HTML
+  (lossless) instead of markdown (ED-1).
+- **`setValue()` before the first connect is honoured** — it was overwritten by the
+  first build's `value`. A `value` assigned *after* the `setValue()` still wins (ED-3).
+- **`format` changed while detached** no longer re-parses the content in the wrong
+  format on reconnect (the old markdown snapshot was parsed as HTML) (ED-4).
+
 ### Changed — BREAKING (interaction model, web-components-core rc15)
 
 Callbacks, events and every clickable item (static toolbar, selection toolbar, context menu)

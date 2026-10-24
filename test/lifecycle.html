@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>km-editor — lifecycle</title>
+</head>
+<body>
+    <!-- Targeted by e2e/lifecycle.spec.ts. #subject is moved between #a and #b. -->
+    <div id="a">
+        <km-editor id="subject" value="# Hello
+
+First paragraph."></km-editor>
+    </div>
+    <div id="b"></div>
+    <pre data-testid="lifecycle-log"></pre>
+
+    <script type="module">
+        import { defaultPlugins } from '/src/index.ts';
+        window.defaultPlugins = defaultPlugins;
+        const log = document.querySelector('[data-testid="lifecycle-log"]');
+        window.track = (el) => {
+            el.addEventListener('ready', () => (log.textContent += `${el.id}:ready\n`));
+            el.addEventListener('change', () => (log.textContent += `${el.id}:change\n`));
+        };
+        window.track(document.getElementById('subject'));
+        /** Move #subject into #b (or back). */
+        window.move = (to = 'b') => document.getElementById(to).appendChild(document.getElementById('subject'));
+        window.lifecycleReady = true;
+    </script>
+</body>
+</html>

@@ -75,6 +75,11 @@ export class SelectionToolbar {
     else this.#hide();
   }
 
+  /** Close the floating bar now (e.g. the host was detached); the next `update()` may re-show it. */
+  hide(): void {
+    this.#hide();
+  }
+
   destroy(): void {
     this.#safely(() => this.#popover.destroy());
     this.#bar.destroy();

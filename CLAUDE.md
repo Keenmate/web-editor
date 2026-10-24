@@ -100,6 +100,13 @@ small framework-free chrome layer in `ui/`. Things the code won't tell you:
 - Status items are a separate strip from tool groups so they are never draggable.
 - Reassigning the element's `plugins` property rebuilds the engine and must
   preserve live content.
+- **Lifecycle = core build-once + activate/deactivate.** A DOM move must NOT
+  rebuild the engine: `disconnect()` only pauses live resources
+  (`engine.deactivate()` stops ProseMirror's internal DOM observer — its document
+  `selectionchange` listener would otherwise pin a removed editor — plus the
+  inline anchor and open floating panels); `connect()` resumes them. Content,
+  tables, undo and selection survive (`e2e/lifecycle.spec.ts`). Only `reinit()`
+  (`value` change / first connect) and a `plugins` swap rebuild.
 
 ### Interaction model (web-components-core `/actions`)
 

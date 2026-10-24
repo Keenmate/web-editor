@@ -166,6 +166,16 @@ export class ViewLayout {
     this.#teardownAnchor();
   }
 
+  /**
+   * Re-acquire live positioning after {@link deactivate} (the host was
+   * reconnected): re-anchors an `inline` editor without rebuilding the shadow
+   * structure, so the editor mount — and the live view — stays where it is.
+   */
+  activate(): void {
+    this.#teardownAnchor();
+    if (this.#mode === 'inline') this.#setupInline();
+  }
+
   destroy(): void {
     this.#teardownAnchor();
     this.overlayLayer.remove();

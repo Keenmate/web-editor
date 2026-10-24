@@ -21,23 +21,25 @@ dialog stub), `e2e/helpers.ts`.
 | --- | :-: | --- | --- |
 | `value` attribute renders a ProseMirror document | ✓ | `smoke.spec.ts` | `fixture.html` |
 | Typing updates `getValue()` + fires `change` | ✓ | `smoke.spec.ts` | `fixture.html` |
-| md / html / json `value` render the same DOM | ✗ | | |
-| `getHTML()` / `getMarkdown()` / `getJSON()` | ✗ | | |
-| `setValue(v, fmt)` + `change` | ✗ | | |
-| `value` reassignment rebuilds without re-firing `ready` | ✗ | | |
-| `focus()` | ✗ | | |
+| md / html / json `value` render the same DOM | ✓ | `content.spec.ts` | `content.html` |
+| `getHTML()` / `getMarkdown()` / `getJSON()` | ✓ | `content.spec.ts` | `content.html` |
+| `setValue(v, fmt)` + `change` | ✓ | `content.spec.ts` | `content.html` |
+| `value` reassignment rebuilds without re-firing `ready` | ✓ | `content.spec.ts` | `content.html` |
+| `focus()` | ✓ | `content.spec.ts` | `content.html` |
 
 ## 2. Lifecycle
 
 | Feature | Status | Spec | Fixture |
 | --- | :-: | --- | --- |
-| DOM move keeps content incl. tables (ED-1) | ✗ | | |
-| DOM move keeps undo history + selection (ED-2) | ✗ | | |
-| `plugins` reassignment preserves content (incl. tables) | ✗ | | |
-| `setValue()` before first connect (ED-3) | ✗ | | |
-| `format` change while detached (ED-4) | ✗ | | |
-| `ready` fires once per element lifetime | ✗ | | |
-| `destroy()` | ✗ | | |
+| DOM move keeps content incl. tables (ED-1, fixed) | ✓ | `lifecycle.spec.ts` | `lifecycle.html` |
+| DOM move keeps undo history + selection (ED-2, fixed) | ✓ | `lifecycle.spec.ts` | `lifecycle.html` |
+| `plugins` reassignment preserves content (incl. tables) | ✓ | `lifecycle.spec.ts` | `lifecycle.html` |
+| `setValue()` before first connect (ED-3, fixed) | ✓ | `lifecycle.spec.ts` | `lifecycle.html` |
+| `format` change while detached (ED-4, fixed) | ✓ | `lifecycle.spec.ts` | `lifecycle.html` |
+| `ready` fires once per element lifetime | ✓ | `lifecycle.spec.ts`, `content.spec.ts` | `lifecycle.html`, `content.html` |
+| `destroy()` | ✓ | `lifecycle.spec.ts` | `lifecycle.html` |
+| Detached editor: `getValue()` live; document listeners released, restored on reconnect | ✓ | `lifecycle.spec.ts` | `lifecycle.html` |
+| A move fires no `change` | ✓ | `lifecycle.spec.ts` | `lifecycle.html` |
 
 ## 3. Interaction model
 

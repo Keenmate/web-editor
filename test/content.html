@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>km-editor — content I/O</title>
+</head>
+<body>
+    <!-- Targeted by e2e/content.spec.ts. Same document in three formats + a log. -->
+    <km-editor id="md" value="# Title
+
+Some **bold** and *italic* text.
+
+- one
+- two"></km-editor>
+    <km-editor id="html" format="html" value="<h1>Title</h1><p>Some <strong>bold</strong> and <em>italic</em> text.</p><ul><li><p>one</p></li><li><p>two</p></li></ul>"></km-editor>
+    <km-editor id="json" format="json"></km-editor>
+    <km-editor id="subject" value="# Hello
+
+First paragraph."></km-editor>
+    <pre data-testid="content-log"></pre>
+
+    <script type="module">
+        import '/src/index.ts';
+        const log = document.querySelector('[data-testid="content-log"]');
+        const json = {
+            type: 'doc',
+            content: [
+                { type: 'heading', attrs: { level: 1 }, content: [{ type: 'text', text: 'Title' }] },
+                { type: 'paragraph', content: [
+                    { type: 'text', text: 'Some ' },
+                    { type: 'text', marks: [{ type: 'bold' }], text: 'bold' },
+                    { type: 'text', text: ' and ' },
+                    { type: 'text', marks: [{ type: 'italic' }], text: 'italic' },
+                    { type: 'text', text: ' text.' },
+                ] },
+                { type: 'bullet_list', content: [
+                    { type: 'list_item', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'one' }] }] },
+                    { type: 'list_item', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'two' }] }] },
+                ] },
+            ],
+        };
+        document.getElementById('json').value = JSON.stringify(json);
+        for (const el of document.querySelectorAll('km-editor')) {
+            el.addEventListener('ready', () => (log.textContent += `${el.id}:ready\n`));
+        }
+        const subject = document.getElementById('subject');
+        subject.addEventListener('change', (e) => (log.textContent += `change:${e.detail.format}:${JSON.stringify(e.detail.value)}\n`));
+        window.contentReady = true;
+    </script>
+</body>
+</html>

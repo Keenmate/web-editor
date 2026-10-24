@@ -9,7 +9,9 @@ A spec that pins the correct behaviour of an open entry is marked
 
 ---
 
-## ED-1. Tables lost on DOM move / `plugins` reassignment
+## ~~ED-1. Tables lost on DOM move / `plugins` reassignment~~ — FIXED (Unreleased)
+
+**Fixed:** the engine stays alive across disconnect/connect (only live resources pause: PM's DOM observer, inline anchor, floating panels); `plugins` swaps carry content over as HTML; a pre-connect `setValue()` is held in `#pendingSet`. Pinned by `e2e/lifecycle.spec.ts`.
 
 **Where:** `src/web-component.ts` `disconnect()` + `set plugins()` snapshot live
 content as **markdown** (`engine.serialize(format)`); the table plugin's markdown
@@ -23,18 +25,24 @@ gets the table as literal text / drops it.
 **Suggested fix:** keep the engine alive across disconnect/connect (D1) and
 snapshot `plugins` reassignment via `getJSON()`.
 
-## ED-2. Undo history / selection lost on every DOM move
+## ~~ED-2. Undo history / selection lost on every DOM move~~ — FIXED (Unreleased)
+
+**Fixed:** the engine stays alive across disconnect/connect (only live resources pause: PM's DOM observer, inline anchor, floating panels); `plugins` swaps carry content over as HTML; a pre-connect `setValue()` is held in `#pendingSet`. Pinned by `e2e/lifecycle.spec.ts`.
 
 **Where:** `src/web-component.ts` `disconnect()` tears the engine down, `connect()`
 rebuilds it. Violates core's build-once + activate/deactivate model (decision D1:
 a move must keep content, tables, undo and selection).
 
-## ED-3. `setValue()` before first connect is discarded
+## ~~ED-3. `setValue()` before first connect is discarded~~ — FIXED (Unreleased)
+
+**Fixed:** the engine stays alive across disconnect/connect (only live resources pause: PM's DOM observer, inline anchor, floating panels); `plugins` swaps carry content over as HTML; a pre-connect `setValue()` is held in `#pendingSet`. Pinned by `e2e/lifecycle.spec.ts`.
 
 **Where:** `setValue()` stores `#content`, but the first-connect `reinit()`
 overwrites `#content` from `config.value`.
 
-## ED-4. `format` changed while detached parses the snapshot in the wrong format
+## ~~ED-4. `format` changed while detached parses the snapshot in the wrong format~~ — FIXED (Unreleased)
+
+**Fixed:** the engine stays alive across disconnect/connect (only live resources pause: PM's DOM observer, inline anchor, floating panels); `plugins` swaps carry content over as HTML; a pre-connect `setValue()` is held in `#pendingSet`. Pinned by `e2e/lifecycle.spec.ts`.
 
 **Where:** the `disconnect()` snapshot is serialised in the *old* format; a
 `format` change while detached lands before `connect()`, so the rebuild parses

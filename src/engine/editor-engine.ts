@@ -114,6 +114,8 @@ export class EditorEngine {
   view: EditorView;
 
   #isEditable: boolean;
+  /** False between deactivate() and activate() (the host element is detached). */
+  #isActive = true;
   #plugins: EditorPlugin[];
   #markdown: MarkdownIO;
   #pipelines: PipelineRegistry;
@@ -218,6 +220,7 @@ export class EditorEngine {
       dispatchTransaction: (tr) => {
         const newState = this.view.state.apply(tr);
         this.view.updateState(newState);
+        this.#keepInactive();
         this.events.emit('transaction', { tr, engine: this });
         if (tr.docChanged) this.events.emit('change', this);
         if (tr.selectionSet || tr.docChanged) this.events.emit('selection-change', this);
@@ -336,6 +339,7 @@ export class EditorEngine {
       plugins: this.state.plugins as Plugin[],
     });
     this.view.updateState(state);
+    this.#keepInactive();
     this.events.emit('change', this);
   }
 
@@ -353,6 +357,36 @@ export class EditorEngine {
     if (isEditable === this.#isEditable) return;
     this.#isEditable = isEditable;
     this.view.setProps({ editable: () => this.#isEditable });
+    this.#keepInactive();
+  }
+
+  /**
+   * Pause the view's live DOM tracking while its host is detached (a DOM move or
+   * a held-but-removed element). ProseMirror's DOM observer keeps a
+   * `selectionchange` listener on the owner document — left attached, it would
+   * pin a removed editor in memory. The document, selection and undo history are
+   * untouched; {@link activate} resumes tracking.
+   */
+  deactivate(): void {
+    this.#isActive = false;
+    this.#domObserver()?.stop();
+  }
+
+  /** Resume live DOM tracking after {@link deactivate} (idempotent). */
+  activate(): void {
+    this.#isActive = true;
+    this.#domObserver()?.start();
+  }
+
+  /** The view restarts its observer around every DOM update — re-pause it while inactive. */
+  #keepInactive(): void {
+    if (!this.#isActive) this.#domObserver()?.stop();
+  }
+
+  // `domObserver` is ProseMirror-internal (not in the public typings); its
+  // start/stop pair is the one the view itself brackets every DOM update with.
+  #domObserver(): { start(): void; stop(): void } | undefined {
+    return (this.view as unknown as { domObserver?: { start(): void; stop(): void } }).domObserver;
   }
 
   destroy(): void {

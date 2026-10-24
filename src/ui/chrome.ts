@@ -123,6 +123,17 @@ export class EditorChrome {
     this.#menu.setEnabled(state.isEditable);
   }
 
+  /**
+   * The host was detached: close the floating panels (selection toolbar, context
+   * menu) so no positioning loop or document listener outlives the move. The
+   * static toolbar / status bar are structure and stay; `refresh()` on reconnect
+   * re-evaluates the selection toolbar.
+   */
+  deactivate(): void {
+    this.#selection.hide();
+    this.#menu.close();
+  }
+
   destroy(): void {
     this.#unsubscribe.forEach((off) => off());
     this.#unsubscribe = [];

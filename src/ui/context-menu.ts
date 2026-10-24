@@ -89,6 +89,11 @@ export class ContextMenu {
     if (!enabled) this.#close();
   }
 
+  /** Close the menu (and drop its document dismiss listeners) if it is open. */
+  close(): void {
+    this.#close();
+  }
+
   destroy(): void {
     this.#view.dom.removeEventListener('contextmenu', this.#onContextMenu);
     this.#detachDismiss();

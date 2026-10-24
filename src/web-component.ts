@@ -240,9 +240,16 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   // Custom editor plugin set. `undefined` → the engine's defaultPlugins(). Not an
   // attribute input (plugins are objects); set via the `plugins` property.
   #customPlugins?: EditorPlugin[];
-  // The content source string, in `format`. Seeded from `value`, refreshed from
-  // the live engine before a teardown so a reconnect rebuild keeps the edits.
-  #content: string | null = null;
+  // What the next engine build loads: a string in `format` (from `value` or a
+  // pre-connect `setValue()`), or an HTML snapshot of the previous engine for a
+  // `plugins` swap (HTML is lossless — tables included — and parses tolerantly
+  // when the new plugin set lacks a node type). Only read by #buildEngine(); a DOM
+  // move never rebuilds (the engine stays alive across disconnect/connect).
+  #seed: { content: string | null; format: EditorFormat } = { content: null, format: 'markdown' };
+  // A `setValue()` made while no engine exists (before the first connect, or after
+  // destroy()). Applied by the next build unless `value` was reassigned since —
+  // `valueAtSet` is the `value` config it was made on top of.
+  #pendingSet?: { value: string; format: EditorFormat; valueAtSet: unknown };
   // `ready` fires once per element lifetime; `is-ready` presence is the guard.
   #readyFired = false;
 
@@ -267,7 +274,14 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   protected override reinit(): void {
     // A `value` (re)assignment is an explicit content replacement — take it as the
     // new source. (First connect also lands here with config.value as the seed.)
-    this.#content = (this.config.value as string | null) ?? null;
+    // A `setValue()` made before the engine existed wins over the `value` it was
+    // made on top of, but not over a `value` assigned after it.
+    const pending = this.#pendingSet;
+    this.#pendingSet = undefined;
+    this.#seed =
+      pending && pending.valueAtSet === this.config.value
+        ? { content: pending.value, format: pending.format }
+        : { content: (this.config.value as string | null) ?? null, format: this.#format() };
     if (this.isConnected) this.#rebuildEngine();
   }
 
@@ -299,26 +313,42 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     // `theme` reflects via the input table; nothing imperative to do here yet.
   }
 
-  /** Activate: ensure the engine exists (a DOM move tore it down in disconnect()). */
+  /**
+   * Activate (every connect, after any reinit()/update()). Core's build-once
+   * model: the engine survives a DOM move, so this only resumes live resources —
+   * the view's DOM observer, the inline anchor, the chrome's selection state.
+   * Content, selection and undo history are exactly as they were.
+   */
   protected override connect(): void {
-    if (!this.#engine) this.#buildEngine();
+    if (!this.#engine) {
+      // Only after destroy(): build afresh (a pending setValue() still applies).
+      this.reinit();
+      return;
+    }
+    this.#engine.activate();
+    this.#layout.activate();
+    this.#chrome?.refresh();
   }
 
-  /** Deactivate: snapshot live content, then tear the engine down. */
+  /**
+   * Deactivate (every disconnect): release live resources only — the engine (and
+   * with it the document, selection and undo history) stays alive, so a DOM move
+   * re-activates without a rebuild and a detached editor still answers getValue().
+   */
   protected override disconnect(): void {
-    if (this.#engine) this.#content = this.#engine.serialize(this.#format());
-    this.#teardownEngine();
-    // Release the inline anchor's floating-ui autoUpdate loop (symmetric with the
-    // re-anchor on reconnect via #applyLayout()); otherwise a detached-but-held
-    // editor keeps tracking its detached host.
+    this.#engine?.deactivate();
+    // Close floating panels so no positioning loop / document listener outlives the move.
+    this.#chrome?.deactivate();
+    // Release the inline anchor's floating-ui autoUpdate loop (re-anchored by
+    // #layout.activate() on reconnect); otherwise a detached-but-held editor keeps
+    // tracking its detached host.
     this.#layout.deactivate();
   }
 
   // ── engine lifecycle ────────────────────────────────────────────────────────
 
   #rebuildEngine(): void {
-    // Preserve nothing here: reinit means the content source itself changed, so
-    // #content was just refreshed from config.value by the caller.
+    // Preserve nothing here: the caller just set #seed to what the new engine loads.
     this.#teardownEngine();
     this.#buildEngine();
   }
@@ -338,7 +368,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
       // Every ctx the engine builds carries this element + its controller.
       host: { element: this, getController: () => this.controller },
     };
-    this.#applyContentOption(options, format, this.#content);
+    this.#applyContentOption(options, this.#seed.format, this.#seed.content);
 
     const engine = new EditorEngine(options);
     this.#engine = engine;
@@ -375,6 +405,13 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     initLogger.debug(`<km-editor> engine built (format=${format}, editable=${options.isEditable}) v${
       typeof __VERSION__ !== 'undefined' ? __VERSION__ : 'dev'
     }`);
+
+    // Built while detached (e.g. a `plugins` swap on a removed element): start
+    // inactive — connect() activates it.
+    if (!this.isConnected) {
+      engine.deactivate();
+      this.#layout.deactivate();
+    }
 
     // First build of this element's lifetime: announce readiness once.
     if (!this.#readyFired) {
@@ -514,10 +551,13 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   setValue(value: string, format?: EditorFormat): void {
     this.flush();
     const fmt = format ?? this.#format();
-    this.#content = value;
     if (this.#engine) {
       if (fmt === 'json') this.#engine.setJSON(JSON.parse(value));
       else this.#engine.setContent(value, fmt);
+    } else {
+      // No engine yet (before the first connect, or after destroy()): the next
+      // build loads it — unless `value` is reassigned in the meantime.
+      this.#pendingSet = { value, format: fmt, valueAtSet: this.config.value };
     }
   }
 
@@ -538,8 +578,10 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   set plugins(value: EditorPlugin[] | null | undefined) {
     this.#customPlugins = value ?? undefined;
     if (this.#engine) {
-      // Snapshot live content, then rebuild on the new plugin set.
-      this.#content = this.#engine.serialize(this.#format());
+      // Snapshot live content as HTML (lossless, tables included; unknown nodes
+      // degrade gracefully if the new set drops a feature), then rebuild on the
+      // new plugin set. Undo history starts fresh with the new engine.
+      this.#seed = { content: this.#engine.getHTML(), format: 'html' };
       this.#rebuildEngine();
     }
   }
