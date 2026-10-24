@@ -59,15 +59,15 @@ dialog stub), `e2e/helpers.ts`.
 
 | Feature | Status | Spec | Fixture |
 | --- | :-: | --- | --- |
-| Bold / italic / underline via toolbar + Mod-b/i/u, `aria-pressed`, md output | ✗ | | |
-| Inline code (md round-trip) | ✗ | | |
-| H1 / paragraph block type | ✗ | | |
-| Shift-Enter hard break | ✗ | | |
-| Bullet / ordered list wrap, Enter split, Tab / Shift-Tab nest, md output | ✗ | | |
-| Undo / redo buttons + Mod-z / Mod-y / Mod-Shift-z, enabled state | ✗ | | |
-| Links: Mod-k / toolbar prompt, md `[t](u "title")`, toggle off | ✗ | | |
-| Links: disabled on empty selection (ED-5) | ✗ | | |
-| Tables: insert, Tab nav, row/column ops, merge/header, html/json round-trip | ✗ | | |
+| Bold / italic / underline via toolbar + Mod-b/i/u, `aria-pressed`, md output, stored marks | ✓ | `formatting.spec.ts` | `formatting.html` |
+| Inline code (md round-trip; no toolbar command exists) | ✓ | `formatting.spec.ts` | `formatting.html` |
+| H1 / paragraph block type | ✓ | `formatting.spec.ts` | `formatting.html` |
+| Shift-Enter hard break (ED-8) | F | `formatting.spec.ts` | `formatting.html` |
+| Bullet / ordered list wrap, Enter split, Tab / Shift-Tab nest, md output | ✓ | `lists.spec.ts` | `lists.html` |
+| Undo / redo buttons + Mod-z / Mod-y / Mod-Shift-z, enabled state | ✓ | `history.spec.ts` | `history.html` |
+| Links: Mod-k / toolbar prompt, md `[t](u "title")`, toggle off, cancel | ✓ | `links.spec.ts` | `links.html` |
+| Links: toolbar disabled on empty selection ✓; Mod-k alert (ED-5) F; title `''` vs `null` (ED-7) F | △ | `links.spec.ts` | `links.html` |
+| Tables: insert (toolbar + menu), Tab nav, row/column ops, merge/split, header toggles, html/json round-trip, md raw-HTML | ✓ | `tables.spec.ts` | `tables.html` |
 | Code block: prompt + language + Prism tokens + fenced md | ✗ | | |
 | Images: insert + md/html round-trip (ED-6) | ✗ | | |
 | `imageBase64Plugin` pipeline (http → `data:`, cancel → no insert) | ✗ | | |
@@ -77,12 +77,12 @@ dialog stub), `e2e/helpers.ts`.
 
 | Feature | Status | Spec | Fixture |
 | --- | :-: | --- | --- |
-| `mode` edit / split / preview / inline + `mode-change` | ✗ | | |
-| Split output is live | ✗ | | |
-| Preview is non-editable | ✗ | | |
-| Mode switch keeps doc + selection | ✗ | | |
-| `readonly`: typing ignored, toolbar hidden, native context menu, removal re-enables | ✗ | | |
-| Inline mode `anchor` tracking + detach | ✗ | | |
+| `mode` edit / split / preview / inline + `mode-change` | ✓ | `modes.spec.ts` | `modes.html` |
+| Split output is live; output tabs switch format | ✓ | `modes.spec.ts` | `modes.html` |
+| Preview is non-editable | ✓ | `modes.spec.ts` | `modes.html` |
+| Mode switch keeps doc + selection + undo | ✓ | `modes.spec.ts` | `modes.html` |
+| `readonly`: typing ignored, toolbar hidden, native context menu, removal re-enables | ✓ | `readonly.spec.ts` | `readonly.html` |
+| Inline mode `anchor` placement + cleared on leaving inline (tracking on scroll / detach: P2) | △ | `modes.spec.ts` | `modes.html` |
 
 ## 6. Chrome
 

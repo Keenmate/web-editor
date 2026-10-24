@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>km-editor — links</title>
+</head>
+<body>
+    <!-- Targeted by e2e/links.spec.ts. -->
+    <km-editor id="subject"  value="some link text"></km-editor>
+    <pre data-testid="links-log"></pre>
+
+    <script type="module">
+        import '/src/index.ts';
+        const log = document.querySelector('[data-testid="links-log"]');
+        const el = document.getElementById('subject');
+        for (const type of ['change', 'mode-change', 'action']) {
+            el.addEventListener(type, (e) => {
+                const d = type === 'change' ? e.detail.format : type === 'mode-change' ? e.detail.mode : e.detail.action;
+                log.textContent += `${type}:${d}\n`;
+            });
+        }
+
+        window.fixtureReady = true;
+    </script>
+</body>
+</html>

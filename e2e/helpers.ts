@@ -57,7 +57,11 @@ export async function selectText(page: Page, text: string, id = 'subject'): Prom
                     if (from < 0 && node.isText && node.text.includes(text)) from = pos + node.text.indexOf(text);
                 });
                 if (from < 0) return false;
-                const TextSelection = state.selection.constructor;
+                // The current selection may be a CellSelection / NodeSelection: walk to the
+                // base Selection class, then let it pick the TextSelection class.
+                let Base = state.selection.constructor;
+                while (Object.getPrototypeOf(Base)?.near) Base = Object.getPrototypeOf(Base);
+                const TextSelection = Base.near(state.doc.resolve(1)).constructor;
                 dispatch(state.tr.setSelection(TextSelection.create(state.doc, from, from + text.length)));
                 return true;
             });
@@ -78,7 +82,11 @@ export async function caretAfter(page: Page, text: string, id = 'subject'): Prom
                     if (at < 0 && node.isText && node.text.includes(text)) at = pos + node.text.indexOf(text) + text.length;
                 });
                 if (at < 0) return false;
-                const TextSelection = state.selection.constructor;
+                // The current selection may be a CellSelection / NodeSelection: walk to the
+                // base Selection class, then let it pick the TextSelection class.
+                let Base = state.selection.constructor;
+                while (Object.getPrototypeOf(Base)?.near) Base = Object.getPrototypeOf(Base);
+                const TextSelection = Base.near(state.doc.resolve(1)).constructor;
                 dispatch(state.tr.setSelection(TextSelection.create(state.doc, at)));
                 return true;
             });

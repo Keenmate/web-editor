@@ -67,3 +67,17 @@ command should just return `false` silently).
 **Where:** `src/plugins/link.ts` — `toggleLink(schema, href, title = '')` vs the
 parser's `title: tok.attrGet('title') || null`. The JSON of the same link differs
 depending on whether it was typed or loaded.
+
+## ED-8. Shift-Enter does not insert a hard break
+
+**Where:** no keymap binds `Shift-Enter` (nor `Mod-Enter`) to `hard_break`
+(`engine/editor-engine.ts` keymap stack: list keymap + `baseKeymap`). The schema
+has `hard_break` and the markdown serializer writes it (`\` + newline), but the
+key press is swallowed — nothing is inserted.
+
+**Repro:** caret mid-paragraph, press Shift+Enter → no `<br>`, no split.
+
+**Suggested fix:** add a `hard-break` command (`keys: ['Shift-Enter', 'Mod-Enter']`)
+that `replaceSelectionWith(schema.nodes.hard_break.create())` (the standard
+prosemirror-example-setup binding, `chainCommands(exitCode, …)`).
+Pinned by `e2e/formatting.spec.ts` (test.fail).
