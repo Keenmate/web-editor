@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, load, selectText, type Page } from './fixtures';
 
 // Interaction model (web-components-core /actions): events + on* twins sharing
 // one detail, controller/element on every detail and ctx (non-enumerable), the
@@ -9,32 +9,14 @@ import { test, expect, type Page } from '@playwright/test';
 type Log = Array<Record<string, unknown>>;
 
 async function open(page: Page): Promise<void> {
-  const errors: string[] = [];
-  page.on('pageerror', (e) => errors.push(String(e)));
-  await page.goto('/test/interaction.html');
-  await page.waitForFunction(() => (window as any).ix?.ready && (document.getElementById('subject') as any).isReady);
+  await load(page, 'interaction.html', { flag: 'ix' });
   await expect(page.locator('#subject .ProseMirror h1')).toHaveText('Hello');
-  expect(errors).toEqual([]);
 }
 
 const log = (page: Page) => page.evaluate(() => (window as any).ix.log as Log);
 const clearLog = (page: Page) => page.evaluate(() => ((window as any).ix.log.length = 0));
 
-/** Select the word "plain" in the paragraph (programmatically, via the controller). */
-async function selectPlain(page: Page): Promise<void> {
-  await page.evaluate(() => {
-    const el = document.getElementById('subject') as any;
-    el.controller.runCommand((state: any, dispatch: any) => {
-      let from = -1;
-      state.doc.descendants((node: any, pos: number) => {
-        if (from < 0 && node.isText && node.text.includes('plain')) from = pos + node.text.indexOf('plain');
-      });
-      const TextSelection = state.selection.constructor;
-      dispatch(state.tr.setSelection(TextSelection.create(state.doc, from, from + 'plain'.length)));
-      return true;
-    });
-  });
-}
+const selectPlain = (page: Page) => selectText(page, 'plain');
 
 test.describe('interaction model', () => {
   test.beforeEach(async ({ page }) => open(page));

@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './fixtures';
 
 // The examples site: the hub is rendered by the devkit kit (kmwc-* classes),
 // every page loads cleanly with the shared layout.

@@ -1,15 +1,15 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, load } from './fixtures';
 
 test.describe('<km-editor>', () => {
   test('renders the value as a ProseMirror document', async ({ page }) => {
-    await page.goto('/test/fixture.html');
+    await load(page, 'fixture.html');
     const editorRoot = page.locator('#subject .ProseMirror');
     await expect(editorRoot.locator('h1')).toHaveText('Hello');
     await expect(editorRoot.locator('strong')).toHaveText('bold');
   });
 
   test('typing updates getValue() and fires change', async ({ page }) => {
-    await page.goto('/test/fixture.html');
+    await load(page, 'fixture.html');
     const editorRoot = page.locator('#subject .ProseMirror');
     await expect(editorRoot.locator('h1')).toHaveText('Hello');
     const changeFired = page.evaluate(
