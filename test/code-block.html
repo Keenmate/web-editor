@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>km-editor — code-block</title>
+</head>
+<body>
+    <!-- Targeted by e2e/code-block.spec.ts. -->
+    <km-editor id="subject" value="Intro para"></km-editor>
+
+    <pre data-testid="code-block-log"></pre>
+
+    <script type="module">
+        import '/src/index.ts';
+        const log = document.querySelector('[data-testid="code-block-log"]');
+        const el = document.getElementById('subject');
+        for (const type of ['change', 'mode-change', 'action']) {
+            el.addEventListener(type, (e) => {
+                const d = type === 'change' ? e.detail.format : type === 'mode-change' ? e.detail.mode : e.detail.action;
+                log.textContent += `${type}:${d}\n`;
+            });
+        }
+
+        window.fixtureReady = true;
+    </script>
+</body>
+</html>

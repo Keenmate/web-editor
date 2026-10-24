@@ -68,9 +68,9 @@ dialog stub), `e2e/helpers.ts`.
 | Links: Mod-k / toolbar prompt, md `[t](u "title")`, toggle off, cancel | ✓ | `links.spec.ts` | `links.html` |
 | Links: toolbar disabled on empty selection ✓; Mod-k alert (ED-5) F; title `''` vs `null` (ED-7) F | △ | `links.spec.ts` | `links.html` |
 | Tables: insert (toolbar + menu), Tab nav, row/column ops, merge/split, header toggles, html/json round-trip, md raw-HTML | ✓ | `tables.spec.ts` | `tables.html` |
-| Code block: prompt + language + Prism tokens + fenced md | ✗ | | |
-| Images: insert + md/html round-trip (ED-6) | ✗ | | |
-| `imageBase64Plugin` pipeline (http → `data:`, cancel → no insert) | ✗ | | |
+| Code block: prompt + language (cancel), Prism tokens, fenced md, html/json, change-code-language | ✓ | `code-block.spec.ts` | `code-block.html` |
+| Images: prompt insert (cancel), md title / html / json round-trip ✓; src escaping (ED-6) F | △ | `images.spec.ts` | `images.html` |
+| `image:browser:pick` + `imageBase64Plugin` (http → `data:`, as-is without it, cancel → no insert, lock released) | ✓ | `image-pipeline.spec.ts` | `image-pipeline.html` |
 | HTML paste keeps marks, drops unknown nodes | ✗ | | |
 
 ## 5. Modes & states

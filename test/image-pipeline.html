@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>km-editor — image pipeline</title>
+</head>
+<body>
+    <!-- Targeted by e2e/image-pipeline.spec.ts.
+         #b64: imageBrowserPlugin + imageBase64Plugin; #plain: imageBrowserPlugin only.
+         The interaction host answers from window.pick ({ cancelled, value }). -->
+    <km-editor id="b64" value="Intro para"></km-editor>
+    <km-editor id="plain" value="Intro para"></km-editor>
+    <pre data-testid="image-pipeline-log"></pre>
+
+    <script type="module">
+        import { defaultPlugins, imageBrowserPlugin, imageBase64Plugin } from '/src/index.ts';
+        const log = document.querySelector('[data-testid="image-pipeline-log"]');
+        window.pick = { cancelled: false, value: { url: location.origin + '/__px.png', name: 'pixel' } };
+        const host = {
+            request: async (ctx) => {
+                log.textContent += `request:${ctx.kind}\n`;
+                return window.pick;
+            },
+        };
+        const setup = (id, extra) => {
+            const el = document.getElementById(id);
+            el.plugins = [...defaultPlugins(), imageBrowserPlugin(), ...extra];
+            el.interactionHost = host;
+            el.addEventListener('lock-change', (e) => (log.textContent += `${id}:lock:${e.detail.isLocked}\n`));
+        };
+        setup('b64', [imageBase64Plugin]);
+        setup('plain', []);
+        window.fixtureReady = true;
+    </script>
+</body>
+</html>
