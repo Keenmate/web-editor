@@ -81,3 +81,26 @@ key press is swallowed — nothing is inserted.
 that `replaceSelectionWith(schema.nodes.hard_break.create())` (the standard
 prosemirror-example-setup binding, `chainCommands(exitCode, …)`).
 Pinned by `e2e/formatting.spec.ts` (test.fail).
+
+## ED-9. A plugin set that fails to assemble destroys the editor
+
+**Where:** `src/web-component.ts` `set plugins()` → `#rebuildEngine()` tears the
+old engine down *before* building the new one. When the new set throws at
+assembly (e.g. a node without a markdown serializer — the documented contract),
+the error reaches the caller but the element is left with no engine: the surface
+is gone and `getValue()` returns `''` (content lost).
+
+**Suggested fix:** build the new engine first (or catch, then rebuild on the
+previous plugin set with the snapshot) and only tear the old one down on success.
+Pinned by `e2e/plugins.spec.ts` (test.fail).
+
+## ED-10. (UX, no test) The selection toolbar covers the static toolbar on the first line
+
+**Where:** `src/ui/selection-toolbar.ts` — the floating bar is placed above the
+selection; when the selection is on the editor's first line it sits on top of the
+editor's own static toolbar (top edge) and intercepts its clicks (seen in
+`e2e/pipelines.spec.ts` before the fixture got spacer lines). floating-ui `flip`
+only considers the viewport, not the toolbar.
+
+**Suggested fix:** pass the static toolbar as a collision boundary / use
+`placement: 'bottom'` fallback when it would overlap the toolbar zone.

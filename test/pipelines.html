@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>km-editor — pipelines</title>
+</head>
+<body>
+    <!-- Targeted by e2e/pipelines.spec.ts. Every command is a one-stage pipeline
+         named after it; plugins splice stages into the `bold` pipeline:
+         #around: before + after stages (log only); #replace: replaces the `bold`
+         stage with italic; #halt: a before-stage that halts when window.shouldHalt. -->
+    <km-editor id="around" value="Top line (keeps the selection toolbar clear of the static toolbar)
+
+Spacer
+
+some plain text"></km-editor>
+    <km-editor id="replace" value="Top line (keeps the selection toolbar clear of the static toolbar)
+
+Spacer
+
+some plain text"></km-editor>
+    <km-editor id="halt" value="Top line (keeps the selection toolbar clear of the static toolbar)
+
+Spacer
+
+some plain text"></km-editor>
+    <pre data-testid="pipelines-log"></pre>
+
+    <script type="module">
+        import { defaultPlugins, definePlugin } from '/src/index.ts';
+        import { toggleMark } from 'prosemirror-commands';
+        const log = document.querySelector('[data-testid="pipelines-log"]');
+        const say = (line) => (log.textContent += line + '\n');
+        window.shouldHalt = true;
+
+        const around = definePlugin({
+            name: 'around',
+            stages: {
+                bold: [
+                    { before: 'bold', stage: { id: 'log-before', run: () => (say('around:before'), { action: 'resolve' }) } },
+                    { after: 'bold', stage: { id: 'log-after', run: () => (say('around:after'), { action: 'resolve' }) } },
+                ],
+            },
+        });
+        const replace = definePlugin({
+            name: 'replace',
+            stages: {
+                bold: [{
+                    stage: {
+                        id: 'bold',
+                        run: (_c, rt) => {
+                            say('replace:run');
+                            return rt.runCommand((state, dispatch) => toggleMark(state.schema.marks.italic)(state, dispatch))
+                                ? { action: 'resolve' }
+                                : { action: 'halt' };
+                        },
+                    },
+                }],
+            },
+        });
+        const halt = definePlugin({
+            name: 'halt',
+            stages: {
+                bold: [{
+                    before: 'bold',
+                    stage: {
+                        id: 'gate',
+                        run: () => {
+                            say('halt:gate');
+                            return window.shouldHalt ? { action: 'halt', reason: 'gated' } : { action: 'resolve' };
+                        },
+                    },
+                }],
+            },
+        });
+        document.getElementById('around').plugins = [...defaultPlugins(), around];
+        document.getElementById('replace').plugins = [...defaultPlugins(), replace];
+        document.getElementById('halt').plugins = [...defaultPlugins(), halt];
+        window.fixtureReady = true;
+    </script>
+</body>
+</html>

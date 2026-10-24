@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>km-editor — plugins</title>
+</head>
+<body>
+    <!-- Targeted by e2e/plugins.spec.ts.
+         #custom: defaultPlugins() + a `highlight` mark plugin (==text== markdown,
+         <mark> html, command + Mod-Shift-h + toolbar group + status item).
+         #bare: plugins = [] (core only). #removed: a plugin dropping the `list` group. -->
+    <km-editor id="custom" statusbar="bottom" value="some plain text"></km-editor>
+    <km-editor id="bare" value="core only"></km-editor>
+    <km-editor id="removed" value="no lists"></km-editor>
+    <pre data-testid="plugins-log"></pre>
+
+    <script type="module">
+        import { defaultPlugins, definePlugin } from '/src/index.ts';
+        import { toggleMark } from 'prosemirror-commands';
+
+        const highlightPlugin = definePlugin({
+            name: 'highlight',
+            marks: {
+                highlight: {
+                    parseDOM: [{ tag: 'mark' }],
+                    toDOM: () => ['mark', 0],
+                },
+            },
+            markdown: {
+                marks: { highlight: { open: '==', close: '==', mixable: true, expelEnclosingWhitespace: true } },
+            },
+            commands: ({ schema }) => [{
+                id: 'highlight',
+                run: toggleMark(schema.marks.highlight),
+                keys: ['Mod-Shift-h'],
+                text: 'Highlight',
+                icon: 'HL',
+                getIsActiveCallback: ({ state }) => {
+                    const { from, to, empty, $from } = state.selection;
+                    const type = schema.marks.highlight;
+                    return empty ? !!type.isInSet(state.storedMarks || $from.marks()) : state.doc.rangeHasMark(from, to, type);
+                },
+            }],
+            toolbarGroups: [{ id: 'highlight', text: 'Highlight', items: ['highlight'] }],
+            statusItems: [{ id: 'hl', render: ({ state }) => `HL: ${state.doc.textContent.length}` }],
+        });
+        window.highlightPlugin = highlightPlugin;
+        window.definePlugin = definePlugin;
+        window.defaultPlugins = defaultPlugins;
+
+        document.getElementById('custom').plugins = [...defaultPlugins(), highlightPlugin];
+        document.getElementById('bare').plugins = [];
+        document.getElementById('removed').plugins = [
+            ...defaultPlugins(),
+            definePlugin({ name: 'no-lists', removeToolbarGroups: ['list'] }),
+        ];
+        window.fixtureReady = true;
+    </script>
+</body>
+</html>

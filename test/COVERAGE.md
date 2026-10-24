@@ -71,7 +71,7 @@ dialog stub), `e2e/helpers.ts`.
 | Code block: prompt + language (cancel), Prism tokens, fenced md, html/json, change-code-language | ✓ | `code-block.spec.ts` | `code-block.html` |
 | Images: prompt insert (cancel), md title / html / json round-trip ✓; src escaping (ED-6) F | △ | `images.spec.ts` | `images.html` |
 | `image:browser:pick` + `imageBase64Plugin` (http → `data:`, as-is without it, cancel → no insert, lock released) | ✓ | `image-pipeline.spec.ts` | `image-pipeline.html` |
-| HTML paste keeps marks, drops unknown nodes | ✗ | | |
+| Paste: HTML keeps marks + blocks, drops unknown elements (keeps text, no script), plain text stays literal | ✓ | `paste.spec.ts` | `paste.html` |
 
 ## 5. Modes & states
 
@@ -98,9 +98,11 @@ dialog stub), `e2e/helpers.ts`.
 
 | Feature | Status | Spec | Fixture |
 | --- | :-: | --- | --- |
-| Custom plugin button + serialization | ✗ | | |
-| `plugins = []` hides link / image / table | ✗ | | |
-| Pipeline stage before / after / replace on toolbar AND keymap; halt cancels | ✗ | | |
+| Custom plugin: mark + toolbar button + keybinding + md/html/json + status item; group order; `plugins` getter | ✓ | `plugins.spec.ts` | `plugins.html` |
+| `plugins = []` drops link / image / table (toolbar, commands, menu, import); `removeToolbarGroups` | ✓ | `plugins.spec.ts` | `plugins.html` |
+| Pipeline stage before / after / replace on toolbar AND keymap AND `runCommand`; halt cancels | ✓ | `pipelines.spec.ts` | `pipelines.html` |
+
+| Serializer contract: node without markdown throws at assembly ✓; failed assembly keeps the editor (ED-9) F | △ | `plugins.spec.ts` | `plugins.html` |
 
 ## 8. Infrastructure
 
