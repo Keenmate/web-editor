@@ -104,3 +104,12 @@ only considers the viewport, not the toolbar.
 
 **Suggested fix:** pass the static toolbar as a collision boundary / use
 `placement: 'bottom'` fallback when it would overlap the toolbar zone.
+
+## ED-11. (Question, core) Invalid enum attributes fall back silently
+
+The e2e plan expected `mode="bogus"` → default **+ warn**. Core's `toEnum`
+(`web-components-core/src/inputs/converters.ts`) returns the default on the
+attribute path without any warning; only invalid *property* assignments warn
+(`rejected invalid value for property …`). Not an editor bug — the editor uses
+core converters as-is. `e2e/inputs.spec.ts` pins the current (silent) behaviour;
+if core starts warning on invalid attributes, flip that assertion.
