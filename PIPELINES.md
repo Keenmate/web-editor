@@ -5,7 +5,9 @@
 > the cloud-image worked example are now live in `src/engine/pipeline/`
 > (`types` / `runner` / `assemble` / `registry`), wired into `EditorEngine`
 > (`engine.pipelines`, `engine.run`, `engine.setInteractionHost`, the `lock`
-> event) and exported from `index.ts`. The first-party `imageBrowserPlugin` /
+> event) and exported from `index.ts`. On the `<km-editor>` element the same
+> surface is `el.controller.runCommand(name)`, the `interactionHost` property and
+> the `lock-change` event (the engine itself is internal to the element). The first-party `imageBrowserPlugin` /
 > `imageBase64Plugin` and the `pipelines.html` visualizer exercise it end to end.
 > The **Demo slice** at the end records the dev-playground proof that preceded the
 > engine integration.
@@ -130,10 +132,11 @@ the host injects the UI:
 ```ts
 interface InteractionRequest { kind: string; title: string; message?: string; payload?: unknown }
 interface InteractionResult  { cancelled: boolean; value?: unknown }
-interface InteractionHost    { request(req: InteractionRequest, signal: AbortSignal): Promise<InteractionResult> }
+interface InteractionContext extends InteractionRequest { signal: AbortSignal } // + controller / element inside <km-editor>
+interface InteractionHost    { request(ctx: InteractionContext): Promise<InteractionResult> }
 ```
 
-A stage `await`s `rt.ui.request(...)`; the pause *is* the awaited promise. The
+A stage `await`s `rt.ui.request({ ...req, signal: rt.signal })`; the pause *is* the awaited promise. The
 result folds into `extra` (`resolve`) or stops the chain (`halt`).
 
 Rules that follow:
@@ -225,15 +228,15 @@ definePlugin({
     timing: 'deferred',
     policy: { lock: true },                 // gating: locks the editor for the run
     stages: [
-      { id: 'pick',   interactive: true, run: (c, rt) => rt.ui.request({ kind: 'cloud-picker', title: 'Choose image' })
+      { id: 'pick',   interactive: true, run: (c, rt) => rt.ui.request({ kind: 'cloud-picker', title: 'Choose image', signal: rt.signal })
                                                            .then(r => r.cancelled ? { action: 'halt' }
                                                                                   : { action: 'resolve', patch: { file: r.value } }) },
       { id: 'upload', run: async (c, rt) => ({ action: 'resolve', patch: { src: await uploadToCloud(c.extra.file, rt.signal) } }) },
       { id: 'insert', run: (c, rt) => { rt.dispatch(insertImageNode(c.extra.src)); return { action: 'resolve' }; } },
     ],
   }],
-  toolbarGroups: [{ id: 'image', label: 'Image',
-    items: [{ type: 'command', command: 'image:browser:pick', label: 'Image', icon: '🖼' }] }],
+  toolbarGroups: [{ id: 'image', text: 'Image',
+    items: [{ action: 'image:browser:pick', text: 'Image', icon: '🖼' }] }],
 });
 
 // Plugin B — knows nothing of A's internals; just slots a stage in by name+anchor.
@@ -437,10 +440,9 @@ blob (the runner knows which stage it's running):
 // crop stage — author writes this once, never cares which layer won
 run(ctx, rt) {
   const { aspect, min } = rt.config as CropConfig;   // resolved for THIS pipeline
-  const r = await rt.ui.request(
-    { kind: 'crop', title: 'Crop', payload: { src: ctx.extra.src, aspect, min } },
-    rt.signal,
-  );
+  const r = await rt.ui.request({
+    kind: 'crop', title: 'Crop', payload: { src: ctx.extra.src, aspect, min }, signal: rt.signal,
+  });
   return r.cancelled ? { action: 'halt' } : { action: 'resolve', patch: { src: r.value } };
 }
 ```
@@ -543,7 +545,7 @@ it can emit **instructions** another stage executes.
   run(ctx, rt) {
     const plan = ctx.extra.cropPlan as CropPlan | undefined;
     if (plan) return { action: 'resolve', patch: { blob: await applyCrop(ctx.extra.blob, plan) } }; // headless
-    const r = await rt.ui.request({ kind: 'crop', payload: { ...rt.config, blob: ctx.extra.blob } }, rt.signal);
+    const r = await rt.ui.request({ kind: 'crop', payload: { ...rt.config, blob: ctx.extra.blob }, signal: rt.signal });
     return r.cancelled ? { action: 'halt' } : { action: 'resolve', patch: { blob: r.value } };
   }
   ```

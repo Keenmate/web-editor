@@ -145,14 +145,20 @@ Interactive stages are headless — the engine calls the host and awaits; the ho
 renders whatever UI it likes and resolves:
 
 ```ts
+interface InteractionContext extends InteractionRequest {
+  signal: AbortSignal; // + controller / element when the engine runs inside <km-editor>
+}
 interface InteractionHost {
-  request(req: InteractionRequest, signal: AbortSignal): Promise<InteractionResult>;
+  request(ctx: InteractionContext): Promise<InteractionResult>;
 }
 ```
 
+A stage passes the run's signal along: `rt.ui.request({ kind, title, signal: rt.signal })`.
+
 The default host routes through `window.confirm`. Provide a richer one (a cloud
-picker, an image editor) with `engine.setInteractionHost(host)`. The host **must**
-honor the `signal` — a superseded run closes its open dialog. The awaited promise
+picker, an image editor) with `engine.setInteractionHost(host)` — or, on the
+element, `el.interactionHost = host` (survives engine rebuilds). The host **must**
+honor `ctx.signal` — a superseded run closes its open dialog. The awaited promise
 **is** the pause: `resolve` folds the result into `extra`, `halt` stops the chain.
 
 ## Keybindings

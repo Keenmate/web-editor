@@ -64,9 +64,12 @@ editor.addEventListener('ready', () => editor.focus());
 editor.addEventListener('change', (e) => {
   console.log(e.detail.value, e.detail.format);
 });
+// …or the camelCase twin, called with the same detail:
+editor.onChange = ({ value, format, controller }) => console.log(value, format);
 
 editor.setValue('## New heading', 'markdown');
 editor.getMarkdown(); // live content — getValue reads live edits, not the `value` attribute
+editor.controller.runCommand('bold'); // the public facade (also on every event detail)
 ```
 
 ## Options
@@ -84,13 +87,25 @@ Every attribute is also a property (e.g. `el.mode = 'preview'`).
 | `theme`     | string                                          | —            | Theme name, reflected to the host for CSS theming (`:host([theme="…"])`). |
 | `anchor`    | CSS selector                                    | —            | For `mode="inline"` only: the page element the floating card tracks. |
 
-**Events:**
+Property-only inputs:
+
+| Property               | Type | Description |
+| ---------------------- | ---- | ----------- |
+| `beforeActionCallback` | `(detail) => false \| void \| Promise<…>` | Runs first on every toolbar / selection-toolbar / context-menu activation; `false` cancels (no `onClick`, no `action` event, no command). |
+| `interactionHost`      | `{ request(ctx) }` | The modal bridge interactive pipeline stages call (`ctx` = request + `signal` + `controller` / `element`). Default: `window.confirm`. Survives engine rebuilds. |
+
+**Events** — bubble, not composed. Each has a camelCase twin property (`onChange`,
+`onReady`, `onModeChange`, `onLockChange`, `onAction`) called with the **same detail**
+before the DOM event. Every detail carries `controller` and `element` (non-enumerable —
+`JSON.stringify(detail)` shows only the data).
 
 | Event         | `detail`              | Fires when |
 | ------------- | --------------------- | ---------- |
-| `change`      | `{ value, format }`   | Content changes (serialized in the active `format`). |
-| `ready`       | —                     | The engine has mounted and is ready. |
+| `change`      | `{ value, format }`   | Content changes (serialized in the active `format`), or `format` switches. |
+| `ready`       | the context only      | The engine has mounted and is ready (once). |
 | `mode-change` | `{ mode }`            | The `mode` changes. |
+| `lock-change` | `{ isLocked }`        | A gating pipeline (e.g. the cloud-image picker) locks / unlocks the editor. |
+| `action`      | `{ action, id, item, source, sourceEvent, triggerElement, dataset, state }` | A toolbar / selection-toolbar / context-menu item was activated (`source`: `toolbar` \| `selection-toolbar` \| `context-menu`). After the item's `onClick`, before the command runs. Keyboard shortcuts don't fire it. |
 
 **Methods & properties:**
 
@@ -103,8 +118,11 @@ Every attribute is also a property (e.g. `el.mode = 'preview'`).
 | `focus()`                 | `void`               | Focus the editing surface. |
 | `isReady`                 | `boolean`            | Whether the engine is mounted. |
 | `plugins`                 | `EditorPlugin[]`     | The active plugin set — assign to compose with `defaultPlugins()` (rebuilds, preserving content). |
-| `engine`                  | `EditorEngine \| null` | The headless engine, for advanced/programmatic use. |
+| `controller`              | `EditorController`   | The public facade (also `detail.controller` / `ctx.controller`): `getValue` / `getContent` / `getHTML` / `getMarkdown` / `getJSON`, `setValue`, `focus`, `isReady`, `runCommand(name \| ProseMirror command)`, `isCommandActive(name)`, `isCommandEnabled(name)`. Programmatic — no `action` event. |
 | `destroy()`               | `void`               | Tear down the element and its engine. |
+
+The internal engine is not exposed on the element; `EditorEngine` is exported for
+standalone (headless) use.
 
 ## Theming
 
@@ -127,6 +145,28 @@ highlighting are first-party plugins used by default; you can add your own with
 import { definePlugin, defaultPlugins } from '@keenmate/web-editor';
 // …define a plugin, then:
 document.querySelector('km-editor').plugins = [...defaultPlugins(), myPlugin];
+```
+
+**Toolbar / menu items** are web-components-core action items. A registered command
+name is a built-in (`'bold'`, `{ action: 'insert-link', text: 'Insert link' }`) — its
+text, icon, tooltip, shortcut and active / disabled state come from the command. Custom
+items use `action: 'custom'` + `id` and `onClick(detail)`; dividers are
+`{ divider: true }` (or `menuDivider()`):
+
+```js
+const myPlugin = definePlugin({
+  name: 'save',
+  toolbarGroups: [{
+    id: 'save',
+    text: 'Save',
+    items: ['undo', 'redo', { divider: true }, {
+      action: 'custom', id: 'save', text: 'Save', icon: '💾',
+      getIsDisabledCallback: ({ state }) => state.doc.textContent.length === 0,
+      onClick: ({ controller }) => api.save(controller.getMarkdown()),
+    }],
+  }],
+});
+editor.beforeActionCallback = ({ action }) => (action === 'insert-image' ? false : undefined); // false cancels
 ```
 
 Writing plugins (schema nodes/marks, commands, keybindings, toolbar/menu items,

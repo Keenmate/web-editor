@@ -56,14 +56,14 @@ definePlugin({
     timing: 'deferred',
     policy: { lock: true },
     stages: [
-      { id: 'pick',   interactive: true, run: (c, rt) => rt.ui.request({ kind: 'cloud-picker', title: 'Choose image' })
+      { id: 'pick',   interactive: true, run: (c, rt) => rt.ui.request({ kind: 'cloud-picker', title: 'Choose image', signal: rt.signal })
                                                            .then(r => r.cancelled ? { action: 'halt' }
                                                                                   : { action: 'resolve', patch: { file: r.value } }) },
       { id: 'upload', run: async (c, rt) => ({ action: 'resolve', patch: { src: await upload(c.extra.file, rt.signal) } }) },
       { id: 'insert', run: (c, rt) => { rt.dispatch(insertImage(c.extra.src)); return { action: 'resolve' }; } },
     ],
   }],
-  toolbarGroups: [{ id: 'image', items: [{ type: 'command', command: 'image:browser:pick', label: 'Image', icon: '🖼' }] }],
+  toolbarGroups: [{ id: 'image', items: [{ action: 'image:browser:pick', text: 'Image', icon: '🖼' }] }],
 });
 
 // Plugin B — knows nothing of A's internals; just slots a stage in by name + anchor.

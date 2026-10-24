@@ -101,6 +101,33 @@ small framework-free chrome layer in `ui/`. Things the code won't tell you:
 - Reassigning the element's `plugins` property rebuilds the engine and must
   preserve live content.
 
+### Interaction model (web-components-core `/actions`)
+
+- **Toolbar / selection-toolbar / context-menu entries are core action items**
+  (`EditorToolbarEntry` = `ActionItem | { divider: true } | 'command-name'`,
+  `src/interaction.ts`). A built-in action = a registered command id (kebab;
+  plugin pipelines keep `ns:obj:verb`). `ui/actions.ts` is the one item layer:
+  `commandDefaults` (text / icon / tooltip / shortcut / active / disabled from
+  the `CommandSpec`) and `createActionHost` (core `runAction`:
+  `beforeActionCallback` → `onClick` → `action` event → `commands.run`).
+  `CommandBar` resolves with core `resolveMenuEntries` on every refresh.
+- **Keyboard shortcuts bypass it** — they are PM keymaps bound to the command
+  pipelines (no `action` event, no veto). Don't route keymaps through `runAction`.
+- **Every ctx comes from `engine.createContext(fields)`**: with `options.host`
+  (set by the element) it inherits `controller` / `element` getters from a
+  prototype (non-enumerable, one allocation); standalone it is just the fields.
+  Command predicates, status items, item callbacks and `InteractionHost.request`
+  all use it. Events go through `this.emit()` (twins get the detail).
+- **The engine is internal to the element**: `el.controller`
+  (`createEditorController`, a method list) is the public API.
+  `getEditorEngine(el)` (`web-component.ts`, not exported from `index.ts`) is
+  for this repo's dev pages / tests only.
+- `PipelineStage.run(ctx, rt)` stays two-argument — a plugin-author reducer
+  contract (threaded value + runtime), not a consumer callback.
+- happy-dom can't focus / select inside a shadow-mounted view: unit tests that
+  dispatch selections there flake — cover those flows in Playwright
+  (`e2e/interaction-model.spec.ts`, fixture `test/interaction.html`).
+
 > **BlissElement gotcha:** the core installs instance-own accessors for every
 > declared `input`, shadowing subclass prototype getters for those keys — so live
 > reads of inputs must go through `this.config`. Non-input properties (like

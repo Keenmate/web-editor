@@ -58,7 +58,7 @@ TypeScript modules with **behaviour unchanged**. No new features.
 ### Phase 1 — Headless engine + serialization  ✅
 `EditorEngine` (`engine/editor-engine.ts`) owns the PM view/state, schema,
 command registry, and event bus, and exposes the serialization API.
-- `engine/event-emitter.ts` — typed event bus (`change`, `selectionUpdate`,
+- `engine/event-emitter.ts` — typed event bus (`change`, `selection-change`,
   `transaction`, `ready`, `destroy`).
 - `engine/command-registry.ts` + `engine/default-commands.ts` — commands carry
   `run` + optional `keys` / `isActive` / `isEnabled`; the registry builds the
@@ -137,7 +137,7 @@ engine's `CommandRegistry` and reflecting `isActive` / `isEnabled`:
   `createPopover` point reference), dismiss on outside-pointerdown / Escape / run;
   suppressed when not editable (native menu shows through).
 - `ui/chrome.ts` (`EditorChrome`) — owns the three presenters, refreshes them on
-  `selectionUpdate` / `change`; lifetime tied to the engine (rebuilt with it). The
+  `selection-change` / `change`; lifetime tied to the engine (rebuilt with it). The
   floating panels portal into a persistent shadow `overlayLayer` (theme-scoped,
   survives view-mode re-renders).
 - `default-commands.ts` — prompt-driven commands (`insert-link`/`-image`/
@@ -205,6 +205,22 @@ and toolbar/selection/menu item lists are all merged.
 > `setup`/`destroy` are called but there's no per-plugin state container yet. The
 > back-compat `schema` singleton / `createEditorState` still expose the full set
 > directly (used only by the provisional playground harness).
+
+#### Phase 5.1 — Interaction model (web-components-core rc15)  ✅
+The editor joined the shared KeenMate interaction model (core `/actions`; see
+`CHANGELOG.md` for the old → new tables). This supersedes the item / event / API
+names in Phases 2 and 4 above:
+- Toolbar / selection-toolbar / context-menu entries are core **action items**
+  (`EditorToolbarEntry`: `{ action, text, icon, tooltip, shortcut, … }`, a
+  `{ divider: true }`, or a command name as shorthand); the command registry
+  supplies the defaults (`CommandSpec.text` / `icon` / `tooltip` / `keys`,
+  `getIsActiveCallback` / `getIsEnabledCallback({ state })`). `ToolGroup` keeps
+  its role as the layout cluster (`text` = its `aria-label`).
+- Every click → core `runAction`: `beforeActionCallback` → `onClick` → the
+  `action` event → the command. Keyboard shortcuts stay PM keymaps (no event).
+- `el.engine` → `el.controller` (`EditorController`); new `interactionHost`
+  input and `lock-change` event; twins (`onChange`, …) receive the detail; every
+  detail / ctx carries `controller` + `element`.
 
 ### Phase 6 — Hardening
 cem manifest (web-types/vscode), THEMING.md, examples, e2e — the web-multiselect
