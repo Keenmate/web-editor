@@ -11,6 +11,8 @@
  * internals across this boundary, matching the loose-TS posture of the repo.
  */
 
+import type { EditorController } from '../../interaction';
+
 /** The value threaded through a pipeline run. `extra` is derived data outside the text. */
 export interface PipelineContext {
   /** The ProseMirror document (read-only for derive stages). */
@@ -151,10 +153,25 @@ export interface InteractionResult {
 }
 
 /**
- * Host-provided modal bridge. The engine calls `request` and awaits it; the host
- * renders however it likes and resolves when the user is done. Must honor the
- * `signal` (close the dialog if the run is superseded).
+ * The ctx of {@link InteractionHost.request}: the request plus the run's abort
+ * `signal`. Inside `<km-editor>` it also carries `controller` + `element`
+ * (non-enumerable).
+ */
+export interface InteractionContext extends InteractionRequest {
+  /** Aborted when a newer run supersedes this one — close the dialog. */
+  signal: AbortSignal;
+  /** The `<km-editor>` facade (absent on a standalone engine). */
+  readonly controller?: EditorController;
+  /** The `<km-editor>` host (absent on a standalone engine). */
+  readonly element?: HTMLElement;
+}
+
+/**
+ * Host-provided modal bridge. A stage calls `rt.ui.request({ ...req, signal:
+ * rt.signal })` and awaits it; the host renders however it likes and resolves
+ * when the user is done. Must honor `ctx.signal` (close the dialog if the run
+ * is superseded).
  */
 export interface InteractionHost {
-  request(req: InteractionRequest, signal: AbortSignal): Promise<InteractionResult>;
+  request(ctx: InteractionContext): Promise<InteractionResult>;
 }

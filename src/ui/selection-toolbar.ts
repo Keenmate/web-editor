@@ -11,16 +11,17 @@
 import { TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { createPopover, type PopoverHandle } from '@keenmate/web-components-core/positioning';
-import type { CommandRegistry } from '../engine/command-registry';
 import { CommandBar } from './command-bar';
 import { domRect } from './virtual';
-import type { ToolbarItem } from './items';
+import type { ActionSurfaceHost } from './actions';
+import type { EditorToolbarEntry } from '../interaction';
 import { uiLogger } from '../logger';
 
 export interface SelectionToolbarOptions {
   view: EditorView;
-  registry: CommandRegistry;
-  items: readonly ToolbarItem[];
+  /** Resolves + activates the items (source `'selection-toolbar'`). */
+  host: ActionSurfaceHost;
+  items: readonly EditorToolbarEntry[];
   /** Shadow-local layer the floating panel portals into (so shadow styles apply). */
   container: HTMLElement;
 }
@@ -39,7 +40,7 @@ export class SelectionToolbar {
     this.#panel = document.createElement('div');
     this.#panel.className = 'km-floating km-selection-toolbar';
     this.#panel.setAttribute('part', 'selection-toolbar');
-    this.#bar = new CommandBar(this.#panel, opts.items, opts.registry, { variant: 'bar' });
+    this.#bar = new CommandBar(this.#panel, opts.items, opts.host, { variant: 'bar', source: 'selection-toolbar' });
 
     this.#popover = createPopover({
       reference: {

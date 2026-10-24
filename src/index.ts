@@ -15,14 +15,29 @@ import { logging } from './logger';
 
 // ── Web Component ─────────────────────────────────────────────────────────
 export { KmEditorElement } from './web-component';
+export type { EditorMode, EditorFormat, EditorToolbar, EditorStatusBar } from './web-component';
+
+// Interaction model (web-components-core /actions): the public controller
+// facade (`el.controller`), callback contexts, action items, event details.
 export type {
-  EditorMode,
-  EditorFormat,
-  EditorToolbar,
-  EditorStatusBar,
-  EditorChangeDetail,
-  EditorModeChangeDetail,
-} from './web-component';
+  EditorController,
+  EditorComponentContext,
+  EditorStateContext,
+  EditorActionContext,
+  CommandContext,
+  StatusContext,
+  EditorAction,
+  EditorActionItem,
+  EditorToolbarEntry,
+  EditorActionSource,
+  EditorActionEventDetail,
+  ChangeEventDetail,
+  ReadyEventDetail,
+  ModeChangeEventDetail,
+  LockChangeEventDetail,
+  EditorEventMap,
+} from './interaction';
+export { menuDivider } from '@keenmate/web-components-core/actions';
 
 // Toolbar zones / tool groups / status items model. Override the core groups or
 // contribute via plugins to customise the zone toolbar, selection toolbar,
@@ -38,7 +53,7 @@ export {
   coreMenuHistoryItems,
   coreStatusItems,
 } from './ui/items';
-export type { ToolbarItem, CommandItem, SeparatorItem, ToolGroup, StatusItem } from './ui/items';
+export type { ToolGroup, StatusItem } from './ui/items';
 
 // Logging controls
 export {
@@ -56,10 +71,11 @@ export {
 export { EditorEngine } from './engine/editor-engine';
 export type {
   EditorEngineOptions,
+  EditorEngineHost,
   EngineEventMap,
 } from './engine/editor-engine';
-export { CommandRegistry } from './engine/command-registry';
-export type { CommandSpec } from './engine/command-registry';
+export { CommandRegistry, formatShortcut } from './engine/command-registry';
+export type { CommandSpec, CommandContextFactory } from './engine/command-registry';
 export { EventEmitter } from './engine/event-emitter';
 export { registerCoreCommands } from './engine/default-commands';
 
@@ -81,7 +97,7 @@ export { imagePlugin } from './plugins/image';
 export { tablePlugin } from './plugins/tables';
 export { codeHighlightPlugin } from './plugins/code-highlight';
 export { imageBrowserPlugin } from './plugins/image-browser';
-export type { CloudAsset, ImageBrowserOptions } from './plugins/image-browser';
+export type { CloudAsset, ImageBrowserOptions, ImageUploadContext } from './plugins/image-browser';
 export { imageBase64Plugin } from './plugins/image-base64';
 
 // Pipeline layer (Phase 7) — named, trigger/command-bound stage chains. Commands
@@ -109,6 +125,7 @@ export type {
   PipelineEvent,
   PipelineListener,
   InteractionHost,
+  InteractionContext,
   InteractionRequest,
   InteractionResult,
 } from './engine/pipeline/types';

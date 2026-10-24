@@ -1,0 +1,170 @@
+/**
+ * The public interaction model of `<km-editor>` (web-components-core `/actions`,
+ * SPEC §12.5 / §12.12). Types + the controller facade builder.
+ *
+ * Every callback takes ONE `ctx`; every ctx and every event detail carries
+ * `controller` (the public {@link EditorController}, also `el.controller`) and
+ * `element` (the host) — both non-enumerable, so `JSON.stringify` / logs see
+ * only the data. Contexts built by a standalone {@link EditorEngine} (no
+ * `<km-editor>` around it) have no `controller` / `element`.
+ */
+import type { ComponentContext } from '@keenmate/web-components-core';
+import type {
+  ActionEventDetail,
+  ActionItem,
+  ActionSource,
+  MenuDivider,
+} from '@keenmate/web-components-core/actions';
+import type { Command, EditorState } from 'prosemirror-state';
+import type { SerializationFormat } from './engine/serialization';
+import type { EditorMode } from './web-component';
+
+// ============================================================================
+// Controller
+// ============================================================================
+
+/**
+ * The public facade — `el.controller`, and `controller` on every callback ctx
+ * and event detail. Delegates to the live element (pending input changes are
+ * flushed first), so it survives engine rebuilds. Reads before the first build
+ * return empty values.
+ */
+export interface EditorController {
+  /** Live content serialized in the active `format` (or an explicit one). */
+  getValue(format?: SerializationFormat): string;
+  /** Alias of {@link getValue}. */
+  getContent(format?: SerializationFormat): string;
+  getHTML(): string;
+  getMarkdown(): string;
+  getJSON(): unknown;
+  /** Replace the document with `value`, parsed in `format` (default: the active one). */
+  setValue(value: string, format?: SerializationFormat): void;
+  focus(): void;
+  /** Whether the engine has been built and `ready` has fired. */
+  readonly isReady: boolean;
+  /**
+   * Run a registered command / pipeline by name (`'bold'`, `'insert-table'`,
+   * `'image:browser:pick'`), or a ProseMirror `Command` against the live view.
+   * Programmatic: no `action` event, no `beforeActionCallback`. Returns whether
+   * it applied (a deferred pipeline returns `true` once started).
+   */
+  runCommand(command: string | Command): boolean;
+  /** Whether a registered command's effect is applied at the selection (Bold in bold text). */
+  isCommandActive(name: string): boolean;
+  /** Whether a registered command can run now. */
+  isCommandEnabled(name: string): boolean;
+}
+
+/** The methods the facade is built from (one list for every target). */
+const CONTROLLER_METHODS = [
+  'getValue',
+  'getContent',
+  'getHTML',
+  'getMarkdown',
+  'getJSON',
+  'setValue',
+  'focus',
+  'runCommand',
+  'isCommandActive',
+  'isCommandEnabled',
+] as const;
+
+type ControllerTarget = Pick<EditorController, (typeof CONTROLLER_METHODS)[number] | 'isReady'>;
+
+/** Build the facade from a method-name list; `getTarget()` is resolved per call. */
+export function createEditorController(getTarget: () => ControllerTarget): EditorController {
+  const controller = {} as Record<string, unknown>;
+  for (const name of CONTROLLER_METHODS) {
+    controller[name] = (...args: unknown[]) =>
+      (getTarget()[name] as (...a: unknown[]) => unknown)(...args);
+  }
+  Object.defineProperty(controller, 'isReady', { get: () => getTarget().isReady, enumerable: true });
+  return Object.freeze(controller) as unknown as EditorController;
+}
+
+// ============================================================================
+// Contexts
+// ============================================================================
+
+/** The component context every editor ctx / detail carries. */
+export type EditorComponentContext = ComponentContext<EditorController, HTMLElement>;
+
+/**
+ * The ctx of command predicates (`CommandSpec.getIsActiveCallback` /
+ * `getIsEnabledCallback`), status items (`StatusItem.render`) and toolbar /
+ * menu item callbacks: the current ProseMirror state.
+ */
+export interface EditorStateContext extends EditorComponentContext {
+  /** The current (read-only) ProseMirror editor state. */
+  state: EditorState;
+}
+
+/** Surface ctx of the toolbar / selection toolbar / context menu items. */
+export type EditorActionContext = EditorStateContext;
+/** The ctx of a command's `getIsActiveCallback` / `getIsEnabledCallback`. */
+export type CommandContext = EditorStateContext;
+/** The ctx of a status item's `render`. */
+export type StatusContext = EditorStateContext;
+
+// ============================================================================
+// Action items
+// ============================================================================
+
+/**
+ * A built-in action = a registered command / pipeline name (`'bold'`,
+ * `'insert-link'`, `'image:browser:pick'`). Open-ended: plugins register more.
+ */
+export type EditorAction = string;
+
+/**
+ * A toolbar / selection-toolbar / context-menu item — a core `ActionItem`.
+ * `action` names a registered command (its text / icon / tooltip / shortcut /
+ * active / disabled state are the defaults); `action: 'custom'` (or no
+ * `action`) + `id` is a consumer item that only fires `onClick` + the `action`
+ * event.
+ */
+export type EditorActionItem = ActionItem<EditorActionContext, EditorAction>;
+
+/**
+ * One entry of a toolbar / menu list: an item, a divider
+ * (`{ divider: true }` / `menuDivider()`), or a built-in name as shorthand
+ * (`'bold'` → `{ action: 'bold' }`). Submenus are not supported.
+ */
+export type EditorToolbarEntry = EditorActionItem | MenuDivider | EditorAction;
+
+/** Which editor surface an item was activated from. */
+export type EditorActionSource = Extract<ActionSource, 'toolbar' | 'context-menu'> | 'selection-toolbar';
+
+/** Detail of the `action` event / `onAction` / item `onClick` / `beforeActionCallback`. */
+export type EditorActionEventDetail = ActionEventDetail<EditorActionContext, EditorAction>;
+
+// ============================================================================
+// Event details
+// ============================================================================
+
+export interface ChangeEventDetail extends EditorComponentContext {
+  /** Current content serialized in the active `format`. */
+  value: string;
+  format: SerializationFormat;
+}
+
+/** `ready` carries only the component context. */
+export type ReadyEventDetail = EditorComponentContext;
+
+export interface ModeChangeEventDetail extends EditorComponentContext {
+  mode: EditorMode;
+}
+
+export interface LockChangeEventDetail extends EditorComponentContext {
+  /** A gating (locking) pipeline started (`true`) or finished (`false`). */
+  isLocked: boolean;
+}
+
+/** Event name → detail (the element's typed event map). */
+export type EditorEventMap = {
+  change: ChangeEventDetail;
+  ready: ReadyEventDetail;
+  'mode-change': ModeChangeEventDetail;
+  'lock-change': LockChangeEventDetail;
+  action: EditorActionEventDetail;
+};

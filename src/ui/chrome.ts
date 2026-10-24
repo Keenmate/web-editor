@@ -20,15 +20,19 @@ import { ToolbarZone } from './toolbar-zone';
 import { StatusBar } from './status-bar';
 import { SelectionToolbar } from './selection-toolbar';
 import { ContextMenu } from './context-menu';
-import type { ToolGroup, ToolbarItem, StatusItem } from './items';
+import type { ToolGroup, StatusItem } from './items';
 import type { EditorStatusBar } from '../web-component';
+import type { EditorToolbarEntry } from '../interaction';
+import { createActionHost, type ActionSurfaceHost } from './actions';
 
 export interface EditorChromeOptions {
   engine: EditorEngine;
   layout: ViewLayout;
+  /** Resolves + activates items (the element binds `beforeActionCallback` + the `action` event). */
+  actions?: ActionSurfaceHost;
   toolbarGroups?: readonly ToolGroup[];
-  selectionItems?: readonly ToolbarItem[];
-  contextMenuItems?: readonly ToolbarItem[];
+  selectionItems?: readonly EditorToolbarEntry[];
+  contextMenuItems?: readonly EditorToolbarEntry[];
   statusItems?: readonly StatusItem[];
 }
 
@@ -51,35 +55,35 @@ export class EditorChrome {
 
   constructor(opts: EditorChromeOptions) {
     const { engine, layout } = opts;
-    const registry = engine.commands;
+    const actions = opts.actions ?? createActionHost({ engine });
     const statusItems = opts.statusItems ?? engine.statusItems;
-    const getState = () => engine.view.state;
+    const getContext = () => engine.createContext({ state: engine.view.state });
 
     this.#toolbar = new ToolbarZone(
       layout.toolbarMount,
       opts.toolbarGroups ?? engine.toolbarGroups,
-      registry
+      actions
     );
     // One StatusBar per edge, each holding every item; `setState` filters which
     // items each shows (single-edge → all; `both` → split by `item.bar`).
-    this.#statusTop = new StatusBar(layout.statusTopMount, statusItems, getState);
-    this.#statusBottom = new StatusBar(layout.statusBottomMount, statusItems, getState);
+    this.#statusTop = new StatusBar(layout.statusTopMount, statusItems, getContext);
+    this.#statusBottom = new StatusBar(layout.statusBottomMount, statusItems, getContext);
     this.#selection = new SelectionToolbar({
       view: engine.view,
-      registry,
+      host: actions,
       items: opts.selectionItems ?? engine.selectionItems,
       container: layout.overlayLayer,
     });
     this.#menu = new ContextMenu({
       view: engine.view,
-      registry,
+      host: actions,
       items: opts.contextMenuItems ?? engine.menuItems,
       container: layout.overlayLayer,
     });
 
-    // `selectionUpdate` covers typing + caret moves; `change` also covers a
+    // `selection-change` covers typing + caret moves; `change` also covers a
     // whole-document replacement (setValue), which emits only `change`.
-    this.#unsubscribe.push(engine.events.on('selectionUpdate', () => this.refresh()));
+    this.#unsubscribe.push(engine.events.on('selection-change', () => this.refresh()));
     this.#unsubscribe.push(engine.events.on('change', () => this.refresh()));
 
     this.refresh();

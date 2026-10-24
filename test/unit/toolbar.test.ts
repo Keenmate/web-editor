@@ -7,6 +7,8 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { TextSelection } from 'prosemirror-state';
 import type { KmEditorElement } from '../../src/web-component';
+import { getEditorEngine } from '../../src/web-component';
+import { createActionHost } from '../../src/ui/actions';
 import { EditorEngine } from '../../src/engine/editor-engine';
 import { definePlugin } from '../../src/engine/plugin';
 import { defaultPlugins } from '../../src/engine/default-plugins';
@@ -33,7 +35,7 @@ async function mount(attrs: Record<string, string> = {}): Promise<KmEditorElemen
 
 const bar = (el: KmEditorElement) => el.shadowRoot!.querySelector('.km-toolbar-zone') as HTMLElement;
 const cmd = (el: KmEditorElement, id: string) =>
-  el.shadowRoot!.querySelector(`.km-toolbar-zone [data-command="${id}"]`) as HTMLButtonElement;
+  el.shadowRoot!.querySelector(`.km-toolbar-zone [data-action="${id}"]`) as HTMLButtonElement;
 
 describe('<km-editor> static toolbar', () => {
   it('renders the command toolbar above the editor in edit mode', async () => {
@@ -64,7 +66,7 @@ describe('<km-editor> static toolbar', () => {
     const groups = el.shadowRoot!.querySelectorAll('.km-toolbar-zone .km-group');
     expect(groups.length).toBeGreaterThan(1);
     const format = el.shadowRoot!.querySelector('.km-group[data-group="format"]')!;
-    expect(format.querySelectorAll('[data-command]').length).toBe(3); // bold/italic/underline
+    expect(format.querySelectorAll('[data-action]').length).toBe(3); // bold/italic/underline
     // A plugin contributes its own group.
     expect(el.shadowRoot!.querySelector('.km-group[data-group="table"]')).toBeTruthy();
   });
@@ -132,7 +134,7 @@ describe('<km-editor> status bar', () => {
     });
     el.plugins = [...defaultPlugins(), p];
     await el.whenSettled();
-    expect(el.engine!.statusItems.some((i) => i.id === 'custom')).toBe(true);
+    expect(getEditorEngine(el)!.statusItems.some((i) => i.id === 'custom')).toBe(true);
     const node = el.shadowRoot!.querySelector('.km-status-item[data-status="custom"]');
     expect(node?.textContent).toBe('CUSTOM');
   });
@@ -162,20 +164,22 @@ describe('CommandBar', () => {
     const engine = new EditorEngine({ mount: mountEl, markdown });
     const parent = document.createElement('div');
     document.body.appendChild(parent);
-    const bar = new CommandBar(parent, defaultToolbarItems, engine.commands, { variant: 'bar' });
+    const bar = new CommandBar(parent, defaultToolbarItems, createActionHost({ engine }), { variant: 'bar' });
     return { engine, bar, parent };
   }
   const btn = (parent: HTMLElement, id: string) =>
-    parent.querySelector(`[data-command="${id}"]`) as HTMLButtonElement;
+    parent.querySelector(`[data-action="${id}"]`) as HTMLButtonElement;
   const select = (engine: EditorEngine, from: number, to: number) =>
     engine.view.dispatch(
       engine.view.state.tr.setSelection(TextSelection.create(engine.view.state.doc, from, to))
     );
 
-  it('runs a command on click and reflects its active state', () => {
+  it('runs a command on click and reflects its active state', async () => {
     const { engine, bar, parent } = setup();
     select(engine, 2, 7); // inside "Hello world"
     btn(parent, 'bold').click();
+    await Promise.resolve(); // core runAction settles on a microtask
+    await Promise.resolve();
     expect(engine.getMarkdown()).toContain('**');
     bar.refresh();
     expect(btn(parent, 'bold').classList.contains('active')).toBe(true);
@@ -212,7 +216,7 @@ describe('SelectionToolbar', () => {
     const engine = new EditorEngine({ mount: mountEl, markdown });
     const toolbar = new SelectionToolbar({
       view: engine.view,
-      registry: engine.commands,
+      host: createActionHost({ engine }),
       items: defaultSelectionItems,
       container,
     });
@@ -257,7 +261,7 @@ describe('ContextMenu', () => {
     const engine = new EditorEngine({ mount: mountEl, markdown: '# Hello' });
     const menu = new ContextMenu({
       view: engine.view,
-      registry: engine.commands,
+      host: createActionHost({ engine }),
       items: defaultContextMenuItems,
       container,
     });

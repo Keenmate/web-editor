@@ -72,23 +72,15 @@ export const linkPlugin = definePlugin({
       id: 'insert-link',
       run: promptForLink(schema),
       keys: ['Mod-k'],
-      isActive: (s) => markActive(s, schema.marks.link),
+      text: 'Link',
+      icon: '🔗',
+      tooltip: 'Insert link (select text first)',
+      getIsActiveCallback: ({ state }) => markActive(state, schema.marks.link),
       // Non-empty selection only — also avoids the "select text first" alert.
-      isEnabled: (s) => !s.selection.empty,
+      getIsEnabledCallback: ({ state }) => !state.selection.empty,
     },
   ],
-  toolbarGroups: [
-    {
-      id: 'link',
-      label: 'Link',
-      items: [
-        { type: 'command', command: 'insert-link', label: 'Link', icon: '🔗', title: 'Insert link (select text first)' },
-      ],
-    },
-  ],
-  selectionItems: [
-    { type: 'separator' },
-    { type: 'command', command: 'insert-link', label: 'Link', icon: '🔗', title: 'Insert link' },
-  ],
-  menuItems: [{ type: 'command', command: 'insert-link', label: 'Insert link' }],
+  toolbarGroups: [{ id: 'link', text: 'Link', items: ['insert-link'] }],
+  selectionItems: [{ divider: true }, { action: 'insert-link', tooltip: 'Insert link' }],
+  menuItems: [{ action: 'insert-link', text: 'Insert link' }],
 });

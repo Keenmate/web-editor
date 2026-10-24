@@ -6,14 +6,21 @@
  *
  * Reactivity (per input `on:`):
  *   - `reinit` — content source changed (`value`) → rebuild the engine.
- *   - `update` — `mode` / `isReadonly` / `theme` / `format` → patch in place
- *                (toggle editable, reflect the attribute, re-report content).
+ *   - `update` — `mode` / `isReadonly` / `theme` / `format` / `interactionHost`
+ *                → patch in place (toggle editable, reflect the attribute,
+ *                re-report content, swap the modal bridge).
  *
  * The content model is ONE ProseMirror document (the engine's). `format` is the
  * serialization lens for I/O (the `value` input, `getValue()`, and the `change`
  * event detail) — switching it never rebuilds the document, only changes how its
  * content is read in and out. This is the single-model design from PLAN.md: no
  * second editing surface, no convertor round-trip.
+ *
+ * Interaction model (web-components-core `/actions`): toolbar / menu items are
+ * core action items; every activation runs `beforeActionCallback` → the item's
+ * `onClick` → the `action` event → the command. Every event detail and callback
+ * ctx carries `controller` (`el.controller`, the public facade) and `element`.
+ * The engine is internal — `el.controller` is the imperative API.
  *
  * NOTE on `el.value`: core installs an instance accessor for every input, so
  * reading `el.value` returns the last value ASSIGNED (the config), not live
@@ -22,15 +29,32 @@
 import {
   BlissElement,
   toBool,
+  toCustom,
   toEnum,
+  toFunction,
   toText,
   adoptStyles,
+  type EventDef,
   type InputDef,
 } from '@keenmate/web-components-core';
+import type { Command } from 'prosemirror-state';
 import { EditorEngine, type EditorEngineOptions } from './engine/editor-engine';
 import { defaultPlugins } from './engine/default-plugins';
+import { defaultInteractionHost } from './engine/pipeline/registry';
+import type { InteractionHost } from './engine/pipeline/types';
 import type { EditorPlugin } from './engine/plugin';
 import type { SerializationFormat } from './engine/serialization';
+import {
+  createEditorController,
+  type EditorController,
+  type EditorEventMap,
+  type EditorActionEventDetail,
+  type ChangeEventDetail,
+  type ReadyEventDetail,
+  type ModeChangeEventDetail,
+  type LockChangeEventDetail,
+} from './interaction';
+import { createActionHost } from './ui/actions';
 import { ViewLayout } from './ui/view-layout';
 import { EditorChrome } from './ui/chrome';
 import styles from './css/editor.css?inline';
@@ -52,6 +76,9 @@ const MODES = ['edit', 'split', 'preview', 'inline'] as const;
 const FORMATS = ['markdown', 'html', 'json'] as const;
 const TOOLBARS = ['top', 'bottom', 'start', 'end', 'none'] as const;
 const STATUSBARS = ['none', 'top', 'bottom', 'both'] as const;
+
+const isInteractionHost = (v: unknown): v is InteractionHost | null =>
+  v == null || (typeof v === 'object' && typeof (v as InteractionHost).request === 'function');
 
 // ============================================================================
 // INPUT TABLE — the whole <km-editor> public attribute/property surface.
@@ -124,46 +151,86 @@ const INPUTS: readonly InputDef[] = [
     description:
       'For `mode="inline"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow.',
   },
+  {
+    configKey: 'beforeActionCallback',
+    converter: toFunction(),
+    default: null,
+    on: 'none',
+    description:
+      'Property only. `(detail) => false | void` (may be async) — runs first on every toolbar / selection-toolbar / context-menu activation, with the `action` event detail. Return `false` to cancel: no `onClick`, no `action` event, no command. Keyboard shortcuts do not pass through it.',
+  },
+  {
+    configKey: 'interactionHost',
+    converter: toCustom<InteractionHost | null>(() => null, { validate: isInteractionHost }),
+    default: null,
+    on: 'update',
+    description:
+      'Property only. The modal bridge interactive pipeline stages call: `{ request(ctx) }`, `ctx` = the request (`kind`, `title`, `message`, `payload`) + `signal` + `controller` / `element`. Default: a `window.confirm`-backed host. Survives engine rebuilds (e.g. a `plugins` reassignment).',
+  },
 ];
 
-/** Outward events (core §12.5) — install managed `onChange`/`onReady`/`onModeChange`. */
-export interface EditorChangeDetail {
-  /** Current content serialized in the active `format`. */
-  value: string;
-  format: EditorFormat;
-}
-export interface EditorModeChangeDetail {
-  mode: EditorMode;
-}
-type EditorEvents = {
-  change: EditorChangeDetail;
-  ready: undefined;
-  'mode-change': EditorModeChangeDetail;
-};
-const EVENTS = [
+/**
+ * Outward events (core §12.5). Each dispatches a DOM event (bubbles, not
+ * composed) and first calls its camelCase `on*` twin with the SAME detail.
+ * Every detail carries `controller` + `element` (non-enumerable).
+ */
+const EVENTS: readonly EventDef[] = [
   {
     name: 'change',
     description:
-      'The document changed. `detail.value` is the content serialized in the active `format`; `detail.format` is that format.',
+      'The document changed (or `format` switched). `detail`: `{ value, format }` — the content serialized in the active `format`. Twin: `onChange(detail)`.',
   },
   {
     name: 'ready',
-    description: 'The engine was built and mounted (once per element lifetime). No detail beyond readiness.',
+    description:
+      'The engine was built and mounted (once per element lifetime). `detail`: the component context only (`controller`, `element`). Twin: `onReady(detail)`.',
   },
   {
     name: 'mode-change',
-    description: 'The `mode` attribute/property changed. `detail.mode` is the new mode.',
+    description: 'The `mode` attribute/property changed. `detail`: `{ mode }`. Twin: `onModeChange(detail)`.',
   },
-] as const;
+  {
+    name: 'lock-change',
+    description:
+      'A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`.',
+  },
+  {
+    name: 'action',
+    description:
+      'A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick`, before the command runs; `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`.',
+  },
+];
 
-export class KmEditorElement extends BlissElement<EditorEvents> {
+/** Element → its live engine. Internal: backs {@link getEditorEngine}. */
+const engines = new WeakMap<KmEditorElement, EditorEngine>();
+
+/**
+ * The internal engine of an element — for this repo's dev pages and tests
+ * only. NOT public API and not exported from the package entry: use
+ * `el.controller`.
+ *
+ * @internal
+ */
+export function getEditorEngine(el: KmEditorElement): EditorEngine | null {
+  el.flush();
+  return engines.get(el) ?? null;
+}
+
+export class KmEditorElement extends BlissElement<EditorEventMap, EditorController> {
   protected static override inputs = INPUTS;
   protected static override events = EVENTS;
 
-  // Type-only: core installs the managed accessors at runtime (§12.5).
-  declare onChange: ((e: CustomEvent<EditorChangeDetail>) => void) | null;
-  declare onReady: ((e: CustomEvent<undefined>) => void) | null;
-  declare onModeChange: ((e: CustomEvent<EditorModeChangeDetail>) => void) | null;
+  // Type-only: core installs the managed accessors at runtime (§12.5). Each
+  // twin is called with the event detail (not the CustomEvent).
+  declare onChange: ((detail: ChangeEventDetail) => void) | null;
+  declare onReady: ((detail: ReadyEventDetail) => void) | null;
+  declare onModeChange: ((detail: ModeChangeEventDetail) => void) | null;
+  declare onLockChange: ((detail: LockChangeEventDetail) => void) | null;
+  declare onAction: ((detail: EditorActionEventDetail) => void) | null;
+  /** `false` (sync or async) cancels a toolbar / menu activation. */
+  declare beforeActionCallback: ((detail: EditorActionEventDetail) => unknown) | null;
+  /** The modal bridge for interactive pipeline stages. */
+  declare interactionHost: InteractionHost | null;
 
   #shadow: ShadowRoot;
   #layout: ViewLayout;
@@ -226,6 +293,9 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
     if ('format' in partial && this.#engine) {
       this.emit('change', this.#changeDetail());
     }
+    if ('interactionHost' in partial) {
+      this.#engine?.setInteractionHost(this.#interactionHost());
+    }
     // `theme` reflects via the input table; nothing imperative to do here yet.
   }
 
@@ -264,22 +334,42 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
       mount: this.#layout.mount,
       isEditable: this.#resolveEditable(),
       editorPlugins: this.#customPlugins, // undefined → engine uses defaultPlugins()
+      interactionHost: this.#interactionHost(),
+      // Every ctx the engine builds carries this element + its controller.
+      host: { element: this, getController: () => this.controller },
     };
     this.#applyContentOption(options, format, this.#content);
 
-    this.#engine = new EditorEngine(options);
+    const engine = new EditorEngine(options);
+    this.#engine = engine;
+    engines.set(this, engine);
 
     // Bridge engine → outward events, and keep the split output panel live.
-    this.#unsubscribe = this.#engine.events.on('change', () => {
+    const offChange = engine.events.on('change', () => {
       this.#layout.refreshOutput();
       this.emit('change', this.#changeDetail());
     });
+    const offLock = engine.events.on('lock', ({ isLocked }) => this.emit('lock-change', { isLocked }));
+    this.#unsubscribe = () => {
+      offChange();
+      offLock();
+    };
     this.#layout.refreshOutput(); // initial fill (engine now exists)
 
     // Command-driven chrome (zone toolbar + status bar + selection toolbar +
     // context menu). Bound to this engine's view/registry and the lists it
     // assembled from its plugin set, so it is rebuilt with the engine.
-    this.#chrome = new EditorChrome({ engine: this.#engine, layout: this.#layout });
+    this.#chrome = new EditorChrome({
+      engine,
+      layout: this.#layout,
+      // Item activation: beforeActionCallback → onClick → `action` → the command.
+      actions: createActionHost({
+        engine,
+        getBeforeActionCallback: () =>
+          this.config.beforeActionCallback as ((detail: EditorActionEventDetail) => unknown) | null,
+        emitAction: (detail) => this.emit('action', detail),
+      }),
+    });
     this.#applyChromeState();
 
     initLogger.debug(`<km-editor> engine built (format=${format}, editable=${options.isEditable}) v${
@@ -301,6 +391,7 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
     this.#unsubscribe = undefined;
     this.#engine?.destroy();
     this.#engine = undefined;
+    engines.delete(this);
   }
 
   /** (Re)arrange the shadow layout for the current mode + anchor + toolbar + status side. */
@@ -344,8 +435,51 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
     return (this.config.format as EditorFormat) ?? 'markdown';
   }
 
-  #changeDetail(): EditorChangeDetail {
+  #changeDetail(): { value: string; format: EditorFormat } {
     return { value: this.#engine!.serialize(this.#format()), format: this.#format() };
+  }
+
+  #interactionHost(): InteractionHost {
+    return (this.config.interactionHost as InteractionHost | null) ?? defaultInteractionHost();
+  }
+
+  /** The public facade (`el.controller`): content I/O, focus, commands — never the engine. */
+  protected override createController(): EditorController {
+    const el = this;
+    const target = {
+      getValue: (format?: EditorFormat) => el.getValue(format),
+      getContent: (format?: EditorFormat) => el.getValue(format),
+      getHTML: () => el.getHTML(),
+      getMarkdown: () => el.getMarkdown(),
+      getJSON: () => el.getJSON(),
+      setValue: (value: string, format?: EditorFormat) => el.setValue(value, format),
+      focus: () => el.focus(),
+      runCommand: (command: string | Command) => el.#runCommand(command),
+      isCommandActive: (name: string) => {
+        el.flush();
+        return el.#engine?.commands.isActive(name) ?? false;
+      },
+      isCommandEnabled: (name: string) => {
+        el.flush();
+        return el.#engine?.commands.isEnabled(name) ?? false;
+      },
+      get isReady() {
+        return el.isReady;
+      },
+    };
+    return createEditorController(() => target);
+  }
+
+  /** A registered command / pipeline by name, or a ProseMirror command on the live view. */
+  #runCommand(command: string | Command): boolean {
+    this.flush();
+    const engine = this.#engine;
+    if (!engine) return false;
+    if (typeof command === 'string') return engine.commands.run(command);
+    const view = engine.view;
+    const ok = command(view.state, view.dispatch, view);
+    view.focus();
+    return ok;
   }
 
   // ── public content API (not inputs) ───────────────────────────────────────
@@ -408,12 +542,6 @@ export class KmEditorElement extends BlissElement<EditorEvents> {
       this.#content = this.#engine.serialize(this.#format());
       this.#rebuildEngine();
     }
-  }
-
-  /** The underlying headless engine (null before the first build / after teardown). */
-  get engine(): EditorEngine | null {
-    this.flush();
-    return this.#engine ?? null;
   }
 
   /** Whether the engine has been built and `ready` has fired. */

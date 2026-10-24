@@ -1,143 +1,99 @@
 /**
  * Toolbar / menu / status item model.
  *
- * A command-driven item references a command id (whose `isActive` / `isEnabled` a
- * presenter reflects) or is a separator. Items cluster into {@link ToolGroup}s —
- * the self-contained unit a zone toolbar lays out (and the future drag-and-drop
- * handle). {@link StatusItem}s are a SEPARATE kind: live state indicators
- * (`Words: 234`) for the dedicated status bar — never command buttons, never
- * draggable.
+ * Toolbar, selection-toolbar and context-menu entries are core action items
+ * (`@keenmate/web-components-core/actions`): `{ action, text, icon, tooltip,
+ * shortcut, cssClass, isVisible / isDisabled / isActive + get*Callback(ctx),
+ * onClick(detail) }`, a divider `{ divider: true }`, or a built-in name as a
+ * string (`'bold'`). A built-in is a registered command; the command supplies
+ * the defaults (text / icon / tooltip / shortcut / active / disabled), so an
+ * entry only sets what differs.
+ *
+ * Items cluster into {@link ToolGroup}s — the self-contained unit a zone
+ * toolbar lays out (and the future drag-and-drop handle). {@link StatusItem}s
+ * are a SEPARATE kind: live state indicators (`Words: 234`) for the dedicated
+ * status bar — never action items, never draggable.
  */
-import type { EditorState } from 'prosemirror-state';
+import type { MenuDivider } from '@keenmate/web-components-core/actions';
+import type { EditorToolbarEntry, StatusContext } from '../interaction';
 
-export interface CommandItem {
-  type: 'command';
-  /** Command id registered in the engine's CommandRegistry. */
-  command: string;
-  /** Full accessible name; also the menu label. */
-  label: string;
-  /** Compact glyph for a toolbar button; falls back to `label`. */
-  icon?: string;
-  /** Tooltip; falls back to `label`. */
-  title?: string;
-}
+const divider: MenuDivider = { divider: true };
 
-export interface SeparatorItem {
-  type: 'separator';
-}
-
-export type ToolbarItem = CommandItem | SeparatorItem;
-
-const sep: SeparatorItem = { type: 'separator' };
-
-// ── Core item groups (Phase 5) ──────────────────────────────────────────────
+// ── Core item lists ─────────────────────────────────────────────────────────
 // The engine assembles each presenter's list as: core-leading + plugin items +
 // core-trailing (see `assembleItems`). These are the core (always-present)
 // commands; link / image / table items come from their plugins.
 
 /** Core static-toolbar items (no history — that trails after plugin items). */
-export const coreToolbarItems: readonly ToolbarItem[] = [
-  { type: 'command', command: 'bold', label: 'Bold', icon: 'B', title: 'Bold (Ctrl+B)' },
-  { type: 'command', command: 'italic', label: 'Italic', icon: 'I', title: 'Italic (Ctrl+I)' },
-  { type: 'command', command: 'underline', label: 'Underline', icon: 'U', title: 'Underline (Ctrl+U)' },
-  sep,
-  { type: 'command', command: 'heading', label: 'Heading', icon: 'H1', title: 'Heading 1' },
-  { type: 'command', command: 'paragraph', label: 'Paragraph', icon: 'P', title: 'Paragraph' },
-  sep,
-  { type: 'command', command: 'bullet-list', label: 'Bullet list', icon: '• List', title: 'Bullet list' },
-  { type: 'command', command: 'ordered-list', label: 'Ordered list', icon: '1. List', title: 'Ordered list' },
-  sep,
-  { type: 'command', command: 'insert-code-block', label: 'Code block', icon: '</>', title: 'Insert code block' },
+export const coreToolbarItems: readonly EditorToolbarEntry[] = [
+  'bold',
+  'italic',
+  'underline',
+  divider,
+  'heading',
+  'paragraph',
+  divider,
+  'bullet-list',
+  'ordered-list',
+  divider,
+  'insert-code-block',
 ];
 
 /** Core static-toolbar trailing group (history). */
-export const coreHistoryItems: readonly ToolbarItem[] = [
-  sep,
-  { type: 'command', command: 'undo', label: 'Undo', icon: '↶', title: 'Undo (Ctrl+Z)' },
-  { type: 'command', command: 'redo', label: 'Redo', icon: '↷', title: 'Redo (Ctrl+Y)' },
-];
+export const coreHistoryItems: readonly EditorToolbarEntry[] = [divider, 'undo', 'redo'];
 
 /** Core selection-toolbar items (inline formatting + block type). */
-export const coreSelectionItems: readonly ToolbarItem[] = [
-  { type: 'command', command: 'bold', label: 'Bold', icon: 'B', title: 'Bold' },
-  { type: 'command', command: 'italic', label: 'Italic', icon: 'I', title: 'Italic' },
-  { type: 'command', command: 'underline', label: 'Underline', icon: 'U', title: 'Underline' },
-  sep,
-  { type: 'command', command: 'heading', label: 'Heading', icon: 'H1', title: 'Heading 1' },
-  { type: 'command', command: 'paragraph', label: 'Paragraph', icon: 'P', title: 'Paragraph' },
+export const coreSelectionItems: readonly EditorToolbarEntry[] = [
+  'bold',
+  'italic',
+  'underline',
+  divider,
+  'heading',
+  'paragraph',
 ];
 
 /** Core context-menu items (leading). */
-export const coreMenuItems: readonly ToolbarItem[] = [
-  { type: 'command', command: 'bold', label: 'Bold' },
-  { type: 'command', command: 'italic', label: 'Italic' },
-  { type: 'command', command: 'underline', label: 'Underline' },
-];
+export const coreMenuItems: readonly EditorToolbarEntry[] = ['bold', 'italic', 'underline'];
 
 /** Core context-menu trailing group (history). */
-export const coreMenuHistoryItems: readonly ToolbarItem[] = [
-  sep,
-  { type: 'command', command: 'undo', label: 'Undo' },
-  { type: 'command', command: 'redo', label: 'Redo' },
-];
+export const coreMenuHistoryItems: readonly EditorToolbarEntry[] = [divider, 'undo', 'redo'];
 
 // ── Tool groups (the zone-toolbar unit) ──────────────────────────────────────
 
 /**
- * A named cluster of command items — the unit a zone toolbar lays out as one
+ * A named cluster of entries — the unit a zone toolbar lays out as one
  * contiguous button group (groups are divider-separated and wrap as a whole),
- * and the unit future drag-and-drop reorders. `label` is metadata for a
- * customization UI / accessibility, not necessarily rendered.
+ * and the unit future drag-and-drop reorders. A layout container, not a
+ * submenu. `text` is the group's accessible name (`aria-label`), not rendered.
  */
 export interface ToolGroup {
   id: string;
-  label?: string;
-  items: readonly CommandItem[];
+  text?: string;
+  items: readonly EditorToolbarEntry[];
 }
-
-const cmd = (command: string, label: string, icon: string, title?: string): CommandItem => ({
-  type: 'command',
-  command,
-  label,
-  icon,
-  title: title ?? label,
-});
 
 /** Core tool groups (leading). Plugin groups slot in after these. */
 export const coreToolbarGroups: readonly ToolGroup[] = [
-  {
-    id: 'format',
-    label: 'Format',
-    items: [
-      cmd('bold', 'Bold', 'B', 'Bold (Ctrl+B)'),
-      cmd('italic', 'Italic', 'I', 'Italic (Ctrl+I)'),
-      cmd('underline', 'Underline', 'U', 'Underline (Ctrl+U)'),
-    ],
-  },
-  { id: 'block', label: 'Block', items: [cmd('heading', 'Heading', 'H1', 'Heading 1'), cmd('paragraph', 'Paragraph', 'P')] },
-  {
-    id: 'list',
-    label: 'Lists',
-    items: [cmd('bullet-list', 'Bullet list', '• List'), cmd('ordered-list', 'Ordered list', '1. List')],
-  },
-  { id: 'insert', label: 'Insert', items: [cmd('insert-code-block', 'Code block', '</>', 'Insert code block')] },
+  { id: 'format', text: 'Format', items: ['bold', 'italic', 'underline'] },
+  { id: 'block', text: 'Block', items: ['heading', 'paragraph'] },
+  { id: 'list', text: 'Lists', items: ['bullet-list', 'ordered-list'] },
+  { id: 'insert', text: 'Insert', items: ['insert-code-block'] },
 ];
 
 /** Core tool groups (trailing — history sits after plugin groups). */
-export const coreHistoryGroups: readonly ToolGroup[] = [
-  { id: 'history', label: 'History', items: [cmd('undo', 'Undo', '↶', 'Undo (Ctrl+Z)'), cmd('redo', 'Redo', '↷', 'Redo (Ctrl+Y)')] },
-];
+export const coreHistoryGroups: readonly ToolGroup[] = [{ id: 'history', text: 'History', items: ['undo', 'redo'] }];
 
 // ── Status items (the dedicated status-bar unit) ─────────────────────────────
 
 /**
- * A live state indicator for the status bar. `render` is called with the current
- * editor state on every change; it returns text or a node. Status items are not
- * commands and are never draggable.
+ * A live state indicator for the status bar. `render(ctx)` is called with the
+ * current editor state (`ctx.state`, + `controller` / `element`) on every
+ * change; it returns text or a node. Status items are not action items and are
+ * never draggable.
  */
 export interface StatusItem {
   id: string;
-  render: (state: EditorState) => string | Node;
+  render: (ctx: StatusContext) => string | Node;
   /** Which end of the status bar to dock to. Default `'start'`. */
   align?: 'start' | 'end';
   /**
@@ -145,10 +101,10 @@ export interface StatusItem {
    * Ignored for single-edge status bars (`'top'`/`'bottom'`), which show every item.
    */
   bar?: 'top' | 'bottom';
-  title?: string;
+  tooltip?: string;
 }
 
-function wordCount(state: EditorState): number {
+function wordCount({ state }: StatusContext): number {
   const text = state.doc.textBetween(0, state.doc.content.size, ' ', ' ').trim();
   return text ? text.split(/\s+/).length : 0;
 }
@@ -159,54 +115,54 @@ function wordCount(state: EditorState): number {
  * on each; single-edge status bars (`top`/`bottom`) show every item regardless.
  */
 export const coreStatusItems: readonly StatusItem[] = [
-  { id: 'words', align: 'end', bar: 'bottom', render: (s) => `Words: ${wordCount(s)}` },
-  { id: 'chars', align: 'end', bar: 'top', render: (s) => `Chars: ${s.doc.textContent.length}` },
+  { id: 'words', align: 'end', bar: 'bottom', render: (ctx) => `Words: ${wordCount(ctx)}` },
+  { id: 'chars', align: 'end', bar: 'top', render: ({ state }) => `Chars: ${state.doc.textContent.length}` },
 ];
 
 /** The default static toolbar — the full editing command set. */
-export const defaultToolbarItems: readonly ToolbarItem[] = [
-  { type: 'command', command: 'bold', label: 'Bold', icon: 'B', title: 'Bold (Ctrl+B)' },
-  { type: 'command', command: 'italic', label: 'Italic', icon: 'I', title: 'Italic (Ctrl+I)' },
-  { type: 'command', command: 'underline', label: 'Underline', icon: 'U', title: 'Underline (Ctrl+U)' },
-  sep,
-  { type: 'command', command: 'heading', label: 'Heading', icon: 'H1', title: 'Heading 1' },
-  { type: 'command', command: 'paragraph', label: 'Paragraph', icon: 'P', title: 'Paragraph' },
-  sep,
-  { type: 'command', command: 'bullet-list', label: 'Bullet list', icon: '• List', title: 'Bullet list' },
-  { type: 'command', command: 'ordered-list', label: 'Ordered list', icon: '1. List', title: 'Ordered list' },
-  sep,
-  { type: 'command', command: 'insert-link', label: 'Link', icon: '🔗', title: 'Insert link (select text first)' },
-  { type: 'command', command: 'insert-image', label: 'Image', icon: '🖼', title: 'Insert image' },
-  { type: 'command', command: 'insert-code-block', label: 'Code block', icon: '</>', title: 'Insert code block' },
-  { type: 'command', command: 'insert-table', label: 'Table', icon: '⊞', title: 'Insert table' },
-  sep,
-  { type: 'command', command: 'undo', label: 'Undo', icon: '↶', title: 'Undo (Ctrl+Z)' },
-  { type: 'command', command: 'redo', label: 'Redo', icon: '↷', title: 'Redo (Ctrl+Y)' },
+export const defaultToolbarItems: readonly EditorToolbarEntry[] = [
+  'bold',
+  'italic',
+  'underline',
+  divider,
+  'heading',
+  'paragraph',
+  divider,
+  'bullet-list',
+  'ordered-list',
+  divider,
+  'insert-link',
+  'insert-image',
+  'insert-code-block',
+  'insert-table',
+  divider,
+  'undo',
+  'redo',
 ];
 
 /** Compact inline-formatting bar shown over a non-empty text selection. */
-export const defaultSelectionItems: readonly ToolbarItem[] = [
-  { type: 'command', command: 'bold', label: 'Bold', icon: 'B', title: 'Bold' },
-  { type: 'command', command: 'italic', label: 'Italic', icon: 'I', title: 'Italic' },
-  { type: 'command', command: 'underline', label: 'Underline', icon: 'U', title: 'Underline' },
-  sep,
-  { type: 'command', command: 'insert-link', label: 'Link', icon: '🔗', title: 'Insert link' },
-  sep,
-  { type: 'command', command: 'heading', label: 'Heading', icon: 'H1', title: 'Heading 1' },
-  { type: 'command', command: 'paragraph', label: 'Paragraph', icon: 'P', title: 'Paragraph' },
+export const defaultSelectionItems: readonly EditorToolbarEntry[] = [
+  'bold',
+  'italic',
+  'underline',
+  divider,
+  { action: 'insert-link', tooltip: 'Insert link' },
+  divider,
+  'heading',
+  'paragraph',
 ];
 
 /** Right-click editing menu (labelled, vertical). */
-export const defaultContextMenuItems: readonly ToolbarItem[] = [
-  { type: 'command', command: 'bold', label: 'Bold' },
-  { type: 'command', command: 'italic', label: 'Italic' },
-  { type: 'command', command: 'underline', label: 'Underline' },
-  sep,
-  { type: 'command', command: 'insert-link', label: 'Insert link' },
-  { type: 'command', command: 'insert-image', label: 'Insert image' },
-  { type: 'command', command: 'insert-code-block', label: 'Insert code block' },
-  { type: 'command', command: 'insert-table', label: 'Insert table' },
-  sep,
-  { type: 'command', command: 'undo', label: 'Undo' },
-  { type: 'command', command: 'redo', label: 'Redo' },
+export const defaultContextMenuItems: readonly EditorToolbarEntry[] = [
+  'bold',
+  'italic',
+  'underline',
+  divider,
+  { action: 'insert-link', text: 'Insert link' },
+  { action: 'insert-image', text: 'Insert image' },
+  { action: 'insert-code-block', text: 'Insert code block' },
+  { action: 'insert-table', text: 'Insert table' },
+  divider,
+  'undo',
+  'redo',
 ];

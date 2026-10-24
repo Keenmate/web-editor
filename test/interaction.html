@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>km-editor interaction-model fixture</title>
+</head>
+<body>
+    <!-- Playwright fixture (e2e/interaction-model.spec.ts): events + twins,
+         controller, ctx carrying controller/element, action items, veto.
+         The element is created in script so every twin is wired before `ready`. -->
+    <script type="module">
+        import { defaultPlugins, definePlugin, imageBrowserPlugin } from '/src/index.ts';
+
+        const log = [];
+        window.ix = { log, ctx: {} };
+
+        const el = document.createElement('km-editor');
+        el.id = 'subject';
+        el.setAttribute('statusbar', 'bottom');
+        el.setAttribute('value', '# Hello\n\nSome plain text here.');
+
+        // A plugin with a probed command, a custom toolbar item and a probed status item.
+        const probe = definePlugin({
+            name: 'ix-probe',
+            commands: () => [{
+                id: 'ix-noop',
+                run: () => true,
+                text: 'Noop',
+                icon: 'N',
+                getIsEnabledCallback: (ctx) => { window.ix.ctx.command = ctx; return true; },
+            }],
+            toolbarGroups: [{
+                id: 'ix',
+                text: 'Interaction',
+                items: [
+                    'ix-noop',
+                    { divider: true },
+                    {
+                        action: 'custom',
+                        id: 'save',
+                        text: 'Save',
+                        icon: 'S',
+                        getIsVisibleCallback: (ctx) => { window.ix.ctx.item = ctx; return true; },
+                        onClick: (detail) => { log.push({ kind: 'onClick', id: detail.id, hasController: detail.controller === el.controller }); },
+                    },
+                ],
+            }],
+            statusItems: [{ id: 'ix', render: (ctx) => { window.ix.ctx.status = ctx; return 'IX'; } }],
+        });
+
+        el.plugins = [...defaultPlugins(), imageBrowserPlugin({ upload: async ({ asset }) => asset.url }), probe];
+        el.interactionHost = {
+            request: async (ctx) => {
+                window.ix.ctx.request = ctx;
+                return { cancelled: false, value: { url: 'data:image/png;base64,iVBORw0KGgo=', name: 'px' } };
+            },
+        };
+        el.onReady = (d) => log.push({ kind: 'onReady', keys: Object.keys(d), json: JSON.stringify(d), isElement: d.element === el, hasController: d.controller === el.controller });
+        el.onAction = (d) => { window.ix.lastTwin = d; log.push({ kind: 'onAction', action: d.action, id: d.id, source: d.source }); };
+        el.addEventListener('action', (e) => { window.ix.lastEvent = e.detail; log.push({ kind: 'action', action: e.detail.action, composed: e.composed }); });
+        el.onChange = (d) => { window.ix.lastChange = d; };
+        el.onLockChange = (d) => log.push({ kind: 'lock', isLocked: d.isLocked });
+
+        document.body.appendChild(el);
+        window.ix.ready = true;
+    </script>
+</body>
+</html>

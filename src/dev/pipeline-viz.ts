@@ -21,6 +21,7 @@ import type {
 } from '../engine/pipeline/types';
 import '../index';
 import type { KmEditorElement } from '../index';
+import { getEditorEngine } from '../web-component';
 import { defaultPlugins } from '../engine/default-plugins';
 import { imageBrowserPlugin } from '../plugins/image-browser';
 import { imageBase64Plugin } from '../plugins/image-base64';
@@ -57,7 +58,7 @@ const CLOUD_IMAGES = [
 ];
 
 /** Stand-in for a real upload: wait (watch the slider), then return the src. */
-function fakeUpload(asset: { url: string; name?: string }, signal: AbortSignal): Promise<string> {
+function fakeUpload({ asset, signal }: { asset: { url: string; name?: string }; signal: AbortSignal }): Promise<string> {
   return delay(settings.delayMs, signal).then(() => asset.url);
 }
 
@@ -66,7 +67,8 @@ function fakeUpload(asset: { url: string; name?: string }, signal: AbortSignal):
  * sensitivity select otherwise (classify / confirm-import). */
 function createMockInteractionHost(): InteractionHost {
   return {
-    request(req, signal) {
+    request(req) {
+      const { signal } = req;
       return new Promise((resolve) => {
         const overlay = document.createElement('div');
         overlay.className = 'pv-modal';
@@ -141,10 +143,12 @@ const idlePipeline: Pipeline = {
       interactive: true,
       run: async (c, rt) => {
         if (!classifyEnabled.on) return { action: 'skip' };
-        const res = await rt.ui.request(
-          { kind: 'classify', title: 'Classify document', message: 'Pick a sensitivity level.' },
-          rt.signal
-        );
+        const res = await rt.ui.request({
+          kind: 'classify',
+          title: 'Classify document',
+          message: 'Pick a sensitivity level.',
+          signal: rt.signal,
+        });
         if (res.cancelled) return { action: 'halt', reason: 'classification cancelled' };
         return { action: 'resolve', patch: { classification: res.value } };
       },
@@ -279,14 +283,12 @@ const asyncPastePipeline: Pipeline = {
       id: 'confirm-import',
       interactive: true,
       run: async (c, rt) => {
-        const res = await rt.ui.request(
-          {
-            kind: 'confirm',
-            title: 'Import pasted content?',
-            message: 'The native paste was cancelled. This async step can pause here (modal). Pick an import level, or Cancel to insert nothing.',
-          },
-          rt.signal
-        );
+        const res = await rt.ui.request({
+          kind: 'confirm',
+          title: 'Import pasted content?',
+          message: 'The native paste was cancelled. This async step can pause here (modal). Pick an import level, or Cancel to insert nothing.',
+          signal: rt.signal,
+        });
         if (res.cancelled) return { action: 'halt', reason: 'import cancelled' };
         return { action: 'resolve', patch: { importAs: res.value } };
       },
@@ -576,27 +578,28 @@ function pluginSet() {
 /** Rebuild the editor on the current plugin set, re-inject the host, and re-wire. */
 function applyPlugins() {
   if (!km) return;
+  km.interactionHost = ui; // public input — survives the rebuild below
   km.plugins = pluginSet(); // rebuilds the engine synchronously, preserving content
-  const engine = km.engine;
+  // Dev lab: drives engine internals (paste lanes, pipeline observers) directly.
+  const engine = getEditorEngine(km);
   if (!engine) return;
-  engine.setInteractionHost(ui);
   wire(engine);
 }
 
 /** Bind the page controls ONCE (they reach the live engine / lanes at click time). */
 function wireControlsOnce() {
   document.querySelector('#pv-simulate')?.addEventListener('click', () => {
-    const engine = km?.engine;
+    const engine = km && getEditorEngine(km);
     if (!engine || !laneRefs.sync) return;
     const cleaned = runPaste(engine, laneRefs.sync, WORD_SAMPLE);
     if (cleaned) insertHTML(engine, cleaned);
   });
   document.querySelector('#pv-simulate-async')?.addEventListener('click', () => {
-    const engine = km?.engine;
+    const engine = km && getEditorEngine(km);
     if (engine && laneRefs.async) void runAsyncPaste(engine, laneRefs.async, WORD_SAMPLE, ui);
   });
   document.querySelector('#pv-simulate-image')?.addEventListener('click', () => {
-    km?.engine?.run('image:browser:pick');
+    km?.controller.runCommand('image:browser:pick');
   });
 
   const pasteModeSel = document.querySelector('#pv-paste-mode') as HTMLSelectElement | null;
@@ -629,6 +632,6 @@ function start() {
 }
 
 if (km) {
-  if (km.isReady && km.engine) start();
+  if (km.isReady && getEditorEngine(km)) start();
   else km.addEventListener('ready', () => start());
 }

@@ -8,7 +8,7 @@
       "elements": [
         {
           "name": "km-editor",
-          "description": "\n\n---\n\n\n### **Events:**\n - **change** - The document changed. `detail.value` is the content serialized in the active `format`; `detail.format` is that format.\n- **ready** - The engine was built and mounted (once per element lifetime). No detail beyond readiness.\n- **mode-change** - The `mode` attribute/property changed. `detail.mode` is the new mode.\n\n### **Methods:**\n \n\n\n\n- **getValue(format: _EditorFormat_): _string_** - Live content serialized in the active `format` (or an explicit one).\n- **getContent(format: _EditorFormat_): _string_** - Alias for getValue — reads live content, not the assigned `value` input.\n- **setValue(value: _string_, format: _EditorFormat_): _void_** - Replace the document with `value`, parsed in `format` (defaults to the active one).",
+          "description": "\n\n---\n\n\n### **Events:**\n - **change** - The document changed (or `format` switched). `detail`: `{ value, format }` — the content serialized in the active `format`. Twin: `onChange(detail)`.\n- **ready** - The engine was built and mounted (once per element lifetime). `detail`: the component context only (`controller`, `element`). Twin: `onReady(detail)`.\n- **mode-change** - The `mode` attribute/property changed. `detail`: `{ mode }`. Twin: `onModeChange(detail)`.\n- **lock-change** - A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`.\n- **action** - A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick`, before the command runs; `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`.\n\n### **Methods:**\n \n\n\n\n\n- **getValue(format: _EditorFormat_): _string_** - Live content serialized in the active `format` (or an explicit one).\n- **getContent(format: _EditorFormat_): _string_** - Alias for getValue — reads live content, not the assigned `value` input.\n- **setValue(value: _string_, format: _EditorFormat_): _void_** - Replace the document with `value`, parsed in `format` (defaults to the active one).",
           "doc-url": "",
           "attributes": [
             {
@@ -67,40 +67,61 @@
           "events": [
             {
               "name": "change",
-              "description": "The document changed. `detail.value` is the content serialized in the active `format`; `detail.format` is that format."
+              "description": "The document changed (or `format` switched). `detail`: `{ value, format }` — the content serialized in the active `format`. Twin: `onChange(detail)`."
             },
             {
               "name": "ready",
-              "description": "The engine was built and mounted (once per element lifetime). No detail beyond readiness."
+              "description": "The engine was built and mounted (once per element lifetime). `detail`: the component context only (`controller`, `element`). Twin: `onReady(detail)`."
             },
             {
               "name": "mode-change",
-              "description": "The `mode` attribute/property changed. `detail.mode` is the new mode."
+              "description": "The `mode` attribute/property changed. `detail`: `{ mode }`. Twin: `onModeChange(detail)`."
+            },
+            {
+              "name": "lock-change",
+              "description": "A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`."
+            },
+            {
+              "name": "action",
+              "description": "A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick`, before the command runs; `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`."
             }
           ],
           "js": {
             "properties": [
               {
                 "name": "onChange",
-                "type": "((e: CustomEvent<EditorChangeDetail>) => void) | null"
+                "type": "((detail: ChangeEventDetail) => void) | null"
               },
               {
                 "name": "onReady",
-                "type": "((e: CustomEvent<undefined>) => void) | null"
+                "type": "((detail: ReadyEventDetail) => void) | null"
               },
               {
                 "name": "onModeChange",
-                "type": "((e: CustomEvent<EditorModeChangeDetail>) => void) | null"
+                "type": "((detail: ModeChangeEventDetail) => void) | null"
+              },
+              {
+                "name": "onLockChange",
+                "type": "((detail: LockChangeEventDetail) => void) | null"
+              },
+              {
+                "name": "onAction",
+                "type": "((detail: EditorActionEventDetail) => void) | null"
+              },
+              {
+                "name": "beforeActionCallback",
+                "description": "Property only. `(detail) => false | void` (may be async) — runs first on every toolbar / selection-toolbar / context-menu activation, with the `action` event detail. Return `false` to cancel: no `onClick`, no `action` event, no command. Keyboard shortcuts do not pass through it.",
+                "type": "Function"
+              },
+              {
+                "name": "interactionHost",
+                "description": "Property only. The modal bridge interactive pipeline stages call: `{ request(ctx) }`, `ctx` = the request (`kind`, `title`, `message`, `payload`) + `signal` + `controller` / `element`. Default: a `window.confirm`-backed host. Survives engine rebuilds (e.g. a `plugins` reassignment).",
+                "type": "unknown"
               },
               {
                 "name": "plugins",
-                "description": "The editor plugin set. Assign to customise — compose with `defaultPlugins()`\nto keep the built-ins, and order the array to control conflict precedence\n(later plugins override earlier by id). Reassigning rebuilds the engine on the\nnew set, preserving the live content. Reading returns the active set.\n\n```js\nimport { defaultPlugins } from '@keenmate/web-editor';\nel.plugins = [...defaultPlugins(), myPlugin];\n```",
+                "description": "The editor plugin set. Assign to customise — compose with `defaultPlugins()`\r\nto keep the built-ins, and order the array to control conflict precedence\r\n(later plugins override earlier by id). Reassigning rebuilds the engine on the\r\nnew set, preserving the live content. Reading returns the active set.\r\n\r\n```js\r\nimport { defaultPlugins } from '@keenmate/web-editor';\r\nel.plugins = [...defaultPlugins(), myPlugin];\r\n```",
                 "type": "EditorPlugin[]"
-              },
-              {
-                "name": "engine",
-                "description": "The underlying headless engine (null before the first build / after teardown).",
-                "type": "EditorEngine | null"
               },
               {
                 "name": "isReady",
@@ -151,15 +172,23 @@
             "events": [
               {
                 "name": "change",
-                "description": "The document changed. `detail.value` is the content serialized in the active `format`; `detail.format` is that format."
+                "description": "The document changed (or `format` switched). `detail`: `{ value, format }` — the content serialized in the active `format`. Twin: `onChange(detail)`."
               },
               {
                 "name": "ready",
-                "description": "The engine was built and mounted (once per element lifetime). No detail beyond readiness."
+                "description": "The engine was built and mounted (once per element lifetime). `detail`: the component context only (`controller`, `element`). Twin: `onReady(detail)`."
               },
               {
                 "name": "mode-change",
-                "description": "The `mode` attribute/property changed. `detail.mode` is the new mode."
+                "description": "The `mode` attribute/property changed. `detail`: `{ mode }`. Twin: `onModeChange(detail)`."
+              },
+              {
+                "name": "lock-change",
+                "description": "A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`."
+              },
+              {
+                "name": "action",
+                "description": "A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick`, before the command runs; `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`."
               }
             ]
           }

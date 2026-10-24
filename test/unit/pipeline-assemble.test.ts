@@ -137,7 +137,7 @@ describe('EditorEngine pipeline integration', () => {
     const engine = new EditorEngine({
       mount: mount(),
       markdown: 'hi',
-      editorPlugins: [...defaultPlugins(), imageBrowserPlugin({ upload: async (a) => a.url })],
+      editorPlugins: [...defaultPlugins(), imageBrowserPlugin({ upload: async ({ asset }) => asset.url })],
       interactionHost: host,
     });
     const locks: boolean[] = [];

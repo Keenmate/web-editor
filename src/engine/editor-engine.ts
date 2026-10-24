@@ -42,10 +42,10 @@ import {
   coreMenuItems,
   coreMenuHistoryItems,
   coreStatusItems,
-  type ToolbarItem,
   type ToolGroup,
   type StatusItem,
 } from '../ui/items';
+import type { EditorComponentContext, EditorController, EditorToolbarEntry } from '../interaction';
 import {
   docToHTML,
   htmlToDoc,
@@ -55,6 +55,16 @@ import {
   type DocJSON,
   type SerializationFormat,
 } from './serialization';
+
+/**
+ * The `<km-editor>` element hosting an engine. With a host, every ctx the engine
+ * builds ({@link EditorEngine.createContext} — command predicates, status items,
+ * toolbar items, interaction requests) carries `controller` + `element`.
+ */
+export interface EditorEngineHost {
+  element: HTMLElement;
+  getController(): EditorController;
+}
 
 export interface EditorEngineOptions {
   /** Element the editor view mounts into. */
@@ -76,11 +86,13 @@ export interface EditorEngineOptions {
    * `window.confirm`-backed host; inject a richer picker via this or
    * `setInteractionHost`. */
   interactionHost?: InteractionHost;
+  /** The element hosting this engine (set by `<km-editor>`; omit standalone). */
+  host?: EditorEngineHost;
 }
 
 export interface EngineEventMap {
   change: EditorEngine;
-  selectionUpdate: EditorEngine;
+  'selection-change': EditorEngine;
   transaction: { tr: Transaction; engine: EditorEngine };
   ready: EditorEngine;
   destroy: EditorEngine;
@@ -95,9 +107,9 @@ export class EditorEngine {
   /** Assembled presenter lists (core + plugin), consumed by the chrome. */
   readonly toolbarGroups: ToolGroup[];
   /** Flattened toolbar commands (groups → items), for consumers wanting a flat list. */
-  readonly toolbarItems: ToolbarItem[];
-  readonly selectionItems: ToolbarItem[];
-  readonly menuItems: ToolbarItem[];
+  readonly toolbarItems: EditorToolbarEntry[];
+  readonly selectionItems: EditorToolbarEntry[];
+  readonly menuItems: EditorToolbarEntry[];
   readonly statusItems: StatusItem[];
   view: EditorView;
 
@@ -108,8 +120,18 @@ export class EditorEngine {
   #interactionHost: InteractionHost;
   /** Editability to restore when a gating lock releases. */
   #preLockIsEditable?: boolean;
+  /** Prototype of every ctx: `controller` / `element` getters when hosted (inherited ⇒ non-enumerable). */
+  #ctxProto: object;
 
   constructor(options: EditorEngineOptions) {
+    const host = options.host;
+    this.#ctxProto = host
+      ? Object.create(Object.prototype, {
+          controller: { get: () => host.getController(), enumerable: false },
+          element: { get: () => host.element, enumerable: false },
+        })
+      : Object.prototype;
+
     const plugins = orderPlugins(options.editorPlugins ?? defaultPlugins());
     this.#plugins = plugins;
 
@@ -122,7 +144,10 @@ export class EditorEngine {
     this.#markdown = buildMarkdownIO(schema, plugins);
 
     // Commands: core + each plugin's.
-    this.commands = new CommandRegistry(() => this.view);
+    this.commands = new CommandRegistry(
+      () => this.view,
+      (fields) => this.createContext(fields)
+    );
     registerCoreCommands(this.commands, schema);
     for (const plugin of plugins) {
       const specs = plugin.commands?.(ctx);
@@ -138,12 +163,15 @@ export class EditorEngine {
     // A declared-pipeline-only name (no backing command) still needs a command
     // entry so the chrome can present/enable its button.
     for (const name of pipelineMap.keys()) {
-      if (!this.commands.has(name)) this.commands.register({ id: name, run: () => true, isEnabled: () => true });
+      if (!this.commands.has(name)) this.commands.register({ id: name, run: () => true, getIsEnabledCallback: () => true });
     }
     this.#pipelines = new PipelineRegistry(pipelineMap, {
       getView: () => this.view,
       getContext: () => ({ doc: this.view.state.doc, extra: {} }),
-      getInteractionHost: () => this.#interactionHost,
+      // Every request carries the component context when hosted.
+      getInteractionHost: () => ({
+        request: (ctx) => this.#interactionHost.request(this.createContext(ctx)),
+      }),
       setLock: (locked) => this.#setLock(locked),
     });
     this.commands.attachRunner((id) => this.#pipelines.run(id));
@@ -192,7 +220,7 @@ export class EditorEngine {
         this.view.updateState(newState);
         this.events.emit('transaction', { tr, engine: this });
         if (tr.docChanged) this.events.emit('change', this);
-        if (tr.selectionSet || tr.docChanged) this.events.emit('selectionUpdate', this);
+        if (tr.selectionSet || tr.docChanged) this.events.emit('selection-change', this);
       },
     });
 
@@ -213,6 +241,16 @@ export class EditorEngine {
 
   get state(): EditorState {
     return this.view.state;
+  }
+
+  /**
+   * Build a callback ctx from `fields`. Hosted by `<km-editor>`, it carries
+   * `controller` + `element` (inherited getters — non-enumerable, so
+   * `JSON.stringify` / `Object.keys` see only the fields); standalone it is
+   * just the fields.
+   */
+  createContext<T extends object>(fields: T): T & EditorComponentContext {
+    return Object.assign(Object.create(this.#ctxProto), fields) as T & EditorComponentContext;
   }
 
   // ── Pipelines (Phase 7) ───────────────────────────────────────────────

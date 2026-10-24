@@ -65,9 +65,7 @@ describe('custom plugin', () => {
     marks: { strike: { parseDOM: [{ tag: 's' }, { tag: 'del' }], toDOM: () => ['s', 0] } },
     markdown: { marks: { strike: { open: '~~', close: '~~', mixable: true } } },
     commands: ({ schema }) => [{ id: 'strike', run: toggleMark(schema.marks.strike) }],
-    toolbarGroups: [
-      { id: 'strike', items: [{ type: 'command', command: 'strike', label: 'Strikethrough', icon: 'S' }] },
-    ],
+    toolbarGroups: [{ id: 'strike', items: [{ action: 'strike', text: 'Strikethrough', icon: 'S' }] }],
   });
 
   it('merges schema, command, group, and Markdown serializer', () => {
@@ -75,9 +73,7 @@ describe('custom plugin', () => {
     expect(engine.schema.marks.strike).toBeTruthy();
     expect(engine.commands.has('strike')).toBe(true);
     expect(engine.toolbarGroups.some((g) => g.id === 'strike')).toBe(true);
-    expect(
-      engine.toolbarItems.some((i) => i.type === 'command' && i.command === 'strike')
-    ).toBe(true);
+    expect(engine.toolbarItems.some((i) => typeof i === 'object' && 'action' in i && i.action === 'strike')).toBe(true);
 
     engine.setHTML('<p><s>gone</s></p>');
     expect(engine.getMarkdown()).toContain('~~gone~~');
@@ -94,7 +90,9 @@ describe('trimmed plugin set', () => {
     expect(engine.commands.has('bold')).toBe(true);
     expect(engine.schema.nodes.code_block).toBeTruthy();
     // Feature toolbar items are gone; core + history remain.
-    const ids = engine.toolbarItems.filter((i) => i.type === 'command').map((i: any) => i.command);
+    const ids = engine.toolbarItems
+      .map((i: any) => (typeof i === 'string' ? i : i.action))
+      .filter(Boolean);
     expect(ids).not.toContain('insert-link');
     expect(ids).not.toContain('insert-table');
     expect(ids).toContain('bold');
@@ -108,7 +106,7 @@ describe('status item override / remove (by id)', () => {
     const engine = new EditorEngine({ mount: mount(), editorPlugins: [p] });
     const words = engine.statusItems.filter((i) => i.id === 'words');
     expect(words.length).toBe(1); // not duplicated
-    expect(words[0].render(engine.view.state)).toBe('W!'); // plugin's render wins
+    expect(words[0].render(engine.createContext({ state: engine.view.state }))).toBe('W!'); // plugin's render wins
     const ids = engine.statusItems.map((i) => i.id);
     expect(ids.indexOf('words')).toBeLessThan(ids.indexOf('chars')); // original slot kept
   });
@@ -126,7 +124,7 @@ describe('status item override / remove (by id)', () => {
     const engine = new EditorEngine({ mount: mount(), editorPlugins: [a, b] });
     const x = engine.statusItems.filter((i) => i.id === 'x');
     expect(x.length).toBe(1);
-    expect(x[0].render(engine.view.state)).toBe('B');
+    expect(x[0].render(engine.createContext({ state: engine.view.state }))).toBe('B');
   });
 });
 
@@ -145,7 +143,9 @@ describe('default plugins', () => {
     expect(md).toContain('![a](img.png)');
 
     // Assembled toolbar includes the plugins' items, in order.
-    const ids = engine.toolbarItems.filter((i) => i.type === 'command').map((i: any) => i.command);
+    const ids = engine.toolbarItems
+      .map((i: any) => (typeof i === 'string' ? i : i.action))
+      .filter(Boolean);
     expect(ids).toEqual(
       expect.arrayContaining(['bold', 'insert-link', 'insert-image', 'insert-table', 'undo'])
     );

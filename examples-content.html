@@ -159,17 +159,12 @@ live inside the editor."></km-editor>
     </div>
 </div>
 
-<!-- Page wiring: real inserts through the engine's write port + a live
-     Markdown readout per editor (the shipped `change` event). -->
+<!-- Page wiring: real inserts through el.controller.runCommand (a ProseMirror
+     command or a registered command name) + a live Markdown readout per editor
+     (the shipped `change` event). -->
 <script type="module">
     import { insertCodeBlock } from '/src/index.ts';
     import { attachControlsPersistence } from '@keenmate/web-components-devkit/examples';
-
-    // Run `fn(view)` once the editor is mounted (its view exists).
-    function withView(el, fn) {
-        const go = () => { const v = el.engine?.view; if (v) fn(v); };
-        if (el.isReady) go(); else el.addEventListener('ready', go);
-    }
 
     // The active output lens — one document, read in any serialization.
     let lens = 'markdown';
@@ -211,43 +206,39 @@ live inside the editor."></km-editor>
         // RC01 — apply a link mark to the current selection (no native prompt).
         const rc01 = document.getElementById('rc01');
         document.getElementById('rc01-apply').addEventListener('click', () => {
-            withView(rc01, (view) => {
-                const { from, to, empty } = view.state.selection;
-                if (empty) { alert('Select some text first.'); return; }
+            rc01.controller.runCommand((state, dispatch) => {
+                const { from, to, empty } = state.selection;
+                if (empty) { alert('Select some text first.'); return false; }
                 const href = document.getElementById('rc01-url').value || '#';
-                const mark = view.state.schema.marks.link.create({ href, title: null });
-                view.dispatch(view.state.tr.addMark(from, to, mark));
-                view.focus();
+                const mark = state.schema.marks.link.create({ href, title: null });
+                dispatch(state.tr.addMark(from, to, mark));
+                return true;
             });
         });
 
         // RC02 — insert an image node at the cursor.
         const rc02 = document.getElementById('rc02');
         document.getElementById('rc02-insert').addEventListener('click', () => {
-            withView(rc02, (view) => {
-                const src = document.getElementById('rc02-url').value;
-                if (!src) return;
-                const node = view.state.schema.nodes.image.create({ src, alt: '', title: '' });
-                view.dispatch(view.state.tr.replaceSelectionWith(node).scrollIntoView());
-                view.focus();
+            const src = document.getElementById('rc02-url').value;
+            if (!src) return;
+            rc02.controller.runCommand((state, dispatch) => {
+                const node = state.schema.nodes.image.create({ src, alt: '', title: '' });
+                dispatch(state.tr.replaceSelectionWith(node).scrollIntoView());
+                return true;
             });
         });
 
         // RC03 — insert a table via the shipped command pipeline.
         const rc03 = document.getElementById('rc03');
         document.getElementById('rc03-insert').addEventListener('click', () => {
-            rc03.engine?.run('insert-table');
-            rc03.engine?.focus();
+            rc03.controller.runCommand('insert-table');
         });
 
         // RC04 — insert a code block in the chosen language.
         const rc04 = document.getElementById('rc04');
         document.getElementById('rc04-insert').addEventListener('click', () => {
-            withView(rc04, (view) => {
-                const lang = document.getElementById('rc04-lang').value;
-                insertCodeBlock(lang)(view.state, view.dispatch);
-                view.focus();
-            });
+            const lang = document.getElementById('rc04-lang').value;
+            rc04.controller.runCommand(insertCodeBlock(lang));
         });
 
         attachControlsPersistence('content');

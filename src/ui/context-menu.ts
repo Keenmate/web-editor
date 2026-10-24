@@ -3,21 +3,22 @@
  * the editor it opens a labelled {@link CommandBar} (menu variant) at the cursor
  * via the core `createPopover` primitive (a virtual point reference), reflecting
  * each command's enabled/active state. Dismisses on outside pointerdown, Escape,
- * or after running an item. Suppressed when editing is disabled, so the native
+ * or when an item is activated. Suppressed when editing is disabled, so the native
  * browser menu shows through in read-only / preview.
  */
 import type { EditorView } from 'prosemirror-view';
 import { createPopover, type PopoverHandle } from '@keenmate/web-components-core/positioning';
-import type { CommandRegistry } from '../engine/command-registry';
 import { CommandBar } from './command-bar';
 import { domRect } from './virtual';
-import type { ToolbarItem } from './items';
+import type { ActionSurfaceHost } from './actions';
+import type { EditorToolbarEntry } from '../interaction';
 import { uiLogger } from '../logger';
 
 export interface ContextMenuOptions {
   view: EditorView;
-  registry: CommandRegistry;
-  items: readonly ToolbarItem[];
+  /** Resolves + activates the items (source `'context-menu'`). */
+  host: ActionSurfaceHost;
+  items: readonly EditorToolbarEntry[];
   /** Shadow-local layer the floating panel portals into (so shadow styles apply). */
   container: HTMLElement;
 }
@@ -41,9 +42,11 @@ export class ContextMenu {
     this.#panel = document.createElement('div');
     this.#panel.className = 'km-floating km-context-menu';
     this.#panel.setAttribute('part', 'context-menu');
-    this.#bar = new CommandBar(this.#panel, opts.items, opts.registry, {
+    this.#bar = new CommandBar(this.#panel, opts.items, opts.host, {
       variant: 'menu',
-      onRun: () => this.#close(),
+      source: 'context-menu',
+      // Close on activation; the action (incl. an async beforeActionCallback) runs after.
+      onActivate: () => this.#close(),
     });
 
     this.#popover = createPopover({

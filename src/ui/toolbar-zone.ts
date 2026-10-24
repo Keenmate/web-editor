@@ -5,15 +5,15 @@
  * the unit future drag-and-drop will move. Groups wrap into multiple rows (top /
  * bottom zones) or columns (start / end zones) via CSS.
  */
-import type { CommandRegistry } from '../engine/command-registry';
 import type { ToolGroup } from './items';
+import type { ActionSurfaceHost } from './actions';
 import { CommandBar } from './command-bar';
 
 export class ToolbarZone {
   readonly el: HTMLDivElement;
   #groups: CommandBar[] = [];
 
-  constructor(parent: HTMLElement, groups: readonly ToolGroup[], registry: CommandRegistry) {
+  constructor(parent: HTMLElement, groups: readonly ToolGroup[], host: ActionSurfaceHost) {
     this.el = document.createElement('div');
     this.el.className = 'km-toolbar-zone';
     this.el.setAttribute('role', 'toolbar');
@@ -24,12 +24,13 @@ export class ToolbarZone {
         divider.className = 'km-group-sep';
         this.el.appendChild(divider);
       }
-      const bar = new CommandBar(this.el, group.items, registry, {
+      const bar = new CommandBar(this.el, group.items, host, {
         variant: 'bar',
         className: 'km-group',
+        source: 'toolbar',
       });
       bar.el.dataset.group = group.id;
-      if (group.label) bar.el.setAttribute('aria-label', group.label);
+      if (group.text) bar.el.setAttribute('aria-label', group.text);
       this.#groups.push(bar);
     });
 

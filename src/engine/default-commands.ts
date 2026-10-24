@@ -4,8 +4,9 @@
  *
  * Feature commands — link, image, table ops — are contributed by their
  * first-party plugins (`src/plugins/*`), not here. Each command carries the
- * metadata the toolbar/menu presenters consume: keybindings, `isActive`, and
- * (for prompt-driven commands) an explicit `isEnabled` so a toolbar refresh never
+ * metadata the toolbar/menu presenters consume: keybindings, display defaults
+ * (`text` / `icon` / `tooltip`), `getIsActiveCallback`, and (for prompt-driven
+ * commands) an explicit `getIsEnabledCallback` so a toolbar refresh never
  * dry-runs them into a `prompt()`.
  */
 import { toggleMark, setBlockType } from 'prosemirror-commands';
@@ -21,50 +22,69 @@ export function registerCoreCommands(registry: CommandRegistry, schema: Schema):
     id: 'bold',
     run: toggleMark(schema.marks.bold),
     keys: ['Mod-b'],
-    isActive: (s) => markActive(s, schema.marks.bold),
+    text: 'Bold',
+    icon: 'B',
+    getIsActiveCallback: ({ state }) => markActive(state, schema.marks.bold),
   });
   registry.register({
     id: 'italic',
     run: toggleMark(schema.marks.italic),
     keys: ['Mod-i'],
-    isActive: (s) => markActive(s, schema.marks.italic),
+    text: 'Italic',
+    icon: 'I',
+    getIsActiveCallback: ({ state }) => markActive(state, schema.marks.italic),
   });
   registry.register({
     id: 'underline',
     run: toggleMark(schema.marks.underline),
     keys: ['Mod-u'],
-    isActive: (s) => markActive(s, schema.marks.underline),
+    text: 'Underline',
+    icon: 'U',
+    getIsActiveCallback: ({ state }) => markActive(state, schema.marks.underline),
   });
   registry.register({
     id: 'heading',
     run: setBlockType(schema.nodes.heading, { level: 1 }),
-    isActive: (s) => blockActive(s, schema.nodes.heading, { level: 1 }),
+    text: 'Heading',
+    icon: 'H1',
+    tooltip: 'Heading 1',
+    getIsActiveCallback: ({ state }) => blockActive(state, schema.nodes.heading, { level: 1 }),
   });
   registry.register({
     id: 'paragraph',
     run: setBlockType(schema.nodes.paragraph),
-    isActive: (s) => blockActive(s, schema.nodes.paragraph),
+    text: 'Paragraph',
+    icon: 'P',
+    getIsActiveCallback: ({ state }) => blockActive(state, schema.nodes.paragraph),
   });
   registry.register({
     id: 'bullet-list',
     run: wrapInList(schema.nodes.bullet_list),
-    isActive: (s) => ancestorActive(s, schema.nodes.bullet_list),
+    text: 'Bullet list',
+    icon: '• List',
+    getIsActiveCallback: ({ state }) => ancestorActive(state, schema.nodes.bullet_list),
   });
   registry.register({
     id: 'ordered-list',
     run: wrapInList(schema.nodes.ordered_list),
-    isActive: (s) => ancestorActive(s, schema.nodes.ordered_list),
+    text: 'Ordered list',
+    icon: '1. List',
+    getIsActiveCallback: ({ state }) => ancestorActive(state, schema.nodes.ordered_list),
   });
   registry.register({
     id: 'insert-code-block',
     run: promptForCodeBlock,
-    isEnabled: () => true,
+    text: 'Code block',
+    icon: '</>',
+    tooltip: 'Insert code block',
+    getIsEnabledCallback: () => true,
   });
   registry.register({
     id: 'change-code-language',
     run: changeCodeBlockLanguage,
-    isEnabled: inCodeBlock,
+    text: 'Change code language',
+    getIsEnabledCallback: ({ state }) => inCodeBlock(state),
   });
-  registry.register({ id: 'undo', run: undo, keys: ['Mod-z'] });
-  registry.register({ id: 'redo', run: redo, keys: ['Mod-y', 'Mod-Shift-z'] });
+  registry.register({ id: 'undo', run: undo, keys: ['Mod-z'], text: 'Undo', icon: '↶' });
+  registry.register({ id: 'redo', run: redo, keys: ['Mod-y', 'Mod-Shift-z'], text: 'Redo', icon: '↷' });
 }

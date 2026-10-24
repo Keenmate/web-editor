@@ -22,18 +22,26 @@ export interface CloudAsset {
   name?: string;
 }
 
+/** The ctx of {@link ImageBrowserOptions.upload}. */
+export interface ImageUploadContext {
+  /** The asset the host picker returned. */
+  asset: CloudAsset;
+  /** Aborted when a newer run supersedes this one — cancel the upload. */
+  signal: AbortSignal;
+}
+
 export interface ImageBrowserOptions {
   /**
    * Resolve a picked asset to its final `src` (e.g. upload to your CDN and return
-   * the hosted URL). Honour the `signal` — a superseded run aborts. Defaults to
+   * the hosted URL). Honour `ctx.signal` — a superseded run aborts. Defaults to
    * using the picked `url` as-is.
    */
-  upload?: (asset: CloudAsset, signal: AbortSignal) => Promise<string>;
+  upload?: (ctx: ImageUploadContext) => Promise<string>;
 }
 
 /** Build the cloud-image browser plugin. */
 export function imageBrowserPlugin(opts: ImageBrowserOptions = {}): EditorPlugin {
-  const upload = opts.upload ?? (async (asset: CloudAsset) => asset.url);
+  const upload = opts.upload ?? (async ({ asset }: ImageUploadContext) => asset.url);
 
   const pipeline: Pipeline = {
     name: 'image:browser:pick',
@@ -44,10 +52,12 @@ export function imageBrowserPlugin(opts: ImageBrowserOptions = {}): EditorPlugin
         id: 'pick',
         interactive: true,
         run: async (_c, rt) => {
-          const res = await rt.ui.request(
-            { kind: 'cloud-picker', title: 'Choose a cloud image', message: 'Pick an image to insert.' },
-            rt.signal
-          );
+          const res = await rt.ui.request({
+            kind: 'cloud-picker',
+            title: 'Choose a cloud image',
+            message: 'Pick an image to insert.',
+            signal: rt.signal,
+          });
           if (res.cancelled || !res.value) return { action: 'halt', reason: 'no image chosen' };
           return { action: 'resolve', patch: { asset: res.value as CloudAsset } };
         },
@@ -56,7 +66,7 @@ export function imageBrowserPlugin(opts: ImageBrowserOptions = {}): EditorPlugin
         id: 'upload',
         run: async (c, rt) => {
           const asset = c.extra.asset as CloudAsset;
-          const src = await upload(asset, rt.signal);
+          const src = await upload({ asset, signal: rt.signal });
           return { action: 'resolve', patch: { src, alt: asset.name ?? '' } };
         },
       },
@@ -84,18 +94,17 @@ export function imageBrowserPlugin(opts: ImageBrowserOptions = {}): EditorPlugin
     toolbarGroups: [
       {
         id: 'image-browser',
-        label: 'Cloud image',
+        text: 'Cloud image',
         items: [
           {
-            type: 'command',
-            command: 'image:browser:pick',
-            label: 'Cloud image',
+            action: 'image:browser:pick',
+            text: 'Cloud image',
             icon: '☁',
-            title: 'Insert image from the cloud',
+            tooltip: 'Insert image from the cloud',
           },
         ],
       },
     ],
-    menuItems: [{ type: 'command', command: 'image:browser:pick', label: 'Insert cloud image…' }],
+    menuItems: [{ action: 'image:browser:pick', text: 'Insert cloud image…' }],
   });
 }

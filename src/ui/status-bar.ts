@@ -3,19 +3,20 @@
  * (`Words: 234`, …). Deliberately separate from the tool zones: status items are
  * never commands and never draggable, so the future group drag-and-drop in the
  * toolbar zones never has to exclude them. Items dock to the `start` or `end` of
- * the bar; `refresh()` re-renders each from the current editor state.
+ * the bar; `refresh()` re-renders each from the current editor state
+ * (`render(ctx)`, `ctx.state` + `controller` / `element`).
  */
-import type { EditorState } from 'prosemirror-state';
 import type { StatusItem } from './items';
+import type { StatusContext } from '../interaction';
 
 export class StatusBar {
   readonly el: HTMLDivElement;
   #items: Array<{ item: StatusItem; node: HTMLSpanElement }> = [];
-  #getState: () => EditorState;
+  #getContext: () => StatusContext;
   #filter: (item: StatusItem) => boolean = () => true;
 
-  constructor(parent: HTMLElement, items: readonly StatusItem[], getState: () => EditorState) {
-    this.#getState = getState;
+  constructor(parent: HTMLElement, items: readonly StatusItem[], getContext: () => StatusContext) {
+    this.#getContext = getContext;
 
     this.el = document.createElement('div');
     this.el.className = 'km-statusbar';
@@ -31,7 +32,7 @@ export class StatusBar {
       const node = document.createElement('span');
       node.className = 'km-status-item';
       node.dataset.status = item.id;
-      if (item.title) node.title = item.title;
+      if (item.tooltip) node.title = item.tooltip;
       (item.align === 'end' ? end : start).appendChild(node);
       this.#items.push({ item, node });
     }
@@ -40,10 +41,10 @@ export class StatusBar {
   }
 
   refresh(): void {
-    const state = this.#getState();
+    const ctx = this.#getContext();
     for (const { item, node } of this.#items) {
       if (!this.#filter(item)) continue;
-      const out = item.render(state);
+      const out = item.render(ctx);
       if (typeof out === 'string') node.textContent = out;
       else node.replaceChildren(out);
     }

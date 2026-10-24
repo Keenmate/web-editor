@@ -70,7 +70,14 @@ export const tablePlugin = definePlugin({
   // wins inside a table and falls through (returns false) to list indentation.
   keymap: () => ({ Tab: goToNextCell(1), 'Shift-Tab': goToNextCell(-1) }),
   commands: ({ schema }): CommandSpec[] => [
-    { id: 'insert-table', run: insertTable(schema), isEnabled: () => true },
+    {
+      id: 'insert-table',
+      run: insertTable(schema),
+      text: 'Table',
+      icon: '⊞',
+      tooltip: 'Insert table',
+      getIsEnabledCallback: () => true,
+    },
     { id: 'add-column-before', run: addColumnBefore },
     { id: 'add-column-after', run: addColumnAfter },
     { id: 'delete-column', run: deleteColumn },
@@ -83,12 +90,6 @@ export const tablePlugin = definePlugin({
     { id: 'toggle-header-column', run: toggleHeaderColumn },
     { id: 'delete-table', run: deleteTable },
   ],
-  toolbarGroups: [
-    {
-      id: 'table',
-      label: 'Table',
-      items: [{ type: 'command', command: 'insert-table', label: 'Table', icon: '⊞', title: 'Insert table' }],
-    },
-  ],
-  menuItems: [{ type: 'command', command: 'insert-table', label: 'Insert table' }],
+  toolbarGroups: [{ id: 'table', text: 'Table', items: ['insert-table'] }],
+  menuItems: [{ action: 'insert-table', text: 'Insert table' }],
 });

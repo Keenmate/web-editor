@@ -138,6 +138,40 @@
     },
     {
       "kind": "javascript-module",
+      "path": "src/interaction.ts",
+      "declarations": [
+        {
+          "kind": "function",
+          "name": "createEditorController",
+          "return": {
+            "type": {
+              "text": "EditorController"
+            }
+          },
+          "parameters": [
+            {
+              "name": "getTarget",
+              "type": {
+                "text": "() => ControllerTarget"
+              }
+            }
+          ],
+          "description": "Build the facade from a method-name list; `getTarget()` is resolved per call."
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "createEditorController",
+          "declaration": {
+            "name": "createEditorController",
+            "module": "src/interaction.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
       "path": "src/logger.ts",
       "declarations": [
         {
@@ -620,7 +654,7 @@
               "name": "inputs",
               "privacy": "protected",
               "static": true,
-              "default": "[ { configKey: 'value', attribute: 'value', converter: toText({ isNullable: true }), on: 'reinit', description: 'Initial content to load, interpreted per `format`. Reassigning replaces the document. Reading `el.value` returns this assigned value, NOT live edits — use `getValue()` for that.', }, { configKey: 'format', attribute: 'format', converter: toEnum(FORMATS, { default: 'markdown' }), shouldReflect: true, on: 'update', description: \"Serialization lens for content I/O (`value`, `getValue()`, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document.\", }, { configKey: 'mode', attribute: 'mode', converter: toEnum(MODES, { default: 'edit' }), shouldReflect: true, on: 'update', description: \"Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the mode is stored, reflected, and announced via `mode-change`.\", }, { configKey: 'isReadonly', attribute: 'readonly', converter: toBool('default-false'), on: 'update', description: 'Make the editor read-only (no input). `mode=\"preview\"` also forces this on.', }, { configKey: 'toolbar', attribute: 'toolbar', converter: toEnum(TOOLBARS, { default: 'top' }), shouldReflect: true, on: 'update', description: \"Static toolbar edge: 'top' (default), 'bottom', 'start', or 'end' places the command toolbar flush against that side of the editor; 'none' hides it. The selection toolbar and context menu are always available while editing (independent of this).\", }, { configKey: 'statusbar', attribute: 'statusbar', converter: toEnum(STATUSBARS, { default: 'none' }), shouldReflect: true, on: 'update', description: \"Status bar edge: 'none' (default), 'top', 'bottom', or 'both'. A dedicated strip of live indicators (word/char count, plus any plugin status items), hugging the editor body — separate from the toolbar zones and shown in read-only too. With 'both', items split across the two strips by their `bar` ('top'/'bottom', default 'bottom').\", }, { configKey: 'theme', attribute: 'theme', converter: toText({ isNullable: true }), shouldReflect: true, on: 'update', description: 'Theme name, reflected to the host attribute for CSS theming (`:host([theme=\"…\"])`).', }, { configKey: 'anchor', attribute: 'anchor', converter: toText({ isNullable: true }), on: 'update', description: 'For `mode=\"inline\"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow.', }, ]",
+              "default": "[ { configKey: 'value', attribute: 'value', converter: toText({ isNullable: true }), on: 'reinit', description: 'Initial content to load, interpreted per `format`. Reassigning replaces the document. Reading `el.value` returns this assigned value, NOT live edits — use `getValue()` for that.', }, { configKey: 'format', attribute: 'format', converter: toEnum(FORMATS, { default: 'markdown' }), shouldReflect: true, on: 'update', description: \"Serialization lens for content I/O (`value`, `getValue()`, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document.\", }, { configKey: 'mode', attribute: 'mode', converter: toEnum(MODES, { default: 'edit' }), shouldReflect: true, on: 'update', description: \"Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the mode is stored, reflected, and announced via `mode-change`.\", }, { configKey: 'isReadonly', attribute: 'readonly', converter: toBool('default-false'), on: 'update', description: 'Make the editor read-only (no input). `mode=\"preview\"` also forces this on.', }, { configKey: 'toolbar', attribute: 'toolbar', converter: toEnum(TOOLBARS, { default: 'top' }), shouldReflect: true, on: 'update', description: \"Static toolbar edge: 'top' (default), 'bottom', 'start', or 'end' places the command toolbar flush against that side of the editor; 'none' hides it. The selection toolbar and context menu are always available while editing (independent of this).\", }, { configKey: 'statusbar', attribute: 'statusbar', converter: toEnum(STATUSBARS, { default: 'none' }), shouldReflect: true, on: 'update', description: \"Status bar edge: 'none' (default), 'top', 'bottom', or 'both'. A dedicated strip of live indicators (word/char count, plus any plugin status items), hugging the editor body — separate from the toolbar zones and shown in read-only too. With 'both', items split across the two strips by their `bar` ('top'/'bottom', default 'bottom').\", }, { configKey: 'theme', attribute: 'theme', converter: toText({ isNullable: true }), shouldReflect: true, on: 'update', description: 'Theme name, reflected to the host attribute for CSS theming (`:host([theme=\"…\"])`).', }, { configKey: 'anchor', attribute: 'anchor', converter: toText({ isNullable: true }), on: 'update', description: 'For `mode=\"inline\"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow.', }, { configKey: 'beforeActionCallback', converter: toFunction(), default: null, on: 'none', description: 'Property only. `(detail) => false | void` (may be async) — runs first on every toolbar / selection-toolbar / context-menu activation, with the `action` event detail. Return `false` to cancel: no `onClick`, no `action` event, no command. Keyboard shortcuts do not pass through it.', }, { configKey: 'interactionHost', converter: toCustom<InteractionHost | null>(() => null, { validate: isInteractionHost }), default: null, on: 'update', description: 'Property only. The modal bridge interactive pipeline stages call: `{ request(ctx) }`, `ctx` = the request (`kind`, `title`, `message`, `payload`) + `signal` + `controller` / `element`. Default: a `window.confirm`-backed host. Survives engine rebuilds (e.g. a `plugins` reassignment).', }, ]",
               "type": {
                 "text": "readonly InputDef[]"
               }
@@ -630,31 +664,65 @@
               "name": "events",
               "privacy": "protected",
               "static": true,
-              "default": "[ { name: 'change', description: 'The document changed. `detail.value` is the content serialized in the active `format`; `detail.format` is that format.', }, { name: 'ready', description: 'The engine was built and mounted (once per element lifetime). No detail beyond readiness.', }, { name: 'mode-change', description: 'The `mode` attribute/property changed. `detail.mode` is the new mode.', }, ]",
+              "default": "[ { name: 'change', description: 'The document changed (or `format` switched). `detail`: `{ value, format }` — the content serialized in the active `format`. Twin: `onChange(detail)`.', }, { name: 'ready', description: 'The engine was built and mounted (once per element lifetime). `detail`: the component context only (`controller`, `element`). Twin: `onReady(detail)`.', }, { name: 'mode-change', description: 'The `mode` attribute/property changed. `detail`: `{ mode }`. Twin: `onModeChange(detail)`.', }, { name: 'lock-change', description: 'A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`.', }, { name: 'action', description: 'A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick`, before the command runs; `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`.', }, ]",
               "type": {
-                "text": "[\n  {\n    name: 'change',\n    description:\n      'The document changed. `detail.value` is the content serialized in the active `format`; `detail.format` is that format.',\n  },\n  {\n    name: 'ready',\n    description: 'The engine was built and mounted (once per element lifetime). No detail beyond readiness.',\n  },\n  {\n    name: 'mode-change',\n    description: 'The `mode` attribute/property changed. `detail.mode` is the new mode.',\n  },\n]"
+                "text": "readonly EventDef[]"
               }
             },
             {
               "kind": "field",
               "name": "onChange",
               "type": {
-                "text": "((e: CustomEvent<EditorChangeDetail>) => void) | null"
+                "text": "((detail: ChangeEventDetail) => void) | null"
               }
             },
             {
               "kind": "field",
               "name": "onReady",
               "type": {
-                "text": "((e: CustomEvent<undefined>) => void) | null"
+                "text": "((detail: ReadyEventDetail) => void) | null"
               }
             },
             {
               "kind": "field",
               "name": "onModeChange",
               "type": {
-                "text": "((e: CustomEvent<EditorModeChangeDetail>) => void) | null"
+                "text": "((detail: ModeChangeEventDetail) => void) | null"
               }
+            },
+            {
+              "kind": "field",
+              "name": "onLockChange",
+              "type": {
+                "text": "((detail: LockChangeEventDetail) => void) | null"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "onAction",
+              "type": {
+                "text": "((detail: EditorActionEventDetail) => void) | null"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "beforeActionCallback",
+              "type": {
+                "text": "Function"
+              },
+              "description": "Property only. `(detail) => false | void` (may be async) — runs first on every toolbar / selection-toolbar / context-menu activation, with the `action` event detail. Return `false` to cancel: no `onClick`, no `action` event, no command. Keyboard shortcuts do not pass through it.",
+              "privacy": "public",
+              "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "interactionHost",
+              "type": {
+                "text": "unknown"
+              },
+              "description": "Property only. The modal bridge interactive pipeline stages call: `{ request(ctx) }`, `ctx` = the request (`kind`, `title`, `message`, `payload`) + `signal` + `controller` / `element`. Default: a `window.confirm`-backed host. Survives engine rebuilds (e.g. a `plugins` reassignment).",
+              "privacy": "public",
+              "default": "null"
             },
             {
               "kind": "field",
@@ -884,9 +952,49 @@
               "privacy": "private",
               "return": {
                 "type": {
-                  "text": "EditorChangeDetail"
+                  "text": "{ value: string; format: EditorFormat }"
                 }
               }
+            },
+            {
+              "kind": "method",
+              "name": "#interactionHost",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "InteractionHost"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "createController",
+              "privacy": "protected",
+              "return": {
+                "type": {
+                  "text": "EditorController"
+                }
+              },
+              "description": "The public facade (`el.controller`): content I/O, focus, commands — never the engine."
+            },
+            {
+              "kind": "method",
+              "name": "#runCommand",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "boolean"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "command",
+                  "type": {
+                    "text": "string | Command"
+                  }
+                }
+              ],
+              "description": "A registered command / pipeline by name, or a ProseMirror command on the live view."
             },
             {
               "kind": "method",
@@ -984,16 +1092,7 @@
               "type": {
                 "text": "EditorPlugin[]"
               },
-              "description": "The editor plugin set. Assign to customise — compose with `defaultPlugins()`\nto keep the built-ins, and order the array to control conflict precedence\n(later plugins override earlier by id). Reassigning rebuilds the engine on the\nnew set, preserving the live content. Reading returns the active set.\n\n```js\nimport { defaultPlugins } from '@keenmate/web-editor';\nel.plugins = [...defaultPlugins(), myPlugin];\n```"
-            },
-            {
-              "kind": "field",
-              "name": "engine",
-              "type": {
-                "text": "EditorEngine | null"
-              },
-              "description": "The underlying headless engine (null before the first build / after teardown).",
-              "readonly": true
+              "description": "The editor plugin set. Assign to customise — compose with `defaultPlugins()`\r\nto keep the built-ins, and order the array to control conflict precedence\r\n(later plugins override earlier by id). Reassigning rebuilds the engine on the\r\nnew set, preserving the live content. Reading returns the active set.\r\n\r\n```js\r\nimport { defaultPlugins } from '@keenmate/web-editor';\r\nel.plugins = [...defaultPlugins(), myPlugin];\r\n```"
             },
             {
               "kind": "field",
@@ -1189,15 +1288,23 @@
           "events": [
             {
               "name": "change",
-              "description": "The document changed. `detail.value` is the content serialized in the active `format`; `detail.format` is that format."
+              "description": "The document changed (or `format` switched). `detail`: `{ value, format }` — the content serialized in the active `format`. Twin: `onChange(detail)`."
             },
             {
               "name": "ready",
-              "description": "The engine was built and mounted (once per element lifetime). No detail beyond readiness."
+              "description": "The engine was built and mounted (once per element lifetime). `detail`: the component context only (`controller`, `element`). Twin: `onReady(detail)`."
             },
             {
               "name": "mode-change",
-              "description": "The `mode` attribute/property changed. `detail.mode` is the new mode."
+              "description": "The `mode` attribute/property changed. `detail`: `{ mode }`. Twin: `onModeChange(detail)`."
+            },
+            {
+              "name": "lock-change",
+              "description": "A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`."
+            },
+            {
+              "name": "action",
+              "description": "A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick`, before the command runs; `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`."
             }
           ],
           "tagName": "km-editor",
@@ -1228,6 +1335,24 @@
       "path": "src/engine/command-registry.ts",
       "declarations": [
         {
+          "kind": "function",
+          "name": "formatShortcut",
+          "return": {
+            "type": {
+              "text": "string"
+            }
+          },
+          "parameters": [
+            {
+              "name": "key",
+              "type": {
+                "text": "string"
+              }
+            }
+          ],
+          "description": "`'Mod-Shift-z'` → `'Ctrl+Shift+Z'` (`'Cmd+Shift+Z'` on Apple platforms)."
+        },
+        {
           "kind": "class",
           "description": "",
           "name": "CommandRegistry",
@@ -1245,7 +1370,7 @@
                 "text": "(id: string) => boolean | undefined"
               },
               "privacy": "private",
-              "description": "When set, `run(id)` delegates to this (the engine's PipelineRegistry), so\nevery command fires through its pipeline (hooks apply). Falls back to a\ndirect command run when unset (standalone registry use / tests)."
+              "description": "When set, `run(id)` delegates to this (the engine's PipelineRegistry), so\r\nevery command fires through its pipeline (hooks apply). Falls back to a\r\ndirect command run when unset (standalone registry use / tests)."
             },
             {
               "kind": "method",
@@ -1359,7 +1484,7 @@
                   }
                 }
               ],
-              "description": "Execute a command by id against the live view, then refocus. Delegates to\nthe pipeline runner when one is attached (so hooked stages run too)."
+              "description": "Execute a command by id against the live view, then refocus. Delegates to\r\nthe pipeline runner when one is attached (so hooked stages run too)."
             },
             {
               "kind": "method",
@@ -1397,6 +1522,24 @@
             },
             {
               "kind": "method",
+              "name": "shortcut",
+              "return": {
+                "type": {
+                  "text": "string | undefined"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "id",
+                  "type": {
+                    "text": "string"
+                  }
+                }
+              ],
+              "description": "The display shortcut of a command (its first key), e.g. `'Ctrl+B'`."
+            },
+            {
+              "kind": "method",
               "name": "keymap",
               "return": {
                 "type": {
@@ -1409,6 +1552,14 @@
         }
       ],
       "exports": [
+        {
+          "kind": "js",
+          "name": "formatShortcut",
+          "declaration": {
+            "name": "formatShortcut",
+            "module": "src/engine/command-registry.ts"
+          }
+        },
         {
           "kind": "js",
           "name": "CommandRegistry",
@@ -1508,7 +1659,7 @@
                 "text": "CommandRegistry"
               },
               "readonly": true,
-              "default": "new CommandRegistry(() => this.view)"
+              "default": "new CommandRegistry( () => this.view, (fields) => this.createContext(fields) )"
             },
             {
               "kind": "field",
@@ -1529,7 +1680,7 @@
               "kind": "field",
               "name": "toolbarItems",
               "type": {
-                "text": "ToolbarItem[]"
+                "text": "EditorToolbarEntry[]"
               },
               "readonly": true,
               "description": "Flattened toolbar commands (groups → items), for consumers wanting a flat list."
@@ -1538,7 +1689,7 @@
               "kind": "field",
               "name": "selectionItems",
               "type": {
-                "text": "ToolbarItem[]"
+                "text": "EditorToolbarEntry[]"
               },
               "readonly": true
             },
@@ -1546,7 +1697,7 @@
               "kind": "field",
               "name": "menuItems",
               "type": {
-                "text": "ToolbarItem[]"
+                "text": "EditorToolbarEntry[]"
               },
               "readonly": true
             },
@@ -1564,7 +1715,7 @@
               "type": {
                 "text": "EditorView"
               },
-              "default": "new EditorView(options.mount, { state, editable: () => this.#isEditable, dispatchTransaction: (tr) => { const newState = this.view.state.apply(tr); this.view.updateState(newState); this.events.emit('transaction', { tr, engine: this }); if (tr.docChanged) this.events.emit('change', this); if (tr.selectionSet || tr.docChanged) this.events.emit('selectionUpdate', this); }, })"
+              "default": "new EditorView(options.mount, { state, editable: () => this.#isEditable, dispatchTransaction: (tr) => { const newState = this.view.state.apply(tr); this.view.updateState(newState); this.events.emit('transaction', { tr, engine: this }); if (tr.docChanged) this.events.emit('change', this); if (tr.selectionSet || tr.docChanged) this.events.emit('selection-change', this); }, })"
             },
             {
               "kind": "field",
@@ -1598,7 +1749,7 @@
               "type": {
                 "text": "PipelineRegistry"
               },
-              "default": "new PipelineRegistry(pipelineMap, { getView: () => this.view, getContext: () => ({ doc: this.view.state.doc, extra: {} }), getInteractionHost: () => this.#interactionHost, setLock: (locked) => this.#setLock(locked), })"
+              "default": "new PipelineRegistry(pipelineMap, { getView: () => this.view, getContext: () => ({ doc: this.view.state.doc, extra: {} }), // Every request carries the component context when hosted. getInteractionHost: () => ({ request: (ctx) => this.#interactionHost.request(this.createContext(ctx)), }), setLock: (locked) => this.#setLock(locked), })"
             },
             {
               "kind": "field",
@@ -1616,6 +1767,15 @@
                 "text": "boolean | undefined"
               },
               "description": "Editability to restore when a gating lock releases."
+            },
+            {
+              "kind": "field",
+              "name": "#ctxProto",
+              "privacy": "private",
+              "type": {
+                "text": "object"
+              },
+              "description": "Prototype of every ctx: `controller` / `element` getters when hosted (inherited ⇒ non-enumerable)."
             },
             {
               "kind": "method",
@@ -1648,6 +1808,24 @@
                 "text": "EditorState"
               },
               "readonly": true
+            },
+            {
+              "kind": "method",
+              "name": "createContext",
+              "return": {
+                "type": {
+                  "text": "T & EditorComponentContext"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "fields",
+                  "type": {
+                    "text": "T"
+                  }
+                }
+              ],
+              "description": "Build a callback ctx from `fields`. Hosted by `<km-editor>`, it carries\n`controller` + `element` (inherited getters — non-enumerable, so\n`JSON.stringify` / `Object.keys` see only the fields); standalone it is\njust the fields."
             },
             {
               "kind": "field",
@@ -2140,7 +2318,7 @@
               }
             }
           ],
-          "description": "Order plugins so every plugin follows its `dependencies` (stable topological\nsort; input order breaks ties). Throws on a missing dependency or a cycle."
+          "description": "Order plugins so every plugin follows its `dependencies` (stable topological\r\nsort; input order breaks ties). Throws on a missing dependency or a cycle."
         },
         {
           "kind": "function",
@@ -2165,7 +2343,7 @@
           "name": "assembleItems",
           "return": {
             "type": {
-              "text": "ToolbarItem[]"
+              "text": "EditorToolbarEntry[]"
             }
           },
           "parameters": [
@@ -2185,18 +2363,18 @@
               "name": "leading",
               "default": "[]",
               "type": {
-                "text": "readonly ToolbarItem[]"
+                "text": "readonly EditorToolbarEntry[]"
               }
             },
             {
               "name": "trailing",
               "default": "[]",
               "type": {
-                "text": "readonly ToolbarItem[]"
+                "text": "readonly EditorToolbarEntry[]"
               }
             }
           ],
-          "description": "Assemble one flat presenter list (selection toolbar / context menu): `leading`\ncore items, then each plugin's items (in plugin order), then `trailing`."
+          "description": "Assemble one flat presenter list (selection toolbar / context menu): `leading`\r\ncore items, then each plugin's items (in plugin order), then `trailing`."
         },
         {
           "kind": "function",
@@ -2544,6 +2722,72 @@
     },
     {
       "kind": "javascript-module",
+      "path": "src/ui/actions.ts",
+      "declarations": [
+        {
+          "kind": "function",
+          "name": "createActionHost",
+          "return": {
+            "type": {
+              "text": "ActionSurfaceHost"
+            }
+          },
+          "parameters": [
+            {
+              "name": "opts",
+              "type": {
+                "text": "ActionHostOptions"
+              }
+            }
+          ],
+          "description": "Bind the action layer to an engine (and, inside `<km-editor>`, to the element's hook + event)."
+        },
+        {
+          "kind": "function",
+          "name": "commandDefaults",
+          "return": {
+            "type": {
+              "text": "Partial<ResolvedActionItem<EditorAction>> | undefined"
+            }
+          },
+          "parameters": [
+            {
+              "name": "registry",
+              "type": {
+                "text": "CommandRegistry"
+              }
+            },
+            {
+              "name": "item",
+              "type": {
+                "text": "EditorActionItem"
+              }
+            }
+          ],
+          "description": "The built-in defaults of an item naming a registered command: text / icon /\ntooltip / shortcut from the `CommandSpec`, `isActive` / `isDisabled` from its\npredicates. An unknown command (its plugin isn't loaded) is disabled. A\ncustom item has no defaults."
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "createActionHost",
+          "declaration": {
+            "name": "createActionHost",
+            "module": "src/ui/actions.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "commandDefaults",
+          "declaration": {
+            "name": "commandDefaults",
+            "module": "src/ui/actions.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
       "path": "src/ui/chrome.ts",
       "declarations": [
         {
@@ -2558,7 +2802,7 @@
               "type": {
                 "text": "ToolbarZone"
               },
-              "default": "new ToolbarZone( layout.toolbarMount, opts.toolbarGroups ?? engine.toolbarGroups, registry )"
+              "default": "new ToolbarZone( layout.toolbarMount, opts.toolbarGroups ?? engine.toolbarGroups, actions )"
             },
             {
               "kind": "field",
@@ -2567,7 +2811,7 @@
               "type": {
                 "text": "StatusBar"
               },
-              "default": "new StatusBar(layout.statusTopMount, statusItems, getState)"
+              "default": "new StatusBar(layout.statusTopMount, statusItems, getContext)"
             },
             {
               "kind": "field",
@@ -2576,7 +2820,7 @@
               "type": {
                 "text": "StatusBar"
               },
-              "default": "new StatusBar(layout.statusBottomMount, statusItems, getState)"
+              "default": "new StatusBar(layout.statusBottomMount, statusItems, getContext)"
             },
             {
               "kind": "field",
@@ -2585,7 +2829,7 @@
               "type": {
                 "text": "SelectionToolbar"
               },
-              "default": "new SelectionToolbar({ view: engine.view, registry, items: opts.selectionItems ?? engine.selectionItems, container: layout.overlayLayer, })"
+              "default": "new SelectionToolbar({ view: engine.view, host: actions, items: opts.selectionItems ?? engine.selectionItems, container: layout.overlayLayer, })"
             },
             {
               "kind": "field",
@@ -2594,7 +2838,7 @@
               "type": {
                 "text": "ContextMenu"
               },
-              "default": "new ContextMenu({ view: engine.view, registry, items: opts.contextMenuItems ?? engine.menuItems, container: layout.overlayLayer, })"
+              "default": "new ContextMenu({ view: engine.view, host: actions, items: opts.contextMenuItems ?? engine.menuItems, container: layout.overlayLayer, })"
             },
             {
               "kind": "field",
@@ -2676,29 +2920,62 @@
             },
             {
               "kind": "field",
-              "name": "#registry",
+              "name": "#host",
               "privacy": "private",
               "type": {
-                "text": "CommandRegistry"
+                "text": "ActionSurfaceHost"
               },
-              "default": "registry"
+              "default": "host"
+            },
+            {
+              "kind": "field",
+              "name": "#entries",
+              "privacy": "private",
+              "type": {
+                "text": "Entry[]"
+              },
+              "default": "normalizeActionItems(entries as (string | EditorActionItem)[])"
+            },
+            {
+              "kind": "field",
+              "name": "#variant",
+              "privacy": "private",
+              "type": {
+                "text": "CommandBarVariant"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "#source",
+              "privacy": "private",
+              "type": {
+                "text": "EditorActionSource"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "#onActivate",
+              "privacy": "private",
+              "type": {
+                "text": "(item: EditorActionItem) => void | undefined"
+              }
             },
             {
               "kind": "field",
               "name": "#buttons",
               "privacy": "private",
-              "type": {
-                "text": "Array<{ command: string; btn: HTMLButtonElement }>"
-              },
-              "default": "[]"
+              "default": "new Map<EditorActionItem, HTMLButtonElement>()",
+              "description": "One button per item, reused across re-layouts."
             },
             {
               "kind": "field",
-              "name": "#onRun",
+              "name": "#layout",
               "privacy": "private",
               "type": {
-                "text": "(command: string) => void | undefined"
-              }
+                "text": "string"
+              },
+              "default": "''",
+              "description": "The visible layout last rendered (item indexes + `|` for dividers)."
             },
             {
               "kind": "method",
@@ -2708,7 +2985,7 @@
                   "text": "void"
                 }
               },
-              "description": "Reflect each command's current active / enabled state."
+              "description": "Re-resolve every item against the current state (visibility, text, active, disabled)."
             },
             {
               "kind": "method",
@@ -2735,6 +3012,58 @@
                   "text": "void"
                 }
               }
+            },
+            {
+              "kind": "method",
+              "name": "#divider",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "HTMLElement"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "#button",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "HTMLButtonElement"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "item",
+                  "type": {
+                    "text": "EditorActionItem"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "#apply",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "btn",
+                  "type": {
+                    "text": "HTMLButtonElement"
+                  }
+                },
+                {
+                  "name": "r",
+                  "type": {
+                    "text": "ResolvedActionItem<EditorAction>"
+                  }
+                }
+              ]
             },
             {
               "kind": "field",
@@ -2778,7 +3107,7 @@
               "type": {
                 "text": "CommandBar"
               },
-              "default": "new CommandBar(this.#panel, opts.items, opts.registry, { variant: 'menu', onRun: () => this.#close(), })"
+              "default": "new CommandBar(this.#panel, opts.items, opts.host, { variant: 'menu', source: 'context-menu', // Close on activation; the action (incl. an async beforeActionCallback) runs after. onActivate: () => this.#close(), })"
             },
             {
               "kind": "field",
@@ -2969,45 +3298,45 @@
           "kind": "variable",
           "name": "coreToolbarItems",
           "type": {
-            "text": "readonly ToolbarItem[]"
+            "text": "readonly EditorToolbarEntry[]"
           },
-          "default": "[ { type: 'command', command: 'bold', label: 'Bold', icon: 'B', title: 'Bold (Ctrl+B)' }, { type: 'command', command: 'italic', label: 'Italic', icon: 'I', title: 'Italic (Ctrl+I)' }, { type: 'command', command: 'underline', label: 'Underline', icon: 'U', title: 'Underline (Ctrl+U)' }, sep, { type: 'command', command: 'heading', label: 'Heading', icon: 'H1', title: 'Heading 1' }, { type: 'command', command: 'paragraph', label: 'Paragraph', icon: 'P', title: 'Paragraph' }, sep, { type: 'command', command: 'bullet-list', label: 'Bullet list', icon: '• List', title: 'Bullet list' }, { type: 'command', command: 'ordered-list', label: 'Ordered list', icon: '1. List', title: 'Ordered list' }, sep, { type: 'command', command: 'insert-code-block', label: 'Code block', icon: '</>', title: 'Insert code block' }, ]",
+          "default": "[ 'bold', 'italic', 'underline', divider, 'heading', 'paragraph', divider, 'bullet-list', 'ordered-list', divider, 'insert-code-block', ]",
           "description": "Core static-toolbar items (no history — that trails after plugin items)."
         },
         {
           "kind": "variable",
           "name": "coreHistoryItems",
           "type": {
-            "text": "readonly ToolbarItem[]"
+            "text": "readonly EditorToolbarEntry[]"
           },
-          "default": "[ sep, { type: 'command', command: 'undo', label: 'Undo', icon: '↶', title: 'Undo (Ctrl+Z)' }, { type: 'command', command: 'redo', label: 'Redo', icon: '↷', title: 'Redo (Ctrl+Y)' }, ]",
+          "default": "[divider, 'undo', 'redo']",
           "description": "Core static-toolbar trailing group (history)."
         },
         {
           "kind": "variable",
           "name": "coreSelectionItems",
           "type": {
-            "text": "readonly ToolbarItem[]"
+            "text": "readonly EditorToolbarEntry[]"
           },
-          "default": "[ { type: 'command', command: 'bold', label: 'Bold', icon: 'B', title: 'Bold' }, { type: 'command', command: 'italic', label: 'Italic', icon: 'I', title: 'Italic' }, { type: 'command', command: 'underline', label: 'Underline', icon: 'U', title: 'Underline' }, sep, { type: 'command', command: 'heading', label: 'Heading', icon: 'H1', title: 'Heading 1' }, { type: 'command', command: 'paragraph', label: 'Paragraph', icon: 'P', title: 'Paragraph' }, ]",
+          "default": "[ 'bold', 'italic', 'underline', divider, 'heading', 'paragraph', ]",
           "description": "Core selection-toolbar items (inline formatting + block type)."
         },
         {
           "kind": "variable",
           "name": "coreMenuItems",
           "type": {
-            "text": "readonly ToolbarItem[]"
+            "text": "readonly EditorToolbarEntry[]"
           },
-          "default": "[ { type: 'command', command: 'bold', label: 'Bold' }, { type: 'command', command: 'italic', label: 'Italic' }, { type: 'command', command: 'underline', label: 'Underline' }, ]",
+          "default": "['bold', 'italic', 'underline']",
           "description": "Core context-menu items (leading)."
         },
         {
           "kind": "variable",
           "name": "coreMenuHistoryItems",
           "type": {
-            "text": "readonly ToolbarItem[]"
+            "text": "readonly EditorToolbarEntry[]"
           },
-          "default": "[ sep, { type: 'command', command: 'undo', label: 'Undo' }, { type: 'command', command: 'redo', label: 'Redo' }, ]",
+          "default": "[divider, 'undo', 'redo']",
           "description": "Core context-menu trailing group (history)."
         },
         {
@@ -3016,7 +3345,7 @@
           "type": {
             "text": "readonly ToolGroup[]"
           },
-          "default": "[ { id: 'format', label: 'Format', items: [ cmd('bold', 'Bold', 'B', 'Bold (Ctrl+B)'), cmd('italic', 'Italic', 'I', 'Italic (Ctrl+I)'), cmd('underline', 'Underline', 'U', 'Underline (Ctrl+U)'), ], }, { id: 'block', label: 'Block', items: [cmd('heading', 'Heading', 'H1', 'Heading 1'), cmd('paragraph', 'Paragraph', 'P')] }, { id: 'list', label: 'Lists', items: [cmd('bullet-list', 'Bullet list', '• List'), cmd('ordered-list', 'Ordered list', '1. List')], }, { id: 'insert', label: 'Insert', items: [cmd('insert-code-block', 'Code block', '</>', 'Insert code block')] }, ]",
+          "default": "[ { id: 'format', text: 'Format', items: ['bold', 'italic', 'underline'] }, { id: 'block', text: 'Block', items: ['heading', 'paragraph'] }, { id: 'list', text: 'Lists', items: ['bullet-list', 'ordered-list'] }, { id: 'insert', text: 'Insert', items: ['insert-code-block'] }, ]",
           "description": "Core tool groups (leading). Plugin groups slot in after these."
         },
         {
@@ -3025,7 +3354,7 @@
           "type": {
             "text": "readonly ToolGroup[]"
           },
-          "default": "[ { id: 'history', label: 'History', items: [cmd('undo', 'Undo', '↶', 'Undo (Ctrl+Z)'), cmd('redo', 'Redo', '↷', 'Redo (Ctrl+Y)')] }, ]",
+          "default": "[{ id: 'history', text: 'History', items: ['undo', 'redo'] }]",
           "description": "Core tool groups (trailing — history sits after plugin groups)."
         },
         {
@@ -3034,34 +3363,34 @@
           "type": {
             "text": "readonly StatusItem[]"
           },
-          "default": "[ { id: 'words', align: 'end', bar: 'bottom', render: (s) => `Words: ${wordCount(s)}` }, { id: 'chars', align: 'end', bar: 'top', render: (s) => `Chars: ${s.doc.textContent.length}` }, ]",
-          "description": "Core status items — a word count and a character count (docked end). They're\nplaced on different edges (`bar`), so `statusbar=\"both\"` shows a populated strip\non each; single-edge status bars (`top`/`bottom`) show every item regardless."
+          "default": "[ { id: 'words', align: 'end', bar: 'bottom', render: (ctx) => `Words: ${wordCount(ctx)}` }, { id: 'chars', align: 'end', bar: 'top', render: ({ state }) => `Chars: ${state.doc.textContent.length}` }, ]",
+          "description": "Core status items — a word count and a character count (docked end). They're\r\nplaced on different edges (`bar`), so `statusbar=\"both\"` shows a populated strip\r\non each; single-edge status bars (`top`/`bottom`) show every item regardless."
         },
         {
           "kind": "variable",
           "name": "defaultToolbarItems",
           "type": {
-            "text": "readonly ToolbarItem[]"
+            "text": "readonly EditorToolbarEntry[]"
           },
-          "default": "[ { type: 'command', command: 'bold', label: 'Bold', icon: 'B', title: 'Bold (Ctrl+B)' }, { type: 'command', command: 'italic', label: 'Italic', icon: 'I', title: 'Italic (Ctrl+I)' }, { type: 'command', command: 'underline', label: 'Underline', icon: 'U', title: 'Underline (Ctrl+U)' }, sep, { type: 'command', command: 'heading', label: 'Heading', icon: 'H1', title: 'Heading 1' }, { type: 'command', command: 'paragraph', label: 'Paragraph', icon: 'P', title: 'Paragraph' }, sep, { type: 'command', command: 'bullet-list', label: 'Bullet list', icon: '• List', title: 'Bullet list' }, { type: 'command', command: 'ordered-list', label: 'Ordered list', icon: '1. List', title: 'Ordered list' }, sep, { type: 'command', command: 'insert-link', label: 'Link', icon: '🔗', title: 'Insert link (select text first)' }, { type: 'command', command: 'insert-image', label: 'Image', icon: '🖼', title: 'Insert image' }, { type: 'command', command: 'insert-code-block', label: 'Code block', icon: '</>', title: 'Insert code block' }, { type: 'command', command: 'insert-table', label: 'Table', icon: '⊞', title: 'Insert table' }, sep, { type: 'command', command: 'undo', label: 'Undo', icon: '↶', title: 'Undo (Ctrl+Z)' }, { type: 'command', command: 'redo', label: 'Redo', icon: '↷', title: 'Redo (Ctrl+Y)' }, ]",
+          "default": "[ 'bold', 'italic', 'underline', divider, 'heading', 'paragraph', divider, 'bullet-list', 'ordered-list', divider, 'insert-link', 'insert-image', 'insert-code-block', 'insert-table', divider, 'undo', 'redo', ]",
           "description": "The default static toolbar — the full editing command set."
         },
         {
           "kind": "variable",
           "name": "defaultSelectionItems",
           "type": {
-            "text": "readonly ToolbarItem[]"
+            "text": "readonly EditorToolbarEntry[]"
           },
-          "default": "[ { type: 'command', command: 'bold', label: 'Bold', icon: 'B', title: 'Bold' }, { type: 'command', command: 'italic', label: 'Italic', icon: 'I', title: 'Italic' }, { type: 'command', command: 'underline', label: 'Underline', icon: 'U', title: 'Underline' }, sep, { type: 'command', command: 'insert-link', label: 'Link', icon: '🔗', title: 'Insert link' }, sep, { type: 'command', command: 'heading', label: 'Heading', icon: 'H1', title: 'Heading 1' }, { type: 'command', command: 'paragraph', label: 'Paragraph', icon: 'P', title: 'Paragraph' }, ]",
+          "default": "[ 'bold', 'italic', 'underline', divider, { action: 'insert-link', tooltip: 'Insert link' }, divider, 'heading', 'paragraph', ]",
           "description": "Compact inline-formatting bar shown over a non-empty text selection."
         },
         {
           "kind": "variable",
           "name": "defaultContextMenuItems",
           "type": {
-            "text": "readonly ToolbarItem[]"
+            "text": "readonly EditorToolbarEntry[]"
           },
-          "default": "[ { type: 'command', command: 'bold', label: 'Bold' }, { type: 'command', command: 'italic', label: 'Italic' }, { type: 'command', command: 'underline', label: 'Underline' }, sep, { type: 'command', command: 'insert-link', label: 'Insert link' }, { type: 'command', command: 'insert-image', label: 'Insert image' }, { type: 'command', command: 'insert-code-block', label: 'Insert code block' }, { type: 'command', command: 'insert-table', label: 'Insert table' }, sep, { type: 'command', command: 'undo', label: 'Undo' }, { type: 'command', command: 'redo', label: 'Redo' }, ]",
+          "default": "[ 'bold', 'italic', 'underline', divider, { action: 'insert-link', text: 'Insert link' }, { action: 'insert-image', text: 'Insert image' }, { action: 'insert-code-block', text: 'Insert code block' }, { action: 'insert-table', text: 'Insert table' }, divider, 'undo', 'redo', ]",
           "description": "Right-click editing menu (labelled, vertical)."
         }
       ],
@@ -3180,7 +3509,7 @@
               "type": {
                 "text": "CommandBar"
               },
-              "default": "new CommandBar(this.#panel, opts.items, opts.registry, { variant: 'bar' })"
+              "default": "new CommandBar(this.#panel, opts.items, opts.host, { variant: 'bar', source: 'selection-toolbar' })"
             },
             {
               "kind": "field",
@@ -3369,12 +3698,12 @@
             },
             {
               "kind": "field",
-              "name": "#getState",
+              "name": "#getContext",
               "privacy": "private",
               "type": {
-                "text": "() => EditorState"
+                "text": "() => StatusContext"
               },
-              "default": "getState"
+              "default": "getContext"
             },
             {
               "kind": "field",

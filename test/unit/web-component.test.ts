@@ -6,6 +6,7 @@
  */
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { KmEditorElement } from '../../src/web-component';
+import { getEditorEngine } from '../../src/web-component';
 
 // Importing the public entry registers the custom element.
 beforeAll(async () => {
@@ -69,15 +70,15 @@ describe('<km-editor>', () => {
 
   it('readonly disables editing; clearing it re-enables', async () => {
     const el = await mount({ value: 'x', readonly: '' });
-    expect(el.engine!.isEditable()).toBe(false);
+    expect(getEditorEngine(el)!.isEditable()).toBe(false);
     el.removeAttribute('readonly');
     await el.whenSettled();
-    expect(el.engine!.isEditable()).toBe(true);
+    expect(getEditorEngine(el)!.isEditable()).toBe(true);
   });
 
   it('mode="preview" forces read-only', async () => {
     const el = await mount({ value: 'x', mode: 'preview' });
-    expect(el.engine!.isEditable()).toBe(false);
+    expect(getEditorEngine(el)!.isEditable()).toBe(false);
   });
 
   it('reflects `format` and re-announces change when it switches', async () => {
@@ -142,7 +143,7 @@ describe('<km-editor> view modes', () => {
   it('preview renders read-only', async () => {
     const el = await mount({ value: 'x', mode: 'preview' });
     expect(root(el).classList.contains('km-preview')).toBe(true);
-    expect(el.engine!.isEditable()).toBe(false);
+    expect(getEditorEngine(el)!.isEditable()).toBe(false);
   });
 
   it('inline renders a floating card (no anchor → normal flow, no throw)', async () => {

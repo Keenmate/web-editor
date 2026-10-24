@@ -17,7 +17,8 @@ import type { SchemaExtensions } from '../schema';
 import type { Command, EditorState, Plugin as PMPlugin } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import type { CommandSpec } from './command-registry';
-import type { ToolbarItem, ToolGroup, StatusItem } from '../ui/items';
+import type { ToolGroup, StatusItem } from '../ui/items';
+import type { EditorToolbarEntry } from '../interaction';
 import type { Pipeline, StageContribution } from './pipeline/types';
 
 /**
@@ -76,9 +77,9 @@ export interface EditorPlugin {
   toolbarGroups?: readonly ToolGroup[];
   /** Ids of toolbar groups to remove from the assembled toolbar (incl. core). */
   removeToolbarGroups?: readonly string[];
-  /** Flat items appended to the selection toolbar / context menu (not grouped). */
-  selectionItems?: readonly ToolbarItem[];
-  menuItems?: readonly ToolbarItem[];
+  /** Flat entries appended to the selection toolbar / context menu (not grouped). */
+  selectionItems?: readonly EditorToolbarEntry[];
+  menuItems?: readonly EditorToolbarEntry[];
   /**
    * Live indicators added to the status bar. Same id semantics as
    * {@link toolbarGroups}: a matching `id` replaces in place (last wins), a new id
@@ -165,9 +166,9 @@ type ItemKey = 'selectionItems' | 'menuItems';
 export function assembleItems(
   plugins: readonly EditorPlugin[],
   key: ItemKey,
-  leading: readonly ToolbarItem[] = [],
-  trailing: readonly ToolbarItem[] = []
-): ToolbarItem[] {
+  leading: readonly EditorToolbarEntry[] = [],
+  trailing: readonly EditorToolbarEntry[] = []
+): EditorToolbarEntry[] {
   return [...leading, ...plugins.flatMap((p) => [...(p[key] ?? [])]), ...trailing];
 }
 

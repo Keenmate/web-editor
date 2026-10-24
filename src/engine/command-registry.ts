@@ -3,22 +3,55 @@
  * keybindings all bind to.
  *
  * A command is a ProseMirror `Command` (`(state, dispatch?, view?) => boolean`)
- * plus optional metadata: keybindings, an `isActive` predicate (for toolbar
- * highlight) and an `isEnabled` predicate (defaults to a dry run of the command).
+ * plus optional metadata: keybindings, display defaults (`text` / `icon` /
+ * `tooltip` — what a toolbar / menu item naming this command shows unless it
+ * sets its own), a `getIsActiveCallback` (toggle state, the toolbar highlight)
+ * and a `getIsEnabledCallback` (defaults to a dry run of the command).
+ *
+ * A registered command id is a built-in action name: a toolbar / menu item
+ * `{ action: 'bold' }` (or the shorthand `'bold'`) runs it.
  */
 import { keymap } from 'prosemirror-keymap';
 import type { Command, EditorState, Plugin } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
+import type { CommandContext } from '../interaction';
 
 export interface CommandSpec {
+  /** The command / built-in action name — kebab-case (`'insert-link'`); plugin pipelines may namespace with `:`. */
   id: string;
   run: Command;
-  /** Keybindings in ProseMirror keymap syntax, e.g. `['Mod-b']`. */
+  /** Keybindings in ProseMirror keymap syntax, e.g. `['Mod-b']`. The first is the item's display `shortcut`. */
   keys?: string[];
-  /** Whether the command's effect is currently applied (toolbar highlight). */
-  isActive?: (state: EditorState) => boolean;
+  /** Default label of an item naming this command (`'Bold'`). */
+  text?: string;
+  /** Default compact glyph of a toolbar item naming this command (`'B'`). */
+  icon?: string;
+  /** Default tooltip; else `text` + the display shortcut (`'Bold (Ctrl+B)'`). */
+  tooltip?: string;
+  /** Whether the command's effect is currently applied (toolbar highlight / `aria-pressed`). */
+  getIsActiveCallback?: (ctx: CommandContext) => boolean;
   /** Whether the command can currently run. Defaults to a dry run of `run`. */
-  isEnabled?: (state: EditorState) => boolean;
+  getIsEnabledCallback?: (ctx: CommandContext) => boolean;
+}
+
+/** Builds the ctx a command predicate receives (the engine attaches `controller` / `element` when hosted). */
+export type CommandContextFactory = (fields: { state: EditorState }) => CommandContext;
+
+const plainContext: CommandContextFactory = (fields) => fields as CommandContext;
+
+const isApple = (): boolean =>
+  typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform ?? '');
+
+/** `'Mod-Shift-z'` → `'Ctrl+Shift+Z'` (`'Cmd+Shift+Z'` on Apple platforms). */
+export function formatShortcut(key: string): string {
+  return key
+    .split('-')
+    .map((part) => {
+      if (part === 'Mod') return isApple() ? 'Cmd' : 'Ctrl';
+      if (part.length === 1) return part.toUpperCase();
+      return part;
+    })
+    .join('+');
 }
 
 export class CommandRegistry {
@@ -28,7 +61,10 @@ export class CommandRegistry {
    * direct command run when unset (standalone registry use / tests). */
   private runner?: (id: string) => boolean;
 
-  constructor(private readonly getView: () => EditorView | undefined) {}
+  constructor(
+    private readonly getView: () => EditorView | undefined,
+    private readonly createContext: CommandContextFactory = plainContext
+  ) {}
 
   /** Route `run(id)` through a pipeline runner (set by the engine). */
   attachRunner(runner: (id: string) => boolean): void {
@@ -76,15 +112,23 @@ export class CommandRegistry {
   isActive(id: string): boolean {
     const view = this.getView();
     const spec = this.map.get(id);
-    if (!view || !spec?.isActive) return false;
-    return spec.isActive(view.state);
+    if (!view || !spec?.getIsActiveCallback) return false;
+    return spec.getIsActiveCallback(this.createContext({ state: view.state }));
   }
 
   isEnabled(id: string): boolean {
     const view = this.getView();
     const spec = this.map.get(id);
     if (!view || !spec) return false;
-    return spec.isEnabled ? spec.isEnabled(view.state) : spec.run(view.state);
+    return spec.getIsEnabledCallback
+      ? spec.getIsEnabledCallback(this.createContext({ state: view.state }))
+      : spec.run(view.state);
+  }
+
+  /** The display shortcut of a command (its first key), e.g. `'Ctrl+B'`. */
+  shortcut(id: string): string | undefined {
+    const key = this.map.get(id)?.keys?.[0];
+    return key ? formatShortcut(key) : undefined;
   }
 
   /** Build a ProseMirror keymap plugin from every command that declares `keys`. */
