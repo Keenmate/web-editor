@@ -6,7 +6,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-Proposed target: **1.0.0-rc01** (package.json unchanged until decided)
+Target: **1.0.0-rc01** (first release).
 
 Pre-1.0, pre-publish. Everything below is the work to date; nothing has been
 released to a registry yet.
