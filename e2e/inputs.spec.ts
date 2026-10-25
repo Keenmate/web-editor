@@ -1,12 +1,12 @@
 import { test, expect, load, editor, pm } from './fixtures';
 
-// Input validation: invalid enum attributes fall back to their default (silently —
-// core's attribute path does not warn); invalid property assignments are rejected
-// with a console warning. Fixture: test/inputs.html
+// Input validation: invalid enum attributes warn and keep the previous value (in
+// markup that is the default); invalid property assignments are rejected with a
+// console warning. Fixture: test/inputs.html
 // (mode="bogus" toolbar="sideways" format="xml" statusbar="nope").
 
 test.describe('inputs', () => {
-    test('invalid enum attributes → defaults (no warning: core attribute path is silent)', async ({ page }) => {
+    test('invalid enum attributes → defaults, each with a warning', async ({ page }) => {
         const warnings: string[] = [];
         page.on('console', (m) => m.type() === 'warning' && warnings.push(m.text()));
         await load(page, 'inputs.html', { flag: 'fixtureReady' });
@@ -17,9 +17,9 @@ test.describe('inputs', () => {
             statusbar: el.statusbar,
         }));
         expect(cfg).toEqual({ mode: 'edit', toolbar: 'top', format: 'markdown', statusbar: 'none' });
-        // Core's toEnum falls back silently on the attribute path (only property
-        // rejections warn) — see NOTES.md ED-11 for the plan's "+ warn" expectation.
-        expect(warnings.filter((w) => /bogus|sideways|xml|nope/.test(w))).toEqual([]);
+        // Core warns once per rejected attribute (NOTES.md ED-11, resolved in core).
+        const rejected = warnings.filter((w) => w.includes('rejected invalid value for attribute'));
+        expect(rejected.map((w) => w.match(/ (\w+)="/)?.[1]).sort()).toEqual(['format', 'mode', 'statusbar', 'toolbar']);
         // The editor still works on the defaults.
         await expect(pm(page).locator('h1')).toHaveText('Title');
         await expect(page.locator('km-editor#subject .km-toolbar-zone')).toBeVisible();

@@ -105,7 +105,11 @@ only considers the viewport, not the toolbar.
 **Suggested fix:** pass the static toolbar as a collision boundary / use
 `placement: 'bottom'` fallback when it would overlap the toolbar zone.
 
-## ED-11. (Question, core) Invalid enum attributes fall back silently
+## ED-11. ~~(Question, core) Invalid enum attributes fall back silently~~ — RESOLVED in core
+
+Core now warns on a rejected attribute value and keeps the previous value (the
+default in markup), the same rule as the property path; `e2e/inputs.spec.ts`
+asserts the four warnings. Original note:
 
 The e2e plan expected `mode="bogus"` → default **+ warn**. Core's `toEnum`
 (`web-components-core/src/inputs/converters.ts`) returns the default on the
