@@ -391,8 +391,14 @@ export class EditorEngine {
     if (!this.#isActive) this.#domObserver()?.stop();
   }
 
-  // `domObserver` is ProseMirror-internal (not in the public typings); its
-  // start/stop pair is the one the view itself brackets every DOM update with.
+  // DEPENDENCY ON PROSEMIRROR INTERNALS: `EditorView.domObserver` (prosemirror-view's
+  // private `DOMObserver`, with its `start()` / `stop()`) is not public API and not
+  // in the typings; its start/stop pair is the one the view itself brackets every
+  // DOM update with. If a prosemirror-view upgrade renames or removes it, this
+  // returns undefined and deactivate()/activate() silently become no-ops — the
+  // document `selectionchange` listener then pins a detached editor again.
+  // `e2e/lifecycle.spec.ts` ("a detached editor releases its document listeners")
+  // catches that; re-check it when bumping prosemirror-view.
   #domObserver(): { start(): void; stop(): void } | undefined {
     return (this.view as unknown as { domObserver?: { start(): void; stop(): void } }).domObserver;
   }
