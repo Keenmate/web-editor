@@ -1,14 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/JetBrains/web-types/master/schema/web-types.json",
   "name": "@keenmate/web-editor",
-  "version": "0.0.1",
+  "version": "1.0.0-rc01",
   "description-markup": "markdown",
   "contributions": {
     "html": {
       "elements": [
         {
           "name": "km-editor",
-          "description": "\n\n---\n\n\n### **Events:**\n - **change** - The document changed (or `format` switched). `detail`: `{ value, format }` — the content serialized in the active `format`. Twin: `onChange(detail)`.\n- **ready** - The engine was built and mounted (once per element lifetime). `detail`: the component context only (`controller`, `element`). Twin: `onReady(detail)`.\n- **mode-change** - The `mode` attribute/property changed. `detail`: `{ mode }`. Twin: `onModeChange(detail)`.\n- **lock-change** - A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`.\n- **action** - A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick`, before the command runs; `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`.\n\n### **Methods:**\n \n\n\n\n\n- **getValue(format: _EditorFormat_): _string_** - Live content serialized in the active `format` (or an explicit one).\n- **getContent(format: _EditorFormat_): _string_** - Alias for getValue — reads live content, not the assigned `value` input.\n- **setValue(value: _string_, format: _EditorFormat_): _void_** - Replace the document with `value`, parsed in `format` (defaults to the active one).",
+          "description": "\n\n---\n\n\n### **Events:**\n - **change** - The document changed (or `format` switched). `detail`: `{ value, format }` — the content serialized in the active `format`. Twin: `onChange(detail)`.\n- **ready** - The engine was built and mounted (once per element lifetime). `detail`: the component context only (`controller`, `element`). Twin: `onReady(detail)`.\n- **mode-change** - The `mode` attribute/property changed. `detail`: `{ mode }`. Twin: `onModeChange(detail)`.\n- **lock-change** - A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`.\n- **action** - A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick` and the command (a notification after the fact; `state` is the snapshot from activation); `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`.\n\n### **Methods:**\n \n\n\n\n\n- **getValue(format: _EditorFormat_): _string_** - Live content serialized in the active `format` (or an explicit one).\n- **getContent(format: _EditorFormat_): _string_** - Alias for getValue — reads live content, not the assigned `value` input.\n- **setValue(value: _string_, format: _EditorFormat_): _void_** - Replace the document with `value`, parsed in `format` (defaults to the active one).",
           "doc-url": "",
           "attributes": [
             {
@@ -83,7 +83,7 @@
             },
             {
               "name": "action",
-              "description": "A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick`, before the command runs; `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`."
+              "description": "A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick` and the command (a notification after the fact; `state` is the snapshot from activation); `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`."
             }
           ],
           "js": {
@@ -188,7 +188,7 @@
               },
               {
                 "name": "action",
-                "description": "A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick`, before the command runs; `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`."
+                "description": "A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick` and the command (a notification after the fact; `state` is the snapshot from activation); `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`."
               }
             ]
           }

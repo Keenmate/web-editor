@@ -664,7 +664,7 @@
               "name": "events",
               "privacy": "protected",
               "static": true,
-              "default": "[ { name: 'change', description: 'The document changed (or `format` switched). `detail`: `{ value, format }` — the content serialized in the active `format`. Twin: `onChange(detail)`.', }, { name: 'ready', description: 'The engine was built and mounted (once per element lifetime). `detail`: the component context only (`controller`, `element`). Twin: `onReady(detail)`.', }, { name: 'mode-change', description: 'The `mode` attribute/property changed. `detail`: `{ mode }`. Twin: `onModeChange(detail)`.', }, { name: 'lock-change', description: 'A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`.', }, { name: 'action', description: 'A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick`, before the command runs; `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`.', }, ]",
+              "default": "[ { name: 'change', description: 'The document changed (or `format` switched). `detail`: `{ value, format }` — the content serialized in the active `format`. Twin: `onChange(detail)`.', }, { name: 'ready', description: 'The engine was built and mounted (once per element lifetime). `detail`: the component context only (`controller`, `element`). Twin: `onReady(detail)`.', }, { name: 'mode-change', description: 'The `mode` attribute/property changed. `detail`: `{ mode }`. Twin: `onModeChange(detail)`.', }, { name: 'lock-change', description: 'A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`.', }, { name: 'action', description: 'A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick` and the command (a notification after the fact; `state` is the snapshot from activation); `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`.', }, ]",
               "type": {
                 "text": "readonly EventDef[]"
               }
@@ -775,12 +775,20 @@
             },
             {
               "kind": "field",
-              "name": "#content",
+              "name": "#seed",
               "privacy": "private",
               "type": {
-                "text": "string | null"
+                "text": "{ content: string | null; format: EditorFormat }"
               },
-              "default": "null"
+              "default": "{ content: null, format: 'markdown' }"
+            },
+            {
+              "kind": "field",
+              "name": "#pendingSet",
+              "privacy": "private",
+              "type": {
+                "text": "{ value: string; format: EditorFormat; valueAtSet: unknown } | undefined"
+              }
             },
             {
               "kind": "field",
@@ -830,7 +838,7 @@
                   "text": "void"
                 }
               },
-              "description": "Activate: ensure the engine exists (a DOM move tore it down in disconnect())."
+              "description": "Activate (every connect, after any reinit()/update()). Core's build-once\r\nmodel: the engine survives a DOM move, so this only resumes live resources —\r\nthe view's DOM observer, the inline anchor, the chrome's selection state.\r\nContent, selection and undo history are exactly as they were."
             },
             {
               "kind": "method",
@@ -841,7 +849,7 @@
                   "text": "void"
                 }
               },
-              "description": "Deactivate: snapshot live content, then tear the engine down."
+              "description": "Deactivate (every disconnect): release live resources only — the engine (and\r\nwith it the document, selection and undo history) stays alive, so a DOM move\r\nre-activates without a rebuild and a detached editor still answers getValue()."
             },
             {
               "kind": "method",
@@ -862,6 +870,36 @@
                   "text": "void"
                 }
               }
+            },
+            {
+              "kind": "method",
+              "name": "#createEngine",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "EditorEngine"
+                }
+              },
+              "description": "Lay out the shadow and construct an engine from #seed (throws on a bad plugin set)."
+            },
+            {
+              "kind": "method",
+              "name": "#wireEngine",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "engine",
+                  "type": {
+                    "text": "EditorEngine"
+                  }
+                }
+              ],
+              "description": "Adopt a freshly constructed engine: events, chrome, activation state, `ready`."
             },
             {
               "kind": "method",
@@ -1304,7 +1342,7 @@
             },
             {
               "name": "action",
-              "description": "A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick`, before the command runs; `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`."
+              "description": "A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick` and the command (a notification after the fact; `state` is the snapshot from activation); `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`."
             }
           ],
           "tagName": "km-editor",
@@ -1488,7 +1526,7 @@
             },
             {
               "kind": "method",
-              "name": "isActive",
+              "name": "isToggled",
               "return": {
                 "type": {
                   "text": "boolean"
@@ -1715,7 +1753,7 @@
               "type": {
                 "text": "EditorView"
               },
-              "default": "new EditorView(options.mount, { state, editable: () => this.#isEditable, dispatchTransaction: (tr) => { const newState = this.view.state.apply(tr); this.view.updateState(newState); this.events.emit('transaction', { tr, engine: this }); if (tr.docChanged) this.events.emit('change', this); if (tr.selectionSet || tr.docChanged) this.events.emit('selection-change', this); }, })"
+              "default": "new EditorView(options.mount, { state, editable: () => this.#isEditable, dispatchTransaction: (tr) => { const newState = this.view.state.apply(tr); this.view.updateState(newState); this.#keepInactive(); this.events.emit('transaction', { tr, engine: this }); if (tr.docChanged) this.events.emit('change', this); if (tr.selectionSet || tr.docChanged) this.events.emit('selection-change', this); }, })"
             },
             {
               "kind": "field",
@@ -1724,6 +1762,16 @@
               "type": {
                 "text": "boolean"
               }
+            },
+            {
+              "kind": "field",
+              "name": "#isActive",
+              "privacy": "private",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "true",
+              "description": "False between deactivate() and activate() (the host element is detached)."
             },
             {
               "kind": "field",
@@ -1825,7 +1873,7 @@
                   }
                 }
               ],
-              "description": "Build a callback ctx from `fields`. Hosted by `<km-editor>`, it carries\n`controller` + `element` (inherited getters — non-enumerable, so\n`JSON.stringify` / `Object.keys` see only the fields); standalone it is\njust the fields."
+              "description": "Build a callback ctx from `fields`. Hosted by `<km-editor>`, it carries\r\n`controller` + `element` (inherited getters — non-enumerable, so\r\n`JSON.stringify` / `Object.keys` see only the fields); standalone it is\r\njust the fields."
             },
             {
               "kind": "field",
@@ -1852,7 +1900,7 @@
                   }
                 }
               ],
-              "description": "Fire a pipeline / command by name. Sync → returns whether it resolved;\ndeferred → kicks off async and returns `true`."
+              "description": "Fire a pipeline / command by name. Sync → returns whether it resolved;\r\ndeferred → kicks off async and returns `true`."
             },
             {
               "kind": "method",
@@ -2075,6 +2123,47 @@
                 }
               ],
               "description": "Toggle read-only. Re-evaluates the view's `editable` prop in place."
+            },
+            {
+              "kind": "method",
+              "name": "deactivate",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "description": "Pause the view's live DOM tracking while its host is detached (a DOM move or\r\na held-but-removed element). ProseMirror's DOM observer keeps a\r\n`selectionchange` listener on the owner document — left attached, it would\r\npin a removed editor in memory. The document, selection and undo history are\r\nuntouched; activate resumes tracking."
+            },
+            {
+              "kind": "method",
+              "name": "activate",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "description": "Resume live DOM tracking after deactivate (idempotent)."
+            },
+            {
+              "kind": "method",
+              "name": "#keepInactive",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "description": "The view restarts its observer around every DOM update — re-pause it while inactive."
+            },
+            {
+              "kind": "method",
+              "name": "#domObserver",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "{ start(): void; stop(): void } | undefined"
+                }
+              }
             },
             {
               "kind": "method",
@@ -2764,7 +2853,7 @@
               }
             }
           ],
-          "description": "The built-in defaults of an item naming a registered command: text / icon /\ntooltip / shortcut from the `CommandSpec`, `isActive` / `isDisabled` from its\npredicates. An unknown command (its plugin isn't loaded) is disabled. A\ncustom item has no defaults."
+          "description": "The built-in defaults of an item naming a registered command: text / icon /\r\ntooltip / shortcut from the `CommandSpec`, `isDisabled` from its predicates and\r\n— only for a toggle command (one with `getIsToggledCallback`) — `isToggled`. An unknown command (its plugin isn't loaded) is disabled. A\r\ncustom item has no defaults."
         }
       ],
       "exports": [
@@ -2879,6 +2968,16 @@
             },
             {
               "kind": "method",
+              "name": "deactivate",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "description": "The host was detached: close the floating panels (selection toolbar, context\r\nmenu) so no positioning loop or document listener outlives the move. The\r\nstatic toolbar / status bar are structure and stay; `refresh()` on reconnect\r\nre-evaluates the selection toolbar."
+            },
+            {
+              "kind": "method",
               "name": "destroy",
               "return": {
                 "type": {
@@ -2985,7 +3084,7 @@
                   "text": "void"
                 }
               },
-              "description": "Re-resolve every item against the current state (visibility, text, active, disabled)."
+              "description": "Re-resolve every item against the current state (visibility, text, toggled, disabled)."
             },
             {
               "kind": "method",
@@ -3061,6 +3160,12 @@
                   "name": "r",
                   "type": {
                     "text": "ResolvedActionItem<EditorAction>"
+                  }
+                },
+                {
+                  "name": "isToggle",
+                  "type": {
+                    "text": "boolean"
                   }
                 }
               ]
@@ -3200,6 +3305,16 @@
                   }
                 }
               ]
+            },
+            {
+              "kind": "method",
+              "name": "close",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "description": "Close the menu (and drop its document dismiss listeners) if it is open."
             },
             {
               "kind": "method",
@@ -3580,6 +3695,16 @@
                 }
               },
               "description": "Re-evaluate visibility + position from the current selection."
+            },
+            {
+              "kind": "method",
+              "name": "hide",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "description": "Close the floating bar now (e.g. the host was detached); the next `update()` may re-show it."
             },
             {
               "kind": "method",
@@ -4070,7 +4195,7 @@
                   }
                 }
               ],
-              "description": "(Re)build the shadow structure for `mode` + `toolbarSide`. The toolbar slot\nand the editor mount are wrapped in one bordered `.km-surface` frame (so the\ntoolbar sits flush against the editor, with a divider, rather than floating as\na separate card); `toolbarSide` sets which edge the toolbar occupies. Builds\nthe output panel only for `split`; (re)anchors only for `inline`."
+              "description": "(Re)build the shadow structure for `mode` + `toolbarSide`. The toolbar slot\r\nand the editor mount are wrapped in one bordered `.km-surface` frame (so the\r\ntoolbar sits flush against the editor, with a divider, rather than floating as\r\na separate card); `toolbarSide` sets which edge the toolbar occupies. Builds\r\nthe output panel only for `split`; (re)anchors only for `inline`."
             },
             {
               "kind": "method",
@@ -4090,7 +4215,17 @@
                   "text": "void"
                 }
               },
-              "description": "Release live positioning resources without tearing down the structure.\nThe element calls this on `disconnect()` so a detached-but-held `inline`\neditor doesn't keep a floating-ui `autoUpdate` loop running against its\ndetached host; a reconnect re-anchors via `render()`."
+              "description": "Release live positioning resources without tearing down the structure.\r\nThe element calls this on `disconnect()` so a detached-but-held `inline`\r\neditor doesn't keep a floating-ui `autoUpdate` loop running against its\r\ndetached host; a reconnect re-anchors via `render()`."
+            },
+            {
+              "kind": "method",
+              "name": "activate",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "description": "Re-acquire live positioning after deactivate (the host was\r\nreconnected): re-anchors an `inline` editor without rebuilding the shadow\r\nstructure, so the editor mount — and the live view — stays where it is."
             },
             {
               "kind": "method",
@@ -5032,6 +5167,42 @@
           "description": "Serialize a single node to HTML (used by the table Markdown fallback)."
         },
         {
+          "kind": "function",
+          "name": "markdownDestination",
+          "return": {
+            "type": {
+              "text": "string"
+            }
+          },
+          "parameters": [
+            {
+              "name": "url",
+              "type": {
+                "text": "string"
+              }
+            }
+          ],
+          "description": "Write a URL as a CommonMark link / image destination so it parses back intact:\r\nwhitespace or `<` / `>` → the `<…>` form (with `<` `>` `\\` escaped); otherwise\r\nthe bare form with `(` `)` `\\` backslash-escaped (an unescaped `)` or space\r\nwould end the destination early)."
+        },
+        {
+          "kind": "function",
+          "name": "markdownTitle",
+          "return": {
+            "type": {
+              "text": "string"
+            }
+          },
+          "parameters": [
+            {
+              "name": "title",
+              "type": {
+                "text": "unknown"
+              }
+            }
+          ],
+          "description": "Write a link / image title as ` \"…\"` (empty when there is none)."
+        },
+        {
           "kind": "variable",
           "name": "coreMarkdownNodes",
           "type": {
@@ -5111,7 +5282,7 @@
               }
             }
           ],
-          "description": "Build a MarkdownParser for `schema` from merged parse specs. Starts from the\nCommonMark preset with `blockquote` / `hr` disabled (the core schema has no\nsuch nodes); `enableRules` re-enables markdown-it rules a plugin needs."
+          "description": "Build a MarkdownParser for `schema` from merged parse specs. Starts from the\r\nCommonMark preset with `blockquote` / `hr` disabled (the core schema has no\r\nsuch nodes); `enableRules` re-enables markdown-it rules a plugin needs."
         },
         {
           "kind": "function",
@@ -5166,6 +5337,22 @@
           "name": "nodeToHTML",
           "declaration": {
             "name": "nodeToHTML",
+            "module": "src/engine/serialization/markdown.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "markdownDestination",
+          "declaration": {
+            "name": "markdownDestination",
+            "module": "src/engine/serialization/markdown.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "markdownTitle",
+          "declaration": {
+            "name": "markdownTitle",
             "module": "src/engine/serialization/markdown.ts"
           }
         },
