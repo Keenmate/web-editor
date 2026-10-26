@@ -22,6 +22,15 @@ test.describe('images', () => {
         expect(await markdown(page)).toBe(`Intro para![A pixel](${PX})`);
     });
 
+    test('an inserted image has no title (null, like a parsed one)', async ({ page, dialogs }) => {
+        await caretAfter(page, 'Intro para');
+        dialogs.answer(PX, 'A pixel');
+        await toolbarButton(page, 'insert-image').click();
+        await expect(pm(page).locator(IMG)).not.toHaveAttribute('title');
+        const json = await call<any>(page, 'getJSON');
+        expect(json.content[0].content[1].attrs.title).toBeNull();
+    });
+
     test('cancelling the URL prompt inserts nothing; cancelling alt still inserts', async ({ page, dialogs }) => {
         await caretAfter(page, 'Intro para');
         dialogs.answer(null);

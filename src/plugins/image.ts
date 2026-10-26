@@ -10,7 +10,7 @@ import { imageNodeSpec } from '../schema';
 import { markdownDestination, markdownTitle } from '../engine/serialization/markdown';
 
 /** Insert an image at the current position. */
-function insertImage(schema: Schema, src: string, alt = '', title = ''): Command {
+function insertImage(schema: Schema, src: string, alt = '', title: string | null = null): Command {
   return (state, dispatch) => {
     const node = schema.nodes.image.create({ src, alt, title });
     if (dispatch) dispatch(state.tr.replaceSelectionWith(node).scrollIntoView());

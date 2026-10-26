@@ -78,7 +78,7 @@ export function imageBrowserPlugin(opts: ImageBrowserOptions = {}): EditorPlugin
           const node = view.state.schema.nodes.image.create({
             src: c.extra.src,
             alt: c.extra.alt ?? '',
-            title: '',
+            title: null,
           });
           rt.dispatch?.(view.state.tr.replaceSelectionWith(node).scrollIntoView());
           return { action: 'resolve' };

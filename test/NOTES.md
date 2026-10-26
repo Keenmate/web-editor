@@ -74,7 +74,8 @@ serializer had the same bug. Pinned by `e2e/images.spec.ts` + unit
 ## ~~ED-7. Link `title` is `''` on create vs `null` on parse~~ — FIXED (Unreleased)
 
 **Fixed:** a created link gets `title: null` (the mark-spec default), same as a
-parsed one. Pinned by `e2e/links.spec.ts`.
+parsed one. Pinned by `e2e/links.spec.ts`. The image commands (`insert-image`,
+`image:browser:pick`) had the same `''` default — fixed too (`e2e/images.spec.ts`).
 
 **Where:** `src/plugins/link.ts` — `toggleLink(schema, href, title = '')` vs the
 parser's `title: tok.attrGet('title') || null`. The JSON of the same link differs

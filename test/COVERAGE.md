@@ -69,7 +69,7 @@ dialog stub), `e2e/helpers.ts`.
 | Links: toolbar disabled on empty selection; Mod-k on empty selection is a silent no-op (ED-5, fixed); created / parsed link JSON identical, title `null` (ED-7, fixed) | ✓ | `links.spec.ts` | `links.html` |
 | Tables: insert (toolbar + menu), Tab nav, row/column ops, merge/split, header toggles, html/json round-trip, md raw-HTML | ✓ | `tables.spec.ts` | `tables.html` |
 | Code block: prompt + language (cancel), Prism tokens, fenced md, html/json, change-code-language | ✓ | `code-block.spec.ts` | `code-block.html` |
-| Images: prompt insert (cancel), md title / html / json round-trip; src with spaces / parentheses survives markdown (ED-6, fixed) | ✓ | `images.spec.ts` | `images.html` |
+| Images: prompt insert (cancel), md title / html / json round-trip; src with spaces / parentheses survives markdown (ED-6, fixed); inserted image title `null` like a parsed one | ✓ | `images.spec.ts` | `images.html` |
 | `image:browser:pick` + `imageBase64Plugin` (http → `data:`, as-is without it, cancel → no insert, lock released) | ✓ | `image-pipeline.spec.ts` | `image-pipeline.html` |
 | Paste: HTML keeps marks + blocks, drops unknown elements (keeps text, no script), plain text stays literal | ✓ | `paste.spec.ts` | `paste.html` |
 

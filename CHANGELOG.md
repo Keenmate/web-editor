@@ -42,6 +42,8 @@ released to a registry yet.
   early). Titles now escape `\` as well as `"` (ED-6).
 - **Shift-Enter inserts a hard break** (`<br>`, markdown `\` + newline) — it did
   nothing. New core command `hard-break` (not in code blocks) (ED-8).
+- **An image inserted from the prompt or `image:browser:pick` has `title: null`**, like
+  a parsed one (it was `''`) — same inconsistency as ED-7, for images.
 
 ### Changed — BREAKING (interaction model, web-components-core rc15)
 
