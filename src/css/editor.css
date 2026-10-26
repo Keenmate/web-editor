@@ -252,7 +252,7 @@
 .km-cmd:hover:not(:disabled) {
   background: rgba(128, 128, 128, 0.18);
 }
-.km-cmd.active {
+.km-cmd.toggled {
   background: var(--km-accent);
   border-color: var(--km-accent);
   color: #fff;
@@ -340,7 +340,7 @@
   color: #fff;
 }
 
-.km-selection-toolbar .km-cmd.active {
+.km-selection-toolbar .km-cmd.toggled {
   background: var(--km-accent);
   color: #fff;
 }
@@ -377,7 +377,7 @@
   color: #fff;
 }
 
-.km-menu-item.active {
+.km-menu-item.toggled {
   font-weight: 600;
 }
 

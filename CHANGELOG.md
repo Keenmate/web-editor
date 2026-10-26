@@ -58,11 +58,11 @@ standalone `EditorEngine` (no `<km-editor>` around it) carry only their fields.
 
 | Old | New |
 |---|---|
-| `el.engine` (the internal `EditorEngine`) | `el.controller` — the public facade: `getValue(format?)`, `getContent`, `getHTML`, `getMarkdown`, `getJSON`, `setValue(value, format?)`, `focus()`, `isReady`, `runCommand(name \| ProseMirror Command)`, `isCommandActive(name)`, `isCommandEnabled(name)`. `EditorEngine` stays exported for standalone use |
+| `el.engine` (the internal `EditorEngine`) | `el.controller` — the public facade: `getValue(format?)`, `getContent`, `getHTML`, `getMarkdown`, `getJSON`, `setValue(value, format?)`, `focus()`, `isReady`, `runCommand(name \| ProseMirror Command)`, `isCommandToggled(name)`, `isCommandEnabled(name)`. `EditorEngine` stays exported for standalone use |
 | `el.engine.setInteractionHost(host)` (lost on every engine rebuild, e.g. a `plugins` change) | `el.interactionHost = host` — a property input; survives rebuilds |
 | `el.engine.events.on('lock', …)` | the `lock-change` event / `onLockChange({ isLocked })` |
 | `el.engine.run(name)` / `el.engine.view` (to dispatch a transaction) | `el.controller.runCommand(name)` / `el.controller.runCommand((state, dispatch) => …)` |
-| `CommandSpec.isActive(state)` / `isEnabled(state)` | `getIsActiveCallback({ state })` / `getIsEnabledCallback({ state })` |
+| `CommandSpec.isActive(state)` / `isEnabled(state)` | `getIsToggledCallback({ state })` / `getIsEnabledCallback({ state })` |
 | — | `CommandSpec.text` / `icon` / `tooltip` — display defaults for any item naming the command |
 | `StatusItem.render(state)` | `render({ state })` (+ `controller` / `element`); `title` → `tooltip` |
 | `InteractionHost.request(req, signal)` | `request(ctx)` — `ctx` = the request (`kind`, `title`, `message`, `payload`) + `signal` (+ `controller` / `element` inside `<km-editor>`). Stages call `rt.ui.request({ ...req, signal: rt.signal })` |
@@ -73,17 +73,25 @@ standalone `EditorEngine` (no `<km-editor>` around it) carry only their fields.
 
 | Old | New |
 |---|---|
-| `CommandItem { type: 'command', command, label, icon?, title? }` | `ActionItem` (`EditorActionItem`): `{ action, id?, text, icon, tooltip, shortcut, cssClass, isVisible, isDisabled, isActive, isDanger, get*Callback(ctx), onClick(detail) }` — `command` → `action`, `label` → `text`, `title` → `tooltip` |
-| — | string shorthand: `'bold'` = `{ action: 'bold' }`; text / icon / tooltip / shortcut / active / disabled default from the registered command (`tooltip` = `text (Ctrl+B)` from its first key). An unknown command renders disabled |
+| `CommandItem { type: 'command', command, label, icon?, title? }` | `ActionItem` (`EditorActionItem`): `{ action, id?, text, icon, tooltip, shortcut, cssClass, isVisible, isDisabled, isToggled, isDanger, get*Callback(ctx), onClick(detail) }` — `command` → `action`, `label` → `text`, `title` → `tooltip` |
+| — | string shorthand: `'bold'` = `{ action: 'bold' }`; text / icon / tooltip / shortcut / toggled / disabled default from the registered command (`tooltip` = `text (Ctrl+B)` from its first key). An unknown command renders disabled |
 | `SeparatorItem { type: 'separator' }` | a divider entry `{ divider: true, text? }` (or `menuDivider(text)`, exported) — leading / trailing / doubled dividers and hidden items are trimmed |
 | `ToolbarItem` (union) | `EditorToolbarEntry` = `EditorActionItem \| MenuDivider \| string` |
 | `ToolGroup { id, label?, items: CommandItem[] }` | `ToolGroup { id, text?, items: EditorToolbarEntry[] }` — still a layout cluster (not a submenu); `text` is its `aria-label` |
-| active state = `CommandSpec.isActive` only | item `isActive` / `getIsActiveCallback(ctx)` wins over the command's; rendered as `.active` + `aria-pressed="true"` on toolbar buttons |
+| active state = `CommandSpec.isActive` only | toggle state: item `isToggled` / `getIsToggledCallback(ctx)` wins over the command's; rendered as `.toggled` + `aria-pressed="true"` on toolbar buttons, and as `role="menuitemcheckbox"` + `aria-checked` on context-menu items |
 | — | custom items: `action: 'custom'` (or none) + `id`; they run `onClick` and fire `action`, no command |
 | a click ran the command synchronously, no event, no veto | every activation: `beforeActionCallback(detail)` (`false` cancels, async OK) → item `onClick(detail)` → the command → the `action` event (a notification after the fact — the listener sees the formatted document; `detail.state` is the snapshot from activation). Runs on a microtask (core `runAction`) |
 | — | `beforeActionCallback` — a new property input |
 | button `data-command="bold"` | `data-action="bold"` (+ `data-id` for custom items) |
 | — | context-menu items show the display shortcut (`.km-menu-shortcut`) |
+
+**BREAKING (2026-10-26, core rename `isActive` → `isToggled`, no aliases):** the toggle
+state is `isToggled` everywhere — `CommandSpec.getIsActiveCallback` → `getIsToggledCallback`,
+item `isActive` / `getIsActiveCallback` → `isToggled` / `getIsToggledCallback`,
+`controller.isCommandActive(name)` → `isCommandToggled(name)`, the `.active` class on toolbar /
+menu buttons → `.toggled` (`.km-cmd.toggled`, `.km-menu-item.toggled`). Toolbar buttons keep
+`aria-pressed`; a context-menu item for a toggle command is `role="menuitemcheckbox"` +
+`aria-checked="true|false"`, other items `role="menuitem"`.
 
 Keyboard shortcuts are ProseMirror keymaps bound to the command pipelines: they run the
 command directly — no `action` event, no `beforeActionCallback`. Submenus (`children`) are not
@@ -156,7 +164,7 @@ it never left "idle"; it now uses `onLockChange({ isLocked })`.
   The editor mount is persistent, so the document/selection survive a mode switch.
 - **Command-driven chrome** — one command model behind a static zone toolbar, a
   selection floating toolbar, and a right-click context menu; all reflect each
-  command's `getIsActiveCallback` / `getIsEnabledCallback`.
+  command's `getIsToggledCallback` / `getIsEnabledCallback`.
 - **Toolbar edge zones + tool groups** — the toolbar docks to any edge
   (`toolbar="top|bottom|start|end|none"`), flush against the editor in one bordered
   frame. Tools are organised into **groups** (contiguous, divider-separated

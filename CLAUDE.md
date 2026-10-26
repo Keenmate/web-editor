@@ -114,7 +114,7 @@ small framework-free chrome layer in `ui/`. Things the code won't tell you:
   (`EditorToolbarEntry` = `ActionItem | { divider: true } | 'command-name'`,
   `src/interaction.ts`). A built-in action = a registered command id (kebab;
   plugin pipelines keep `ns:obj:verb`). `ui/actions.ts` is the one item layer:
-  `commandDefaults` (text / icon / tooltip / shortcut / active / disabled from
+  `commandDefaults` (text / icon / tooltip / shortcut / toggled / disabled from
   the `CommandSpec`) and `createActionHost` (core `runAction`:
   `beforeActionCallback` → `onClick` → `commands.run` → `action` event).
   `CommandBar` resolves with core `resolveMenuEntries` on every refresh.

@@ -76,8 +76,8 @@ export function createActionHost(opts: ActionHostOptions): ActionSurfaceHost {
 
 /**
  * The built-in defaults of an item naming a registered command: text / icon /
- * tooltip / shortcut from the `CommandSpec`, `isActive` / `isDisabled` from its
- * predicates. An unknown command (its plugin isn't loaded) is disabled. A
+ * tooltip / shortcut from the `CommandSpec`, `isDisabled` from its predicates and
+ * — only for a toggle command (one with `getIsToggledCallback`) — `isToggled`. An unknown command (its plugin isn't loaded) is disabled. A
  * custom item has no defaults.
  */
 export function commandDefaults(
@@ -96,7 +96,7 @@ export function commandDefaults(
     icon: spec.icon,
     shortcut,
     tooltip: spec.tooltip ?? (shortcut ? `${label} (${shortcut})` : label),
-    isActive: registry.isActive(name),
     isDisabled: !registry.isEnabled(name),
+    ...(spec.getIsToggledCallback ? { isToggled: registry.isToggled(name) } : {}),
   };
 }

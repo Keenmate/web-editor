@@ -2,7 +2,7 @@
  * ContextMenu — the right-click editing menu (Phase 4). On `contextmenu` inside
  * the editor it opens a labelled {@link CommandBar} (menu variant) at the cursor
  * via the core `createPopover` primitive (a virtual point reference), reflecting
- * each command's enabled/active state. Dismisses on outside pointerdown, Escape,
+ * each command's enabled / toggled state (toggles are `menuitemcheckbox`). Dismisses on outside pointerdown, Escape,
  * or when an item is activated. Suppressed when editing is disabled, so the native
  * browser menu shows through in read-only / preview.
  */

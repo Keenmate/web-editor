@@ -118,7 +118,7 @@ before the DOM event. Every detail carries `controller` and `element` (non-enume
 | `focus()`                 | `void`               | Focus the editing surface. |
 | `isReady`                 | `boolean`            | Whether the engine is mounted. |
 | `plugins`                 | `EditorPlugin[]`     | The active plugin set — assign to compose with `defaultPlugins()` (rebuilds, preserving content). |
-| `controller`              | `EditorController`   | The public facade (also `detail.controller` / `ctx.controller`): `getValue` / `getContent` / `getHTML` / `getMarkdown` / `getJSON`, `setValue`, `focus`, `isReady`, `runCommand(name \| ProseMirror command)`, `isCommandActive(name)`, `isCommandEnabled(name)`. Programmatic — no `action` event. |
+| `controller`              | `EditorController`   | The public facade (also `detail.controller` / `ctx.controller`): `getValue` / `getContent` / `getHTML` / `getMarkdown` / `getJSON`, `setValue`, `focus`, `isReady`, `runCommand(name \| ProseMirror command)`, `isCommandToggled(name)`, `isCommandEnabled(name)`. Programmatic — no `action` event. |
 | `destroy()`               | `void`               | Tear down the element and its engine. |
 
 The internal engine is not exposed on the element; `EditorEngine` is exported for
@@ -149,7 +149,7 @@ document.querySelector('km-editor').plugins = [...defaultPlugins(), myPlugin];
 
 **Toolbar / menu items** are web-components-core action items. A registered command
 name is a built-in (`'bold'`, `{ action: 'insert-link', text: 'Insert link' }`) — its
-text, icon, tooltip, shortcut and active / disabled state come from the command. Custom
+text, icon, tooltip, shortcut and toggled / disabled state come from the command. Custom
 items use `action: 'custom'` + `id` and `onClick(detail)`; dividers are
 `{ divider: true }` (or `menuDivider()`):
 

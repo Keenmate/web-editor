@@ -518,9 +518,9 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
       setValue: (value: string, format?: EditorFormat) => el.setValue(value, format),
       focus: () => el.focus(),
       runCommand: (command: string | Command) => el.#runCommand(command),
-      isCommandActive: (name: string) => {
+      isCommandToggled: (name: string) => {
         el.flush();
-        return el.#engine?.commands.isActive(name) ?? false;
+        return el.#engine?.commands.isToggled(name) ?? false;
       },
       isCommandEnabled: (name: string) => {
         el.flush();

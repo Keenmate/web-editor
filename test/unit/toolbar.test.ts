@@ -155,7 +155,7 @@ describe('<km-editor> status bar', () => {
 
 // CommandBar is exercised against a light-DOM engine: dispatching a selection
 // into a *shadow*-mounted ProseMirror view trips a happy-dom `activeElement` bug,
-// so the element describe above sticks to rendering/visibility and the active /
+// so the element describe above sticks to rendering/visibility and the toggled /
 // enabled / click-to-run behaviour is covered here on the raw renderer.
 describe('CommandBar', () => {
   function setup(markdown = '# Hello world') {
@@ -174,7 +174,7 @@ describe('CommandBar', () => {
       engine.view.state.tr.setSelection(TextSelection.create(engine.view.state.doc, from, to))
     );
 
-  it('runs a command on click and reflects its active state', async () => {
+  it('runs a command on click and reflects its toggled state', async () => {
     const { engine, bar, parent } = setup();
     select(engine, 2, 7); // inside "Hello world"
     btn(parent, 'bold').click();
@@ -182,7 +182,7 @@ describe('CommandBar', () => {
     await Promise.resolve();
     expect(engine.getMarkdown()).toContain('**');
     bar.refresh();
-    expect(btn(parent, 'bold').classList.contains('active')).toBe(true);
+    expect(btn(parent, 'bold').classList.contains('toggled')).toBe(true);
     bar.destroy();
   });
 
@@ -195,6 +195,31 @@ describe('CommandBar', () => {
     bar.refresh();
     expect(btn(parent, 'insert-link').disabled).toBe(false);
     bar.destroy();
+  });
+
+  it('menu variant: a toggle command is a menuitemcheckbox (aria-checked), the rest menuitems', () => {
+    const mountEl = document.createElement('div');
+    document.body.appendChild(mountEl);
+    const engine = new EditorEngine({ mount: mountEl, markdown: '# Hello world' });
+    const parent = document.createElement('div');
+    document.body.appendChild(parent);
+    const menu = new CommandBar(
+      parent,
+      ['heading', 'bold', { action: 'custom', id: 'plain', text: 'Plain' }],
+      createActionHost({ engine }),
+      { variant: 'menu' }
+    );
+    select(engine, 3, 3);
+    menu.refresh();
+    expect(btn(parent, 'heading').getAttribute('role')).toBe('menuitemcheckbox');
+    expect(btn(parent, 'heading').getAttribute('aria-checked')).toBe('true');
+    expect(btn(parent, 'heading').classList.contains('toggled')).toBe(true);
+    expect(btn(parent, 'bold').getAttribute('aria-checked')).toBe('false');
+    const plain = parent.querySelector('[data-id="plain"]') as HTMLButtonElement;
+    expect(plain.getAttribute('role')).toBe('menuitem');
+    expect(plain.hasAttribute('aria-checked')).toBe(false);
+    expect(plain.hasAttribute('aria-pressed')).toBe(false);
+    menu.destroy();
   });
 
   it('setVisible toggles the whole bar', () => {

@@ -5,7 +5,7 @@
  * Feature commands — link, image, table ops — are contributed by their
  * first-party plugins (`src/plugins/*`), not here. Each command carries the
  * metadata the toolbar/menu presenters consume: keybindings, display defaults
- * (`text` / `icon` / `tooltip`), `getIsActiveCallback`, and (for prompt-driven
+ * (`text` / `icon` / `tooltip`), `getIsToggledCallback`, and (for prompt-driven
  * commands) an explicit `getIsEnabledCallback` so a toolbar refresh never
  * dry-runs them into a `prompt()`.
  */
@@ -24,7 +24,7 @@ export function registerCoreCommands(registry: CommandRegistry, schema: Schema):
     keys: ['Mod-b'],
     text: 'Bold',
     icon: 'B',
-    getIsActiveCallback: ({ state }) => markActive(state, schema.marks.bold),
+    getIsToggledCallback: ({ state }) => markActive(state, schema.marks.bold),
   });
   registry.register({
     id: 'italic',
@@ -32,7 +32,7 @@ export function registerCoreCommands(registry: CommandRegistry, schema: Schema):
     keys: ['Mod-i'],
     text: 'Italic',
     icon: 'I',
-    getIsActiveCallback: ({ state }) => markActive(state, schema.marks.italic),
+    getIsToggledCallback: ({ state }) => markActive(state, schema.marks.italic),
   });
   registry.register({
     id: 'underline',
@@ -40,7 +40,7 @@ export function registerCoreCommands(registry: CommandRegistry, schema: Schema):
     keys: ['Mod-u'],
     text: 'Underline',
     icon: 'U',
-    getIsActiveCallback: ({ state }) => markActive(state, schema.marks.underline),
+    getIsToggledCallback: ({ state }) => markActive(state, schema.marks.underline),
   });
   registry.register({
     id: 'heading',
@@ -48,28 +48,28 @@ export function registerCoreCommands(registry: CommandRegistry, schema: Schema):
     text: 'Heading',
     icon: 'H1',
     tooltip: 'Heading 1',
-    getIsActiveCallback: ({ state }) => blockActive(state, schema.nodes.heading, { level: 1 }),
+    getIsToggledCallback: ({ state }) => blockActive(state, schema.nodes.heading, { level: 1 }),
   });
   registry.register({
     id: 'paragraph',
     run: setBlockType(schema.nodes.paragraph),
     text: 'Paragraph',
     icon: 'P',
-    getIsActiveCallback: ({ state }) => blockActive(state, schema.nodes.paragraph),
+    getIsToggledCallback: ({ state }) => blockActive(state, schema.nodes.paragraph),
   });
   registry.register({
     id: 'bullet-list',
     run: wrapInList(schema.nodes.bullet_list),
     text: 'Bullet list',
     icon: '• List',
-    getIsActiveCallback: ({ state }) => ancestorActive(state, schema.nodes.bullet_list),
+    getIsToggledCallback: ({ state }) => ancestorActive(state, schema.nodes.bullet_list),
   });
   registry.register({
     id: 'ordered-list',
     run: wrapInList(schema.nodes.ordered_list),
     text: 'Ordered list',
     icon: '1. List',
-    getIsActiveCallback: ({ state }) => ancestorActive(state, schema.nodes.ordered_list),
+    getIsToggledCallback: ({ state }) => ancestorActive(state, schema.nodes.ordered_list),
   });
   registry.register({
     id: 'insert-code-block',

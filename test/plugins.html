@@ -35,7 +35,7 @@
                 keys: ['Mod-Shift-h'],
                 text: 'Highlight',
                 icon: 'HL',
-                getIsActiveCallback: ({ state }) => {
+                getIsToggledCallback: ({ state }) => {
                     const { from, to, empty, $from } = state.selection;
                     const type = schema.marks.highlight;
                     return empty ? !!type.isInSet(state.storedMarks || $from.marks()) : state.doc.rangeHasMark(from, to, type);

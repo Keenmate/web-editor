@@ -1,5 +1,5 @@
 /**
- * Selection-state predicates shared by command metadata (`isActive` /
+ * Selection-state predicates shared by command metadata (`getIsToggledCallback` /
  * `isEnabled`) across the core commands and the first-party plugins.
  */
 import type { EditorState } from 'prosemirror-state';

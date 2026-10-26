@@ -50,7 +50,7 @@ test.describe('interaction model', () => {
     expect(out.boldEnabled).toBe(true);
     expect(out.keys).toEqual(
       [
-        'focus', 'getContent', 'getHTML', 'getJSON', 'getMarkdown', 'getValue', 'isCommandActive',
+        'focus', 'getContent', 'getHTML', 'getJSON', 'getMarkdown', 'getValue', 'isCommandToggled',
         'isCommandEnabled', 'isReady', 'runCommand', 'setValue',
       ].sort()
     );

@@ -72,7 +72,7 @@ export const linkPlugin = definePlugin({
       text: 'Link',
       icon: '🔗',
       tooltip: 'Insert link (select text first)',
-      getIsActiveCallback: ({ state }) => markActive(state, schema.marks.link),
+      getIsToggledCallback: ({ state }) => markActive(state, schema.marks.link),
       // Non-empty selection only.
       getIsEnabledCallback: ({ state }) => !state.selection.empty,
     },

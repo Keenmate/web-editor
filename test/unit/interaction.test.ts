@@ -94,7 +94,7 @@ describe('controller', () => {
     expect(c.isCommandEnabled('bold')).toBe(true);
     expect(c.runCommand('heading')).toBe(true);
     expect(c.getMarkdown()).toContain('# plain');
-    expect(c.isCommandActive('heading')).toBe(true);
+    expect(c.isCommandToggled('heading')).toBe(true);
     // A ProseMirror command runs against the live view.
     const ok = c.runCommand((state, dispatch) => {
       dispatch?.(state.tr.insertText('!', state.doc.content.size - 1));
@@ -176,7 +176,7 @@ describe('toolbar items are core action items', () => {
               text: 'Save',
               icon: 'S',
               cssClass: 'my-save',
-              getIsActiveCallback: (ctx) => {
+              getIsToggledCallback: (ctx) => {
                 ctxSeen = ctx;
                 return true;
               },
@@ -220,7 +220,7 @@ describe('toolbar items are core action items', () => {
 });
 
 describe('single-ctx callbacks carry controller + element', () => {
-  it('CommandSpec.getIsActiveCallback / getIsEnabledCallback and StatusItem.render get { state } + context', async () => {
+  it('CommandSpec.getIsToggledCallback / getIsEnabledCallback and StatusItem.render get { state } + context', async () => {
     const seen: any[] = [];
     const p = definePlugin({
       name: 'probe',
@@ -228,7 +228,7 @@ describe('single-ctx callbacks carry controller + element', () => {
         {
           id: 'probe',
           run: () => true,
-          getIsActiveCallback: (ctx) => (seen.push(['active', ctx]), false),
+          getIsToggledCallback: (ctx) => (seen.push(['toggled', ctx]), false),
           getIsEnabledCallback: (ctx) => (seen.push(['enabled', ctx]), true),
         },
       ],
@@ -236,7 +236,7 @@ describe('single-ctx callbacks carry controller + element', () => {
       statusItems: [{ id: 'probe', render: (ctx) => (seen.push(['status', ctx]), 'P') }],
     });
     const el = await mount({ value: 'x', statusbar: 'bottom' }, (e) => (e.plugins = [...defaultPlugins(), p]));
-    for (const kind of ['active', 'enabled', 'status']) {
+    for (const kind of ['toggled', 'enabled', 'status']) {
       const entry = seen.find(([k]) => k === kind);
       expect(entry, kind).toBeTruthy();
       expect(entry[1].state).toBeTruthy();

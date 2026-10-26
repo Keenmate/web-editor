@@ -44,6 +44,22 @@ test.describe('context menu', () => {
         await expect(menu(page)).toBeHidden();
     });
 
+    test('toggle commands are menuitemcheckbox + aria-checked; others menuitem', async ({ page }) => {
+        await selectText(page, 'words');
+        await page.keyboard.press('Control+b');
+        await pm(page).locator('p strong').click({ button: 'right' });
+        await expect(menu(page)).toBeVisible();
+        const bold = menu(page).locator('[data-action="bold"]');
+        await expect(bold).toHaveAttribute('role', 'menuitemcheckbox');
+        await expect(bold).toHaveAttribute('aria-checked', 'true');
+        await expect(bold).toHaveClass(/(^| )toggled( |$)/);
+        await expect(bold).not.toHaveAttribute('aria-pressed', /.*/);
+        await expect(menu(page).locator('[data-action="italic"]')).toHaveAttribute('aria-checked', 'false');
+        const undo = menu(page).locator('[data-action="undo"]');
+        await expect(undo).toHaveAttribute('role', 'menuitem');
+        await expect(undo).not.toHaveAttribute('aria-checked', /.*/);
+    });
+
     test('read-only: no custom menu', async ({ page }) => {
         await editor(page).evaluate((el) => el.setAttribute('readonly', ''));
         await pm(page).locator('p').click({ button: 'right' });

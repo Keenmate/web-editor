@@ -3,10 +3,10 @@
  *
  * Toolbar, selection-toolbar and context-menu entries are core action items
  * (`@keenmate/web-components-core/actions`): `{ action, text, icon, tooltip,
- * shortcut, cssClass, isVisible / isDisabled / isActive + get*Callback(ctx),
+ * shortcut, cssClass, isVisible / isDisabled / isToggled + get*Callback(ctx),
  * onClick(detail) }`, a divider `{ divider: true }`, or a built-in name as a
  * string (`'bold'`). A built-in is a registered command; the command supplies
- * the defaults (text / icon / tooltip / shortcut / active / disabled), so an
+ * the defaults (text / icon / tooltip / shortcut / toggled / disabled), so an
  * entry only sets what differs.
  *
  * Items cluster into {@link ToolGroup}s — the self-contained unit a zone

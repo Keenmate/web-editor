@@ -5,7 +5,7 @@
  * A command is a ProseMirror `Command` (`(state, dispatch?, view?) => boolean`)
  * plus optional metadata: keybindings, display defaults (`text` / `icon` /
  * `tooltip` — what a toolbar / menu item naming this command shows unless it
- * sets its own), a `getIsActiveCallback` (toggle state, the toolbar highlight)
+ * sets its own), a `getIsToggledCallback` (toggle state, the toolbar highlight)
  * and a `getIsEnabledCallback` (defaults to a dry run of the command).
  *
  * A registered command id is a built-in action name: a toolbar / menu item
@@ -29,7 +29,7 @@ export interface CommandSpec {
   /** Default tooltip; else `text` + the display shortcut (`'Bold (Ctrl+B)'`). */
   tooltip?: string;
   /** Whether the command's effect is currently applied (toolbar highlight / `aria-pressed`). */
-  getIsActiveCallback?: (ctx: CommandContext) => boolean;
+  getIsToggledCallback?: (ctx: CommandContext) => boolean;
   /** Whether the command can currently run. Defaults to a dry run of `run`. */
   getIsEnabledCallback?: (ctx: CommandContext) => boolean;
 }
@@ -109,11 +109,11 @@ export class CommandRegistry {
     return ok;
   }
 
-  isActive(id: string): boolean {
+  isToggled(id: string): boolean {
     const view = this.getView();
     const spec = this.map.get(id);
-    if (!view || !spec?.getIsActiveCallback) return false;
-    return spec.getIsActiveCallback(this.createContext({ state: view.state }));
+    if (!view || !spec?.getIsToggledCallback) return false;
+    return spec.getIsToggledCallback(this.createContext({ state: view.state }));
   }
 
   isEnabled(id: string): boolean {

@@ -71,7 +71,7 @@ export class CommandBar {
     this.refresh();
   }
 
-  /** Re-resolve every item against the current state (visibility, text, active, disabled). */
+  /** Re-resolve every item against the current state (visibility, text, toggled, disabled). */
   refresh(): void {
     const registry = this.#host.registry;
     const resolved = resolveMenuEntries<any, EditorAction>(this.#entries, this.#host.context(), (item) =>
@@ -88,7 +88,13 @@ export class CommandBar {
       );
     }
     for (const r of resolved) {
-      if (r.kind === 'item') this.#apply(this.#button(r.item), r.resolved);
+      if (r.kind !== 'item') continue;
+      // A toggle defines its toggle state (the item, or its command's getIsToggledCallback).
+      const isToggle =
+        r.item.isToggled !== undefined ||
+        typeof r.item.getIsToggledCallback === 'function' ||
+        commandDefaults(registry, r.item)?.isToggled !== undefined;
+      this.#apply(this.#button(r.item), r.resolved, isToggle);
     }
   }
 
@@ -115,7 +121,6 @@ export class CommandBar {
     if (btn) return btn;
     btn = document.createElement('button');
     btn.type = 'button';
-    if (this.#variant === 'menu') btn.setAttribute('role', 'menuitem');
     // Keep the editor's selection alive while clicking the chrome (mousedown
     // in a toolbar would otherwise blur the editor and collapse the range).
     btn.addEventListener('mousedown', (e) => e.preventDefault());
@@ -129,14 +134,20 @@ export class CommandBar {
     return btn;
   }
 
-  #apply(btn: HTMLButtonElement, r: ResolvedActionItem<EditorAction>): void {
+  #apply(btn: HTMLButtonElement, r: ResolvedActionItem<EditorAction>, isToggle: boolean): void {
     const isMenu = this.#variant === 'menu';
     btn.dataset.action = r.action;
     if (r.id !== undefined) btn.dataset.id = r.id;
     else delete btn.dataset.id;
-    btn.className = [isMenu ? 'km-menu-item' : 'km-cmd', r.cssClass, r.isActive && 'active', r.isDanger && 'km-danger']
+    btn.className = [isMenu ? 'km-menu-item' : 'km-cmd', r.cssClass, r.isToggled && 'toggled', r.isDanger && 'km-danger']
       .filter(Boolean)
       .join(' ');
+    if (isMenu) {
+      // A toggle is a menuitemcheckbox (aria-checked); everything else a menuitem.
+      btn.setAttribute('role', isToggle ? 'menuitemcheckbox' : 'menuitem');
+      if (isToggle) btn.setAttribute('aria-checked', String(r.isToggled));
+      else btn.removeAttribute('aria-checked');
+    }
 
     if (isMenu) {
       const label = document.createElement('span');
@@ -152,7 +163,7 @@ export class CommandBar {
       btn.replaceChildren(...parts);
     } else {
       btn.textContent = r.icon ?? r.text;
-      if (r.isActive) btn.setAttribute('aria-pressed', 'true');
+      if (r.isToggled) btn.setAttribute('aria-pressed', 'true');
       else btn.removeAttribute('aria-pressed');
     }
     btn.title = r.tooltip ?? r.text;

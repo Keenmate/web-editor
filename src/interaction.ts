@@ -50,7 +50,7 @@ export interface EditorController {
    */
   runCommand(command: string | Command): boolean;
   /** Whether a registered command's effect is applied at the selection (Bold in bold text). */
-  isCommandActive(name: string): boolean;
+  isCommandToggled(name: string): boolean;
   /** Whether a registered command can run now. */
   isCommandEnabled(name: string): boolean;
 }
@@ -65,7 +65,7 @@ const CONTROLLER_METHODS = [
   'setValue',
   'focus',
   'runCommand',
-  'isCommandActive',
+  'isCommandToggled',
   'isCommandEnabled',
 ] as const;
 
@@ -90,7 +90,7 @@ export function createEditorController(getTarget: () => ControllerTarget): Edito
 export type EditorComponentContext = ComponentContext<EditorController, HTMLElement>;
 
 /**
- * The ctx of command predicates (`CommandSpec.getIsActiveCallback` /
+ * The ctx of command predicates (`CommandSpec.getIsToggledCallback` /
  * `getIsEnabledCallback`), status items (`StatusItem.render`) and toolbar /
  * menu item callbacks: the current ProseMirror state.
  */
@@ -101,7 +101,7 @@ export interface EditorStateContext extends EditorComponentContext {
 
 /** Surface ctx of the toolbar / selection toolbar / context menu items. */
 export type EditorActionContext = EditorStateContext;
-/** The ctx of a command's `getIsActiveCallback` / `getIsEnabledCallback`. */
+/** The ctx of a command's `getIsToggledCallback` / `getIsEnabledCallback`. */
 export type CommandContext = EditorStateContext;
 /** The ctx of a status item's `render`. */
 export type StatusContext = EditorStateContext;
@@ -119,7 +119,7 @@ export type EditorAction = string;
 /**
  * A toolbar / selection-toolbar / context-menu item — a core `ActionItem`.
  * `action` names a registered command (its text / icon / tooltip / shortcut /
- * active / disabled state are the defaults); `action: 'custom'` (or no
+ * toggled / disabled state are the defaults); `action: 'custom'` (or no
  * `action`) + `id` is a consumer item that only fires `onClick` + the `action`
  * event.
  */
