@@ -12,7 +12,7 @@ import { linkMarkSpec } from '../schema';
 import { markActive } from '../predicates';
 
 /** Toggle or set a link on the selection (removes an existing one). */
-function toggleLink(schema: Schema, href?: string, title = ''): Command {
+function toggleLink(schema: Schema, href?: string, title: string | null = null): Command {
   return (state, dispatch) => {
     const { tr, selection } = state;
     const { from, to } = selection;
@@ -31,10 +31,9 @@ function toggleLink(schema: Schema, href?: string, title = ''): Command {
 function promptForLink(schema: Schema): Command {
   return (state, dispatch) => {
     const { from, to, empty } = state.selection;
-    if (empty) {
-      alert('Please select some text first to create a link.');
-      return false;
-    }
+    // Nothing to link: a silent no-op (the toolbar / menu entry is disabled here;
+    // Mod-k runs the command directly, so it must not pop a blocking alert — ED-5).
+    if (empty) return false;
     if (state.doc.rangeHasMark(from, to, schema.marks.link)) {
       return toggleLink(schema)(state, dispatch);
     }
@@ -76,7 +75,7 @@ export const linkPlugin = definePlugin({
       icon: '🔗',
       tooltip: 'Insert link (select text first)',
       getIsActiveCallback: ({ state }) => markActive(state, schema.marks.link),
-      // Non-empty selection only — also avoids the "select text first" alert.
+      // Non-empty selection only.
       getIsEnabledCallback: ({ state }) => !state.selection.empty,
     },
   ],

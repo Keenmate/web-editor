@@ -48,7 +48,10 @@ overwrites `#content` from `config.value`.
 `format` change while detached lands before `connect()`, so the rebuild parses
 e.g. the markdown snapshot as HTML.
 
-## ED-5. Mod-k with an empty selection pops a blocking `alert()`
+## ~~ED-5. Mod-k with an empty selection pops a blocking `alert()`~~ — FIXED (Unreleased)
+
+**Fixed:** `insert-link` on an empty selection is a silent no-op (returns `false`).
+Pinned by `e2e/links.spec.ts`.
 
 **Where:** `src/plugins/link.ts` `promptForLink` — `alert('Please select some text
 first…')`. The toolbar is guarded by `getIsEnabledCallback`, but keymaps run the
@@ -62,7 +65,10 @@ command should just return `false` silently).
 **Where:** `src/plugins/image.ts` markdown serializer —
 `![alt](${src} "title")`. A `src` with spaces or `)` breaks the round-trip.
 
-## ED-7. Link `title` is `''` on create vs `null` on parse
+## ~~ED-7. Link `title` is `''` on create vs `null` on parse~~ — FIXED (Unreleased)
+
+**Fixed:** a created link gets `title: null` (the mark-spec default), same as a
+parsed one. Pinned by `e2e/links.spec.ts`.
 
 **Where:** `src/plugins/link.ts` — `toggleLink(schema, href, title = '')` vs the
 parser's `title: tok.attrGet('title') || null`. The JSON of the same link differs

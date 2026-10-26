@@ -53,7 +53,6 @@ test.describe('links', () => {
     });
 
     test('Mod-k on an empty selection does nothing (no blocking alert)', async ({ page, dialogs }) => {
-        test.fail(true, 'NOTES.md ED-5');
         await caretAfter(page, 'link');
         await page.keyboard.press('Control+k');
         await page.waitForTimeout(100);
@@ -61,7 +60,6 @@ test.describe('links', () => {
     });
 
     test('a created link and a parsed link have the same JSON (title null)', async ({ page, dialogs }) => {
-        test.fail(true, 'NOTES.md ED-7');
         await selectText(page, 'link');
         dialogs.answer('https://e.test/');
         await page.keyboard.press('Control+k');

@@ -66,7 +66,7 @@ dialog stub), `e2e/helpers.ts`.
 | Bullet / ordered list wrap, Enter split, Tab / Shift-Tab nest, md output | ✓ | `lists.spec.ts` | `lists.html` |
 | Undo / redo buttons + Mod-z / Mod-y / Mod-Shift-z, enabled state | ✓ | `history.spec.ts` | `history.html` |
 | Links: Mod-k / toolbar prompt, md `[t](u "title")`, toggle off, cancel | ✓ | `links.spec.ts` | `links.html` |
-| Links: toolbar disabled on empty selection ✓; Mod-k alert (ED-5) F; title `''` vs `null` (ED-7) F | △ | `links.spec.ts` | `links.html` |
+| Links: toolbar disabled on empty selection; Mod-k on empty selection is a silent no-op (ED-5, fixed); created / parsed link JSON identical, title `null` (ED-7, fixed) | ✓ | `links.spec.ts` | `links.html` |
 | Tables: insert (toolbar + menu), Tab nav, row/column ops, merge/split, header toggles, html/json round-trip, md raw-HTML | ✓ | `tables.spec.ts` | `tables.html` |
 | Code block: prompt + language (cancel), Prism tokens, fenced md, html/json, change-code-language | ✓ | `code-block.spec.ts` | `code-block.html` |
 | Images: prompt insert (cancel), md title / html / json round-trip ✓; src escaping (ED-6) F | △ | `images.spec.ts` | `images.html` |

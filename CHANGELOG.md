@@ -33,6 +33,10 @@ released to a registry yet.
   content, undo history and `plugins` value — in place; the error is still thrown to
   the caller. On a successful swap the new set's `setup()` now runs before the old
   set's `destroy()` (ED-9).
+- **Mod-k on an empty selection no longer pops a blocking `alert()`** — `insert-link`
+  is a silent no-op there, matching the disabled toolbar / menu entry (ED-5).
+- **A link created from the prompt has `title: null`**, like a parsed one (it was
+  `''`), so the JSON of the same link no longer depends on how it was made (ED-7).
 
 ### Changed — BREAKING (interaction model, web-components-core rc15)
 
