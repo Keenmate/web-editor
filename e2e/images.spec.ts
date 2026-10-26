@@ -52,7 +52,6 @@ test.describe('images', () => {
     });
 
     test('a src with spaces / parentheses survives the markdown round-trip', async ({ page }) => {
-        test.fail(true, 'NOTES.md ED-6');
         const src = 'https://img.test/my image (1).png';
         await call(page, 'setValue', [`<p><img src="${src}" alt="x"></p>`, 'html']);
         const md = await markdown(page);

@@ -7,6 +7,7 @@ import type { Schema } from 'prosemirror-model';
 import { definePlugin } from '../engine/plugin';
 import type { CommandSpec } from '../engine/command-registry';
 import { imageNodeSpec } from '../schema';
+import { markdownDestination, markdownTitle } from '../engine/serialization/markdown';
 
 /** Insert an image at the current position. */
 function insertImage(schema: Schema, src: string, alt = '', title = ''): Command {
@@ -33,10 +34,9 @@ export const imagePlugin = definePlugin({
   markdown: {
     nodes: {
       image(state: any, node: any) {
-        const title = node.attrs.title
-          ? ` "${String(node.attrs.title).replace(/"/g, '\\"')}"`
-          : '';
-        state.write(`![${state.esc(node.attrs.alt || '')}](${node.attrs.src}${title})`);
+        // src / title escaped so spaces, `)` or quotes survive the round-trip (ED-6).
+        const dest = markdownDestination(String(node.attrs.src ?? ''));
+        state.write(`![${state.esc(node.attrs.alt || '')}](${dest}${markdownTitle(node.attrs.title)})`);
       },
     },
     parse: {

@@ -10,6 +10,7 @@ import { definePlugin } from '../engine/plugin';
 import type { CommandSpec } from '../engine/command-registry';
 import { linkMarkSpec } from '../schema';
 import { markActive } from '../predicates';
+import { markdownDestination, markdownTitle } from '../engine/serialization/markdown';
 
 /** Toggle or set a link on the selection (removes an existing one). */
 function toggleLink(schema: Schema, href?: string, title: string | null = null): Command {
@@ -51,11 +52,8 @@ export const linkPlugin = definePlugin({
       link: {
         open: '[',
         close(_state: any, mark: any) {
-          const href = mark.attrs.href || '';
-          const title = mark.attrs.title
-            ? ` "${String(mark.attrs.title).replace(/"/g, '\\"')}"`
-            : '';
-          return `](${href}${title})`;
+          // Same destination / title escaping as images (ED-6).
+          return `](${markdownDestination(String(mark.attrs.href || ''))}${markdownTitle(mark.attrs.title)})`;
         },
       },
     },

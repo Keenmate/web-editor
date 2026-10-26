@@ -23,6 +23,22 @@ export function nodeToHTML(node: PMNode, schema: Schema): string {
   return container.innerHTML;
 }
 
+/**
+ * Write a URL as a CommonMark link / image destination so it parses back intact:
+ * whitespace or `<` / `>` → the `<…>` form (with `<` `>` `\` escaped); otherwise
+ * the bare form with `(` `)` `\` backslash-escaped (an unescaped `)` or space
+ * would end the destination early).
+ */
+export function markdownDestination(url: string): string {
+  if (/[\s<>]/.test(url)) return `<${url.replace(/[<>\\]/g, '\\$&')}>`;
+  return url.replace(/[()\\]/g, '\\$&');
+}
+
+/** Write a link / image title as ` "…"` (empty when there is none). */
+export function markdownTitle(title: unknown): string {
+  return title ? ` "${String(title).replace(/["\\]/g, '\\$&')}"` : '';
+}
+
 type NodeSerializers = Record<string, (state: any, node: any, parent: any, index: number) => void>;
 type MarkSerializers = Record<string, any>;
 type ParseSpecs = Record<string, any>;

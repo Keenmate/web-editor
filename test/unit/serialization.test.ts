@@ -59,3 +59,32 @@ describe('Markdown serialization', () => {
     expect(toMarkdown(doc)).toContain('```ts');
   });
 });
+
+describe('Markdown link / image destinations (ED-6)', () => {
+  const urls = [
+    'https://img.test/a.png',
+    'https://img.test/my image (1).png',
+    'https://img.test/a)b.png',
+    'https://img.test/a(b).png',
+    'https://img.test/a<b>.png',
+    'https://img.test/back\slash.png',
+  ];
+  for (const src of urls) {
+    it(`image src ${JSON.stringify(src)} survives a markdown round-trip`, () => {
+      const doc = schema.node('doc', null, [
+        schema.node('paragraph', null, [schema.nodes.image.create({ src, alt: 'x', title: 'a "q" \ t' })]),
+      ]);
+      const back = fromMarkdown(toMarkdown(doc));
+      const img = back.firstChild!.firstChild!;
+      expect(decodeURI(img.attrs.src)).toBe(src);
+      expect(img.attrs.title).toBe('a "q" \ t');
+    });
+    it(`link href ${JSON.stringify(src)} survives a markdown round-trip`, () => {
+      const doc = schema.node('doc', null, [
+        schema.node('paragraph', null, [schema.text('t', [schema.marks.link.create({ href: src })])]),
+      ]);
+      const back = fromMarkdown(toMarkdown(doc));
+      expect(decodeURI(back.firstChild!.firstChild!.marks[0].attrs.href)).toBe(src);
+    });
+  }
+});

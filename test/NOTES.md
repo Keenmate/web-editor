@@ -60,7 +60,13 @@ command directly and skip it.
 **Suggested fix:** keymap path should honour `getIsEnabledCallback` (or the
 command should just return `false` silently).
 
-## ED-6. Image markdown writes `src` unescaped
+## ~~ED-6. Image markdown writes `src` unescaped~~ — FIXED (Unreleased)
+
+**Fixed:** image `src` and link `href` go through `markdownDestination()`
+(`engine/serialization/markdown.ts`): whitespace / `<` `>` → the `<…>` form,
+otherwise `(` `)` `\` backslash-escaped; titles escape `"` and `\`. The link
+serializer had the same bug. Pinned by `e2e/images.spec.ts` + unit
+`serialization.test.ts`.
 
 **Where:** `src/plugins/image.ts` markdown serializer —
 `![alt](${src} "title")`. A `src` with spaces or `)` breaks the round-trip.
