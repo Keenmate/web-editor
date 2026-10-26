@@ -40,6 +40,8 @@ released to a registry yet.
 - **Markdown export escapes image `src` / link `href`** — a URL with spaces, `(` / `)`,
   `<` / `>` or `\` was written raw and broke the round-trip (the destination ended
   early). Titles now escape `\` as well as `"` (ED-6).
+- **Shift-Enter inserts a hard break** (`<br>`, markdown `\` + newline) — it did
+  nothing. New core command `hard-break` (not in code blocks) (ED-8).
 
 ### Changed — BREAKING (interaction model, web-components-core rc15)
 

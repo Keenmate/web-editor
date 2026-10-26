@@ -82,7 +82,6 @@ test.describe('formatting', () => {
     });
 
     test('Shift-Enter inserts a hard break (not a new paragraph)', async ({ page }) => {
-        test.fail(true, 'NOTES.md ED-8');
         await caretAfter(page, 'plain');
         await page.keyboard.press('Shift+Enter');
         await expect(pm(page).locator('p')).toHaveCount(1);

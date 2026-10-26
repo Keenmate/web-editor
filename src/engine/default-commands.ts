@@ -85,6 +85,21 @@ export function registerCoreCommands(registry: CommandRegistry, schema: Schema):
     text: 'Change code language',
     getIsEnabledCallback: ({ state }) => inCodeBlock(state),
   });
+  registry.register({
+    id: 'hard-break',
+    // Shift-Enter: a line break inside the current block (ED-8). Inline-content
+    // blocks only — in a code block (`code: true`) it returns false, so the key
+    // keeps its previous behaviour there.
+    run: (state, dispatch) => {
+      const br = schema.nodes.hard_break;
+      const { $from } = state.selection;
+      if (!br || !$from.parent.inlineContent || $from.parent.type.spec.code) return false;
+      if (dispatch) dispatch(state.tr.replaceSelectionWith(br.create()).scrollIntoView());
+      return true;
+    },
+    keys: ['Shift-Enter'],
+    text: 'Line break',
+  });
   registry.register({ id: 'undo', run: undo, keys: ['Mod-z'], text: 'Undo', icon: '↶' });
   registry.register({ id: 'redo', run: redo, keys: ['Mod-y', 'Mod-Shift-z'], text: 'Redo', icon: '↷' });
 }

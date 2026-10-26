@@ -62,7 +62,7 @@ dialog stub), `e2e/helpers.ts`.
 | Bold / italic / underline via toolbar + Mod-b/i/u, `aria-pressed`, md output, stored marks | ✓ | `formatting.spec.ts` | `formatting.html` |
 | Inline code (md round-trip; no toolbar command exists) | ✓ | `formatting.spec.ts` | `formatting.html` |
 | H1 / paragraph block type | ✓ | `formatting.spec.ts` | `formatting.html` |
-| Shift-Enter hard break (ED-8) | F | `formatting.spec.ts` | `formatting.html` |
+| Shift-Enter hard break (ED-8, fixed) | ✓ | `formatting.spec.ts` | `formatting.html` |
 | Bullet / ordered list wrap, Enter split, Tab / Shift-Tab nest, md output | ✓ | `lists.spec.ts` | `lists.html` |
 | Undo / redo buttons + Mod-z / Mod-y / Mod-Shift-z, enabled state | ✓ | `history.spec.ts` | `history.html` |
 | Links: Mod-k / toolbar prompt, md `[t](u "title")`, toggle off, cancel | ✓ | `links.spec.ts` | `links.html` |

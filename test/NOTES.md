@@ -80,7 +80,12 @@ parsed one. Pinned by `e2e/links.spec.ts`.
 parser's `title: tok.attrGet('title') || null`. The JSON of the same link differs
 depending on whether it was typed or loaded.
 
-## ED-8. Shift-Enter does not insert a hard break
+## ~~ED-8. Shift-Enter does not insert a hard break~~ — FIXED (Unreleased)
+
+**Fixed:** core command `hard-break` (`engine/default-commands.ts`, `keys:
+['Shift-Enter']`) inserts a `hard_break` in inline-content blocks (not in code
+blocks, where it returns `false`). `Mod-Enter` was deliberately NOT bound (open
+question — hosts often use it for "submit"). Pinned by `e2e/formatting.spec.ts`.
 
 **Where:** no keymap binds `Shift-Enter` (nor `Mod-Enter`) to `hard_break`
 (`engine/editor-engine.ts` keymap stack: list keymap + `baseKeymap`). The schema
