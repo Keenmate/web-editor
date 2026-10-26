@@ -116,7 +116,7 @@ describe('toolbar items are core action items', () => {
     expect(bold.title).toBe('Bold (Ctrl+B)');
   });
 
-  it('a click fires `action` (+ onAction) with the context, then runs the command', async () => {
+  it('a click runs the command, then fires `action` (+ onAction) with the context (after the fact)', async () => {
     const el = await mount({ value: '# Heading' });
     const order: string[] = [];
     let detail: EditorActionEventDetail | undefined;
@@ -127,7 +127,7 @@ describe('toolbar items are core action items', () => {
     el.addEventListener('action', () => order.push(`dom:${el.getMarkdown().startsWith('#') ? 'before' : 'after'}`));
     toolbarButton(el, 'paragraph').click();
     await tick();
-    expect(order).toEqual(['twin:paragraph', 'dom:before']);
+    expect(order).toEqual(['twin:paragraph', 'dom:after']);
     expect(el.getMarkdown()).not.toContain('#');
     expect(detail!.source).toBe('toolbar');
     expect(detail!.item).toEqual({ action: 'paragraph' });

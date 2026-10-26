@@ -47,7 +47,7 @@ dialog stub), `e2e/helpers.ts`.
 | --- | :-: | --- | --- |
 | `ready` / `change` twins + DOM events share the detail (controller/element non-enumerable) | ✓ | `interaction-model.spec.ts` | `interaction.html` |
 | `el.controller` facade (no engine exposed) | ✓ | `interaction-model.spec.ts` | `interaction.html` |
-| Toolbar click → `onAction` → `action` event → command | ✓ | `interaction-model.spec.ts` | `interaction.html` |
+| Toolbar click → command → `onAction` → `action` event (after the fact) | ✓ | `interaction-model.spec.ts` | `interaction.html` |
 | `beforeActionCallback` veto (sync / async) | ✓ | `interaction-model.spec.ts` | `interaction.html` |
 | Custom action item (`onClick`, id) + ctx | ✓ | `interaction-model.spec.ts` | `interaction.html` |
 | Context menu source + shortcuts | ✓ | `interaction-model.spec.ts` | `interaction.html` |

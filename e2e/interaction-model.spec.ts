@@ -71,7 +71,7 @@ test.describe('interaction model', () => {
     expect(d.ok).toBe(true);
   });
 
-  test('toolbar click: onAction twin → action event (not composed) → command; aria-pressed reflects', async ({ page }) => {
+  test('toolbar click: command → onAction twin → action event (not composed); aria-pressed reflects', async ({ page }) => {
     await selectPlain(page);
     await clearLog(page);
     const bold = page.locator('#subject .km-toolbar-zone [data-action="bold"]');
@@ -82,6 +82,8 @@ test.describe('interaction model', () => {
       { kind: 'onAction', action: 'bold', id: undefined, source: 'toolbar' },
       { kind: 'action', action: 'bold', composed: false },
     ]);
+    // The event is a notification after the fact: the command already ran.
+    expect(await page.evaluate(() => (window as any).ix.strongAtEvent)).toBe(1);
     const shared = await page.evaluate(() => {
       const ix = (window as any).ix;
       const el = document.getElementById('subject') as any;

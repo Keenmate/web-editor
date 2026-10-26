@@ -80,7 +80,7 @@ standalone `EditorEngine` (no `<km-editor>` around it) carry only their fields.
 | `ToolGroup { id, label?, items: CommandItem[] }` | `ToolGroup { id, text?, items: EditorToolbarEntry[] }` — still a layout cluster (not a submenu); `text` is its `aria-label` |
 | active state = `CommandSpec.isActive` only | item `isActive` / `getIsActiveCallback(ctx)` wins over the command's; rendered as `.active` + `aria-pressed="true"` on toolbar buttons |
 | — | custom items: `action: 'custom'` (or none) + `id`; they run `onClick` and fire `action`, no command |
-| a click ran the command synchronously, no event, no veto | every activation: `beforeActionCallback(detail)` (`false` cancels, async OK) → item `onClick(detail)` → the `action` event → the command. Runs on a microtask (core `runAction`) |
+| a click ran the command synchronously, no event, no veto | every activation: `beforeActionCallback(detail)` (`false` cancels, async OK) → item `onClick(detail)` → the command → the `action` event (a notification after the fact — the listener sees the formatted document; `detail.state` is the snapshot from activation). Runs on a microtask (core `runAction`) |
 | — | `beforeActionCallback` — a new property input |
 | button `data-command="bold"` | `data-action="bold"` (+ `data-id` for custom items) |
 | — | context-menu items show the display shortcut (`.km-menu-shortcut`) |

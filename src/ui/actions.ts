@@ -2,7 +2,7 @@
  * The action layer shared by every editor surface (zone toolbar, selection
  * toolbar, context menu): built-in defaults from the command registry, and
  * activation through core `runAction` (`beforeActionCallback` → item `onClick`
- * → `action` event → the built-in command).
+ * → the built-in command → `action` event).
  *
  * Keyboard shortcuts are NOT routed through here: they are ProseMirror keymaps
  * bound to the command pipelines (see `EditorEngine`), so a keypress runs the

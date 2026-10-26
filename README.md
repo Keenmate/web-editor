@@ -105,7 +105,7 @@ before the DOM event. Every detail carries `controller` and `element` (non-enume
 | `ready`       | the context only      | The engine has mounted and is ready (once). |
 | `mode-change` | `{ mode }`            | The `mode` changes. |
 | `lock-change` | `{ isLocked }`        | A gating pipeline (e.g. the cloud-image picker) locks / unlocks the editor. |
-| `action`      | `{ action, id, item, source, sourceEvent, triggerElement, dataset, state }` | A toolbar / selection-toolbar / context-menu item was activated (`source`: `toolbar` \| `selection-toolbar` \| `context-menu`). After the item's `onClick`, before the command runs. Keyboard shortcuts don't fire it. |
+| `action`      | `{ action, id, item, source, sourceEvent, triggerElement, dataset, state }` | A toolbar / selection-toolbar / context-menu item was activated (`source`: `toolbar` \| `selection-toolbar` \| `context-menu`). After the item's `onClick` and the command (a notification after the fact; `state` is the snapshot from activation). Keyboard shortcuts don't fire it. |
 
 **Methods & properties:**
 

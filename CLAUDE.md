@@ -116,7 +116,7 @@ small framework-free chrome layer in `ui/`. Things the code won't tell you:
   plugin pipelines keep `ns:obj:verb`). `ui/actions.ts` is the one item layer:
   `commandDefaults` (text / icon / tooltip / shortcut / active / disabled from
   the `CommandSpec`) and `createActionHost` (core `runAction`:
-  `beforeActionCallback` → `onClick` → `action` event → `commands.run`).
+  `beforeActionCallback` → `onClick` → `commands.run` → `action` event).
   `CommandBar` resolves with core `resolveMenuEntries` on every refresh.
 - **Keyboard shortcuts bypass it** — they are PM keymaps bound to the command
   pipelines (no `action` event, no veto). Don't route keymaps through `runAction`.

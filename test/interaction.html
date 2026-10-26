@@ -57,7 +57,7 @@
         };
         el.onReady = (d) => log.push({ kind: 'onReady', keys: Object.keys(d), json: JSON.stringify(d), isElement: d.element === el, hasController: d.controller === el.controller });
         el.onAction = (d) => { window.ix.lastTwin = d; log.push({ kind: 'onAction', action: d.action, id: d.id, source: d.source }); };
-        el.addEventListener('action', (e) => { window.ix.lastEvent = e.detail; log.push({ kind: 'action', action: e.detail.action, composed: e.composed }); });
+        el.addEventListener('action', (e) => { window.ix.lastEvent = e.detail; window.ix.strongAtEvent = (el.shadowRoot ?? el).querySelectorAll('.ProseMirror strong').length; log.push({ kind: 'action', action: e.detail.action, composed: e.composed }); });
         el.onChange = (d) => { window.ix.lastChange = d; };
         el.onLockChange = (d) => log.push({ kind: 'lock', isLocked: d.isLocked });
 
