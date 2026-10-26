@@ -349,11 +349,22 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
 
   #rebuildEngine(): void {
     // Preserve nothing here: the caller just set #seed to what the new engine loads.
+    // Construct the new engine BEFORE tearing the old one down: assembly can throw
+    // (e.g. a plugin node without a markdown serializer — the documented contract),
+    // and a failed build must leave the working editor, its content and undo
+    // history untouched (ED-9). The new view is appended to the persistent mount
+    // next to the old one; the old view's destroy() removes its own DOM.
+    const engine = this.#createEngine();
     this.#teardownEngine();
-    this.#buildEngine();
+    this.#wireEngine(engine);
   }
 
   #buildEngine(): void {
+    this.#wireEngine(this.#createEngine());
+  }
+
+  /** Lay out the shadow and construct an engine from #seed (throws on a bad plugin set). */
+  #createEngine(): EditorEngine {
     const format = this.#format();
     // Seed the split output lens to the I/O format, then lay out the shadow so the
     // persistent mount is attached before the view measures itself.
@@ -370,7 +381,22 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     };
     this.#applyContentOption(options, this.#seed.format, this.#seed.content);
 
-    const engine = new EditorEngine(options);
+    const mount = this.#layout.mount;
+    const before = new Set(Array.from(mount.childNodes));
+    try {
+      return new EditorEngine(options);
+    } catch (err) {
+      // A throw after the view was created (a plugin's `setup()` or a PM plugin
+      // view) leaves the half-built view's DOM in the mount — remove it so the
+      // previous editor (if any) is the only surface left.
+      for (const node of Array.from(mount.childNodes)) if (!before.has(node)) node.remove();
+      throw err;
+    }
+  }
+
+  /** Adopt a freshly constructed engine: events, chrome, activation state, `ready`. */
+  #wireEngine(engine: EditorEngine): void {
+    const format = this.#format();
     this.#engine = engine;
     engines.set(this, engine);
 
@@ -402,7 +428,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     });
     this.#applyChromeState();
 
-    initLogger.debug(`<km-editor> engine built (format=${format}, editable=${options.isEditable}) v${
+    initLogger.debug(`<km-editor> engine built (format=${format}, editable=${engine.isEditable()}) v${
       typeof __VERSION__ !== 'undefined' ? __VERSION__ : 'dev'
     }`);
 
@@ -576,13 +602,24 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     return this.#customPlugins ? [...this.#customPlugins] : defaultPlugins();
   }
   set plugins(value: EditorPlugin[] | null | undefined) {
+    const previousPlugins = this.#customPlugins;
     this.#customPlugins = value ?? undefined;
     if (this.#engine) {
       // Snapshot live content as HTML (lossless, tables included; unknown nodes
       // degrade gracefully if the new set drops a feature), then rebuild on the
       // new plugin set. Undo history starts fresh with the new engine.
+      const previousSeed = this.#seed;
       this.#seed = { content: this.#engine.getHTML(), format: 'html' };
-      this.#rebuildEngine();
+      try {
+        this.#rebuildEngine();
+      } catch (err) {
+        // The new set failed to assemble: the previous engine is still live
+        // (#rebuildEngine builds before it tears down) — keep its plugin set so
+        // `plugins` reads what is actually running, and report to the caller.
+        this.#customPlugins = previousPlugins;
+        this.#seed = previousSeed;
+        throw err;
+      }
     }
   }
 

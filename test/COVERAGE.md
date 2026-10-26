@@ -101,8 +101,7 @@ dialog stub), `e2e/helpers.ts`.
 | Custom plugin: mark + toolbar button + keybinding + md/html/json + status item; group order; `plugins` getter | ✓ | `plugins.spec.ts` | `plugins.html` |
 | `plugins = []` drops link / image / table (toolbar, commands, menu, import); `removeToolbarGroups` | ✓ | `plugins.spec.ts` | `plugins.html` |
 | Pipeline stage before / after / replace on toolbar AND keymap AND `runCommand`; halt cancels | ✓ | `pipelines.spec.ts` | `pipelines.html` |
-
-| Serializer contract: node without markdown throws at assembly ✓; failed assembly keeps the editor (ED-9) F | △ | `plugins.spec.ts` | `plugins.html` |
+| Serializer contract: node without markdown throws at assembly; a failed `plugins` swap (assembly or `setup()` throw) keeps the live editor, content, undo history and `plugins` (ED-9, fixed) | ✓ | `plugins.spec.ts` | `plugins.html` |
 
 ## 8. Infrastructure
 

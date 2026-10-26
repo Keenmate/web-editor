@@ -82,7 +82,14 @@ that `replaceSelectionWith(schema.nodes.hard_break.create())` (the standard
 prosemirror-example-setup binding, `chainCommands(exitCode, …)`).
 Pinned by `e2e/formatting.spec.ts` (test.fail).
 
-## ED-9. A plugin set that fails to assemble destroys the editor
+## ~~ED-9. A plugin set that fails to assemble destroys the editor~~ — FIXED (Unreleased)
+
+**Fixed:** `#rebuildEngine()` constructs the new engine *before* tearing the old
+one down; a throw (assembly, or a plugin `setup()` — the engine then destroys its
+half-built view) leaves the previous engine, content, undo history and `plugins`
+value in place, and the error still reaches the caller. Pinned by
+`e2e/plugins.spec.ts`. Side effect: on a successful swap the new set's `setup()`
+now runs before the old set's `destroy()`.
 
 **Where:** `src/web-component.ts` `set plugins()` → `#rebuildEngine()` tears the
 old engine down *before* building the new one. When the new set throws at

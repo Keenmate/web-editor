@@ -227,8 +227,16 @@ export class EditorEngine {
       },
     });
 
-    for (const plugin of plugins) {
-      plugin.setup?.({ schema, view: this.view, getState: () => this.view.state });
+    try {
+      for (const plugin of plugins) {
+        plugin.setup?.({ schema, view: this.view, getState: () => this.view.state });
+      }
+    } catch (err) {
+      // A failed setup must not leave a live half-built view (DOM + document
+      // listeners) behind — the caller keeps whatever editor it had (ED-9).
+      this.#pipelines.dispose();
+      this.view.destroy();
+      throw err;
     }
 
     this.events.emit('ready', this);

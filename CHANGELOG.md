@@ -27,6 +27,12 @@ released to a registry yet.
   first build's `value`. A `value` assigned *after* the `setValue()` still wins (ED-3).
 - **`format` changed while detached** no longer re-parses the content in the wrong
   format on reconnect (the old markdown snapshot was parsed as HTML) (ED-4).
+- **A `plugins` set that fails to assemble no longer empties the editor.** The new
+  engine is built before the old one is torn down, so a throw (e.g. a node without a
+  markdown serializer, or a plugin `setup()` error) leaves the previous engine — its
+  content, undo history and `plugins` value — in place; the error is still thrown to
+  the caller. On a successful swap the new set's `setup()` now runs before the old
+  set's `destroy()` (ED-9).
 
 ### Changed — BREAKING (interaction model, web-components-core rc15)
 

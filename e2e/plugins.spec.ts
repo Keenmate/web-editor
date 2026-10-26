@@ -98,7 +98,6 @@ test.describe('plugins', () => {
     });
 
     test('a plugin set that fails to assemble leaves the editor (and its content) intact', async ({ page }) => {
-        test.fail(true, 'NOTES.md ED-9');
         await page.evaluate(() => {
             const w = window as any;
             const bad = w.definePlugin({ name: 'bad', nodes: { widget: { group: 'block', atom: true, toDOM: () => ['div'] } } });
@@ -110,5 +109,30 @@ test.describe('plugins', () => {
         });
         expect(await markdown(page, 'bare')).toBe('core only');
         await expect(pm(page, 'bare')).toHaveText('core only');
+        // Still the previous engine: one surface, the running (empty) plugin set.
+        await expect(page.locator('km-editor#bare .ProseMirror')).toHaveCount(1);
+        expect(await page.evaluate(() => (document.getElementById('bare') as any).plugins.length)).toBe(0);
+    });
+
+    test('a failed plugin swap keeps the live engine (undo history) and a throwing setup() leaves no surface behind', async ({ page }) => {
+        await pm(page, 'bare').click();
+        await page.keyboard.press('End');
+        await page.keyboard.type('!');
+        expect(await markdown(page, 'bare')).toBe('core only!');
+        const msg = await page.evaluate(() => {
+            const w = window as any;
+            const bad = w.definePlugin({ name: 'bad-setup', setup: () => { throw new Error('setup boom'); } });
+            try {
+                (document.getElementById('bare') as any).plugins = [bad];
+                return 'no throw';
+            } catch (e) {
+                return String((e as Error).message);
+            }
+        });
+        expect(msg).toBe('setup boom');
+        await expect(page.locator('km-editor#bare .ProseMirror')).toHaveCount(1);
+        await pm(page, 'bare').click();
+        await page.keyboard.press('ControlOrMeta+z');
+        expect(await markdown(page, 'bare')).toBe('core only');
     });
 });
