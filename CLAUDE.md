@@ -106,7 +106,12 @@ small framework-free chrome layer in `ui/`. Things the code won't tell you:
   `selectionchange` listener would otherwise pin a removed editor — plus the
   inline anchor and open floating panels); `connect()` resumes them. Content,
   tables, undo and selection survive (`e2e/lifecycle.spec.ts`). Only `reinit()`
-  (`value` change / first connect) and a `plugins` swap rebuild.
+  (`defaultValue` = `value` ATTRIBUTE change / first connect) and a `plugins` swap
+  rebuild; the `value` PROPERTY is live content (no rebuild). `destroy()` is core's —
+  the editor's cleanup is `destroyCallback()`; a destroyed element never rebuilds.
+- **UI strings go through `labels`** (`src/labels.ts`): never hard-code English in
+  chrome / prompts — use `engine.label` / `ctx.label` / the plugin builder's `label`
+  / `rt.label`; command texts are keyed by the camel-cased command id.
 
 ### Interaction model (web-components-core `/actions`)
 
