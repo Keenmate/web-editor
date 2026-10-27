@@ -116,10 +116,11 @@ before the DOM event. Every detail carries `controller` and `element` (non-enume
 | `getJSON()`               | `unknown`            | Live content as the ProseMirror JSON document. |
 | `setValue(value, format?)`| `void`               | Replace the document from `value`. |
 | `focus()`                 | `void`               | Focus the editing surface. |
-| `isReady`                 | `boolean`            | Whether the engine is mounted. |
+| `isReady` / `whenReady()` | `boolean` / `Promise<void>` | Core: the first build is live (`ready` attribute, `:state(ready)`, `ready` event). |
+| `shouldDefer` / `release()` | `boolean` / `void` | Core: hold the first build (attribute `defer`) until `release()` / removing `defer`. |
 | `plugins`                 | `EditorPlugin[]`     | The active plugin set — assign to compose with `defaultPlugins()` (rebuilds, preserving content). |
-| `controller`              | `EditorController`   | The public facade (also `detail.controller` / `ctx.controller`): `getValue` / `getContent` / `getHTML` / `getMarkdown` / `getJSON`, `setValue`, `focus`, `isReady`, `runCommand(name \| ProseMirror command)`, `isCommandToggled(name)`, `isCommandEnabled(name)`. Programmatic — no `action` event. |
-| `destroy()`               | `void`               | Tear down the element and its engine. |
+| `controller`              | `EditorController`   | The public facade (also `detail.controller` / `ctx.controller`): `getValue` / `getContent` / `getHTML` / `getMarkdown` / `getJSON`, `setValue`, `focus`, `runCommand(name \| ProseMirror command)`, `isCommandToggled(name)`, `isCommandEnabled(name)`. Programmatic — no `action` event. |
+| `destroy()`               | `void`               | Core: final teardown of the engine and shadow layout (idempotent; `isDestroyed`). The element stays inert — create a new one instead of re-inserting it. |
 
 The internal engine is not exposed on the element; `EditorEngine` is exported for
 standalone (headless) use.

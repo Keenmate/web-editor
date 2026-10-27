@@ -86,7 +86,8 @@ describe('controller', () => {
   it('is the public facade — content I/O and commands, no engine', async () => {
     const el = await mount({ value: '# Title' });
     const c = el.controller;
-    expect(c.isReady).toBe(true);
+    expect(el.isReady).toBe(true);
+    expect('isReady' in c).toBe(false);
     expect(c.getValue()).toContain('# Title');
     expect(c.getHTML()).toContain('<h1');
     c.setValue('plain', 'markdown');

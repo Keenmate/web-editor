@@ -44,6 +44,35 @@ describe('<km-editor>', () => {
     expect(el.isReady).toBe(true);
   });
 
+  it('core `defer` holds the first build until release()', async () => {
+    const el = document.createElement('km-editor') as KmEditorElement;
+    el.shouldDefer = true;
+    let readyCount = 0;
+    el.addEventListener('ready', () => readyCount++);
+    document.body.appendChild(el);
+    el.setAttribute('value', '# Deferred');
+    await new Promise((r) => setTimeout(r, 0));
+    expect(el.isReady).toBe(false);
+    expect(el.shadowRoot!.querySelector('.ProseMirror')).toBeNull();
+    el.release();
+    await el.whenReady();
+    expect(readyCount).toBe(1);
+    expect(el.hasAttribute('ready')).toBe(true);
+    expect(el.getMarkdown()).toContain('# Deferred');
+  });
+
+  it('destroy() tears the engine down for good — re-inserting does not rebuild', async () => {
+    const el = await mount({ value: '# Gone' });
+    el.destroy();
+    expect(el.isDestroyed).toBe(true);
+    expect(el.shadowRoot!.querySelector('.ProseMirror')).toBeNull();
+    el.remove();
+    document.body.appendChild(el);
+    await el.whenSettled();
+    expect(el.shadowRoot!.querySelector('.ProseMirror')).toBeNull();
+    expect(el.getMarkdown()).toBe('');
+  });
+
   it('reads live content via the active format lens', async () => {
     const el = await mount({ value: '# Title', format: 'markdown' });
     expect(el.getValue()).toContain('# Title');

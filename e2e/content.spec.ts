@@ -74,13 +74,18 @@ test.describe('content I/O', () => {
         expect(await markdown(page)).toBe('# Third!');
     });
 
-    test('`ready` fired once per editor; isReady + is-ready attribute', async ({ page }) => {
+    test('`ready` fired once per editor; isReady + core `ready` attribute + :state(ready)', async ({ page }) => {
         const lines = (await logLines(page, 'content')).filter((l) => l.endsWith(':ready'));
         // `ready` may fire before the log listener attaches for parser-upgraded editors;
         // what matters is it never fires twice.
         for (const id of ['md', 'html', 'json', 'subject']) {
             expect(lines.filter((l) => l === `${id}:ready`).length).toBeLessThanOrEqual(1);
-            expect(await page.evaluate((i) => (document.getElementById(i) as any).isReady, id)).toBe(true);
+            expect(
+                await page.evaluate((i) => {
+                    const el = document.getElementById(i) as any;
+                    return [el.isReady, el.hasAttribute('ready'), el.hasAttribute('is-ready'), el.matches(':state(ready)')];
+                }, id)
+            ).toEqual([true, true, false, true]);
         }
     });
 

@@ -6,7 +6,7 @@ import { expect, type Locator, type Page } from '@playwright/test';
 
 /**
  * Open a fixture page and wait until every `<km-editor>` on it is built
- * (`is-ready`) — plus an optional page-level readiness flag (`window[flag]`).
+ * (core `ready` attribute) — plus an optional page-level readiness flag (`window[flag]`).
  */
 export async function load(page: Page, path: string, opts: { flag?: string } = {}): Promise<void> {
     await page.goto(path.startsWith('/') ? path : `/test/${path}`);
@@ -16,7 +16,7 @@ export async function load(page: Page, path: string, opts: { flag?: string } = {
         await page.waitForFunction((f) => !!(window as any)[f], flag);
     }
     await page.waitForFunction(() =>
-        [...document.querySelectorAll('km-editor')].every((el) => !el.isConnected || el.hasAttribute('is-ready'))
+        [...document.querySelectorAll('km-editor')].every((el) => !el.isConnected || el.hasAttribute('ready'))
     );
 }
 

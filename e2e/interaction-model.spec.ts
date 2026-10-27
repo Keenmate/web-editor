@@ -36,7 +36,7 @@ test.describe('interaction model', () => {
       });
       return {
         hasEngine: 'engine' in el || 'engine' in c,
-        isReady: c.isReady,
+        isReady: el.isReady && !('isReady' in c),
         ran,
         markdown: c.getMarkdown(),
         boldEnabled: c.isCommandEnabled('bold'),
@@ -51,7 +51,7 @@ test.describe('interaction model', () => {
     expect(out.keys).toEqual(
       [
         'focus', 'getContent', 'getHTML', 'getJSON', 'getMarkdown', 'getValue', 'isCommandToggled',
-        'isCommandEnabled', 'isReady', 'runCommand', 'setValue',
+        'isCommandEnabled', 'runCommand', 'setValue',
       ].sort()
     );
   });

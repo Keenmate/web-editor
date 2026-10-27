@@ -40,8 +40,6 @@ export interface EditorController {
   /** Replace the document with `value`, parsed in `format` (default: the active one). */
   setValue(value: string, format?: SerializationFormat): void;
   focus(): void;
-  /** Whether the engine has been built and `ready` has fired. */
-  readonly isReady: boolean;
   /**
    * Run a registered command / pipeline by name (`'bold'`, `'insert-table'`,
    * `'image:browser:pick'`), or a ProseMirror `Command` against the live view.
@@ -69,7 +67,7 @@ const CONTROLLER_METHODS = [
   'isCommandEnabled',
 ] as const;
 
-type ControllerTarget = Pick<EditorController, (typeof CONTROLLER_METHODS)[number] | 'isReady'>;
+type ControllerTarget = Pick<EditorController, (typeof CONTROLLER_METHODS)[number]>;
 
 /** Build the facade from a method-name list; `getTarget()` is resolved per call. */
 export function createEditorController(getTarget: () => ControllerTarget): EditorController {
@@ -78,7 +76,6 @@ export function createEditorController(getTarget: () => ControllerTarget): Edito
     controller[name] = (...args: unknown[]) =>
       (getTarget()[name] as (...a: unknown[]) => unknown)(...args);
   }
-  Object.defineProperty(controller, 'isReady', { get: () => getTarget().isReady, enumerable: true });
   return Object.freeze(controller) as unknown as EditorController;
 }
 

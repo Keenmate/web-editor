@@ -183,7 +183,7 @@ const EVENTS: readonly EventDef[] = [
   {
     name: 'ready',
     description:
-      'The engine was built and mounted (once per element lifetime). `detail`: the component context only (`controller`, `element`). Twin: `onReady(detail)`.',
+      'The editor was built and is live for the first time (once per element lifetime; core `BlissElement`). Fires right after the first build — during upgrade for a normal element, or when the `defer` gate is released (`el.release()` / removing `defer`). The host then has the `ready` attribute and matches `:state(ready)`; `el.whenReady()` resolves. `detail`: `controller` / `element`. Twin: `onReady(detail)`.',
   },
   {
     name: 'mode-change',
@@ -246,12 +246,9 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   // when the new plugin set lacks a node type). Only read by #buildEngine(); a DOM
   // move never rebuilds (the engine stays alive across disconnect/connect).
   #seed: { content: string | null; format: EditorFormat } = { content: null, format: 'markdown' };
-  // A `setValue()` made while no engine exists (before the first connect, or after
-  // destroy()). Applied by the next build unless `value` was reassigned since —
+  // A `setValue()` made while no engine exists (before the first build). Applied by the next build unless `value` was reassigned since —
   // `valueAtSet` is the `value` config it was made on top of.
   #pendingSet?: { value: string; format: EditorFormat; valueAtSet: unknown };
-  // `ready` fires once per element lifetime; `is-ready` presence is the guard.
-  #readyFired = false;
 
   constructor() {
     super();
@@ -320,11 +317,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
    * Content, selection and undo history are exactly as they were.
    */
   protected override connect(): void {
-    if (!this.#engine) {
-      // Only after destroy(): build afresh (a pending setValue() still applies).
-      this.reinit();
-      return;
-    }
+    if (!this.#engine) return; // a failed first build — core retries reinit() on the next flush
     this.#engine.activate();
     this.#layout.activate();
     this.#chrome?.refresh();
@@ -438,13 +431,6 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
       engine.deactivate();
       this.#layout.deactivate();
     }
-
-    // First build of this element's lifetime: announce readiness once.
-    if (!this.#readyFired) {
-      this.#readyFired = true;
-      this.setAttribute('is-ready', '');
-      this.emit('ready');
-    }
   }
 
   #teardownEngine(): void {
@@ -526,9 +512,6 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
         el.flush();
         return el.#engine?.commands.isEnabled(name) ?? false;
       },
-      get isReady() {
-        return el.isReady;
-      },
     };
     return createEditorController(() => target);
   }
@@ -581,8 +564,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
       if (fmt === 'json') this.#engine.setJSON(JSON.parse(value));
       else this.#engine.setContent(value, fmt);
     } else {
-      // No engine yet (before the first connect, or after destroy()): the next
-      // build loads it — unless `value` is reassigned in the meantime.
+      // No engine yet (before the first build): the build loads it — unless `value` is reassigned in the meantime.
       this.#pendingSet = { value, format: fmt, valueAtSet: this.config.value };
     }
   }
@@ -623,17 +605,17 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     }
   }
 
-  /** Whether the engine has been built and `ready` has fired. */
-  get isReady(): boolean {
-    return this.hasAttribute('is-ready');
-  }
-
   focus(): void {
     this.flush();
     this.#engine?.focus();
   }
 
-  destroy(): void {
+  /**
+   * Final teardown (core `destroy()` calls this once): the engine — document,
+   * undo history, plugins' `destroy()` — and the shadow layout. `disconnect()`
+   * keeps both alive for a DOM move; this releases them for good.
+   */
+  protected override destroyCallback(): void {
     this.#teardownEngine();
     this.#layout.destroy();
   }

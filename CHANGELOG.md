@@ -56,6 +56,19 @@ released to a registry yet.
 - **An image inserted from the prompt or `image:browser:pick` has `title: null`**, like
   a parsed one (it was `''`) — same inconsistency as ED-7, for images.
 
+### Changed — BREAKING (suite-wide naming unification)
+
+Clean breaks, no aliases (rulebook `naming-conventions.md` D-NC-13..27).
+
+- **Ready / defer / destroy come from core `BlissElement`** (D-NC-19). The host
+  attribute `is-ready` is gone — use the core `ready` attribute or `:state(ready)`;
+  `el.isReady` / `el.whenReady()` / the `ready` event (+ `onReady`) are core's.
+  `controller.isReady` is removed (read `el.isReady`). New: `defer` attribute /
+  `el.shouldDefer` holds the first build until `el.release()` (or removing `defer`).
+  `el.destroy()` is core's (final, idempotent; `el.isDestroyed`): it releases the engine
+  and the shadow layout, and the element stays inert — re-inserting it no longer
+  rebuilds a fresh editor (create a new element instead).
+
 ### Changed — BREAKING (interaction model, web-components-core rc15)
 
 Callbacks, events and every clickable item (static toolbar, selection toolbar, context menu)
