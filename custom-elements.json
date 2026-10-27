@@ -25,28 +25,40 @@
         {
           "kind": "function",
           "name": "promptForCodeBlock",
+          "return": {
+            "type": {
+              "text": "Command"
+            }
+          },
           "parameters": [
             {
-              "name": "state"
-            },
-            {
-              "name": "dispatch"
+              "name": "label",
+              "default": "englishLabels",
+              "type": {
+                "text": "LabelResolver"
+              }
             }
           ],
-          "description": "Prompt for a code-block language, then insert."
+          "description": "Prompt for a code-block language (label `codeLanguagePrompt`), then insert."
         },
         {
           "kind": "function",
           "name": "changeCodeBlockLanguage",
+          "return": {
+            "type": {
+              "text": "Command"
+            }
+          },
           "parameters": [
             {
-              "name": "state"
-            },
-            {
-              "name": "dispatch"
+              "name": "label",
+              "default": "englishLabels",
+              "type": {
+                "text": "LabelResolver"
+              }
             }
           ],
-          "description": "Change the language of the code block the cursor is in."
+          "description": "Change the language of the code block the cursor is in (label `codeLanguageChangePrompt`)."
         }
       ],
       "exports": [
@@ -166,6 +178,116 @@
           "declaration": {
             "name": "createEditorController",
             "module": "src/interaction.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/labels.ts",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "DEFAULT_LABELS",
+          "type": {
+            "text": "{\n  /** Status bar: word count. */\n  words: 'Words: {count}',\n  /** Status bar: character count. */\n  chars: 'Chars: {count}',\n  /** Toolbar group accessible names (`<groupId>Group`). */\n  formatGroup: 'Format',\n  blockGroup: 'Block',\n  listGroup: 'Lists',\n  insertGroup: 'Insert',\n  historyGroup: 'History',\n  linkGroup: 'Link',\n  imageGroup: 'Image',\n  tableGroup: 'Table',\n  imageBrowserGroup: 'Cloud image',\n  /** `insert-link` prompt. */\n  linkUrlPrompt: 'Enter link URL:',\n  /** `insert-image` prompts. */\n  imageUrlPrompt: 'Enter image URL:',\n  imageAltPrompt: 'Enter alt text (optional):',\n  /** `insert-code-block` / `change-code-language` prompts (`{languages}` = the list). */\n  codeLanguagePrompt: 'Enter language ({languages}):',\n  codeLanguageChangePrompt: 'Change language ({languages}):',\n  /** Cloud-image plugin (`image:browser:pick`): toolbar button, its tooltip, the menu item, the picker request. */\n  cloudImage: 'Cloud image',\n  cloudImageTooltip: 'Insert image from the cloud',\n  insertCloudImage: 'Insert cloud image…',\n  cloudImagePickerTitle: 'Choose a cloud image',\n  cloudImagePickerMessage: 'Pick an image to insert.',\n}"
+          },
+          "default": "{ /** Status bar: word count. */ words: 'Words: {count}', /** Status bar: character count. */ chars: 'Chars: {count}', /** Toolbar group accessible names (`<groupId>Group`). */ formatGroup: 'Format', blockGroup: 'Block', listGroup: 'Lists', insertGroup: 'Insert', historyGroup: 'History', linkGroup: 'Link', imageGroup: 'Image', tableGroup: 'Table', imageBrowserGroup: 'Cloud image', /** `insert-link` prompt. */ linkUrlPrompt: 'Enter link URL:', /** `insert-image` prompts. */ imageUrlPrompt: 'Enter image URL:', imageAltPrompt: 'Enter alt text (optional):', /** `insert-code-block` / `change-code-language` prompts (`{languages}` = the list). */ codeLanguagePrompt: 'Enter language ({languages}):', codeLanguageChangePrompt: 'Change language ({languages}):', /** Cloud-image plugin (`image:browser:pick`): toolbar button, its tooltip, the menu item, the picker request. */ cloudImage: 'Cloud image', cloudImageTooltip: 'Insert image from the cloud', insertCloudImage: 'Insert cloud image…', cloudImagePickerTitle: 'Choose a cloud image', cloudImagePickerMessage: 'Pick an image to insert.', }",
+          "description": "Built-in English strings for the non-command keys."
+        },
+        {
+          "kind": "function",
+          "name": "labelKey",
+          "return": {
+            "type": {
+              "text": "string"
+            }
+          },
+          "parameters": [
+            {
+              "name": "id",
+              "type": {
+                "text": "string"
+              }
+            }
+          ],
+          "description": "`'insert-link'` → `'insertLink'`, `'image:browser:pick'` → `'imageBrowserPick'`."
+        },
+        {
+          "kind": "function",
+          "name": "formatLabel",
+          "return": {
+            "type": {
+              "text": "string"
+            }
+          },
+          "parameters": [
+            {
+              "name": "template",
+              "type": {
+                "text": "string"
+              }
+            },
+            {
+              "name": "params",
+              "optional": true,
+              "type": {
+                "text": "LabelParams"
+              }
+            }
+          ],
+          "description": "Fill `{name}` placeholders; an unknown placeholder is left as written."
+        },
+        {
+          "kind": "function",
+          "name": "createLabelResolver",
+          "return": {
+            "type": {
+              "text": "LabelResolver"
+            }
+          },
+          "parameters": [
+            {
+              "name": "getLabels",
+              "type": {
+                "text": "() => EditorLabels | null | undefined"
+              }
+            }
+          ],
+          "description": "Build the one label-resolving function (the seam core `/locale` will plug\ninto): instance `labels` → built-in English → `fallback` → the key itself."
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "DEFAULT_LABELS",
+          "declaration": {
+            "name": "DEFAULT_LABELS",
+            "module": "src/labels.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "labelKey",
+          "declaration": {
+            "name": "labelKey",
+            "module": "src/labels.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "formatLabel",
+          "declaration": {
+            "name": "formatLabel",
+            "module": "src/labels.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "createLabelResolver",
+          "declaration": {
+            "name": "createLabelResolver",
+            "module": "src/labels.ts"
           }
         }
       ]
@@ -654,7 +776,7 @@
               "name": "inputs",
               "privacy": "protected",
               "static": true,
-              "default": "[ { configKey: 'value', attribute: 'value', converter: toText({ isNullable: true }), on: 'reinit', description: 'Initial content to load, interpreted per `format`. Reassigning replaces the document. Reading `el.value` returns this assigned value, NOT live edits — use `getValue()` for that.', }, { configKey: 'format', attribute: 'format', converter: toEnum(FORMATS, { default: 'markdown' }), shouldReflect: true, on: 'update', description: \"Serialization lens for content I/O (`value`, `getValue()`, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document.\", }, { configKey: 'mode', attribute: 'mode', converter: toEnum(MODES, { default: 'edit' }), shouldReflect: true, on: 'update', description: \"Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the mode is stored, reflected, and announced via `mode-change`.\", }, { configKey: 'isReadonly', attribute: 'readonly', converter: toBool('default-false'), on: 'update', description: 'Make the editor read-only (no input). `mode=\"preview\"` also forces this on.', }, { configKey: 'toolbar', attribute: 'toolbar', converter: toEnum(TOOLBARS, { default: 'top' }), shouldReflect: true, on: 'update', description: \"Static toolbar edge: 'top' (default), 'bottom', 'start', or 'end' places the command toolbar flush against that side of the editor; 'none' hides it. The selection toolbar and context menu are always available while editing (independent of this).\", }, { configKey: 'statusbar', attribute: 'statusbar', converter: toEnum(STATUSBARS, { default: 'none' }), shouldReflect: true, on: 'update', description: \"Status bar edge: 'none' (default), 'top', 'bottom', or 'both'. A dedicated strip of live indicators (word/char count, plus any plugin status items), hugging the editor body — separate from the toolbar zones and shown in read-only too. With 'both', items split across the two strips by their `bar` ('top'/'bottom', default 'bottom').\", }, { configKey: 'theme', attribute: 'theme', converter: toText({ isNullable: true }), shouldReflect: true, on: 'update', description: 'Theme name, reflected to the host attribute for CSS theming (`:host([theme=\"…\"])`).', }, { configKey: 'anchor', attribute: 'anchor', converter: toText({ isNullable: true }), on: 'update', description: 'For `mode=\"inline\"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow.', }, { configKey: 'beforeActionCallback', converter: toFunction(), default: null, on: 'none', description: 'Property only. `(detail) => false | void` (may be async) — runs first on every toolbar / selection-toolbar / context-menu activation, with the `action` event detail. Return `false` to cancel: no `onClick`, no `action` event, no command. Keyboard shortcuts do not pass through it.', }, { configKey: 'interactionHost', converter: toCustom<InteractionHost | null>(() => null, { validate: isInteractionHost }), default: null, on: 'update', description: 'Property only. The modal bridge interactive pipeline stages call: `{ request(ctx) }`, `ctx` = the request (`kind`, `title`, `message`, `payload`) + `signal` + `controller` / `element`. Default: a `window.confirm`-backed host. Survives engine rebuilds (e.g. a `plugins` reassignment).', }, ]",
+              "default": "[ { configKey: 'defaultValue', attribute: 'value', converter: toText({ isNullable: true }), on: 'reinit', description: 'Initial / default content, interpreted per `format` (like a native input’s `value` attribute ↔ `defaultValue`). Changing it replaces the document. The live content is the `value` PROPERTY.', }, { configKey: 'format', attribute: 'format', converter: toEnum(FORMATS, { default: 'markdown' }), shouldReflect: true, on: 'update', description: \"Serialization lens for content I/O (the `value` attribute and property, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document.\", }, { configKey: 'viewMode', attribute: 'view-mode', converter: toEnum(VIEW_MODES, { default: 'edit' }), shouldReflect: true, on: 'update', description: \"Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the view mode is stored, reflected, and announced via `view-mode-change`.\", }, { configKey: 'isReadonly', attribute: 'readonly', converter: toBool('presence'), shouldReflect: true, on: 'update', description: 'Read-only: the content can’t change (no typing, toolbar hidden), but it stays focusable, selectable and copyable. `view-mode=\"preview\"` also forces this on. Reflects to `readonly`.', }, { configKey: 'isDisabled', attribute: 'disabled', converter: toBool('presence'), shouldReflect: true, on: 'update', description: 'Disabled: no interaction at all — not editable, not focusable or selectable (the surface is `inert`), toolbar hidden. An ancestor `<fieldset disabled>` disables it too (core). Reflects to `disabled`, like a native control.', }, { configKey: 'toolbar', attribute: 'toolbar', converter: toEnum(TOOLBARS, { default: 'top' }), shouldReflect: true, on: 'update', description: \"Static toolbar edge: 'top' (default), 'bottom', 'start', or 'end' places the command toolbar flush against that side of the editor; 'none' hides it. The selection toolbar and context menu are always available while editing (independent of this).\", }, { configKey: 'statusbar', attribute: 'statusbar', converter: toEnum(STATUSBARS, { default: 'none' }), shouldReflect: true, on: 'update', description: \"Status bar edge: 'none' (default), 'top', 'bottom', or 'both'. A dedicated strip of live indicators (word/char count, plus any plugin status items), hugging the editor body — separate from the toolbar zones and shown in read-only too. With 'both', items split across the two strips by their `bar` ('top'/'bottom', default 'bottom').\", }, { configKey: 'theme', attribute: 'theme', converter: toText({ isNullable: true }), shouldReflect: true, on: 'update', description: 'Theme name, reflected to the host attribute for CSS theming (`:host([theme=\"…\"])`).', }, { configKey: 'anchor', attribute: 'anchor', converter: toText({ isNullable: true }), on: 'update', description: 'For `view-mode=\"inline\"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow.', }, { configKey: 'labels', attribute: 'labels', converter: toObject<EditorLabels>({ validate: isLabels }), on: 'update', description: 'Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`. Property (object) or JSON attribute (`labels=\\'{\"bold\":\"Tučně\"}\\'`). Applies live (no rebuild).', }, { configKey: 'beforeActionCallback', converter: toFunction(), default: null, on: 'none', description: 'Property only. `(detail) => false | void` (may be async) — runs first on every toolbar / selection-toolbar / context-menu activation, with the `action` event detail. Return `false` to cancel: no `onClick`, no `action` event, no command. Keyboard shortcuts do not pass through it.', }, { configKey: 'interactionHost', converter: toCustom<InteractionHost | null>(() => null, { validate: isInteractionHost }), default: null, on: 'update', description: 'Property only. The modal bridge interactive pipeline stages call: `{ request(ctx) }`, `ctx` = the request (`kind`, `title`, `message`, `payload`) + `signal` + `controller` / `element`. Default: a `window.confirm`-backed host. Survives engine rebuilds (e.g. a `plugins` reassignment).', }, ]",
               "type": {
                 "text": "readonly InputDef[]"
               }
@@ -664,10 +786,20 @@
               "name": "events",
               "privacy": "protected",
               "static": true,
-              "default": "[ { name: 'change', description: 'The document changed (or `format` switched). `detail`: `{ value, format }` — the content serialized in the active `format`. Twin: `onChange(detail)`.', }, { name: 'ready', description: 'The engine was built and mounted (once per element lifetime). `detail`: the component context only (`controller`, `element`). Twin: `onReady(detail)`.', }, { name: 'mode-change', description: 'The `mode` attribute/property changed. `detail`: `{ mode }`. Twin: `onModeChange(detail)`.', }, { name: 'lock-change', description: 'A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`.', }, { name: 'action', description: 'A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick` and the command (a notification after the fact; `state` is the snapshot from activation); `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`.', }, ]",
+              "default": "[ { name: 'change', description: 'The document changed (or `format` switched). `detail`: `{ value, format }` — the content serialized in the active `format`. Twin: `onChange(detail)`.', }, { name: 'ready', description: 'The editor was built and is live for the first time (once per element lifetime; core `BlissElement`). Fires right after the first build — during upgrade for a normal element, or when the `defer` gate is released (`el.release()` / removing `defer`). The host then has the `ready` attribute and matches `:state(ready)`; `el.whenReady()` resolves. `detail`: `controller` / `element`. Twin: `onReady(detail)`.', }, { name: 'view-mode-change', description: 'The `viewMode` (attribute `view-mode`) changed. `detail`: `{ viewMode }`. Twin: `onViewModeChange(detail)`.', }, { name: 'lock-change', description: 'A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`.', }, { name: 'action', description: 'A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick` and the command (a notification after the fact; `state` is the snapshot from activation); `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`.', }, ]",
               "type": {
                 "text": "readonly EventDef[]"
               }
+            },
+            {
+              "kind": "field",
+              "name": "formAssociated",
+              "type": {
+                "text": "boolean"
+              },
+              "static": true,
+              "default": "true",
+              "description": "Form-associated for `<fieldset disabled>` (core `isEffectivelyDisabled`) and `el.form`."
             },
             {
               "kind": "field",
@@ -685,9 +817,9 @@
             },
             {
               "kind": "field",
-              "name": "onModeChange",
+              "name": "onViewModeChange",
               "type": {
-                "text": "((detail: ModeChangeEventDetail) => void) | null"
+                "text": "((detail: ViewModeChangeEventDetail) => void) | null"
               }
             },
             {
@@ -723,6 +855,26 @@
               "description": "Property only. The modal bridge interactive pipeline stages call: `{ request(ctx) }`, `ctx` = the request (`kind`, `title`, `message`, `payload`) + `signal` + `controller` / `element`. Default: a `window.confirm`-backed host. Survives engine rebuilds (e.g. a `plugins` reassignment).",
               "privacy": "public",
               "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "labels",
+              "type": {
+                "text": "object"
+              },
+              "description": "Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`. Property (object) or JSON attribute (`labels='{\"bold\":\"Tučně\"}'`). Applies live (no rebuild).",
+              "privacy": "public",
+              "attribute": "labels"
+            },
+            {
+              "kind": "field",
+              "name": "defaultValue",
+              "type": {
+                "text": "string | null"
+              },
+              "description": "Initial / default content, interpreted per `format` (like a native input’s `value` attribute ↔ `defaultValue`). Changing it replaces the document. The live content is the `value` PROPERTY.",
+              "privacy": "public",
+              "attribute": "value"
             },
             {
               "kind": "field",
@@ -791,15 +943,6 @@
               }
             },
             {
-              "kind": "field",
-              "name": "#readyFired",
-              "privacy": "private",
-              "type": {
-                "text": "boolean"
-              },
-              "default": "false"
-            },
-            {
               "kind": "method",
               "name": "reinit",
               "privacy": "protected",
@@ -809,6 +952,17 @@
                 }
               },
               "description": "Content source changed (or first connect): (re)build the engine."
+            },
+            {
+              "kind": "method",
+              "name": "disabledChanged",
+              "privacy": "protected",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "description": "`isDisabled` or an ancestor `<fieldset disabled>` flipped (core merges both\ninto `isEffectivelyDisabled`): toggle editing, the chrome and `inert`."
             },
             {
               "kind": "method",
@@ -838,7 +992,7 @@
                   "text": "void"
                 }
               },
-              "description": "Activate (every connect, after any reinit()/update()). Core's build-once\r\nmodel: the engine survives a DOM move, so this only resumes live resources —\r\nthe view's DOM observer, the inline anchor, the chrome's selection state.\r\nContent, selection and undo history are exactly as they were."
+              "description": "Activate (every connect, after any reinit()/update()). Core's build-once\nmodel: the engine survives a DOM move, so this only resumes live resources —\nthe view's DOM observer, the inline anchor, the chrome's selection state.\nContent, selection and undo history are exactly as they were."
             },
             {
               "kind": "method",
@@ -849,7 +1003,7 @@
                   "text": "void"
                 }
               },
-              "description": "Deactivate (every disconnect): release live resources only — the engine (and\r\nwith it the document, selection and undo history) stays alive, so a DOM move\r\nre-activates without a rebuild and a detached editor still answers getValue()."
+              "description": "Deactivate (every disconnect): release live resources only — the engine (and\nwith it the document, selection and undo history) stays alive, so a DOM move\nre-activates without a rebuild and a detached editor still answers `value`."
             },
             {
               "kind": "method",
@@ -920,7 +1074,7 @@
                   "text": "void"
                 }
               },
-              "description": "(Re)arrange the shadow layout for the current mode + anchor + toolbar + status side."
+              "description": "(Re)arrange the shadow layout for the current view mode + anchor + toolbar + status side."
             },
             {
               "kind": "method",
@@ -1035,42 +1189,12 @@
               "description": "A registered command / pipeline by name, or a ProseMirror command on the live view."
             },
             {
-              "kind": "method",
-              "name": "getValue",
-              "return": {
-                "type": {
-                  "text": "string"
-                }
+              "kind": "field",
+              "name": "value",
+              "type": {
+                "text": "string"
               },
-              "parameters": [
-                {
-                  "name": "format",
-                  "optional": true,
-                  "type": {
-                    "text": "EditorFormat"
-                  }
-                }
-              ],
-              "description": "Live content serialized in the active `format` (or an explicit one)."
-            },
-            {
-              "kind": "method",
-              "name": "getContent",
-              "return": {
-                "type": {
-                  "text": "string"
-                }
-              },
-              "parameters": [
-                {
-                  "name": "format",
-                  "optional": true,
-                  "type": {
-                    "text": "EditorFormat"
-                  }
-                }
-              ],
-              "description": "Alias for getValue — reads live content, not the assigned `value` input."
+              "description": "The live content, serialized in the active `format` (`''` before the first\nbuild). Assigning replaces the document, parsed in `format` — like\n`setValue(value)`. The `value` ATTRIBUTE is the initial content\n(defaultValue) and is never written."
             },
             {
               "kind": "method",
@@ -1122,7 +1246,7 @@
                   }
                 }
               ],
-              "description": "Replace the document with `value`, parsed in `format` (defaults to the active one)."
+              "description": "Replace the document with `value`, parsed in `format` (defaults to the active\none) — the `value` setter with an explicit format, and the controller's write path."
             },
             {
               "kind": "field",
@@ -1130,16 +1254,7 @@
               "type": {
                 "text": "EditorPlugin[]"
               },
-              "description": "The editor plugin set. Assign to customise — compose with `defaultPlugins()`\r\nto keep the built-ins, and order the array to control conflict precedence\r\n(later plugins override earlier by id). Reassigning rebuilds the engine on the\r\nnew set, preserving the live content. Reading returns the active set.\r\n\r\n```js\r\nimport { defaultPlugins } from '@keenmate/web-editor';\r\nel.plugins = [...defaultPlugins(), myPlugin];\r\n```"
-            },
-            {
-              "kind": "field",
-              "name": "isReady",
-              "type": {
-                "text": "boolean"
-              },
-              "description": "Whether the engine has been built and `ready` has fired.",
-              "readonly": true
+              "description": "The editor plugin set. Assign to customise — compose with `defaultPlugins()`\nto keep the built-ins, and order the array to control conflict precedence\n(later plugins override earlier by id). Reassigning rebuilds the engine on the\nnew set, preserving the live content. Reading returns the active set.\n\n```js\nimport { defaultPlugins } from '@keenmate/web-editor';\nel.plugins = [...defaultPlugins(), myPlugin];\n```"
             },
             {
               "kind": "method",
@@ -1152,22 +1267,14 @@
             },
             {
               "kind": "method",
-              "name": "destroy",
+              "name": "destroyCallback",
+              "privacy": "protected",
               "return": {
                 "type": {
                   "text": "void"
                 }
-              }
-            },
-            {
-              "kind": "field",
-              "name": "value",
-              "privacy": "public",
-              "type": {
-                "text": "string | null"
               },
-              "attribute": "value",
-              "description": "Initial content to load, interpreted per `format`. Reassigning replaces the document. Reading `el.value` returns this assigned value, NOT live edits — use `getValue()` for that."
+              "description": "Final teardown (core `destroy()` calls this once): the engine — document,\nundo history, plugins' `destroy()` — and the shadow layout. `disconnect()`\nkeeps both alive for a DOM move; this releases them for good."
             },
             {
               "kind": "field",
@@ -1179,19 +1286,19 @@
               "default": "'markdown'",
               "attribute": "format",
               "reflects": true,
-              "description": "Serialization lens for content I/O (`value`, `getValue()`, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document."
+              "description": "Serialization lens for content I/O (the `value` attribute and property, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document."
             },
             {
               "kind": "field",
-              "name": "mode",
+              "name": "viewMode",
               "privacy": "public",
               "type": {
                 "text": "'edit' | 'split' | 'preview' | 'inline'"
               },
               "default": "'edit'",
-              "attribute": "mode",
+              "attribute": "view-mode",
               "reflects": true,
-              "description": "Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the mode is stored, reflected, and announced via `mode-change`."
+              "description": "Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the view mode is stored, reflected, and announced via `view-mode-change`."
             },
             {
               "kind": "field",
@@ -1201,7 +1308,19 @@
                 "text": "boolean"
               },
               "attribute": "readonly",
-              "description": "Make the editor read-only (no input). `mode=\"preview\"` also forces this on."
+              "reflects": true,
+              "description": "Read-only: the content can’t change (no typing, toolbar hidden), but it stays focusable, selectable and copyable. `view-mode=\"preview\"` also forces this on. Reflects to `readonly`."
+            },
+            {
+              "kind": "field",
+              "name": "isDisabled",
+              "privacy": "public",
+              "type": {
+                "text": "boolean"
+              },
+              "attribute": "disabled",
+              "reflects": true,
+              "description": "Disabled: no interaction at all — not editable, not focusable or selectable (the surface is `inert`), toolbar hidden. An ancestor `<fieldset disabled>` disables it too (core). Reflects to `disabled`, like a native control."
             },
             {
               "kind": "field",
@@ -1246,7 +1365,7 @@
                 "text": "string | null"
               },
               "attribute": "anchor",
-              "description": "For `mode=\"inline\"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow."
+              "description": "For `view-mode=\"inline\"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow."
             }
           ],
           "superclass": {
@@ -1256,11 +1375,11 @@
           "attributes": [
             {
               "name": "value",
-              "fieldName": "value",
+              "fieldName": "defaultValue",
               "type": {
                 "text": "string | null"
               },
-              "description": "Initial content to load, interpreted per `format`. Reassigning replaces the document. Reading `el.value` returns this assigned value, NOT live edits — use `getValue()` for that."
+              "description": "Initial / default content, interpreted per `format` (like a native input’s `value` attribute ↔ `defaultValue`). Changing it replaces the document. The live content is the `value` PROPERTY."
             },
             {
               "name": "format",
@@ -1269,16 +1388,16 @@
                 "text": "'markdown' | 'html' | 'json'"
               },
               "default": "'markdown'",
-              "description": "Serialization lens for content I/O (`value`, `getValue()`, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document."
+              "description": "Serialization lens for content I/O (the `value` attribute and property, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document."
             },
             {
-              "name": "mode",
-              "fieldName": "mode",
+              "name": "view-mode",
+              "fieldName": "viewMode",
               "type": {
                 "text": "'edit' | 'split' | 'preview' | 'inline'"
               },
               "default": "'edit'",
-              "description": "Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the mode is stored, reflected, and announced via `mode-change`."
+              "description": "Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the view mode is stored, reflected, and announced via `view-mode-change`."
             },
             {
               "name": "readonly",
@@ -1286,7 +1405,15 @@
               "type": {
                 "text": "boolean"
               },
-              "description": "Make the editor read-only (no input). `mode=\"preview\"` also forces this on."
+              "description": "Read-only: the content can’t change (no typing, toolbar hidden), but it stays focusable, selectable and copyable. `view-mode=\"preview\"` also forces this on. Reflects to `readonly`."
+            },
+            {
+              "name": "disabled",
+              "fieldName": "isDisabled",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Disabled: no interaction at all — not editable, not focusable or selectable (the surface is `inert`), toolbar hidden. An ancestor `<fieldset disabled>` disables it too (core). Reflects to `disabled`, like a native control."
             },
             {
               "name": "toolbar",
@@ -1320,7 +1447,15 @@
               "type": {
                 "text": "string | null"
               },
-              "description": "For `mode=\"inline\"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow."
+              "description": "For `view-mode=\"inline\"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow."
+            },
+            {
+              "name": "labels",
+              "fieldName": "labels",
+              "type": {
+                "text": "object"
+              },
+              "description": "Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`. Property (object) or JSON attribute (`labels='{\"bold\":\"Tučně\"}'`). Applies live (no rebuild)."
             }
           ],
           "events": [
@@ -1330,11 +1465,11 @@
             },
             {
               "name": "ready",
-              "description": "The engine was built and mounted (once per element lifetime). `detail`: the component context only (`controller`, `element`). Twin: `onReady(detail)`."
+              "description": "The editor was built and is live for the first time (once per element lifetime; core `BlissElement`). Fires right after the first build — during upgrade for a normal element, or when the `defer` gate is released (`el.release()` / removing `defer`). The host then has the `ready` attribute and matches `:state(ready)`; `el.whenReady()` resolves. `detail`: `controller` / `element`. Twin: `onReady(detail)`."
             },
             {
-              "name": "mode-change",
-              "description": "The `mode` attribute/property changed. `detail`: `{ mode }`. Twin: `onModeChange(detail)`."
+              "name": "view-mode-change",
+              "description": "The `viewMode` (attribute `view-mode`) changed. `detail`: `{ viewMode }`. Twin: `onViewModeChange(detail)`."
             },
             {
               "name": "lock-change",
@@ -1632,8 +1767,16 @@
               "type": {
                 "text": "Schema"
               }
+            },
+            {
+              "name": "label",
+              "optional": true,
+              "type": {
+                "text": "LabelResolver"
+              }
             }
-          ]
+          ],
+          "description": "`text` / `tooltip` are the English defaults; an element's `labels` override them\nper command (key = camel-cased id, `<key>Tooltip`). `label` resolves the prompts."
         }
       ],
       "exports": [
@@ -1749,6 +1892,16 @@
             },
             {
               "kind": "field",
+              "name": "label",
+              "type": {
+                "text": "LabelResolver"
+              },
+              "readonly": true,
+              "description": "Resolve a UI string: the `labels` override → built-in English → `fallback`.\nEvery ctx the engine builds carries it as `ctx.label` (non-enumerable).",
+              "default": "label"
+            },
+            {
+              "kind": "field",
               "name": "view",
               "type": {
                 "text": "EditorView"
@@ -1797,7 +1950,7 @@
               "type": {
                 "text": "PipelineRegistry"
               },
-              "default": "new PipelineRegistry(pipelineMap, { getView: () => this.view, getContext: () => ({ doc: this.view.state.doc, extra: {} }), // Every request carries the component context when hosted. getInteractionHost: () => ({ request: (ctx) => this.#interactionHost.request(this.createContext(ctx)), }), setLock: (locked) => this.#setLock(locked), })"
+              "default": "new PipelineRegistry(pipelineMap, { getView: () => this.view, getContext: () => ({ doc: this.view.state.doc, extra: {} }), // Every request carries the component context when hosted. getInteractionHost: () => ({ request: (ctx) => this.#interactionHost.request(this.createContext(ctx)), }), setLock: (locked) => this.#setLock(locked), label, })"
             },
             {
               "kind": "field",
@@ -1862,7 +2015,7 @@
               "name": "createContext",
               "return": {
                 "type": {
-                  "text": "T & EditorComponentContext"
+                  "text": "T & EditorLabelContext"
                 }
               },
               "parameters": [
@@ -1873,7 +2026,7 @@
                   }
                 }
               ],
-              "description": "Build a callback ctx from `fields`. Hosted by `<km-editor>`, it carries\r\n`controller` + `element` (inherited getters — non-enumerable, so\r\n`JSON.stringify` / `Object.keys` see only the fields); standalone it is\r\njust the fields."
+              "description": "Build a callback ctx from `fields`. Hosted by `<km-editor>`, it carries\n`controller` + `element` (inherited getters — non-enumerable, so\n`JSON.stringify` / `Object.keys` see only the fields). Every ctx also\ninherits `label` (label), hosted or standalone."
             },
             {
               "kind": "field",
@@ -1900,7 +2053,7 @@
                   }
                 }
               ],
-              "description": "Fire a pipeline / command by name. Sync → returns whether it resolved;\r\ndeferred → kicks off async and returns `true`."
+              "description": "Fire a pipeline / command by name. Sync → returns whether it resolved;\ndeferred → kicks off async and returns `true`."
             },
             {
               "kind": "method",
@@ -2132,7 +2285,7 @@
                   "text": "void"
                 }
               },
-              "description": "Pause the view's live DOM tracking while its host is detached (a DOM move or\r\na held-but-removed element). ProseMirror's DOM observer keeps a\r\n`selectionchange` listener on the owner document — left attached, it would\r\npin a removed editor in memory. The document, selection and undo history are\r\nuntouched; activate resumes tracking."
+              "description": "Pause the view's live DOM tracking while its host is detached (a DOM move or\na held-but-removed element). ProseMirror's DOM observer keeps a\n`selectionchange` listener on the owner document — left attached, it would\npin a removed editor in memory. The document, selection and undo history are\nuntouched; activate resumes tracking."
             },
             {
               "kind": "method",
@@ -2175,6 +2328,10 @@
               }
             }
           ]
+        },
+        {
+          "kind": "variable",
+          "name": "label"
         },
         {
           "kind": "variable",
@@ -2407,7 +2564,7 @@
               }
             }
           ],
-          "description": "Order plugins so every plugin follows its `dependencies` (stable topological\r\nsort; input order breaks ties). Throws on a missing dependency or a cycle."
+          "description": "Order plugins so every plugin follows its `dependencies` (stable topological\nsort; input order breaks ties). Throws on a missing dependency or a cycle."
         },
         {
           "kind": "function",
@@ -2463,7 +2620,7 @@
               }
             }
           ],
-          "description": "Assemble one flat presenter list (selection toolbar / context menu): `leading`\r\ncore items, then each plugin's items (in plugin order), then `trailing`."
+          "description": "Assemble one flat presenter list (selection toolbar / context menu): `leading`\ncore items, then each plugin's items (in plugin order), then `trailing`."
         },
         {
           "kind": "function",
@@ -2576,6 +2733,241 @@
     },
     {
       "kind": "javascript-module",
+      "path": "src/plugins/code-highlight.ts",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "codeHighlightPlugin"
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "codeHighlightPlugin",
+          "declaration": {
+            "name": "codeHighlightPlugin",
+            "module": "src/plugins/code-highlight.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/plugins/debug.ts",
+      "declarations": [
+        {
+          "kind": "function",
+          "name": "updateDebugPanel",
+          "parameters": [
+            {
+              "name": "view",
+              "type": {
+                "text": "EditorView"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "createDebugPlugins",
+          "return": {
+            "type": {
+              "text": "Plugin[]"
+            }
+          }
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "updateDebugPanel",
+          "declaration": {
+            "name": "updateDebugPanel",
+            "module": "src/plugins/debug.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "createDebugPlugins",
+          "declaration": {
+            "name": "createDebugPlugins",
+            "module": "src/plugins/debug.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/plugins/floating-toolbar.ts",
+      "declarations": [
+        {
+          "kind": "function",
+          "name": "createFloatingToolbarPlugin",
+          "return": {
+            "type": {
+              "text": "Plugin"
+            }
+          },
+          "parameters": [
+            {
+              "name": "schema",
+              "type": {
+                "text": "Schema"
+              }
+            }
+          ],
+          "description": "Build the floating-toolbar plugin. Call this once at bootstrap, after the\nplayground DOM exists — it captures the toolbar elements by id."
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "createFloatingToolbarPlugin",
+          "declaration": {
+            "name": "createFloatingToolbarPlugin",
+            "module": "src/plugins/floating-toolbar.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/plugins/image-base64.ts",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "imageBase64Plugin"
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "imageBase64Plugin",
+          "declaration": {
+            "name": "imageBase64Plugin",
+            "module": "src/plugins/image-base64.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/plugins/image-browser.ts",
+      "declarations": [
+        {
+          "kind": "function",
+          "name": "imageBrowserPlugin",
+          "return": {
+            "type": {
+              "text": "EditorPlugin"
+            }
+          },
+          "parameters": [
+            {
+              "name": "opts",
+              "default": "{}",
+              "type": {
+                "text": "ImageBrowserOptions"
+              }
+            }
+          ],
+          "description": "Build the cloud-image browser plugin."
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "imageBrowserPlugin",
+          "declaration": {
+            "name": "imageBrowserPlugin",
+            "module": "src/plugins/image-browser.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/plugins/image.ts",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "imagePlugin"
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "imagePlugin",
+          "declaration": {
+            "name": "imagePlugin",
+            "module": "src/plugins/image.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/plugins/link.ts",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "linkPlugin"
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "linkPlugin",
+          "declaration": {
+            "name": "linkPlugin",
+            "module": "src/plugins/link.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/plugins/syntax-highlight.ts",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "syntaxHighlightPlugin",
+          "default": "new Plugin({ state: { init(_, { doc }) { return getDecorations(doc); }, apply(tr, decorations) { if (tr.docChanged) { return getDecorations(tr.doc); } return decorations.map(tr.mapping, tr.doc); }, }, props: { decorations(state) { return this.getState(state); }, }, })"
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "syntaxHighlightPlugin",
+          "declaration": {
+            "name": "syntaxHighlightPlugin",
+            "module": "src/plugins/syntax-highlight.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/plugins/tables.ts",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "tablePlugin"
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "tablePlugin",
+          "declaration": {
+            "name": "tablePlugin",
+            "module": "src/plugins/tables.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
       "path": "src/ui/actions.ts",
       "declarations": [
         {
@@ -2616,9 +3008,15 @@
               "type": {
                 "text": "EditorActionItem"
               }
+            },
+            {
+              "name": "label",
+              "type": {
+                "text": "LabelResolver"
+              }
             }
           ],
-          "description": "The built-in defaults of an item naming a registered command: text / icon /\r\ntooltip / shortcut from the `CommandSpec`, `isDisabled` from its predicates and\r\n— only for a toggle command (one with `getIsToggledCallback`) — `isToggled`. An unknown command (its plugin isn't loaded) is disabled. A\r\ncustom item has no defaults."
+          "description": "The built-in defaults of an item naming a registered command: text / icon /\ntooltip / shortcut from the `CommandSpec` — text and tooltip through `labels`\n(key = camel-cased command id, `<key>Tooltip`; the spec's text is the English default) — `isDisabled` from its predicates and\n— only for a toggle command (one with `getIsToggledCallback`) — `isToggled`. An unknown command (its plugin isn't loaded) is disabled. A\ncustom item has no defaults."
         }
       ],
       "exports": [
@@ -3154,8 +3552,8 @@
           "type": {
             "text": "readonly StatusItem[]"
           },
-          "default": "[ { id: 'words', align: 'end', bar: 'bottom', render: (ctx) => `Words: ${wordCount(ctx)}` }, { id: 'chars', align: 'end', bar: 'top', render: ({ state }) => `Chars: ${state.doc.textContent.length}` }, ]",
-          "description": "Core status items — a word count and a character count (docked end). They're\r\nplaced on different edges (`bar`), so `statusbar=\"both\"` shows a populated strip\r\non each; single-edge status bars (`top`/`bottom`) show every item regardless."
+          "default": "[ { id: 'words', align: 'end', bar: 'bottom', render: (ctx) => ctx.label('words', { count: wordCount(ctx) }) }, { id: 'chars', align: 'end', bar: 'top', render: (ctx) => ctx.label('chars', { count: ctx.state.doc.textContent.length }) }, ]",
+          "description": "Core status items — a word count and a character count (docked end). They're\nplaced on different edges (`bar`), so `statusbar=\"both\"` shows a populated strip\non each; single-edge status bars (`top`/`bottom`) show every item regardless."
         },
         {
           "kind": "variable",
@@ -3172,7 +3570,7 @@
           "type": {
             "text": "readonly EditorToolbarEntry[]"
           },
-          "default": "[ 'bold', 'italic', 'underline', divider, { action: 'insert-link', tooltip: 'Insert link' }, divider, 'heading', 'paragraph', ]",
+          "default": "[ 'bold', 'italic', 'underline', divider, 'insert-link', divider, 'heading', 'paragraph', ]",
           "description": "Compact inline-formatting bar shown over a non-empty text selection."
         },
         {
@@ -3181,7 +3579,7 @@
           "type": {
             "text": "readonly EditorToolbarEntry[]"
           },
-          "default": "[ 'bold', 'italic', 'underline', divider, { action: 'insert-link', text: 'Insert link' }, { action: 'insert-image', text: 'Insert image' }, { action: 'insert-code-block', text: 'Insert code block' }, { action: 'insert-table', text: 'Insert table' }, divider, 'undo', 'redo', ]",
+          "default": "[ 'bold', 'italic', 'underline', divider, 'insert-link', 'insert-image', 'insert-code-block', 'insert-table', divider, 'undo', 'redo', ]",
           "description": "Right-click editing menu (labelled, vertical)."
         }
       ],
@@ -3625,6 +4023,24 @@
               "default": "[]"
             },
             {
+              "kind": "field",
+              "name": "#groupDefs",
+              "privacy": "private",
+              "type": {
+                "text": "readonly ToolGroup[]"
+              },
+              "default": "groups"
+            },
+            {
+              "kind": "field",
+              "name": "#host",
+              "privacy": "private",
+              "type": {
+                "text": "ActionSurfaceHost"
+              },
+              "default": "host"
+            },
+            {
               "kind": "method",
               "name": "refresh",
               "return": {
@@ -3796,9 +4212,18 @@
               "name": "#mode",
               "privacy": "private",
               "type": {
-                "text": "EditorMode"
+                "text": "EditorViewMode"
               },
               "default": "'edit'"
+            },
+            {
+              "kind": "field",
+              "name": "#isInert",
+              "privacy": "private",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false"
             },
             {
               "kind": "field",
@@ -3847,7 +4272,7 @@
                 {
                   "name": "mode",
                   "type": {
-                    "text": "EditorMode"
+                    "text": "EditorViewMode"
                   }
                 },
                 {
@@ -3871,7 +4296,7 @@
                   }
                 }
               ],
-              "description": "(Re)build the shadow structure for `mode` + `toolbarSide`. The toolbar slot\r\nand the editor mount are wrapped in one bordered `.we-surface` frame (so the\r\ntoolbar sits flush against the editor, with a divider, rather than floating as\r\na separate card); `toolbarSide` sets which edge the toolbar occupies. Builds\r\nthe output panel only for `split`; (re)anchors only for `inline`."
+              "description": "(Re)build the shadow structure for `mode` + `toolbarSide`. The toolbar slot\nand the editor mount are wrapped in one bordered `.we-surface` frame (so the\ntoolbar sits flush against the editor, with a divider, rather than floating as\na separate card); `toolbarSide` sets which edge the toolbar occupies. Builds\nthe output panel only for `split`; (re)anchors only for `inline`."
             },
             {
               "kind": "method",
@@ -3891,7 +4316,7 @@
                   "text": "void"
                 }
               },
-              "description": "Release live positioning resources without tearing down the structure.\r\nThe element calls this on `disconnect()` so a detached-but-held `inline`\r\neditor doesn't keep a floating-ui `autoUpdate` loop running against its\r\ndetached host; a reconnect re-anchors via `render()`."
+              "description": "Release live positioning resources without tearing down the structure.\nThe element calls this on `disconnect()` so a detached-but-held `inline`\neditor doesn't keep a floating-ui `autoUpdate` loop running against its\ndetached host; a reconnect re-anchors via `render()`."
             },
             {
               "kind": "method",
@@ -3901,7 +4326,25 @@
                   "text": "void"
                 }
               },
-              "description": "Re-acquire live positioning after deactivate (the host was\r\nreconnected): re-anchors an `inline` editor without rebuilding the shadow\r\nstructure, so the editor mount — and the live view — stays where it is."
+              "description": "Re-acquire live positioning after deactivate (the host was\nreconnected): re-anchors an `inline` editor without rebuilding the shadow\nstructure, so the editor mount — and the live view — stays where it is."
+            },
+            {
+              "kind": "method",
+              "name": "setInert",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "isInert",
+                  "type": {
+                    "text": "boolean"
+                  }
+                }
+              ],
+              "description": "`disabled`: make the whole surface (editor, toolbar, status, output) `inert`."
             },
             {
               "kind": "method",
@@ -4030,241 +4473,6 @@
           "declaration": {
             "name": "domRect",
             "module": "src/ui/virtual.ts"
-          }
-        }
-      ]
-    },
-    {
-      "kind": "javascript-module",
-      "path": "src/plugins/code-highlight.ts",
-      "declarations": [
-        {
-          "kind": "variable",
-          "name": "codeHighlightPlugin"
-        }
-      ],
-      "exports": [
-        {
-          "kind": "js",
-          "name": "codeHighlightPlugin",
-          "declaration": {
-            "name": "codeHighlightPlugin",
-            "module": "src/plugins/code-highlight.ts"
-          }
-        }
-      ]
-    },
-    {
-      "kind": "javascript-module",
-      "path": "src/plugins/debug.ts",
-      "declarations": [
-        {
-          "kind": "function",
-          "name": "updateDebugPanel",
-          "parameters": [
-            {
-              "name": "view",
-              "type": {
-                "text": "EditorView"
-              }
-            }
-          ]
-        },
-        {
-          "kind": "function",
-          "name": "createDebugPlugins",
-          "return": {
-            "type": {
-              "text": "Plugin[]"
-            }
-          }
-        }
-      ],
-      "exports": [
-        {
-          "kind": "js",
-          "name": "updateDebugPanel",
-          "declaration": {
-            "name": "updateDebugPanel",
-            "module": "src/plugins/debug.ts"
-          }
-        },
-        {
-          "kind": "js",
-          "name": "createDebugPlugins",
-          "declaration": {
-            "name": "createDebugPlugins",
-            "module": "src/plugins/debug.ts"
-          }
-        }
-      ]
-    },
-    {
-      "kind": "javascript-module",
-      "path": "src/plugins/floating-toolbar.ts",
-      "declarations": [
-        {
-          "kind": "function",
-          "name": "createFloatingToolbarPlugin",
-          "return": {
-            "type": {
-              "text": "Plugin"
-            }
-          },
-          "parameters": [
-            {
-              "name": "schema",
-              "type": {
-                "text": "Schema"
-              }
-            }
-          ],
-          "description": "Build the floating-toolbar plugin. Call this once at bootstrap, after the\nplayground DOM exists — it captures the toolbar elements by id."
-        }
-      ],
-      "exports": [
-        {
-          "kind": "js",
-          "name": "createFloatingToolbarPlugin",
-          "declaration": {
-            "name": "createFloatingToolbarPlugin",
-            "module": "src/plugins/floating-toolbar.ts"
-          }
-        }
-      ]
-    },
-    {
-      "kind": "javascript-module",
-      "path": "src/plugins/image-base64.ts",
-      "declarations": [
-        {
-          "kind": "variable",
-          "name": "imageBase64Plugin"
-        }
-      ],
-      "exports": [
-        {
-          "kind": "js",
-          "name": "imageBase64Plugin",
-          "declaration": {
-            "name": "imageBase64Plugin",
-            "module": "src/plugins/image-base64.ts"
-          }
-        }
-      ]
-    },
-    {
-      "kind": "javascript-module",
-      "path": "src/plugins/image-browser.ts",
-      "declarations": [
-        {
-          "kind": "function",
-          "name": "imageBrowserPlugin",
-          "return": {
-            "type": {
-              "text": "EditorPlugin"
-            }
-          },
-          "parameters": [
-            {
-              "name": "opts",
-              "default": "{}",
-              "type": {
-                "text": "ImageBrowserOptions"
-              }
-            }
-          ],
-          "description": "Build the cloud-image browser plugin."
-        }
-      ],
-      "exports": [
-        {
-          "kind": "js",
-          "name": "imageBrowserPlugin",
-          "declaration": {
-            "name": "imageBrowserPlugin",
-            "module": "src/plugins/image-browser.ts"
-          }
-        }
-      ]
-    },
-    {
-      "kind": "javascript-module",
-      "path": "src/plugins/image.ts",
-      "declarations": [
-        {
-          "kind": "variable",
-          "name": "imagePlugin"
-        }
-      ],
-      "exports": [
-        {
-          "kind": "js",
-          "name": "imagePlugin",
-          "declaration": {
-            "name": "imagePlugin",
-            "module": "src/plugins/image.ts"
-          }
-        }
-      ]
-    },
-    {
-      "kind": "javascript-module",
-      "path": "src/plugins/link.ts",
-      "declarations": [
-        {
-          "kind": "variable",
-          "name": "linkPlugin"
-        }
-      ],
-      "exports": [
-        {
-          "kind": "js",
-          "name": "linkPlugin",
-          "declaration": {
-            "name": "linkPlugin",
-            "module": "src/plugins/link.ts"
-          }
-        }
-      ]
-    },
-    {
-      "kind": "javascript-module",
-      "path": "src/plugins/syntax-highlight.ts",
-      "declarations": [
-        {
-          "kind": "variable",
-          "name": "syntaxHighlightPlugin",
-          "default": "new Plugin({ state: { init(_, { doc }) { return getDecorations(doc); }, apply(tr, decorations) { if (tr.docChanged) { return getDecorations(tr.doc); } return decorations.map(tr.mapping, tr.doc); }, }, props: { decorations(state) { return this.getState(state); }, }, })"
-        }
-      ],
-      "exports": [
-        {
-          "kind": "js",
-          "name": "syntaxHighlightPlugin",
-          "declaration": {
-            "name": "syntaxHighlightPlugin",
-            "module": "src/plugins/syntax-highlight.ts"
-          }
-        }
-      ]
-    },
-    {
-      "kind": "javascript-module",
-      "path": "src/plugins/tables.ts",
-      "declarations": [
-        {
-          "kind": "variable",
-          "name": "tablePlugin"
-        }
-      ],
-      "exports": [
-        {
-          "kind": "js",
-          "name": "tablePlugin",
-          "declaration": {
-            "name": "tablePlugin",
-            "module": "src/plugins/tables.ts"
           }
         }
       ]

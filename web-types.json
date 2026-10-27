@@ -8,25 +8,25 @@
       "elements": [
         {
           "name": "km-editor",
-          "description": "\n\n---\n\n\n### **Events:**\n - **change** - The document changed (or `format` switched). `detail`: `{ value, format }` — the content serialized in the active `format`. Twin: `onChange(detail)`.\n- **ready** - The engine was built and mounted (once per element lifetime). `detail`: the component context only (`controller`, `element`). Twin: `onReady(detail)`.\n- **mode-change** - The `mode` attribute/property changed. `detail`: `{ mode }`. Twin: `onModeChange(detail)`.\n- **lock-change** - A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`.\n- **action** - A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick` and the command (a notification after the fact; `state` is the snapshot from activation); `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`.\n\n### **Methods:**\n \n\n\n\n\n- **getValue(format: _EditorFormat_): _string_** - Live content serialized in the active `format` (or an explicit one).\n- **getContent(format: _EditorFormat_): _string_** - Alias for getValue — reads live content, not the assigned `value` input.\n- **setValue(value: _string_, format: _EditorFormat_): _void_** - Replace the document with `value`, parsed in `format` (defaults to the active one).",
+          "description": "\n\n---\n\n\n### **Events:**\n - **change** - The document changed (or `format` switched). `detail`: `{ value, format }` — the content serialized in the active `format`. Twin: `onChange(detail)`.\n- **ready** - The editor was built and is live for the first time (once per element lifetime; core `BlissElement`). Fires right after the first build — during upgrade for a normal element, or when the `defer` gate is released (`el.release()` / removing `defer`). The host then has the `ready` attribute and matches `:state(ready)`; `el.whenReady()` resolves. `detail`: `controller` / `element`. Twin: `onReady(detail)`.\n- **view-mode-change** - The `viewMode` (attribute `view-mode`) changed. `detail`: `{ viewMode }`. Twin: `onViewModeChange(detail)`.\n- **lock-change** - A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`.\n- **action** - A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick` and the command (a notification after the fact; `state` is the snapshot from activation); `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`.\n\n### **Methods:**\n \n\n\n\n\n\n- **setValue(value: _string_, format: _EditorFormat_): _void_** - Replace the document with `value`, parsed in `format` (defaults to the active\none) — the `value` setter with an explicit format, and the controller's write path.\n",
           "doc-url": "",
           "attributes": [
             {
               "name": "value",
-              "description": "Initial content to load, interpreted per `format`. Reassigning replaces the document. Reading `el.value` returns this assigned value, NOT live edits — use `getValue()` for that.",
+              "description": "Initial / default content, interpreted per `format` (like a native input’s `value` attribute ↔ `defaultValue`). Changing it replaces the document. The live content is the `value` PROPERTY.",
               "value": { "type": "string | null" }
             },
             {
               "name": "format",
-              "description": "Serialization lens for content I/O (`value`, `getValue()`, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document.",
+              "description": "Serialization lens for content I/O (the `value` attribute and property, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document.",
               "value": {
                 "type": "'markdown' | 'html' | 'json'",
                 "default": "'markdown'"
               }
             },
             {
-              "name": "mode",
-              "description": "Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the mode is stored, reflected, and announced via `mode-change`.",
+              "name": "view-mode",
+              "description": "Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the view mode is stored, reflected, and announced via `view-mode-change`.",
               "value": {
                 "type": "'edit' | 'split' | 'preview' | 'inline'",
                 "default": "'edit'"
@@ -34,7 +34,12 @@
             },
             {
               "name": "readonly",
-              "description": "Make the editor read-only (no input). `mode=\"preview\"` also forces this on.",
+              "description": "Read-only: the content can’t change (no typing, toolbar hidden), but it stays focusable, selectable and copyable. `view-mode=\"preview\"` also forces this on. Reflects to `readonly`.",
+              "value": { "type": "boolean" }
+            },
+            {
+              "name": "disabled",
+              "description": "Disabled: no interaction at all — not editable, not focusable or selectable (the surface is `inert`), toolbar hidden. An ancestor `<fieldset disabled>` disables it too (core). Reflects to `disabled`, like a native control.",
               "value": { "type": "boolean" }
             },
             {
@@ -60,8 +65,13 @@
             },
             {
               "name": "anchor",
-              "description": "For `mode=\"inline\"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow.",
+              "description": "For `view-mode=\"inline\"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow.",
               "value": { "type": "string | null" }
+            },
+            {
+              "name": "labels",
+              "description": "Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`. Property (object) or JSON attribute (`labels='{\"bold\":\"Tučně\"}'`). Applies live (no rebuild).",
+              "value": { "type": "object" }
             }
           ],
           "events": [
@@ -71,11 +81,11 @@
             },
             {
               "name": "ready",
-              "description": "The engine was built and mounted (once per element lifetime). `detail`: the component context only (`controller`, `element`). Twin: `onReady(detail)`."
+              "description": "The editor was built and is live for the first time (once per element lifetime; core `BlissElement`). Fires right after the first build — during upgrade for a normal element, or when the `defer` gate is released (`el.release()` / removing `defer`). The host then has the `ready` attribute and matches `:state(ready)`; `el.whenReady()` resolves. `detail`: `controller` / `element`. Twin: `onReady(detail)`."
             },
             {
-              "name": "mode-change",
-              "description": "The `mode` attribute/property changed. `detail`: `{ mode }`. Twin: `onModeChange(detail)`."
+              "name": "view-mode-change",
+              "description": "The `viewMode` (attribute `view-mode`) changed. `detail`: `{ viewMode }`. Twin: `onViewModeChange(detail)`."
             },
             {
               "name": "lock-change",
@@ -97,8 +107,8 @@
                 "type": "((detail: ReadyEventDetail) => void) | null"
               },
               {
-                "name": "onModeChange",
-                "type": "((detail: ModeChangeEventDetail) => void) | null"
+                "name": "onViewModeChange",
+                "type": "((detail: ViewModeChangeEventDetail) => void) | null"
               },
               {
                 "name": "onLockChange",
@@ -119,33 +129,43 @@
                 "type": "unknown"
               },
               {
-                "name": "plugins",
-                "description": "The editor plugin set. Assign to customise — compose with `defaultPlugins()`\r\nto keep the built-ins, and order the array to control conflict precedence\r\n(later plugins override earlier by id). Reassigning rebuilds the engine on the\r\nnew set, preserving the live content. Reading returns the active set.\r\n\r\n```js\r\nimport { defaultPlugins } from '@keenmate/web-editor';\r\nel.plugins = [...defaultPlugins(), myPlugin];\r\n```",
-                "type": "EditorPlugin[]"
+                "name": "labels",
+                "description": "Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`. Property (object) or JSON attribute (`labels='{\"bold\":\"Tučně\"}'`). Applies live (no rebuild).",
+                "type": "object"
               },
               {
-                "name": "isReady",
-                "description": "Whether the engine has been built and `ready` has fired.",
-                "type": "boolean"
-              },
-              {
-                "name": "value",
-                "description": "Initial content to load, interpreted per `format`. Reassigning replaces the document. Reading `el.value` returns this assigned value, NOT live edits — use `getValue()` for that.",
+                "name": "defaultValue",
+                "description": "Initial / default content, interpreted per `format` (like a native input’s `value` attribute ↔ `defaultValue`). Changing it replaces the document. The live content is the `value` PROPERTY.",
                 "type": "string | null"
               },
               {
+                "name": "value",
+                "description": "The live content, serialized in the active `format` (`''` before the first\nbuild). Assigning replaces the document, parsed in `format` — like\n`setValue(value)`. The `value` ATTRIBUTE is the initial content\n(defaultValue) and is never written.",
+                "type": "string"
+              },
+              {
+                "name": "plugins",
+                "description": "The editor plugin set. Assign to customise — compose with `defaultPlugins()`\nto keep the built-ins, and order the array to control conflict precedence\n(later plugins override earlier by id). Reassigning rebuilds the engine on the\nnew set, preserving the live content. Reading returns the active set.\n\n```js\nimport { defaultPlugins } from '@keenmate/web-editor';\nel.plugins = [...defaultPlugins(), myPlugin];\n```",
+                "type": "EditorPlugin[]"
+              },
+              {
                 "name": "format",
-                "description": "Serialization lens for content I/O (`value`, `getValue()`, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document.",
+                "description": "Serialization lens for content I/O (the `value` attribute and property, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document.",
                 "type": "'markdown' | 'html' | 'json'"
               },
               {
-                "name": "mode",
-                "description": "Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the mode is stored, reflected, and announced via `mode-change`.",
+                "name": "viewMode",
+                "description": "Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the view mode is stored, reflected, and announced via `view-mode-change`.",
                 "type": "'edit' | 'split' | 'preview' | 'inline'"
               },
               {
                 "name": "isReadonly",
-                "description": "Make the editor read-only (no input). `mode=\"preview\"` also forces this on.",
+                "description": "Read-only: the content can’t change (no typing, toolbar hidden), but it stays focusable, selectable and copyable. `view-mode=\"preview\"` also forces this on. Reflects to `readonly`.",
+                "type": "boolean"
+              },
+              {
+                "name": "isDisabled",
+                "description": "Disabled: no interaction at all — not editable, not focusable or selectable (the surface is `inert`), toolbar hidden. An ancestor `<fieldset disabled>` disables it too (core). Reflects to `disabled`, like a native control.",
                 "type": "boolean"
               },
               {
@@ -165,7 +185,7 @@
               },
               {
                 "name": "anchor",
-                "description": "For `mode=\"inline\"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow.",
+                "description": "For `view-mode=\"inline\"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow.",
                 "type": "string | null"
               }
             ],
@@ -176,11 +196,11 @@
               },
               {
                 "name": "ready",
-                "description": "The engine was built and mounted (once per element lifetime). `detail`: the component context only (`controller`, `element`). Twin: `onReady(detail)`."
+                "description": "The editor was built and is live for the first time (once per element lifetime; core `BlissElement`). Fires right after the first build — during upgrade for a normal element, or when the `defer` gate is released (`el.release()` / removing `defer`). The host then has the `ready` attribute and matches `:state(ready)`; `el.whenReady()` resolves. `detail`: `controller` / `element`. Twin: `onReady(detail)`."
               },
               {
-                "name": "mode-change",
-                "description": "The `mode` attribute/property changed. `detail`: `{ mode }`. Twin: `onModeChange(detail)`."
+                "name": "view-mode-change",
+                "description": "The `viewMode` (attribute `view-mode`) changed. `detail`: `{ viewMode }`. Twin: `onViewModeChange(detail)`."
               },
               {
                 "name": "lock-change",
