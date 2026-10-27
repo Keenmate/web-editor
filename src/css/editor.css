@@ -19,6 +19,26 @@
   --we-min-height: 160px;
   --we-accent: #0066cc;
   --we-danger: #c62828;
+
+  /* Context menu = core `openMenu()` (.km-menu*): the public --we-context-menu-*
+     seam (falling back to the theme vars above) feeds the --km-menu-* it reads;
+     they inherit into the shadow-local menu. */
+  --km-menu-z-index: var(--we-context-menu-z-index, 1100);
+  --km-menu-bg: var(--we-context-menu-bg, var(--we-bg));
+  --km-menu-text-color: var(--we-context-menu-text-color, currentColor);
+  --km-menu-border: var(--we-context-menu-border, 1px solid var(--we-border));
+  --km-menu-border-radius: var(--we-context-menu-border-radius, var(--we-radius));
+  --km-menu-shadow: var(--we-context-menu-shadow, 0 6px 24px rgba(0, 0, 0, 0.22));
+  --km-menu-min-width: var(--we-context-menu-min-width, 190px);
+  --km-menu-padding: var(--we-context-menu-padding, 4px 0);
+  --km-menu-font-size: var(--we-context-menu-font-size, 13px);
+  --km-menu-item-padding: var(--we-context-menu-item-padding, 6px 12px);
+  --km-menu-hover-bg: var(--we-context-menu-hover-bg, color-mix(in srgb, var(--we-accent) 14%, transparent));
+  --km-menu-toggled-color: var(--we-context-menu-toggled-color, var(--we-accent));
+  --km-menu-shortcut-color: var(--we-context-menu-shortcut-color, var(--we-muted-fg));
+  --km-menu-danger-color: var(--we-context-menu-danger-color, var(--we-danger));
+  --km-menu-divider-color: var(--we-context-menu-divider-color, var(--we-border));
+  --km-menu-disabled-opacity: var(--we-context-menu-disabled-opacity, 0.4);
   color: #333;
   font-family: system-ui, -apple-system, sans-serif;
 }
@@ -321,7 +341,7 @@
   z-index: 1100;
   border-radius: var(--we-radius);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.22);
-  overflow: hidden; /* clip the inner bar/menu to the rounded corners */
+  overflow: hidden; /* clip the inner bar to the rounded corners */
 }
 
 /* Selection toolbar — a dark pill over the selection. */
@@ -349,65 +369,12 @@
   background: #444;
 }
 
-/* Context menu — a labelled vertical menu. */
-.we-context-menu .we-menu {
-  display: flex;
-  flex-direction: column;
-  min-width: 190px;
-  padding: 4px;
-  background: var(--we-bg);
-  border: 1px solid var(--we-border);
-  border-radius: var(--we-radius);
-}
+/* Context menu — core `openMenu()` renders it (`.km-menu*`, core's shared
+   stylesheet, root also gets `.we-context-menu` + part="context-menu"). Its look
+   comes from the --km-menu-* mapping on :host (the --we-context-menu-* seam). */
 
-.we-menu-item {
-  padding: 6px 10px;
-  border: none;
-  background: transparent;
-  color: inherit;
-  border-radius: 4px;
-  cursor: pointer;
-  font: inherit;
-  font-size: 13px;
-  text-align: left;
-}
-
-.we-menu-item:hover:not(:disabled) {
-  background: var(--we-accent);
-  color: #fff;
-}
-
-.we-menu-item.toggled {
-  font-weight: 600;
-}
-
-/* Label + the command's display shortcut (right-aligned, muted). */
-.we-menu-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.we-menu-shortcut {
-  opacity: 0.6;
-  font-size: 12px;
-}
-
-.we-menu-item.we-danger,
 .we-cmd.we-danger {
   color: var(--we-danger);
-}
-
-.we-menu-item:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-.we-menu-sep {
-  height: 1px;
-  margin: 4px 2px;
-  background: var(--we-border);
 }
 
 /* ── dark theme (opt-in via theme="dark") ── */

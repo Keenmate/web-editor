@@ -164,7 +164,7 @@ describe('CommandBar', () => {
     const engine = new EditorEngine({ mount: mountEl, markdown });
     const parent = document.createElement('div');
     document.body.appendChild(parent);
-    const bar = new CommandBar(parent, defaultToolbarItems, createActionHost({ engine }), { variant: 'bar' });
+    const bar = new CommandBar(parent, defaultToolbarItems, createActionHost({ engine }));
     return { engine, bar, parent };
   }
   const btn = (parent: HTMLElement, id: string) =>
@@ -195,31 +195,6 @@ describe('CommandBar', () => {
     bar.refresh();
     expect(btn(parent, 'insert-link').disabled).toBe(false);
     bar.destroy();
-  });
-
-  it('menu variant: a toggle command is a menuitemcheckbox (aria-checked), the rest menuitems', () => {
-    const mountEl = document.createElement('div');
-    document.body.appendChild(mountEl);
-    const engine = new EditorEngine({ mount: mountEl, markdown: '# Hello world' });
-    const parent = document.createElement('div');
-    document.body.appendChild(parent);
-    const menu = new CommandBar(
-      parent,
-      ['heading', 'bold', { action: 'custom', id: 'plain', text: 'Plain' }],
-      createActionHost({ engine }),
-      { variant: 'menu' }
-    );
-    select(engine, 3, 3);
-    menu.refresh();
-    expect(btn(parent, 'heading').getAttribute('role')).toBe('menuitemcheckbox');
-    expect(btn(parent, 'heading').getAttribute('aria-checked')).toBe('true');
-    expect(btn(parent, 'heading').classList.contains('toggled')).toBe(true);
-    expect(btn(parent, 'bold').getAttribute('aria-checked')).toBe('false');
-    const plain = parent.querySelector('[data-id="plain"]') as HTMLButtonElement;
-    expect(plain.getAttribute('role')).toBe('menuitem');
-    expect(plain.hasAttribute('aria-checked')).toBe(false);
-    expect(plain.hasAttribute('aria-pressed')).toBe(false);
-    menu.destroy();
   });
 
   it('setVisible toggles the whole bar', () => {
@@ -302,7 +277,34 @@ describe('ContextMenu', () => {
     engine.view.dom.dispatchEvent(ev);
     expect(menu.open).toBe(true);
     expect(ev.defaultPrevented).toBe(true);
-    expect(container.querySelector('.we-context-menu .we-menu-item')).toBeTruthy();
+    expect(container.querySelector('.km-menu.we-context-menu .km-menu__item')).toBeTruthy();
+    expect(container.querySelector('.we-context-menu')!.getAttribute('part')).toBe('context-menu');
+    menu.destroy();
+    expect(container.querySelector('.km-menu')).toBeNull();
+  });
+
+  it('a toggle command is a menuitemcheckbox (aria-checked), the rest menuitems', () => {
+    const mountEl = document.createElement('div');
+    document.body.appendChild(mountEl);
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const engine = new EditorEngine({ mount: mountEl, markdown: '# Hello world' });
+    const menu = new ContextMenu({
+      view: engine.view,
+      host: createActionHost({ engine }),
+      items: ['heading', 'bold', { action: 'custom', id: 'plain', text: 'Plain' }],
+      container,
+    });
+    engine.view.dispatch(engine.view.state.tr.setSelection(TextSelection.create(engine.view.state.doc, 3, 3)));
+    engine.view.dom.dispatchEvent(contextmenu());
+    const item = (sel: string) => container.querySelector(`.km-menu__item${sel}`) as HTMLElement;
+    expect(item('[data-action="heading"]').getAttribute('role')).toBe('menuitemcheckbox');
+    expect(item('[data-action="heading"]').getAttribute('aria-checked')).toBe('true');
+    expect(item('[data-action="heading"]').classList.contains('km-menu__item--toggled')).toBe(true);
+    expect(item('[data-action="bold"]').getAttribute('aria-checked')).toBe('false');
+    const plain = item('[data-id="plain"]');
+    expect(plain.getAttribute('role')).toBe('menuitem');
+    expect(plain.hasAttribute('aria-checked')).toBe(false);
     menu.destroy();
   });
 

@@ -1,142 +1,100 @@
 /**
- * ContextMenu — the right-click editing menu (Phase 4). On `contextmenu` inside
- * the editor it opens a labelled {@link CommandBar} (menu variant) at the cursor
- * via the core `createPopover` primitive (a virtual point reference), reflecting
- * each command's enabled / toggled state (toggles are `menuitemcheckbox`). Dismisses on outside pointerdown, Escape,
- * or when an item is activated. Suppressed when editing is disabled, so the native
- * browser menu shows through in read-only / preview.
+ * ContextMenu — the right-click editing menu. On `contextmenu` inside the editor
+ * it opens the items at the cursor with core `openMenu()`
+ * (`@keenmate/web-components-core/menu`), which owns the rendering (`.km-menu*`,
+ * themed through `--km-menu-*` — mapped from `--we-context-menu-*` on the host),
+ * positioning, the WAI-ARIA keyboard (arrows / Home / End / Enter / Space /
+ * Escape / Tab) and dismissal (outside press, scroll, blur, another overlay).
+ * Each item resolves against the current state (`commandDefaults`: text,
+ * shortcut, enabled, toggled — a toggle is a `menuitemcheckbox`) and activates
+ * through the action host (core `runAction`, source `'context-menu'`).
+ * Suppressed when editing is disabled, so the native browser menu shows through
+ * in read-only / preview.
  */
 import type { EditorView } from 'prosemirror-view';
-import { createPopover, type PopoverHandle } from '@keenmate/web-components-core/positioning';
-import { CommandBar } from './command-bar';
-import { domRect } from './virtual';
-import type { ActionSurfaceHost } from './actions';
-import type { EditorToolbarEntry } from '../interaction';
-import { uiLogger } from '../logger';
+import { normalizeActionItems } from '@keenmate/web-components-core/actions';
+import { openMenu, type MenuHandle } from '@keenmate/web-components-core/menu';
+import { commandDefaults, type ActionSurfaceHost } from './actions';
+import type { EditorAction, EditorActionContext, EditorActionItem, EditorToolbarEntry } from '../interaction';
 
 export interface ContextMenuOptions {
   view: EditorView;
   /** Resolves + activates the items (source `'context-menu'`). */
   host: ActionSurfaceHost;
   items: readonly EditorToolbarEntry[];
-  /** Shadow-local layer the floating panel portals into (so shadow styles apply). */
+  /** Shadow-local layer the menu is appended to (so the host's custom properties reach it). */
   container: HTMLElement;
 }
 
+type Entry = EditorActionItem | { divider: true; text?: string };
+
 export class ContextMenu {
   #view: EditorView;
-  #bar: CommandBar;
-  #panel: HTMLDivElement;
-  #popover: PopoverHandle;
+  #host: ActionSurfaceHost;
+  #container: HTMLElement;
+  #entries: Entry[];
+  #menu: MenuHandle | null = null;
   #enabled = true;
-  #open = false;
-  #point = { x: 0, y: 0 };
-
   #onContextMenu: (e: MouseEvent) => void;
-  #onDismiss: (e: Event) => void;
-  #onKey: (e: KeyboardEvent) => void;
 
   constructor(opts: ContextMenuOptions) {
     this.#view = opts.view;
-
-    this.#panel = document.createElement('div');
-    this.#panel.className = 'we-floating we-context-menu';
-    this.#panel.setAttribute('part', 'context-menu');
-    this.#bar = new CommandBar(this.#panel, opts.items, opts.host, {
-      variant: 'menu',
-      source: 'context-menu',
-      // Close on activation; the action (incl. an async beforeActionCallback) runs after.
-      onActivate: () => this.#close(),
-    });
-
-    this.#popover = createPopover({
-      reference: {
-        getBoundingClientRect: () => domRect(this.#point.x, this.#point.y, 0, 0),
-        contextElement: this.#view.dom,
-      },
-      panel: this.#panel,
-      container: opts.container,
-      placement: 'bottom-start',
-      offset: 4,
-      inheritThemeFrom: this.#view.dom as HTMLElement,
-    });
+    this.#host = opts.host;
+    this.#container = opts.container;
+    // Expand the string shorthand ONCE, so each item keeps its identity across
+    // opens (core's busy guard keys on it).
+    this.#entries = normalizeActionItems(opts.items as (string | EditorActionItem)[]) as Entry[];
 
     this.#onContextMenu = (e) => {
       if (!this.#enabled) return;
       e.preventDefault();
-      this.#point = { x: e.clientX, y: e.clientY };
-      this.#openMenu();
+      this.#open(e.clientX, e.clientY);
     };
-    // Use composedPath so a click on the portaled panel (in the shadow overlay)
-    // isn't mistaken for an outside click after event retargeting.
-    this.#onDismiss = (e) => {
-      if (e.composedPath().includes(this.#panel)) return;
-      this.#close();
-    };
-    this.#onKey = (e) => {
-      if (e.key === 'Escape') this.#close();
-    };
-
     this.#view.dom.addEventListener('contextmenu', this.#onContextMenu);
   }
 
   get open(): boolean {
-    return this.#open;
+    return this.#menu?.isOpen ?? false;
   }
 
   setEnabled(enabled: boolean): void {
     this.#enabled = enabled;
-    if (!enabled) this.#close();
+    if (!enabled) this.close();
   }
 
-  /** Close the menu (and drop its document dismiss listeners) if it is open. */
+  /** Close the menu (and drop its document listeners) if it is open. */
   close(): void {
-    this.#close();
+    const menu = this.#menu;
+    this.#menu = null;
+    menu?.close();
   }
 
   destroy(): void {
     this.#view.dom.removeEventListener('contextmenu', this.#onContextMenu);
-    this.#detachDismiss();
-    this.#safely(() => this.#popover.destroy());
-    this.#bar.destroy();
-    this.#panel.remove();
-    this.#open = false;
+    this.close();
   }
 
   // ── internals ─────────────────────────────────────────────────────────────
 
-  #openMenu(): void {
-    this.#bar.refresh();
-    this.#safely(() => {
-      if (!this.#popover.isOpen) this.#popover.open();
-      else this.#popover.update();
+  #open(x: number, y: number): void {
+    this.close();
+    const host = this.#host;
+    const registry = host.registry;
+    const menu = openMenu<EditorActionContext, EditorAction>(this.#entries, host.context(), {
+      at: { x, y },
+      host: this.#container,
+      className: 'we-context-menu',
+      returnFocusTo: this.#view.dom as HTMLElement,
+      inheritThemeFrom: this.#view.dom as HTMLElement,
+      defaults: (item) => commandDefaults(registry, item),
+      runAction: (item, { triggerElement, sourceEvent }) =>
+        host.activate(item, 'context-menu', sourceEvent, triggerElement),
+      onClose: () => {
+        if (this.#menu === menu) this.#menu = null;
+      },
     });
-    this.#open = true;
-    this.#attachDismiss();
-  }
-
-  #close(): void {
-    if (!this.#open && !this.#popover.isOpen) return;
-    this.#safely(() => this.#popover.close());
-    this.#open = false;
-    this.#detachDismiss();
-  }
-
-  #attachDismiss(): void {
-    document.addEventListener('pointerdown', this.#onDismiss, true);
-    document.addEventListener('keydown', this.#onKey, true);
-  }
-
-  #detachDismiss(): void {
-    document.removeEventListener('pointerdown', this.#onDismiss, true);
-    document.removeEventListener('keydown', this.#onKey, true);
-  }
-
-  #safely(fn: () => void): void {
-    try {
-      fn();
-    } catch (err) {
-      uiLogger.warn('context menu positioning failed', err);
-    }
+    if (!menu.isOpen) return; // nothing visible
+    menu.element?.setAttribute('part', 'context-menu');
+    this.#menu = menu;
   }
 }

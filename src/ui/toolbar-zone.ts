@@ -25,7 +25,6 @@ export class ToolbarZone {
         this.el.appendChild(divider);
       }
       const bar = new CommandBar(this.el, group.items, host, {
-        variant: 'bar',
         className: 'we-group',
         source: 'toolbar',
       });

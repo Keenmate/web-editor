@@ -157,7 +157,7 @@ test.describe('interaction model', () => {
     await page.locator('#subject .ProseMirror p').click({ button: 'right' });
     const menu = page.locator('#subject .we-context-menu');
     await expect(menu).toBeVisible();
-    await expect(menu.locator('[data-action="bold"] .we-menu-shortcut')).toHaveText('Ctrl+B');
+    await expect(menu.locator('[data-action="bold"] .km-menu__shortcut')).toHaveText('Ctrl+B');
     await clearLog(page);
     await menu.locator('[data-action="insert-table"]').click();
     await expect(page.locator('#subject .ProseMirror table')).toHaveCount(1);

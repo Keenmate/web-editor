@@ -135,6 +135,15 @@ bleed in. Ship the stylesheet once:
 
 Set `theme="…"` to target a theme from your own CSS via `:host([theme="…"])`.
 
+The editor's own classes and custom properties use the `we-` prefix (`--we-bg`,
+`--we-border`, `--we-accent`, …). The right-click menu is the shared KeenMate menu
+from `@keenmate/web-components-core` (`.km-menu*`, `::part(context-menu)`); restyle it
+with the `--we-context-menu-*` properties on the element — `bg`, `text-color`,
+`border`, `border-radius`, `shadow`, `min-width`, `padding`, `font-size`,
+`item-padding`, `hover-bg`, `toggled-color`, `shortcut-color`, `danger-color`,
+`divider-color`, `disabled-opacity`, `z-index` (they default to the theme
+properties above).
+
 ## Extending
 
 The editor assembles itself from a **plugin set**. Links, images, tables, and code

@@ -117,7 +117,12 @@ small framework-free chrome layer in `ui/`. Things the code won't tell you:
   `commandDefaults` (text / icon / tooltip / shortcut / toggled / disabled from
   the `CommandSpec`) and `createActionHost` (core `runAction`:
   `beforeActionCallback` → `onClick` → `commands.run` → `action` event).
-  `CommandBar` resolves with core `resolveMenuEntries` on every refresh.
+  `CommandBar` (the button bars) resolves with core `resolveMenuEntries` on every
+  refresh; the context menu is core `openMenu()` (`/menu`, renders `.km-menu*`,
+  themed by `--we-context-menu-*` → `--km-menu-*` on `:host`) — no menu markup,
+  keyboard or dismiss code of our own.
+- **CSS prefix is `we-`** (classes and custom properties). `km-` is core's (shared
+  UI like `.km-menu*`); the tag stays `<km-editor>`.
 - **Keyboard shortcuts bypass it** — they are PM keymaps bound to the command
   pipelines (no `action` event, no veto). Don't route keymaps through `runAction`.
 - **Every ctx comes from `engine.createContext(fields)`**: with `options.host`

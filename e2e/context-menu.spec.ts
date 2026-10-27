@@ -52,7 +52,7 @@ test.describe('context menu', () => {
         const bold = menu(page).locator('[data-action="bold"]');
         await expect(bold).toHaveAttribute('role', 'menuitemcheckbox');
         await expect(bold).toHaveAttribute('aria-checked', 'true');
-        await expect(bold).toHaveClass(/(^| )toggled( |$)/);
+        await expect(bold).toHaveClass(/km-menu__item--toggled/);
         await expect(bold).not.toHaveAttribute('aria-pressed', /.*/);
         await expect(menu(page).locator('[data-action="italic"]')).toHaveAttribute('aria-checked', 'false');
         const undo = menu(page).locator('[data-action="undo"]');
@@ -73,4 +73,110 @@ test.describe('context menu', () => {
         await editor(page).evaluate((el) => el.setAttribute('readonly', ''));
         await expect(menu(page)).toBeHidden();
     });
+
+    // ── core openMenu() (web-components-core /menu) ──────────────────────────
+
+    test('rendered by core openMenu: .km-menu role=menu, part=context-menu, themed via --we-context-menu-*', async ({ page }) => {
+        await editor(page).evaluate((el) => (el as HTMLElement).style.setProperty('--we-context-menu-bg', 'rgb(1, 2, 3)'));
+        await pm(page).locator('p').click({ button: 'right' });
+        await expect(menu(page)).toBeVisible();
+        await expect(menu(page)).toHaveClass(/(^| )km-menu( |$)/);
+        await expect(menu(page)).toHaveAttribute('role', 'menu');
+        await expect(menu(page)).toHaveAttribute('part', 'context-menu');
+        await expect(menu(page)).toHaveCSS('background-color', 'rgb(1, 2, 3)');
+        await expect(menu(page).locator('[role="separator"]').first()).toBeAttached();
+        // Only the one menu, no leftover editor-rendered menu markup.
+        await expect(editor(page).locator('.km-menu')).toHaveCount(1);
+    });
+
+    test('keyboard: arrows move focus (skipping disabled), Enter runs the item, focus returns to the editor', async ({ page }) => {
+        await selectText(page, 'words');
+        const p = (await pm(page).locator('p').boundingBox())!;
+        await page.mouse.click(p.x + 5, p.y + 5, { button: 'right' });
+        await selectText(page, 'words');
+        await expect(menu(page)).toBeVisible();
+        const focusedAction = () =>
+            editor(page).evaluate((el) => (el.shadowRoot!.activeElement as HTMLElement | null)?.dataset.action ?? null);
+        await page.keyboard.press('ArrowDown');
+        expect(await focusedAction()).toBe('bold');
+        await page.keyboard.press('ArrowDown');
+        expect(await focusedAction()).toBe('italic');
+        await page.keyboard.press('End');
+        // redo is disabled (nothing to redo) → End lands on the last ENABLED item.
+        expect(await focusedAction()).not.toBe('redo');
+        await page.keyboard.press('Home');
+        expect(await focusedAction()).toBe('bold');
+        await page.keyboard.press('Enter');
+        await expect(menu(page)).toBeHidden();
+        await expect(pm(page).locator('p strong')).toHaveText('words');
+        expect(await editor(page).evaluate((el) => el.shadowRoot!.activeElement?.classList.contains('ProseMirror'))).toBe(true);
+        await expect(page.getByTestId('context-menu-log')).toContainText('action:bold');
+    });
+
+    test('keyboard: Space toggles the focused item; the toggle reflects on reopen', async ({ page }) => {
+        await selectText(page, 'words');
+        await pm(page).locator('p').click({ button: 'right' });
+        await selectText(page, 'words');
+        await page.keyboard.press('ArrowDown');
+        await page.keyboard.press('ArrowDown');
+        await page.keyboard.press(' ');
+        await expect(menu(page)).toBeHidden();
+        await expect(pm(page).locator('p em')).toHaveText('words');
+        await pm(page).locator('p em').click({ button: 'right' });
+        await expect(menu(page).locator('[data-action="italic"]')).toHaveAttribute('aria-checked', 'true');
+        await expect(menu(page).locator('[data-action="bold"]')).toHaveAttribute('aria-checked', 'false');
+    });
+
+    test('disabled items are aria-disabled and do nothing when clicked', async ({ page }) => {
+        await pm(page).locator('p').click({ button: 'right' });
+        const redo = menu(page).locator('[data-action="redo"]');
+        await expect(redo).toHaveAttribute('aria-disabled', 'true');
+        await redo.click({ force: true });
+        await expect(menu(page)).toBeVisible();
+        await expect(page.getByTestId('context-menu-log')).not.toContainText('action:redo');
+    });
+
+    test('Escape with focus in the menu closes it and returns focus to the editor', async ({ page }) => {
+        await pm(page).locator('p').click({ button: 'right' });
+        await page.keyboard.press('ArrowDown');
+        await page.keyboard.press('Escape');
+        await expect(menu(page)).toBeHidden();
+        expect(await editor(page).evaluate((el) => el.shadowRoot!.activeElement?.classList.contains('ProseMirror'))).toBe(true);
+    });
+
+    test('Tab closes it', async ({ page }) => {
+        await pm(page).locator('p').click({ button: 'right' });
+        await page.keyboard.press('ArrowDown');
+        await page.keyboard.press('Tab');
+        await expect(menu(page)).toBeHidden();
+    });
+
+    test('a second right-click replaces the menu (one open at a time)', async ({ page }) => {
+        const p = (await pm(page).locator('p').boundingBox())!;
+        await page.mouse.click(p.x + 5, p.y + 5, { button: 'right' });
+        await expect(menu(page)).toBeVisible();
+        // Above the open menu (it drops down from the point), so the press lands on the editor.
+        const h = (await pm(page).locator('h1').boundingBox())!;
+        await page.mouse.click(h.x + 40, h.y + 5, { button: 'right' });
+        await expect(editor(page).locator('.km-menu')).toHaveCount(1);
+        const m = (await menu(page).boundingBox())!;
+        expect(Math.abs(m.x - (h.x + 40))).toBeLessThan(30);
+        expect(Math.abs(m.y - (h.y + 5))).toBeLessThan(30);
+    });
+
+    test('a scroll outside the menu closes it', async ({ page }) => {
+        await pm(page).locator('p').click({ button: 'right' });
+        await expect(menu(page)).toBeVisible();
+        await page.mouse.move(5, 600);
+        await page.mouse.wheel(0, 100);
+        await expect(menu(page)).toBeHidden();
+    });
+
+    test('moving the element closes the open menu', async ({ page }) => {
+        await pm(page).locator('p').click({ button: 'right' });
+        await expect(menu(page)).toBeVisible();
+        await editor(page).evaluate((el) => document.body.appendChild(el));
+        await expect(menu(page)).toBeHidden();
+    });
 });
+

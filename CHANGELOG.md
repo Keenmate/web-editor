@@ -126,6 +126,18 @@ it never left "idle"; it now uses `onLockChange({ isLocked })`.
   `km-` is reserved for shared UI rendered by `@keenmate/web-components-core` (its
   `/menu` renders `.km-menu*` / `--km-menu-*`), which the editor's own `.km-menu`
   collided with. The tag stays `<km-editor>`.
+- **The context menu is core `openMenu()`** (`@keenmate/web-components-core/menu`),
+  like web-treeview's. Core renders it (`.km-menu` / `.km-menu__item` /
+  `.km-menu__shortcut` / `.km-menu__divider`; the root keeps the `.we-context-menu`
+  class and `part="context-menu"`) and owns positioning, dismissal (outside press,
+  scroll, window blur, another KM overlay, Escape, Tab) and the WAI-ARIA keyboard
+  (↑ / ↓ / Home / End skip disabled items, Enter / Space activate, focus returns to
+  the editor). Toggles stay `menuitemcheckbox` + `aria-checked` (the toggled class
+  is now `km-menu__item--toggled`; disabled items are `aria-disabled` divs).
+  Theme it with the new `--we-context-menu-*` properties (mapped onto core's
+  `--km-menu-*`). The editor's own menu markup (formerly `.km-menu-item`, `.km-menu-label`,
+  `.km-menu-shortcut`, `.km-menu-sep`) and the `CommandBar` `variant` option are
+  gone.
 - **Built on `@keenmate/web-components-core` 1.0.0-rc15** — the input table uses its renamed
   `shouldReflect` flag (the interaction-model change above is the only API change).
 - **Moved onto `@keenmate/web-components-devkit` and flattened to a single-package
