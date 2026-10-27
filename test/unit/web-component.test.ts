@@ -1,7 +1,7 @@
 /**
  * `<km-editor>` element tests — the BlissElement shell over the engine. Exercises
  * registration, content I/O through the `format` lens, readonly/editable, and the
- * outward `change` / `ready` / `mode-change` events. Runs in happy-dom (the same
+ * outward `change` / `ready` / `view-mode-change` events. Runs in happy-dom (the same
  * environment the engine tests use, so EditorView works here).
  */
 import { describe, it, expect, beforeAll } from 'vitest';
@@ -105,8 +105,8 @@ describe('<km-editor>', () => {
     expect(getEditorEngine(el)!.isEditable()).toBe(true);
   });
 
-  it('mode="preview" forces read-only', async () => {
-    const el = await mount({ value: 'x', mode: 'preview' });
+  it('view-mode="preview" forces read-only', async () => {
+    const el = await mount({ value: 'x', 'view-mode': 'preview' });
     expect(getEditorEngine(el)!.isEditable()).toBe(false);
   });
 
@@ -120,11 +120,11 @@ describe('<km-editor>', () => {
     expect(formats.at(-1)).toBe('html');
   });
 
-  it('emits `mode-change` when the mode switches', async () => {
+  it('emits `view-mode-change` when the mode switches', async () => {
     const el = await mount({ value: 'x' });
     const modes: string[] = [];
-    el.addEventListener('mode-change', (e) => modes.push((e as CustomEvent).detail.mode));
-    el.setAttribute('mode', 'split');
+    el.addEventListener('view-mode-change', (e) => modes.push((e as CustomEvent).detail.viewMode));
+    el.setAttribute('view-mode', 'split');
     await el.whenSettled();
     expect(modes.at(-1)).toBe('split');
   });
@@ -136,12 +136,13 @@ describe('<km-editor> view modes', () => {
   it('edit (default) renders just the editor surface', async () => {
     const el = await mount({ value: '# Edit' });
     expect(root(el).classList.contains('we-edit')).toBe(true);
+    expect(root(el).getAttribute('part')).toBe('container');
     expect(el.shadowRoot!.querySelector('.km-editor')).toBeTruthy();
     expect(el.shadowRoot!.querySelector('.we-output')).toBeNull();
   });
 
   it('split renders a live output panel reflecting the document', async () => {
-    const el = await mount({ value: '# Split', mode: 'split' });
+    const el = await mount({ value: '# Split', 'view-mode': 'split' });
     expect(root(el).classList.contains('we-split')).toBe(true);
     const pre = el.shadowRoot!.querySelector('.we-output-pre') as HTMLPreElement;
     expect(pre).toBeTruthy();
@@ -150,7 +151,7 @@ describe('<km-editor> view modes', () => {
   });
 
   it('split output tabs switch the serialization lens', async () => {
-    const el = await mount({ value: '# Tabs', mode: 'split' });
+    const el = await mount({ value: '# Tabs', 'view-mode': 'split' });
     const pre = el.shadowRoot!.querySelector('.we-output-pre') as HTMLPreElement;
     const htmlTab = el.shadowRoot!.querySelector('.we-output-tabs button[data-format="html"]') as HTMLButtonElement;
     htmlTab.click();
@@ -159,24 +160,24 @@ describe('<km-editor> view modes', () => {
   });
 
   it('switching modes preserves the document (mount is re-parented, not rebuilt)', async () => {
-    const el = await mount({ value: '# Keep me', mode: 'edit' });
+    const el = await mount({ value: '# Keep me', 'view-mode': 'edit' });
     const before = el.getMarkdown();
-    el.setAttribute('mode', 'split');
+    el.setAttribute('view-mode', 'split');
     await el.whenSettled();
-    el.setAttribute('mode', 'edit');
+    el.setAttribute('view-mode', 'edit');
     await el.whenSettled();
     expect(el.getMarkdown()).toBe(before);
     expect(el.getMarkdown()).toContain('# Keep me');
   });
 
   it('preview renders read-only', async () => {
-    const el = await mount({ value: 'x', mode: 'preview' });
+    const el = await mount({ value: 'x', 'view-mode': 'preview' });
     expect(root(el).classList.contains('we-preview')).toBe(true);
     expect(getEditorEngine(el)!.isEditable()).toBe(false);
   });
 
   it('inline renders a floating card (no anchor → normal flow, no throw)', async () => {
-    const el = await mount({ value: 'x', mode: 'inline' });
+    const el = await mount({ value: 'x', 'view-mode': 'inline' });
     expect(root(el).classList.contains('we-inline')).toBe(true);
   });
 });

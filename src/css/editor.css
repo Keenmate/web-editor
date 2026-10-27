@@ -174,7 +174,7 @@
 }
 
 /* ── inline: floating overlay card over a live page ── */
-:host([mode='inline']) {
+:host([view-mode='inline']) {
   z-index: 1000;
 }
 

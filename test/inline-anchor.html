@@ -7,7 +7,7 @@
 <body>
     <!-- Targeted by e2e/inline-anchor.spec.ts. -->
     <div id="scroller" style="height:300px;overflow:auto;border:1px solid #ccc"><div style="height:120px"></div><p id="target">Anchor target</p><div style="height:1200px"></div></div>
-    <km-editor id="subject" mode="inline" anchor="#target" value="# Title
+    <km-editor id="subject" view-mode="inline" anchor="#target" value="# Title
 
 plain words here"></km-editor>
     <pre data-testid="inline-anchor-log"></pre>
@@ -16,9 +16,9 @@ plain words here"></km-editor>
         import '/src/index.ts';
         const log = document.querySelector('[data-testid="inline-anchor-log"]');
         const el = document.getElementById('subject');
-        for (const type of ['change', 'mode-change', 'action']) {
+        for (const type of ['change', 'view-mode-change', 'action']) {
             el.addEventListener(type, (e) => {
-                const d = type === 'change' ? e.detail.format : type === 'mode-change' ? e.detail.mode : e.detail.action;
+                const d = type === 'change' ? e.detail.format : type === 'view-mode-change' ? e.detail.viewMode : e.detail.action;
                 log.textContent += `${type}:${d}\n`;
             });
         }

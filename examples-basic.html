@@ -8,7 +8,7 @@
 <div class="card">
     <h2>BU01 · View Mode &amp; Editing</h2>
     <p>
-        One document, four presentations. <code>mode</code> switches between
+        One document, four presentations. <code>view-mode</code> switches between
         <code>edit</code>, <code>split</code> (editor + live output), <code>preview</code>
         (read-only render), and <code>inline</code>. <code>readonly</code> blocks input;
         <code>preview</code> forces it on. The mount is persistent, so the document and
@@ -16,7 +16,7 @@
     </p>
 
     <div class="controls">
-        <span><code>mode</code>:</span>
+        <span><code>view-mode</code>:</span>
         <label><input type="radio" name="eb01-mode" value="edit" checked> edit</label>
         <label><input type="radio" name="eb01-mode" value="split"> split</label>
         <label><input type="radio" name="eb01-mode" value="preview"> preview</label>
@@ -27,9 +27,9 @@
     </div>
 
     <div class="demo-area">
-        <km-editor id="eb01" mode="edit" format="markdown" toolbar="top" value="# View modes
+        <km-editor id="eb01" view-mode="edit" format="markdown" toolbar="top" value="# View modes
 
-Edit me, then flip the **mode** switch above. Switch to *split* to see the live
+Edit me, then flip the **view-mode** switch above. Switch to *split* to see the live
 output, or *preview* for the read-only render.
 
 - One ProseMirror document
@@ -57,7 +57,7 @@ output, or *preview* for the read-only render.
     </div>
 
     <div class="demo-area">
-        <km-editor id="eb02" mode="edit" format="markdown" toolbar="top" value="## Format lens
+        <km-editor id="eb02" view-mode="edit" format="markdown" toolbar="top" value="## Format lens
 
 Type here and watch the **output** below change format without rebuilding the
 document. Add a [link](https://keenmate.com) or some `code`."></km-editor>
@@ -98,7 +98,7 @@ document. Add a [link](https://keenmate.com) or some `code`."></km-editor>
     </div>
 
     <div class="demo-area">
-        <km-editor id="eb03" mode="edit" format="markdown" toolbar="top" statusbar="none" value="### Chrome placement
+        <km-editor id="eb03" view-mode="edit" format="markdown" toolbar="top" statusbar="none" value="### Chrome placement
 
 Move the **toolbar** to any edge, or hide it and use the selection toolbar.
 Turn on the **status bar** to see the live Words / Chars counters."></km-editor>
@@ -123,7 +123,7 @@ Turn on the **status bar** to see the live Words / Chars counters."></km-editor>
     </div>
 
     <div class="demo-area">
-        <km-editor id="eb04" mode="edit" format="markdown" toolbar="top" statusbar="bottom" value="#### Theming
+        <km-editor id="eb04" view-mode="edit" format="markdown" toolbar="top" statusbar="bottom" value="#### Theming
 
 The `theme` attribute is reflected to the host for CSS theming. Switch it above."></km-editor>
     </div>
@@ -142,7 +142,7 @@ The `theme` attribute is reflected to the host for CSS theming. Switch it above.
 
     <div class="demo-area">
         <km-editor
-            mode="edit"
+            view-mode="edit"
             format="markdown"
             toolbar="top"
             statusbar="both"
@@ -168,9 +168,9 @@ This editor was set up entirely in **HTML** — no script wired it.
             r.addEventListener('change', (e) => { if (e.target.checked) fn(e.target.value); }));
 
     function wire() {
-        // BU01 — mode + readonly
+        // BU01 — view-mode + readonly
         const eb01 = document.getElementById('eb01');
-        onRadio('eb01-mode', (v) => eb01.setAttribute('mode', v));
+        onRadio('eb01-mode', (v) => eb01.setAttribute('view-mode', v));
         document.getElementById('eb01-readonly').addEventListener('change', (e) =>
             setBool(eb01, 'readonly', e.target.checked));
 

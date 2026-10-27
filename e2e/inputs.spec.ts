@@ -3,7 +3,7 @@ import { test, expect, load, editor, pm } from './fixtures';
 // Input validation: invalid enum attributes warn and keep the previous value (in
 // markup that is the default); invalid property assignments are rejected with a
 // console warning. Fixture: test/inputs.html
-// (mode="bogus" toolbar="sideways" format="xml" statusbar="nope").
+// (view-mode="bogus" toolbar="sideways" format="xml" statusbar="nope").
 
 test.describe('inputs', () => {
     test('invalid enum attributes → defaults, each with a warning', async ({ page }) => {
@@ -11,15 +11,15 @@ test.describe('inputs', () => {
         page.on('console', (m) => m.type() === 'warning' && warnings.push(m.text()));
         await load(page, 'inputs.html', { flag: 'fixtureReady' });
         const cfg = await editor(page).evaluate((el: any) => ({
-            mode: el.mode,
+            viewMode: el.viewMode,
             toolbar: el.toolbar,
             format: el.format,
             statusbar: el.statusbar,
         }));
-        expect(cfg).toEqual({ mode: 'edit', toolbar: 'top', format: 'markdown', statusbar: 'none' });
+        expect(cfg).toEqual({ viewMode: 'edit', toolbar: 'top', format: 'markdown', statusbar: 'none' });
         // Core warns once per rejected attribute (NOTES.md ED-11, resolved in core).
         const rejected = warnings.filter((w) => w.includes('rejected invalid value for attribute'));
-        expect(rejected.map((w) => w.match(/ (\w+)="/)?.[1]).sort()).toEqual(['format', 'mode', 'statusbar', 'toolbar']);
+        expect(rejected.map((w) => w.match(/ ([\w-]+)="/)?.[1]).sort()).toEqual(['format', 'statusbar', 'toolbar', 'view-mode']);
         // The editor still works on the defaults.
         await expect(pm(page).locator('h1')).toHaveText('Title');
         await expect(page.locator('km-editor#subject .we-toolbar-zone')).toBeVisible();
@@ -30,12 +30,12 @@ test.describe('inputs', () => {
         const warnings: string[] = [];
         page.on('console', (m) => m.type() === 'warning' && warnings.push(m.text()));
         const out = await editor(page).evaluate((el: any) => {
-            el.mode = 'split';
-            el.mode = 'nonsense';
+            el.viewMode = 'split';
+            el.viewMode = 'nonsense';
             el.interactionHost = { notAHost: true };
-            return { mode: el.mode, host: el.interactionHost };
+            return { viewMode: el.viewMode, host: el.interactionHost };
         });
-        expect(out.mode).toBe('split');
+        expect(out.viewMode).toBe('split');
         expect(out.host).toBeNull();
         await expect.poll(() => warnings.length).toBeGreaterThanOrEqual(2);
     });

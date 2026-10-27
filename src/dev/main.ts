@@ -15,7 +15,7 @@ import type { SerializationFormat } from '../engine/serialization';
 // Registers <km-editor> (side-effect import — must NOT be type-only, or esbuild
 // elides it and the element is never defined). Types come separately.
 import '../index';
-import type { KmEditorElement, EditorMode } from '../index';
+import type { KmEditorElement, EditorViewMode } from '../index';
 
 // ── <km-editor> element showcase (Phase 2–3) ──────────────────────────────
 const km = document.querySelector('#km') as KmEditorElement | null;
@@ -33,10 +33,10 @@ if (km) {
     const detail = (e as CustomEvent).detail;
     setStatus(`changed · ${detail.format} · ${detail.value.length} chars`);
   });
-  km.addEventListener('mode-change', (e) => setStatus(`mode → ${(e as CustomEvent).detail.mode}`));
+  km.addEventListener('view-mode-change', (e) => setStatus(`viewMode → ${(e as CustomEvent).detail.mode}`));
 
   document.querySelector('#we-mode')?.addEventListener('change', (e) => {
-    km.setAttribute('mode', (e.target as HTMLSelectElement).value as EditorMode);
+    km.setAttribute('view-mode', (e.target as HTMLSelectElement).value as EditorViewMode);
   });
   document.querySelector('#we-format')?.addEventListener('change', (e) => {
     km.setAttribute('format', (e.target as HTMLSelectElement).value);

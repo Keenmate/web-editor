@@ -64,11 +64,11 @@ describe('events', () => {
     expect(Object.keys(d).sort()).toEqual(['format', 'value']);
   });
 
-  it('mode-change: onModeChange receives { mode }', async () => {
+  it('view-mode-change: onViewModeChange receives { viewMode }', async () => {
     const el = await mount({ value: 'x' });
     const modes: string[] = [];
-    el.onModeChange = (d) => modes.push(d.mode);
-    el.setAttribute('mode', 'split');
+    el.onViewModeChange = (d) => modes.push(d.viewMode);
+    el.setAttribute('view-mode', 'split');
     await el.whenSettled();
     expect(modes).toEqual(['split']);
   });

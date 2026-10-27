@@ -15,7 +15,7 @@
  */
 import { anchor, type AnchorHandle } from '@keenmate/web-components-core/positioning';
 import type { SerializationFormat } from '../engine/serialization';
-import type { EditorMode, EditorToolbar, EditorStatusBar } from '../web-component';
+import type { EditorViewMode, EditorToolbar, EditorStatusBar } from '../web-component';
 
 const OUTPUT_FORMATS: readonly SerializationFormat[] = ['markdown', 'html', 'json'];
 const OUTPUT_LABELS: Record<SerializationFormat, string> = {
@@ -52,7 +52,7 @@ export class ViewLayout {
   #outputPre?: HTMLPreElement;
   #outputFormat: SerializationFormat = 'html';
 
-  #mode: EditorMode = 'edit';
+  #mode: EditorViewMode = 'edit';
   #anchorSelector: string | null = null;
   #anchorHandle?: AnchorHandle;
 
@@ -101,7 +101,7 @@ export class ViewLayout {
    * the output panel only for `split`; (re)anchors only for `inline`.
    */
   render(
-    mode: EditorMode,
+    mode: EditorViewMode,
     anchorSelector: string | null,
     toolbarSide: EditorToolbar = 'top',
     statusSide: EditorStatusBar = 'none'
@@ -118,7 +118,7 @@ export class ViewLayout {
 
     if (!this.#root) {
       this.#root = document.createElement('div');
-      this.#root.setAttribute('part', 'root');
+      this.#root.setAttribute('part', 'container');
       this.#shadow.appendChild(this.#root);
     }
     const root = this.#root;

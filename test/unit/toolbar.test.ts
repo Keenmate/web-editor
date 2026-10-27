@@ -140,7 +140,7 @@ describe('<km-editor> status bar', () => {
   });
 
   it('hides the toolbar in preview (read-only) mode', async () => {
-    const el = await mount({ value: 'x', mode: 'preview' });
+    const el = await mount({ value: 'x', 'view-mode': 'preview' });
     expect(bar(el).hidden).toBe(true);
   });
 

@@ -136,7 +136,7 @@ Core now warns on a rejected attribute value and keeps the previous value (the
 default in markup), the same rule as the property path; `e2e/inputs.spec.ts`
 asserts the four warnings. Original note:
 
-The e2e plan expected `mode="bogus"` → default **+ warn**. Core's `toEnum`
+The e2e plan expected `view-mode="bogus"` (then `mode`) → default **+ warn**. Core's `toEnum`
 (`web-components-core/src/inputs/converters.ts`) returns the default on the
 attribute path without any warning; only invalid *property* assignments warn
 (`rejected invalid value for property …`). Not an editor bug — the editor uses

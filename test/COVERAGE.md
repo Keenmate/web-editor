@@ -77,7 +77,7 @@ dialog stub), `e2e/helpers.ts`.
 
 | Feature | Status | Spec | Fixture |
 | --- | :-: | --- | --- |
-| `mode` edit / split / preview / inline + `mode-change` | ✓ | `modes.spec.ts` | `modes.html` |
+| `view-mode` edit / split / preview / inline + `view-mode-change` | ✓ | `modes.spec.ts` | `modes.html` |
 | Split output is live; output tabs switch format | ✓ | `modes.spec.ts` | `modes.html` |
 | Preview is non-editable | ✓ | `modes.spec.ts` | `modes.html` |
 | Mode switch keeps doc + selection + undo | ✓ | `modes.spec.ts` | `modes.html` |

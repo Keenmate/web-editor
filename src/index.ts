@@ -15,7 +15,7 @@ import { logging } from './logger';
 
 // ── Web Component ─────────────────────────────────────────────────────────
 export { KmEditorElement } from './web-component';
-export type { EditorMode, EditorFormat, EditorToolbar, EditorStatusBar } from './web-component';
+export type { EditorViewMode, EditorFormat, EditorToolbar, EditorStatusBar } from './web-component';
 
 // Interaction model (web-components-core /actions): the public controller
 // facade (`el.controller`), callback contexts, action items, event details.
@@ -33,7 +33,7 @@ export type {
   EditorActionEventDetail,
   ChangeEventDetail,
   ReadyEventDetail,
-  ModeChangeEventDetail,
+  ViewModeChangeEventDetail,
   LockChangeEventDetail,
   EditorEventMap,
 } from './interaction';

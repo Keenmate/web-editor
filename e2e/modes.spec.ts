@@ -1,11 +1,11 @@
 import { test, expect, load, pm, editor, markdown, selectText, caretAfter, logLines, clearLog, type Page } from './fixtures';
 
-// View modes: edit / split / preview / inline + `mode-change`; split output is
+// View modes: edit / split / preview / inline + `view-mode-change`; split output is
 // live; preview is read-only; switching keeps the document + selection.
 // Fixture: test/modes.html (value "# Title\n\nplain words here", #target paragraph).
 
 const setMode = (page: Page, mode: string) =>
-    page.evaluate((m) => ((document.getElementById('subject') as any).mode = m), mode);
+    page.evaluate((m) => ((document.getElementById('subject') as any).viewMode = m), mode);
 const root = (page: Page) => page.locator('km-editor#subject .we-root');
 const output = (page: Page) => page.locator('km-editor#subject .we-output-pre');
 
@@ -14,25 +14,25 @@ test.describe('modes', () => {
 
     test('default mode is edit, no output panel', async ({ page }) => {
         // Core reflects explicit values only — an untouched default leaves no attribute.
-        expect(await editor(page).evaluate((el: any) => el.mode)).toBe('edit');
-        await expect(editor(page)).not.toHaveAttribute('mode');
+        expect(await editor(page).evaluate((el: any) => el.viewMode)).toBe('edit');
+        await expect(editor(page)).not.toHaveAttribute('view-mode');
         await expect(root(page)).toHaveClass(/we-edit/);
         await expect(page.locator('km-editor#subject .we-output')).toHaveCount(0);
         await expect(pm(page)).toHaveAttribute('contenteditable', 'true');
     });
 
-    test('each switch fires mode-change and reflects the attribute', async ({ page }) => {
+    test('each switch fires view-mode-change and reflects the attribute', async ({ page }) => {
         await clearLog(page, 'modes');
         for (const m of ['split', 'preview', 'inline', 'edit']) {
             await setMode(page, m);
-            await expect(editor(page)).toHaveAttribute('mode', m);
+            await expect(editor(page)).toHaveAttribute('view-mode', m);
             await expect(root(page)).toHaveClass(new RegExp('we-' + m));
         }
-        expect((await logLines(page, 'modes')).filter((l) => l.startsWith('mode-change'))).toEqual([
-            'mode-change:split',
-            'mode-change:preview',
-            'mode-change:inline',
-            'mode-change:edit',
+        expect((await logLines(page, 'modes')).filter((l) => l.startsWith('view-mode-change'))).toEqual([
+            'view-mode-change:split',
+            'view-mode-change:preview',
+            'view-mode-change:inline',
+            'view-mode-change:edit',
         ]);
     });
 
@@ -67,7 +67,7 @@ test.describe('modes', () => {
         await page.evaluate(() => {
             const el = document.getElementById('subject') as any;
             el.anchor = '#target';
-            el.mode = 'inline';
+            el.viewMode = 'inline';
         });
         await expect(root(page)).toHaveClass(/we-inline/);
         await expect.poll(() => editor(page).evaluate((el) => getComputedStyle(el).position)).toBe('fixed');

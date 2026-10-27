@@ -15,9 +15,9 @@ plain words here"></km-editor>
         import '/src/index.ts';
         const log = document.querySelector('[data-testid="statusbar-log"]');
         const el = document.getElementById('subject');
-        for (const type of ['change', 'mode-change', 'action']) {
+        for (const type of ['change', 'view-mode-change', 'action']) {
             el.addEventListener(type, (e) => {
-                const d = type === 'change' ? e.detail.format : type === 'mode-change' ? e.detail.mode : e.detail.action;
+                const d = type === 'change' ? e.detail.format : type === 'view-mode-change' ? e.detail.viewMode : e.detail.action;
                 log.textContent += `${type}:${d}\n`;
             });
         }

@@ -45,7 +45,7 @@ test.describe('selection toolbar', () => {
         await editor(page).evaluate((el) => el.setAttribute('readonly', ''));
         await expect(bar(page)).toBeHidden();
         await editor(page).evaluate((el) => el.removeAttribute('readonly'));
-        await editor(page).evaluate((el: any) => (el.mode = 'preview'));
+        await editor(page).evaluate((el: any) => (el.viewMode = 'preview'));
         await selectText(page, 'plain');
         await expect(bar(page)).toBeHidden();
     });

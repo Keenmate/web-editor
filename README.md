@@ -74,18 +74,18 @@ editor.controller.runCommand('bold'); // the public facade (also on every event 
 
 ## Options
 
-Every attribute is also a property (e.g. `el.mode = 'preview'`).
+Every attribute is also a property (e.g. `el.viewMode = 'preview'` ↔ `view-mode`).
 
 | Attribute   | Values                                          | Default      | Description |
 | ----------- | ----------------------------------------------- | ------------ | ----------- |
 | `value`     | string                                          | —            | Initial content, interpreted per `format`. Reassigning replaces the document. Reading `el.value` returns the **assigned** value, not live edits — use `getValue()`. |
 | `format`    | `markdown` \| `html` \| `json`                  | `markdown`   | Serialization lens for content I/O (`value`, `getValue()`, the `change` detail). Switching re-reports the same document in the new format — it never rebuilds it. |
-| `mode`      | `edit` \| `split` \| `preview` \| `inline`      | `edit`       | Presentation. `preview` forces read-only. `inline` renders a floating card (see `anchor`). |
-| `readonly`  | boolean                                         | `false`      | Make the editor read-only. `mode="preview"` also forces this on. |
+| `view-mode` | `edit` \| `split` \| `preview` \| `inline`      | `edit`       | Presentation. `preview` forces read-only. `inline` renders a floating card (see `anchor`). |
+| `readonly`  | boolean                                         | `false`      | Make the editor read-only. `view-mode="preview"` also forces this on. |
 | `toolbar`   | `top` \| `bottom` \| `start` \| `end` \| `none` | `top`        | Which edge the command toolbar docks to (`none` hides it). The selection toolbar and context menu are always available while editing. |
 | `statusbar` | `none` \| `top` \| `bottom` \| `both`           | `none`       | A dedicated strip of live indicators (word/char count, plugin items). `both` splits items across two strips. |
 | `theme`     | string                                          | —            | Theme name, reflected to the host for CSS theming (`:host([theme="…"])`). |
-| `anchor`    | CSS selector                                    | —            | For `mode="inline"` only: the page element the floating card tracks. |
+| `anchor`    | CSS selector                                    | —            | For `view-mode="inline"` only: the page element the floating card tracks. |
 
 Property-only inputs:
 
@@ -95,7 +95,7 @@ Property-only inputs:
 | `interactionHost`      | `{ request(ctx) }` | The modal bridge interactive pipeline stages call (`ctx` = request + `signal` + `controller` / `element`). Default: `window.confirm`. Survives engine rebuilds. |
 
 **Events** — bubble, not composed. Each has a camelCase twin property (`onChange`,
-`onReady`, `onModeChange`, `onLockChange`, `onAction`) called with the **same detail**
+`onReady`, `onViewModeChange`, `onLockChange`, `onAction`) called with the **same detail**
 before the DOM event. Every detail carries `controller` and `element` (non-enumerable —
 `JSON.stringify(detail)` shows only the data).
 
@@ -103,7 +103,7 @@ before the DOM event. Every detail carries `controller` and `element` (non-enume
 | ------------- | --------------------- | ---------- |
 | `change`      | `{ value, format }`   | Content changes (serialized in the active `format`), or `format` switches. |
 | `ready`       | the context only      | The engine has mounted and is ready (once). |
-| `mode-change` | `{ mode }`            | The `mode` changes. |
+| `view-mode-change` | `{ viewMode }`   | The `viewMode` changes. |
 | `lock-change` | `{ isLocked }`        | A gating pipeline (e.g. the cloud-image picker) locks / unlocks the editor. |
 | `action`      | `{ action, id, item, source, sourceEvent, triggerElement, dataset, state }` | A toolbar / selection-toolbar / context-menu item was activated (`source`: `toolbar` \| `selection-toolbar` \| `context-menu`). After the item's `onClick` and the command (a notification after the fact; `state` is the snapshot from activation). Keyboard shortcuts don't fire it. |
 

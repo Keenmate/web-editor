@@ -68,6 +68,12 @@ Clean breaks, no aliases (rulebook `naming-conventions.md` D-NC-13..27).
   `el.destroy()` is core's (final, idempotent; `el.isDestroyed`): it releases the engine
   and the shadow layout, and the element stays inert — re-inserting it no longer
   rebuilds a fresh editor (create a new element instead).
+- **`mode` → `viewMode`** (attribute `view-mode`; no bare `mode`, D-NC-27): the
+  edit / split / preview / inline presentation. The event `mode-change` → `view-mode-change`
+  with detail `{ viewMode }` (was `{ mode }`), twin `onModeChange` → `onViewModeChange`.
+  Types: `EditorMode` → `EditorViewMode`, `ModeChangeEventDetail` → `ViewModeChangeEventDetail`.
+  CSS hook `:host([mode='inline'])` → `:host([view-mode='inline'])`.
+- **Root CSS part `root` → `container`** (`::part(container)`, D-NC-27).
 
 ### Changed — BREAKING (interaction model, web-components-core rc15)
 

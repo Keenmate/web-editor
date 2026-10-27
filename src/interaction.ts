@@ -17,7 +17,7 @@ import type {
 } from '@keenmate/web-components-core/actions';
 import type { Command, EditorState } from 'prosemirror-state';
 import type { SerializationFormat } from './engine/serialization';
-import type { EditorMode } from './web-component';
+import type { EditorViewMode } from './web-component';
 
 // ============================================================================
 // Controller
@@ -148,8 +148,8 @@ export interface ChangeEventDetail extends EditorComponentContext {
 /** `ready` carries only the component context. */
 export type ReadyEventDetail = EditorComponentContext;
 
-export interface ModeChangeEventDetail extends EditorComponentContext {
-  mode: EditorMode;
+export interface ViewModeChangeEventDetail extends EditorComponentContext {
+  viewMode: EditorViewMode;
 }
 
 export interface LockChangeEventDetail extends EditorComponentContext {
@@ -161,7 +161,7 @@ export interface LockChangeEventDetail extends EditorComponentContext {
 export type EditorEventMap = {
   change: ChangeEventDetail;
   ready: ReadyEventDetail;
-  'mode-change': ModeChangeEventDetail;
+  'view-mode-change': ViewModeChangeEventDetail;
   'lock-change': LockChangeEventDetail;
   action: EditorActionEventDetail;
 };

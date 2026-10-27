@@ -6,7 +6,7 @@
  *
  * Reactivity (per input `on:`):
  *   - `reinit` — content source changed (`value`) → rebuild the engine.
- *   - `update` — `mode` / `isReadonly` / `theme` / `format` / `interactionHost`
+ *   - `update` — `viewMode` / `isReadonly` / `theme` / `format` / `interactionHost`
  *                → patch in place (toggle editable, reflect the attribute,
  *                re-report content, swap the modal bridge).
  *
@@ -51,7 +51,7 @@ import {
   type EditorActionEventDetail,
   type ChangeEventDetail,
   type ReadyEventDetail,
-  type ModeChangeEventDetail,
+  type ViewModeChangeEventDetail,
   type LockChangeEventDetail,
 } from './interaction';
 import { createActionHost } from './ui/actions';
@@ -63,8 +63,8 @@ import { initLogger, contentLogger } from './logger';
 // Build-time constant (vite `define`).
 declare const __VERSION__: string;
 
-/** How the editor is presented. Layout for `split`/`inline` lands in Phase 3. */
-export type EditorMode = 'edit' | 'split' | 'preview' | 'inline';
+/** How the editor is presented (`viewMode`). Layout for `split`/`inline` lands in Phase 3. */
+export type EditorViewMode = 'edit' | 'split' | 'preview' | 'inline';
 /** The serialization lens used for content I/O. */
 export type EditorFormat = SerializationFormat; // 'html' | 'markdown' | 'json'
 /** Static toolbar placement — which edge of the editor it occupies (`'none'` hides it). */
@@ -72,7 +72,7 @@ export type EditorToolbar = 'top' | 'bottom' | 'start' | 'end' | 'none';
 /** Status-bar placement — a dedicated strip docked top, bottom, or both (`'none'` hides it). */
 export type EditorStatusBar = 'none' | 'top' | 'bottom' | 'both';
 
-const MODES = ['edit', 'split', 'preview', 'inline'] as const;
+const VIEW_MODES = ['edit', 'split', 'preview', 'inline'] as const;
 const FORMATS = ['markdown', 'html', 'json'] as const;
 const TOOLBARS = ['top', 'bottom', 'start', 'end', 'none'] as const;
 const STATUSBARS = ['none', 'top', 'bottom', 'both'] as const;
@@ -102,20 +102,20 @@ const INPUTS: readonly InputDef[] = [
       "Serialization lens for content I/O (`value`, `getValue()`, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document.",
   },
   {
-    configKey: 'mode',
-    attribute: 'mode',
-    converter: toEnum(MODES, { default: 'edit' }),
+    configKey: 'viewMode',
+    attribute: 'view-mode',
+    converter: toEnum(VIEW_MODES, { default: 'edit' }),
     shouldReflect: true,
     on: 'update',
     description:
-      "Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the mode is stored, reflected, and announced via `mode-change`.",
+      "Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the view mode is stored, reflected, and announced via `view-mode-change`.",
   },
   {
     configKey: 'isReadonly',
     attribute: 'readonly',
     converter: toBool('default-false'),
     on: 'update',
-    description: 'Make the editor read-only (no input). `mode="preview"` also forces this on.',
+    description: 'Make the editor read-only (no input). `view-mode="preview"` also forces this on.',
   },
   {
     configKey: 'toolbar',
@@ -149,7 +149,7 @@ const INPUTS: readonly InputDef[] = [
     converter: toText({ isNullable: true }),
     on: 'update',
     description:
-      'For `mode="inline"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow.',
+      'For `view-mode="inline"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow.',
   },
   {
     configKey: 'beforeActionCallback',
@@ -186,8 +186,8 @@ const EVENTS: readonly EventDef[] = [
       'The editor was built and is live for the first time (once per element lifetime; core `BlissElement`). Fires right after the first build — during upgrade for a normal element, or when the `defer` gate is released (`el.release()` / removing `defer`). The host then has the `ready` attribute and matches `:state(ready)`; `el.whenReady()` resolves. `detail`: `controller` / `element`. Twin: `onReady(detail)`.',
   },
   {
-    name: 'mode-change',
-    description: 'The `mode` attribute/property changed. `detail`: `{ mode }`. Twin: `onModeChange(detail)`.',
+    name: 'view-mode-change',
+    description: 'The `viewMode` (attribute `view-mode`) changed. `detail`: `{ viewMode }`. Twin: `onViewModeChange(detail)`.',
   },
   {
     name: 'lock-change',
@@ -224,7 +224,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   // twin is called with the event detail (not the CustomEvent).
   declare onChange: ((detail: ChangeEventDetail) => void) | null;
   declare onReady: ((detail: ReadyEventDetail) => void) | null;
-  declare onModeChange: ((detail: ModeChangeEventDetail) => void) | null;
+  declare onViewModeChange: ((detail: ViewModeChangeEventDetail) => void) | null;
   declare onLockChange: ((detail: LockChangeEventDetail) => void) | null;
   declare onAction: ((detail: EditorActionEventDetail) => void) | null;
   /** `false` (sync or async) cancels a toolbar / menu activation. */
@@ -284,20 +284,20 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
 
   /** Cosmetic/behavioural change: patch the live engine without a rebuild. */
   protected override update(partial: Record<string, unknown>): void {
-    if ('isReadonly' in partial || 'mode' in partial) {
+    if ('isReadonly' in partial || 'viewMode' in partial) {
       this.#engine?.setEditable(this.#resolveEditable());
     }
     // Structural view-mode / anchor change: re-arrange the shadow layout in place
     // (the persistent mount is re-parented, so the live document survives).
-    if ('mode' in partial || 'anchor' in partial || 'toolbar' in partial || 'statusbar' in partial) {
+    if ('viewMode' in partial || 'anchor' in partial || 'toolbar' in partial || 'statusbar' in partial) {
       this.#applyLayout();
     }
     // Editing availability or the toolbar / status-bar toggle changed.
-    if ('isReadonly' in partial || 'mode' in partial || 'toolbar' in partial || 'statusbar' in partial) {
+    if ('isReadonly' in partial || 'viewMode' in partial || 'toolbar' in partial || 'statusbar' in partial) {
       this.#applyChromeState();
     }
-    if ('mode' in partial) {
-      this.emit('mode-change', { mode: this.config.mode as EditorMode });
+    if ('viewMode' in partial) {
+      this.emit('view-mode-change', { viewMode: this.config.viewMode as EditorViewMode });
     }
     // `format` changed: the document is unchanged, but its reported serialization
     // is — re-announce so split-view / bound consumers refresh their output.
@@ -443,10 +443,10 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     engines.delete(this);
   }
 
-  /** (Re)arrange the shadow layout for the current mode + anchor + toolbar + status side. */
+  /** (Re)arrange the shadow layout for the current view mode + anchor + toolbar + status side. */
   #applyLayout(): void {
     this.#layout.render(
-      this.config.mode as EditorMode,
+      this.config.viewMode as EditorViewMode,
       (this.config.anchor as string | null) ?? null,
       this.config.toolbar as EditorToolbar,
       this.config.statusbar as EditorStatusBar
@@ -476,7 +476,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
 
   #resolveEditable(): boolean {
     const isReadonly = this.config.isReadonly === true;
-    const previewing = this.config.mode === 'preview';
+    const previewing = this.config.viewMode === 'preview';
     return !isReadonly && !previewing;
   }
 
