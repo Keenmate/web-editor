@@ -1,4 +1,4 @@
-import { test, expect, load, pm, call, markdown, logLines, clearLog } from './fixtures';
+import { test, expect, load, pm, call, markdown, logLines, clearLog, prop } from './fixtures';
 
 // Content I/O: the three input formats, the getters, setValue + change, value
 // reassignment, focus(). Fixture: test/content.html.
@@ -20,7 +20,7 @@ test.describe('content I/O', () => {
         expect(await call(page, 'getJSON', [], 'json')).toEqual(json);
     });
 
-    test('getHTML / getMarkdown / getJSON / getValue serialise the live document', async ({ page }) => {
+    test('getHTML / getMarkdown / getJSON / value serialise the live document', async ({ page }) => {
         expect(await call(page, 'getHTML', [], 'md')).toBe(
             '<h1>Title</h1><p>Some <strong>bold</strong> and <em>italic</em> text.</p><ul><li><p>one</p></li><li><p>two</p></li></ul>'
         );
@@ -28,12 +28,13 @@ test.describe('content I/O', () => {
         const json = (await call<any>(page, 'getJSON', [], 'md'));
         expect(json.type).toBe('doc');
         expect(json.content.map((n: any) => n.type)).toEqual(['heading', 'paragraph', 'bullet_list']);
-        // getValue() uses the element's `format`; an explicit format overrides it.
-        expect(await call(page, 'getValue', [], 'html')).toContain('<h1>Title</h1>');
-        expect(await call(page, 'getValue', [], 'md')).toContain('# Title');
-        expect(JSON.parse(await call<string>(page, 'getValue', [], 'json'))).toEqual(json);
-        expect(await call(page, 'getValue', ['markdown'], 'html')).toContain('# Title');
-        expect(await call(page, 'getContent', ['html'], 'md')).toContain('<h1>Title</h1>');
+        // `value` is the live content in the element's `format`; the `value` attribute
+        // (`defaultValue`) is the initial content and stays untouched.
+        expect(await prop(page, 'value', 'html')).toContain('<h1>Title</h1>');
+        expect(await prop(page, 'value', 'md')).toContain('# Title');
+        expect(JSON.parse(await prop<string>(page, 'value', 'json'))).toEqual(json);
+        expect(await prop(page, 'getValue', 'md')).toBeUndefined();
+        expect(await prop(page, 'getContent', 'md')).toBeUndefined();
     });
 
     test('setValue(v) parses in the active format and fires change { value, format }', async ({ page }) => {
@@ -59,7 +60,7 @@ test.describe('content I/O', () => {
         expect(last).toBe(`change:markdown:${JSON.stringify('From JSON')}`);
     });
 
-    test('`value` reassignment replaces the document without re-firing ready', async ({ page }) => {
+    test('`value` property / attribute replace the document without re-firing ready', async ({ page }) => {
         await clearLog(page, 'content');
         await page.evaluate(() => ((document.getElementById('subject') as any).value = '# Second\n\nbody'));
         await expect(pm(page).locator('h1')).toHaveText('Second');

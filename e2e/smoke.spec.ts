@@ -8,7 +8,7 @@ test.describe('<km-editor>', () => {
     await expect(editorRoot.locator('strong')).toHaveText('bold');
   });
 
-  test('typing updates getValue() and fires change', async ({ page }) => {
+  test('typing updates `value` and fires change', async ({ page }) => {
     await load(page, 'fixture.html');
     const editorRoot = page.locator('#subject .ProseMirror');
     await expect(editorRoot.locator('h1')).toHaveText('Hello');
@@ -19,7 +19,7 @@ test.describe('<km-editor>', () => {
     await page.keyboard.press('End');
     await page.keyboard.type(' world');
     expect(await changeFired).toBe(true);
-    const markdown = await page.evaluate(() => (document.getElementById('subject') as unknown as { getValue(): string }).getValue());
+    const markdown = await page.evaluate(() => (document.getElementById('subject') as unknown as { value: string }).value);
     expect(markdown).toContain('# Hello world');
   });
 });

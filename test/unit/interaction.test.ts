@@ -88,7 +88,8 @@ describe('controller', () => {
     const c = el.controller;
     expect(el.isReady).toBe(true);
     expect('isReady' in c).toBe(false);
-    expect(c.getValue()).toContain('# Title');
+    expect(c.value).toContain('# Title');
+    expect(c.value).toBe(el.value);
     expect(c.getHTML()).toContain('<h1');
     c.setValue('plain', 'markdown');
     expect(c.getMarkdown()).toContain('plain');

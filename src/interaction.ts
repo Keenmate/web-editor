@@ -30,10 +30,8 @@ import type { EditorViewMode } from './web-component';
  * return empty values.
  */
 export interface EditorController {
-  /** Live content serialized in the active `format` (or an explicit one). */
-  getValue(format?: SerializationFormat): string;
-  /** Alias of {@link getValue}. */
-  getContent(format?: SerializationFormat): string;
+  /** Live content serialized in the active `format` (read-only; same as `el.value`). */
+  readonly value: string;
   getHTML(): string;
   getMarkdown(): string;
   getJSON(): unknown;
@@ -55,8 +53,6 @@ export interface EditorController {
 
 /** The methods the facade is built from (one list for every target). */
 const CONTROLLER_METHODS = [
-  'getValue',
-  'getContent',
   'getHTML',
   'getMarkdown',
   'getJSON',
@@ -67,7 +63,7 @@ const CONTROLLER_METHODS = [
   'isCommandEnabled',
 ] as const;
 
-type ControllerTarget = Pick<EditorController, (typeof CONTROLLER_METHODS)[number]>;
+type ControllerTarget = Pick<EditorController, (typeof CONTROLLER_METHODS)[number] | 'value'>;
 
 /** Build the facade from a method-name list; `getTarget()` is resolved per call. */
 export function createEditorController(getTarget: () => ControllerTarget): EditorController {
@@ -76,6 +72,7 @@ export function createEditorController(getTarget: () => ControllerTarget): Edito
     controller[name] = (...args: unknown[]) =>
       (getTarget()[name] as (...a: unknown[]) => unknown)(...args);
   }
+  Object.defineProperty(controller, 'value', { get: () => getTarget().value, enumerable: true });
   return Object.freeze(controller) as unknown as EditorController;
 }
 

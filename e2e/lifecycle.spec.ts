@@ -39,12 +39,12 @@ test.describe('lifecycle', () => {
         expect(await html(page)).toBe(before);
     });
 
-    test('content is readable while detached (getValue on a removed editor)', async ({ page }) => {
+    test('content is readable while detached (`value` on a removed editor)', async ({ page }) => {
         await call(page, 'setValue', [TABLE_HTML, 'html']);
         const out = await page.evaluate(() => {
             const el = document.getElementById('subject') as any;
             el.remove();
-            return { html: el.getHTML(), md: el.getValue() };
+            return { html: el.getHTML(), md: el.value };
         });
         expect(out.html).toContain('<table>');
         expect(out.md).toContain('Before');
@@ -110,6 +110,19 @@ test.describe('lifecycle', () => {
         await expect(pm(page, 'pre1').locator('h1')).toHaveText('Pre-set');
     });
 
+    test('`value` assigned before upgrade is applied by the first build', async ({ page }) => {
+        const md = await page.evaluate(async () => {
+            const el = document.createElement('km-editor-pre') as any;
+            el.value = '# Before upgrade';
+            document.body.appendChild(el);
+            const Base = customElements.get('km-editor') as any;
+            customElements.define('km-editor-pre', class extends Base {});
+            await el.whenSettled();
+            return [el.getMarkdown(), Object.prototype.hasOwnProperty.call(el, 'value'), el.hasAttribute('value')];
+        });
+        expect(md).toEqual(['# Before upgrade', false, false]);
+    });
+
     test('`format` changed while detached is applied on reconnect (ED-4)', async ({ page }) => {
         await call(page, 'setValue', ['# Title\n\ntext **b**']);
         await page.evaluate(() => {
@@ -120,7 +133,7 @@ test.describe('lifecycle', () => {
         });
         await expect(pm(page).locator('h1')).toHaveText('Title');
         await expect(pm(page).locator('strong')).toHaveText('b');
-        expect(await call(page, 'getValue')).toBe('<h1>Title</h1><p>text <strong>b</strong></p>');
+        expect(await page.evaluate(() => (document.getElementById('subject') as any).value)).toBe('<h1>Title</h1><p>text <strong>b</strong></p>');
     });
 
     test('`ready` fires once across moves, value and plugins reassignment', async ({ page }) => {
@@ -182,6 +195,6 @@ test.describe('lifecycle', () => {
     test('destroy() removes the editor surface', async ({ page }) => {
         await call(page, 'destroy');
         await expect(page.locator('km-editor#subject .ProseMirror')).toHaveCount(0);
-        expect(await call(page, 'getValue')).toBe('');
+        expect(await page.evaluate(() => (document.getElementById('subject') as any).value)).toBe('');
     });
 });

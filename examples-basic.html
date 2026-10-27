@@ -177,7 +177,7 @@ This editor was set up entirely in **HTML** — no script wired it.
         // BU02 — format lens + live output readout
         const eb02 = document.getElementById('eb02');
         const out = document.getElementById('eb02-out');
-        const refresh = () => { out.textContent = eb02.getValue?.() ?? ''; };
+        const refresh = () => { out.textContent = eb02.value ?? ''; };
         onRadio('eb02-format', (v) => { eb02.setAttribute('format', v); refresh(); });
         eb02.addEventListener('change', refresh);
         if (eb02.isReady) refresh(); else eb02.addEventListener('ready', refresh);

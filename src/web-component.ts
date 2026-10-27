@@ -5,7 +5,7 @@
  * core input/event table, and bridges engine events to outward CustomEvents.
  *
  * Reactivity (per input `on:`):
- *   - `reinit` — content source changed (`value`) → rebuild the engine.
+ *   - `reinit` — content source changed (`defaultValue`, attribute `value`) → rebuild the engine.
  *   - `update` — `viewMode` / `isReadonly` / `theme` / `format` / `interactionHost`
  *                → patch in place (toggle editable, reflect the attribute,
  *                re-report content, swap the modal bridge).
@@ -22,9 +22,9 @@
  * ctx carries `controller` (`el.controller`, the public facade) and `element`.
  * The engine is internal — `el.controller` is the imperative API.
  *
- * NOTE on `el.value`: core installs an instance accessor for every input, so
- * reading `el.value` returns the last value ASSIGNED (the config), not live
- * edits. Use {@link getValue} / {@link getContent} to read what the user typed.
+ * `el.value` is the LIVE content (serialized in `format`; assigning replaces the
+ * document). The `value` ATTRIBUTE is the initial / default content —
+ * `el.defaultValue`, like a native input's `defaultValue`.
  */
 import {
   BlissElement,
@@ -85,12 +85,12 @@ const isInteractionHost = (v: unknown): v is InteractionHost | null =>
 // ============================================================================
 const INPUTS: readonly InputDef[] = [
   {
-    configKey: 'value',
+    configKey: 'defaultValue',
     attribute: 'value',
     converter: toText({ isNullable: true }),
     on: 'reinit',
     description:
-      'Initial content to load, interpreted per `format`. Reassigning replaces the document. Reading `el.value` returns this assigned value, NOT live edits — use `getValue()` for that.',
+      'Initial / default content, interpreted per `format` (like a native input’s `value` attribute ↔ `defaultValue`). Changing it replaces the document. The live content is the `value` PROPERTY.',
   },
   {
     configKey: 'format',
@@ -99,7 +99,7 @@ const INPUTS: readonly InputDef[] = [
     shouldReflect: true,
     on: 'update',
     description:
-      "Serialization lens for content I/O (`value`, `getValue()`, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document.",
+      "Serialization lens for content I/O (the `value` attribute and property, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document.",
   },
   {
     configKey: 'viewMode',
@@ -231,6 +231,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   declare beforeActionCallback: ((detail: EditorActionEventDetail) => unknown) | null;
   /** The modal bridge for interactive pipeline stages. */
   declare interactionHost: InteractionHost | null;
+  /** Initial / default content (attribute `value`); the live content is {@link value}. */
+  declare defaultValue: string | null;
 
   #shadow: ShadowRoot;
   #layout: ViewLayout;
@@ -240,14 +242,14 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   // Custom editor plugin set. `undefined` → the engine's defaultPlugins(). Not an
   // attribute input (plugins are objects); set via the `plugins` property.
   #customPlugins?: EditorPlugin[];
-  // What the next engine build loads: a string in `format` (from `value` or a
+  // What the next engine build loads: a string in `format` (from `defaultValue` or a
   // pre-connect `setValue()`), or an HTML snapshot of the previous engine for a
   // `plugins` swap (HTML is lossless — tables included — and parses tolerantly
   // when the new plugin set lacks a node type). Only read by #buildEngine(); a DOM
   // move never rebuilds (the engine stays alive across disconnect/connect).
   #seed: { content: string | null; format: EditorFormat } = { content: null, format: 'markdown' };
   // A `setValue()` made while no engine exists (before the first build). Applied by the next build unless `value` was reassigned since —
-  // `valueAtSet` is the `value` config it was made on top of.
+  // `valueAtSet` is the `defaultValue` config it was made on top of.
   #pendingSet?: { value: string; format: EditorFormat; valueAtSet: unknown };
 
   constructor() {
@@ -263,22 +265,31 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
       host: this,
       serialize: (fmt) => (this.#engine ? this.#engine.serialize(fmt) : ''),
     });
+    // `el.value = …` assigned before upgrade is an own data property shadowing the
+    // `value` accessor: lift it off and apply it like a pre-build `setValue()`.
+    if (Object.prototype.hasOwnProperty.call(this, 'value')) {
+      const pre = (this as { value?: unknown }).value;
+      delete (this as { value?: unknown }).value;
+      if (typeof pre === 'string') {
+        this.#pendingSet = { value: pre, format: this.#format(), valueAtSet: this.config.defaultValue };
+      }
+    }
   }
 
   // ── core lifecycle hooks ──────────────────────────────────────────────────
 
   /** Content source changed (or first connect): (re)build the engine. */
   protected override reinit(): void {
-    // A `value` (re)assignment is an explicit content replacement — take it as the
-    // new source. (First connect also lands here with config.value as the seed.)
-    // A `setValue()` made before the engine existed wins over the `value` it was
-    // made on top of, but not over a `value` assigned after it.
+    // A `defaultValue` (attribute `value`) change is an explicit content replacement —
+    // take it as the new source. (The first build also lands here with it as the seed.)
+    // A `value` / `setValue()` assigned before the engine existed wins over the
+    // `defaultValue` it was made on top of, but not over one assigned after it.
     const pending = this.#pendingSet;
     this.#pendingSet = undefined;
     this.#seed =
-      pending && pending.valueAtSet === this.config.value
+      pending && pending.valueAtSet === this.config.defaultValue
         ? { content: pending.value, format: pending.format }
-        : { content: (this.config.value as string | null) ?? null, format: this.#format() };
+        : { content: (this.config.defaultValue as string | null) ?? null, format: this.#format() };
     if (this.isConnected) this.#rebuildEngine();
   }
 
@@ -326,7 +337,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   /**
    * Deactivate (every disconnect): release live resources only — the engine (and
    * with it the document, selection and undo history) stays alive, so a DOM move
-   * re-activates without a rebuild and a detached editor still answers getValue().
+   * re-activates without a rebuild and a detached editor still answers `value`.
    */
   protected override disconnect(): void {
     this.#engine?.deactivate();
@@ -496,8 +507,6 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   protected override createController(): EditorController {
     const el = this;
     const target = {
-      getValue: (format?: EditorFormat) => el.getValue(format),
-      getContent: (format?: EditorFormat) => el.getValue(format),
       getHTML: () => el.getHTML(),
       getMarkdown: () => el.getMarkdown(),
       getJSON: () => el.getJSON(),
@@ -511,6 +520,9 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
       isCommandEnabled: (name: string) => {
         el.flush();
         return el.#engine?.commands.isEnabled(name) ?? false;
+      },
+      get value() {
+        return el.value;
       },
     };
     return createEditorController(() => target);
@@ -530,15 +542,18 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
 
   // ── public content API (not inputs) ───────────────────────────────────────
 
-  /** Live content serialized in the active `format` (or an explicit one). */
-  getValue(format?: EditorFormat): string {
+  /**
+   * The live content, serialized in the active `format` (`''` before the first
+   * build). Assigning replaces the document, parsed in `format` — like
+   * `setValue(value)`. The `value` ATTRIBUTE is the initial content
+   * ({@link defaultValue}) and is never written.
+   */
+  get value(): string {
     this.flush();
-    return this.#engine ? this.#engine.serialize(format ?? this.#format()) : '';
+    return this.#engine ? this.#engine.serialize(this.#format()) : '';
   }
-
-  /** Alias for {@link getValue} — reads live content, not the assigned `value` input. */
-  getContent(format?: EditorFormat): string {
-    return this.getValue(format);
+  set value(value: string) {
+    this.setValue(value ?? '');
   }
 
   getHTML(): string {
@@ -556,7 +571,10 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     return this.#engine?.getJSON() ?? null;
   }
 
-  /** Replace the document with `value`, parsed in `format` (defaults to the active one). */
+  /**
+   * Replace the document with `value`, parsed in `format` (defaults to the active
+   * one) — the `value` setter with an explicit format, and the controller's write path.
+   */
   setValue(value: string, format?: EditorFormat): void {
     this.flush();
     const fmt = format ?? this.#format();
@@ -565,7 +583,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
       else this.#engine.setContent(value, fmt);
     } else {
       // No engine yet (before the first build): the build loads it — unless `value` is reassigned in the meantime.
-      this.#pendingSet = { value, format: fmt, valueAtSet: this.config.value };
+      this.#pendingSet = { value, format: fmt, valueAtSet: this.config.defaultValue };
     }
   }
 

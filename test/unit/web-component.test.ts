@@ -73,11 +73,23 @@ describe('<km-editor>', () => {
     expect(el.getMarkdown()).toBe('');
   });
 
+  it('`value` property replaces the live document; the `value` attribute stays the default', async () => {
+    const el = await mount({ value: '# Initial' });
+    el.value = '# Assigned';
+    expect(el.getMarkdown()).toContain('# Assigned');
+    expect(el.getAttribute('value')).toBe('# Initial');
+    expect(el.defaultValue).toBe('# Initial');
+  });
+
   it('reads live content via the active format lens', async () => {
     const el = await mount({ value: '# Title', format: 'markdown' });
-    expect(el.getValue()).toContain('# Title');
-    expect(el.getValue('html')).toContain('<h1');
-    expect(typeof el.getValue('json')).toBe('string'); // serialize() returns a JSON string
+    expect(el.value).toContain('# Title');
+    expect(el.defaultValue).toBe('# Title');
+    el.format = 'html';
+    expect(el.value).toContain('<h1');
+    el.format = 'json';
+    expect(typeof el.value).toBe('string'); // serialize() returns a JSON string
+    expect('getValue' in el).toBe(false);
   });
 
   it('setValue replaces the document', async () => {

@@ -8,7 +8,7 @@ test.describe('logging', () => {
         const lines: string[] = [];
         page.on('console', (m) => lines.push(`${m.type()}: ${m.text()}`));
         await load(page, 'logging.html', { flag: 'fixtureReady' });
-        await editor(page).evaluate((el: any) => (el.value = '# again')); // a rebuild
+        await editor(page).evaluate((el: any) => (el.defaultValue = '# again')); // a rebuild
         await page.waitForTimeout(50);
         expect(lines.filter((l) => /EDITOR|km-editor/.test(l))).toEqual([]);
     });
@@ -24,12 +24,12 @@ test.describe('logging', () => {
         });
         expect(cats).toEqual(expect.arrayContaining(['enableLogging', 'disableLogging']));
         // The INIT category logs every engine build — trigger one.
-        await editor(page).evaluate((el: any) => (el.value = '# rebuilt'));
+        await editor(page).evaluate((el: any) => (el.defaultValue = '# rebuilt'));
         await expect.poll(() => lines.filter((l) => l.includes('engine built'))).toHaveLength(1);
         expect(lines.find((l) => l.includes('engine built'))).toMatch(/EDITOR:INIT/);
         // …and disabling silences it again.
         await page.evaluate(() => (window as any).components['km-editor'].logging.disableLogging());
-        await editor(page).evaluate((el: any) => (el.value = '# quiet'));
+        await editor(page).evaluate((el: any) => (el.defaultValue = '# quiet'));
         await page.waitForTimeout(50);
         expect(lines.filter((l) => l.includes('engine built'))).toHaveLength(1);
     });

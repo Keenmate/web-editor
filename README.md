@@ -68,7 +68,8 @@ editor.addEventListener('change', (e) => {
 editor.onChange = ({ value, format, controller }) => console.log(value, format);
 
 editor.setValue('## New heading', 'markdown');
-editor.getMarkdown(); // live content — getValue reads live edits, not the `value` attribute
+editor.value;         // live content in the active `format` (the `value` attribute is only the initial content)
+editor.getMarkdown(); // live content as markdown, whatever `format` is
 editor.controller.runCommand('bold'); // the public facade (also on every event detail)
 ```
 
@@ -78,8 +79,8 @@ Every attribute is also a property (e.g. `el.viewMode = 'preview'` ↔ `view-mod
 
 | Attribute   | Values                                          | Default      | Description |
 | ----------- | ----------------------------------------------- | ------------ | ----------- |
-| `value`     | string                                          | —            | Initial content, interpreted per `format`. Reassigning replaces the document. Reading `el.value` returns the **assigned** value, not live edits — use `getValue()`. |
-| `format`    | `markdown` \| `html` \| `json`                  | `markdown`   | Serialization lens for content I/O (`value`, `getValue()`, the `change` detail). Switching re-reports the same document in the new format — it never rebuilds it. |
+| `value`     | string                                          | —            | Initial content, interpreted per `format` (property `defaultValue`, like a native input). Changing it replaces the document. The live content is the `value` **property**. |
+| `format`    | `markdown` \| `html` \| `json`                  | `markdown`   | Serialization lens for content I/O (the `value` attribute and property, the `change` detail). Switching re-reports the same document in the new format — it never rebuilds it. |
 | `view-mode` | `edit` \| `split` \| `preview` \| `inline`      | `edit`       | Presentation. `preview` forces read-only. `inline` renders a floating card (see `anchor`). |
 | `readonly`  | boolean                                         | `false`      | Make the editor read-only. `view-mode="preview"` also forces this on. |
 | `toolbar`   | `top` \| `bottom` \| `start` \| `end` \| `none` | `top`        | Which edge the command toolbar docks to (`none` hides it). The selection toolbar and context menu are always available while editing. |
@@ -111,15 +112,15 @@ before the DOM event. Every detail carries `controller` and `element` (non-enume
 
 | Member                    | Returns              | Description |
 | ------------------------- | -------------------- | ----------- |
-| `getValue(format?)`       | `string`             | Live content in `format` (defaults to the active `format`). |
+| `value`                   | `string`             | The live content, serialized in the active `format`. Assigning replaces the document (the `value` attribute is not written). |
 | `getMarkdown()` / `getHTML()` | `string`         | Live content in that format. |
 | `getJSON()`               | `unknown`            | Live content as the ProseMirror JSON document. |
-| `setValue(value, format?)`| `void`               | Replace the document from `value`. |
+| `setValue(value, format?)`| `void`               | Replace the document from `value`, parsed in `format` (default: the active one). |
 | `focus()`                 | `void`               | Focus the editing surface. |
 | `isReady` / `whenReady()` | `boolean` / `Promise<void>` | Core: the first build is live (`ready` attribute, `:state(ready)`, `ready` event). |
 | `shouldDefer` / `release()` | `boolean` / `void` | Core: hold the first build (attribute `defer`) until `release()` / removing `defer`. |
 | `plugins`                 | `EditorPlugin[]`     | The active plugin set — assign to compose with `defaultPlugins()` (rebuilds, preserving content). |
-| `controller`              | `EditorController`   | The public facade (also `detail.controller` / `ctx.controller`): `getValue` / `getContent` / `getHTML` / `getMarkdown` / `getJSON`, `setValue`, `focus`, `runCommand(name \| ProseMirror command)`, `isCommandToggled(name)`, `isCommandEnabled(name)`. Programmatic — no `action` event. |
+| `controller`              | `EditorController`   | The public facade (also `detail.controller` / `ctx.controller`): `value` (read-only), `getHTML` / `getMarkdown` / `getJSON`, `setValue`, `focus`, `runCommand(name \| ProseMirror command)`, `isCommandToggled(name)`, `isCommandEnabled(name)`. Programmatic — no `action` event. |
 | `destroy()`               | `void`               | Core: final teardown of the engine and shadow layout (idempotent; `isDestroyed`). The element stays inert — create a new one instead of re-inserting it. |
 
 The internal engine is not exposed on the element; `EditorEngine` is exported for

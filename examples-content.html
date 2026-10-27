@@ -182,7 +182,7 @@ live inside the editor."></km-editor>
         const refreshOne = (el) => {
             const out = document.getElementById(el.getAttribute('data-out'));
             if (!out) return;
-            out.textContent = el.getValue?.(lens) ?? '';
+            out.textContent = (lens === 'html' ? el.getHTML() : lens === 'json' ? JSON.stringify(el.getJSON(), null, 2) : el.getMarkdown());
             const label = out.closest('.output')?.querySelector('.output-label');
             if (label) label.textContent = labelFor(el);
         };

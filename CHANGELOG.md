@@ -74,6 +74,15 @@ Clean breaks, no aliases (rulebook `naming-conventions.md` D-NC-13..27).
   Types: `EditorMode` → `EditorViewMode`, `ModeChangeEventDetail` → `ViewModeChangeEventDetail`.
   CSS hook `:host([mode='inline'])` → `:host([view-mode='inline'])`.
 - **Root CSS part `root` → `container`** (`::part(container)`, D-NC-27).
+- **`value` is live state** (D-NC-14): `el.value` reads the live content serialized in
+  `format` and assigning it replaces the document in place (no engine rebuild, the
+  attribute is not written); `controller.value` is its read-only twin. The `value`
+  ATTRIBUTE is the initial / default content — its property is now `el.defaultValue`
+  (was `el.value`, which returned the assigned string, not live edits); changing it still
+  rebuilds. **Removed:** `getValue(format?)` and its alias `getContent(format?)` on the
+  element and the controller — read `value`, or `getHTML()` / `getMarkdown()` /
+  `getJSON()` for a fixed format. `setValue(value, format?)` stays (explicit format; the
+  controller's write path).
 
 ### Changed — BREAKING (interaction model, web-components-core rc15)
 

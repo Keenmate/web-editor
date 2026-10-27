@@ -38,6 +38,11 @@ export async function call<T = unknown>(page: Page, method: string, args: unknow
     ) as Promise<T>;
 }
 
+/** Read a property of an editor (`value`, `isReady`, …). */
+export async function prop<T = unknown>(page: Page, name: string, id = 'subject'): Promise<T> {
+    return page.evaluate(({ id, name }) => (document.getElementById(id) as any)[name], { id, name }) as Promise<T>;
+}
+
 /** Live markdown of an editor. */
 export const markdown = (page: Page, id = 'subject'): Promise<string> => call<string>(page, 'getMarkdown', [], id);
 /** Live HTML of an editor. */
