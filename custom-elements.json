@@ -2576,241 +2576,6 @@
     },
     {
       "kind": "javascript-module",
-      "path": "src/plugins/code-highlight.ts",
-      "declarations": [
-        {
-          "kind": "variable",
-          "name": "codeHighlightPlugin"
-        }
-      ],
-      "exports": [
-        {
-          "kind": "js",
-          "name": "codeHighlightPlugin",
-          "declaration": {
-            "name": "codeHighlightPlugin",
-            "module": "src/plugins/code-highlight.ts"
-          }
-        }
-      ]
-    },
-    {
-      "kind": "javascript-module",
-      "path": "src/plugins/debug.ts",
-      "declarations": [
-        {
-          "kind": "function",
-          "name": "updateDebugPanel",
-          "parameters": [
-            {
-              "name": "view",
-              "type": {
-                "text": "EditorView"
-              }
-            }
-          ]
-        },
-        {
-          "kind": "function",
-          "name": "createDebugPlugins",
-          "return": {
-            "type": {
-              "text": "Plugin[]"
-            }
-          }
-        }
-      ],
-      "exports": [
-        {
-          "kind": "js",
-          "name": "updateDebugPanel",
-          "declaration": {
-            "name": "updateDebugPanel",
-            "module": "src/plugins/debug.ts"
-          }
-        },
-        {
-          "kind": "js",
-          "name": "createDebugPlugins",
-          "declaration": {
-            "name": "createDebugPlugins",
-            "module": "src/plugins/debug.ts"
-          }
-        }
-      ]
-    },
-    {
-      "kind": "javascript-module",
-      "path": "src/plugins/floating-toolbar.ts",
-      "declarations": [
-        {
-          "kind": "function",
-          "name": "createFloatingToolbarPlugin",
-          "return": {
-            "type": {
-              "text": "Plugin"
-            }
-          },
-          "parameters": [
-            {
-              "name": "schema",
-              "type": {
-                "text": "Schema"
-              }
-            }
-          ],
-          "description": "Build the floating-toolbar plugin. Call this once at bootstrap, after the\nplayground DOM exists — it captures the toolbar elements by id."
-        }
-      ],
-      "exports": [
-        {
-          "kind": "js",
-          "name": "createFloatingToolbarPlugin",
-          "declaration": {
-            "name": "createFloatingToolbarPlugin",
-            "module": "src/plugins/floating-toolbar.ts"
-          }
-        }
-      ]
-    },
-    {
-      "kind": "javascript-module",
-      "path": "src/plugins/image-base64.ts",
-      "declarations": [
-        {
-          "kind": "variable",
-          "name": "imageBase64Plugin"
-        }
-      ],
-      "exports": [
-        {
-          "kind": "js",
-          "name": "imageBase64Plugin",
-          "declaration": {
-            "name": "imageBase64Plugin",
-            "module": "src/plugins/image-base64.ts"
-          }
-        }
-      ]
-    },
-    {
-      "kind": "javascript-module",
-      "path": "src/plugins/image-browser.ts",
-      "declarations": [
-        {
-          "kind": "function",
-          "name": "imageBrowserPlugin",
-          "return": {
-            "type": {
-              "text": "EditorPlugin"
-            }
-          },
-          "parameters": [
-            {
-              "name": "opts",
-              "default": "{}",
-              "type": {
-                "text": "ImageBrowserOptions"
-              }
-            }
-          ],
-          "description": "Build the cloud-image browser plugin."
-        }
-      ],
-      "exports": [
-        {
-          "kind": "js",
-          "name": "imageBrowserPlugin",
-          "declaration": {
-            "name": "imageBrowserPlugin",
-            "module": "src/plugins/image-browser.ts"
-          }
-        }
-      ]
-    },
-    {
-      "kind": "javascript-module",
-      "path": "src/plugins/image.ts",
-      "declarations": [
-        {
-          "kind": "variable",
-          "name": "imagePlugin"
-        }
-      ],
-      "exports": [
-        {
-          "kind": "js",
-          "name": "imagePlugin",
-          "declaration": {
-            "name": "imagePlugin",
-            "module": "src/plugins/image.ts"
-          }
-        }
-      ]
-    },
-    {
-      "kind": "javascript-module",
-      "path": "src/plugins/link.ts",
-      "declarations": [
-        {
-          "kind": "variable",
-          "name": "linkPlugin"
-        }
-      ],
-      "exports": [
-        {
-          "kind": "js",
-          "name": "linkPlugin",
-          "declaration": {
-            "name": "linkPlugin",
-            "module": "src/plugins/link.ts"
-          }
-        }
-      ]
-    },
-    {
-      "kind": "javascript-module",
-      "path": "src/plugins/syntax-highlight.ts",
-      "declarations": [
-        {
-          "kind": "variable",
-          "name": "syntaxHighlightPlugin",
-          "default": "new Plugin({ state: { init(_, { doc }) { return getDecorations(doc); }, apply(tr, decorations) { if (tr.docChanged) { return getDecorations(tr.doc); } return decorations.map(tr.mapping, tr.doc); }, }, props: { decorations(state) { return this.getState(state); }, }, })"
-        }
-      ],
-      "exports": [
-        {
-          "kind": "js",
-          "name": "syntaxHighlightPlugin",
-          "declaration": {
-            "name": "syntaxHighlightPlugin",
-            "module": "src/plugins/syntax-highlight.ts"
-          }
-        }
-      ]
-    },
-    {
-      "kind": "javascript-module",
-      "path": "src/plugins/tables.ts",
-      "declarations": [
-        {
-          "kind": "variable",
-          "name": "tablePlugin"
-        }
-      ],
-      "exports": [
-        {
-          "kind": "js",
-          "name": "tablePlugin",
-          "declaration": {
-            "name": "tablePlugin",
-            "module": "src/plugins/tables.ts"
-          }
-        }
-      ]
-    },
-    {
-      "kind": "javascript-module",
       "path": "src/ui/actions.ts",
       "declarations": [
         {
@@ -3037,26 +2802,10 @@
             },
             {
               "kind": "field",
-              "name": "#variant",
-              "privacy": "private",
-              "type": {
-                "text": "CommandBarVariant"
-              }
-            },
-            {
-              "kind": "field",
               "name": "#source",
               "privacy": "private",
               "type": {
                 "text": "EditorActionSource"
-              }
-            },
-            {
-              "kind": "field",
-              "name": "#onActivate",
-              "privacy": "private",
-              "type": {
-                "text": "(item: EditorActionItem) => void | undefined"
               }
             },
             {
@@ -3161,12 +2910,6 @@
                   "type": {
                     "text": "ResolvedActionItem<EditorAction>"
                   }
-                },
-                {
-                  "name": "isToggle",
-                  "type": {
-                    "text": "boolean"
-                  }
                 }
               ]
             },
@@ -3207,28 +2950,37 @@
             },
             {
               "kind": "field",
-              "name": "#bar",
+              "name": "#host",
               "privacy": "private",
               "type": {
-                "text": "CommandBar"
+                "text": "ActionSurfaceHost"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "#container",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLElement"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "#entries",
+              "privacy": "private",
+              "type": {
+                "text": "Entry[]"
               },
-              "default": "new CommandBar(this.#panel, opts.items, opts.host, { variant: 'menu', source: 'context-menu', // Close on activation; the action (incl. an async beforeActionCallback) runs after. onActivate: () => this.#close(), })"
+              "default": "normalizeActionItems(opts.items as (string | EditorActionItem)[])"
             },
             {
               "kind": "field",
-              "name": "#panel",
+              "name": "#menu",
               "privacy": "private",
               "type": {
-                "text": "HTMLDivElement"
-              }
-            },
-            {
-              "kind": "field",
-              "name": "#popover",
-              "privacy": "private",
-              "type": {
-                "text": "PopoverHandle"
-              }
+                "text": "MenuHandle | null"
+              },
+              "default": "null"
             },
             {
               "kind": "field",
@@ -3241,44 +2993,10 @@
             },
             {
               "kind": "field",
-              "name": "#open",
-              "privacy": "private",
-              "type": {
-                "text": "boolean"
-              },
-              "default": "false"
-            },
-            {
-              "kind": "field",
-              "name": "#point",
-              "privacy": "private",
-              "type": {
-                "text": "object"
-              },
-              "default": "{ x: 0, y: 0 }"
-            },
-            {
-              "kind": "field",
               "name": "#onContextMenu",
               "privacy": "private",
               "type": {
                 "text": "(e: MouseEvent) => void"
-              }
-            },
-            {
-              "kind": "field",
-              "name": "#onDismiss",
-              "privacy": "private",
-              "type": {
-                "text": "(e: Event) => void"
-              }
-            },
-            {
-              "kind": "field",
-              "name": "#onKey",
-              "privacy": "private",
-              "type": {
-                "text": "(e: KeyboardEvent) => void"
               }
             },
             {
@@ -3314,7 +3032,7 @@
                   "text": "void"
                 }
               },
-              "description": "Close the menu (and drop its document dismiss listeners) if it is open."
+              "description": "Close the menu (and drop its document listeners) if it is open."
             },
             {
               "kind": "method",
@@ -3327,47 +3045,7 @@
             },
             {
               "kind": "method",
-              "name": "#openMenu",
-              "privacy": "private",
-              "return": {
-                "type": {
-                  "text": "void"
-                }
-              }
-            },
-            {
-              "kind": "method",
-              "name": "#close",
-              "privacy": "private",
-              "return": {
-                "type": {
-                  "text": "void"
-                }
-              }
-            },
-            {
-              "kind": "method",
-              "name": "#attachDismiss",
-              "privacy": "private",
-              "return": {
-                "type": {
-                  "text": "void"
-                }
-              }
-            },
-            {
-              "kind": "method",
-              "name": "#detachDismiss",
-              "privacy": "private",
-              "return": {
-                "type": {
-                  "text": "void"
-                }
-              }
-            },
-            {
-              "kind": "method",
-              "name": "#safely",
+              "name": "#open",
               "privacy": "private",
               "return": {
                 "type": {
@@ -3376,20 +3054,18 @@
               },
               "parameters": [
                 {
-                  "name": "fn",
+                  "name": "x",
                   "type": {
-                    "text": "() => void"
+                    "text": "number"
+                  }
+                },
+                {
+                  "name": "y",
+                  "type": {
+                    "text": "number"
                   }
                 }
               ]
-            },
-            {
-              "kind": "field",
-              "name": "className",
-              "type": {
-                "text": "string"
-              },
-              "default": "'km-floating km-context-menu'"
             }
           ]
         }
@@ -3624,7 +3300,7 @@
               "type": {
                 "text": "CommandBar"
               },
-              "default": "new CommandBar(this.#panel, opts.items, opts.host, { variant: 'bar', source: 'selection-toolbar' })"
+              "default": "new CommandBar(this.#panel, opts.items, opts.host, { source: 'selection-toolbar' })"
             },
             {
               "kind": "field",
@@ -3779,7 +3455,7 @@
               "type": {
                 "text": "string"
               },
-              "default": "'km-floating km-selection-toolbar'"
+              "default": "'we-floating we-selection-toolbar'"
             }
           ]
         }
@@ -3906,7 +3582,7 @@
               "type": {
                 "text": "string"
               },
-              "default": "'km-status-end'"
+              "default": "'we-status-end'"
             }
           ]
         }
@@ -3989,7 +3665,7 @@
               "type": {
                 "text": "string"
               },
-              "default": "'km-toolbar-zone'"
+              "default": "'we-toolbar-zone'"
             }
           ]
         }
@@ -4195,7 +3871,7 @@
                   }
                 }
               ],
-              "description": "(Re)build the shadow structure for `mode` + `toolbarSide`. The toolbar slot\r\nand the editor mount are wrapped in one bordered `.km-surface` frame (so the\r\ntoolbar sits flush against the editor, with a divider, rather than floating as\r\na separate card); `toolbarSide` sets which edge the toolbar occupies. Builds\r\nthe output panel only for `split`; (re)anchors only for `inline`."
+              "description": "(Re)build the shadow structure for `mode` + `toolbarSide`. The toolbar slot\r\nand the editor mount are wrapped in one bordered `.we-surface` frame (so the\r\ntoolbar sits flush against the editor, with a divider, rather than floating as\r\na separate card); `toolbarSide` sets which edge the toolbar occupies. Builds\r\nthe output panel only for `split`; (re)anchors only for `inline`."
             },
             {
               "kind": "method",
@@ -4290,7 +3966,7 @@
               "type": {
                 "text": "string"
               },
-              "default": "'km-overlays'"
+              "default": "'we-overlays'"
             }
           ]
         }
@@ -4344,7 +4020,7 @@
               }
             }
           ],
-          "description": "A plain `DOMRect`-shaped object for a `@floating-ui/dom` virtual reference.\nBuilt by hand (rather than `new DOMRect`) so it works identically in the\nbrowser and in happy-dom, and so a caller can recompute it per frame (the\nselection rect / cursor point the floating presenters anchor to)."
+          "description": "A plain `DOMRect`-shaped object for a `@floating-ui/dom` virtual reference.\nBuilt by hand (rather than `new DOMRect`) so it works identically in the\nbrowser and in happy-dom, and so a caller can recompute it per frame (the\nselection rect the selection toolbar anchors to)."
         }
       ],
       "exports": [
@@ -4354,6 +4030,241 @@
           "declaration": {
             "name": "domRect",
             "module": "src/ui/virtual.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/plugins/code-highlight.ts",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "codeHighlightPlugin"
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "codeHighlightPlugin",
+          "declaration": {
+            "name": "codeHighlightPlugin",
+            "module": "src/plugins/code-highlight.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/plugins/debug.ts",
+      "declarations": [
+        {
+          "kind": "function",
+          "name": "updateDebugPanel",
+          "parameters": [
+            {
+              "name": "view",
+              "type": {
+                "text": "EditorView"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "createDebugPlugins",
+          "return": {
+            "type": {
+              "text": "Plugin[]"
+            }
+          }
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "updateDebugPanel",
+          "declaration": {
+            "name": "updateDebugPanel",
+            "module": "src/plugins/debug.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "createDebugPlugins",
+          "declaration": {
+            "name": "createDebugPlugins",
+            "module": "src/plugins/debug.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/plugins/floating-toolbar.ts",
+      "declarations": [
+        {
+          "kind": "function",
+          "name": "createFloatingToolbarPlugin",
+          "return": {
+            "type": {
+              "text": "Plugin"
+            }
+          },
+          "parameters": [
+            {
+              "name": "schema",
+              "type": {
+                "text": "Schema"
+              }
+            }
+          ],
+          "description": "Build the floating-toolbar plugin. Call this once at bootstrap, after the\nplayground DOM exists — it captures the toolbar elements by id."
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "createFloatingToolbarPlugin",
+          "declaration": {
+            "name": "createFloatingToolbarPlugin",
+            "module": "src/plugins/floating-toolbar.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/plugins/image-base64.ts",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "imageBase64Plugin"
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "imageBase64Plugin",
+          "declaration": {
+            "name": "imageBase64Plugin",
+            "module": "src/plugins/image-base64.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/plugins/image-browser.ts",
+      "declarations": [
+        {
+          "kind": "function",
+          "name": "imageBrowserPlugin",
+          "return": {
+            "type": {
+              "text": "EditorPlugin"
+            }
+          },
+          "parameters": [
+            {
+              "name": "opts",
+              "default": "{}",
+              "type": {
+                "text": "ImageBrowserOptions"
+              }
+            }
+          ],
+          "description": "Build the cloud-image browser plugin."
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "imageBrowserPlugin",
+          "declaration": {
+            "name": "imageBrowserPlugin",
+            "module": "src/plugins/image-browser.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/plugins/image.ts",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "imagePlugin"
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "imagePlugin",
+          "declaration": {
+            "name": "imagePlugin",
+            "module": "src/plugins/image.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/plugins/link.ts",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "linkPlugin"
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "linkPlugin",
+          "declaration": {
+            "name": "linkPlugin",
+            "module": "src/plugins/link.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/plugins/syntax-highlight.ts",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "syntaxHighlightPlugin",
+          "default": "new Plugin({ state: { init(_, { doc }) { return getDecorations(doc); }, apply(tr, decorations) { if (tr.docChanged) { return getDecorations(tr.doc); } return decorations.map(tr.mapping, tr.doc); }, }, props: { decorations(state) { return this.getState(state); }, }, })"
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "syntaxHighlightPlugin",
+          "declaration": {
+            "name": "syntaxHighlightPlugin",
+            "module": "src/plugins/syntax-highlight.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/plugins/tables.ts",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "tablePlugin"
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "tablePlugin",
+          "declaration": {
+            "name": "tablePlugin",
+            "module": "src/plugins/tables.ts"
           }
         }
       ]
