@@ -6,7 +6,7 @@
  *
  * Reactivity (per input `on:`):
  *   - `reinit` — content source changed (`defaultValue`, attribute `value`) → rebuild the engine.
- *   - `update` — `viewMode` / `isReadonly` / `theme` / `format` / `interactionHost`
+ *   - `update` — `viewMode` / `isReadonly` / `isDisabled` (via `disabledChanged()`) / `theme` / `format` / `interactionHost`
  *                → patch in place (toggle editable, reflect the attribute,
  *                re-report content, swap the modal bridge).
  *
@@ -113,9 +113,20 @@ const INPUTS: readonly InputDef[] = [
   {
     configKey: 'isReadonly',
     attribute: 'readonly',
-    converter: toBool('default-false'),
+    converter: toBool('presence'),
+    shouldReflect: true,
     on: 'update',
-    description: 'Make the editor read-only (no input). `view-mode="preview"` also forces this on.',
+    description:
+      'Read-only: the content can’t change (no typing, toolbar hidden), but it stays focusable, selectable and copyable. `view-mode="preview"` also forces this on. Reflects to `readonly`.',
+  },
+  {
+    configKey: 'isDisabled',
+    attribute: 'disabled',
+    converter: toBool('presence'),
+    shouldReflect: true,
+    on: 'update',
+    description:
+      'Disabled: no interaction at all — not editable, not focusable or selectable (the surface is `inert`), toolbar hidden. An ancestor `<fieldset disabled>` disables it too (core). Reflects to `disabled`, like a native control.',
   },
   {
     configKey: 'toolbar',
@@ -219,6 +230,8 @@ export function getEditorEngine(el: KmEditorElement): EditorEngine | null {
 export class KmEditorElement extends BlissElement<EditorEventMap, EditorController> {
   protected static override inputs = INPUTS;
   protected static override events = EVENTS;
+  /** Form-associated for `<fieldset disabled>` (core `isEffectivelyDisabled`) and `el.form`. */
+  static formAssociated = true;
 
   // Type-only: core installs the managed accessors at runtime (§12.5). Each
   // twin is called with the event detail (not the CustomEvent).
@@ -291,6 +304,16 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
         ? { content: pending.value, format: pending.format }
         : { content: (this.config.defaultValue as string | null) ?? null, format: this.#format() };
     if (this.isConnected) this.#rebuildEngine();
+  }
+
+  /**
+   * `isDisabled` or an ancestor `<fieldset disabled>` flipped (core merges both
+   * into `isEffectivelyDisabled`): toggle editing, the chrome and `inert`.
+   */
+  protected override disabledChanged(): void {
+    this.#engine?.setEditable(this.#resolveEditable());
+    this.#layout.setInert(this.isEffectivelyDisabled);
+    this.#applyChromeState();
   }
 
   /** Cosmetic/behavioural change: patch the live engine without a rebuild. */
@@ -462,6 +485,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
       this.config.toolbar as EditorToolbar,
       this.config.statusbar as EditorStatusBar
     );
+    this.#layout.setInert(this.isEffectivelyDisabled);
   }
 
   /** Push the current editable + toolbar + status-bar settings into the chrome. */
@@ -486,6 +510,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   }
 
   #resolveEditable(): boolean {
+    if (this.isEffectivelyDisabled) return false;
     const isReadonly = this.config.isReadonly === true;
     const previewing = this.config.viewMode === 'preview';
     return !isReadonly && !previewing;

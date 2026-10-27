@@ -83,6 +83,17 @@ Clean breaks, no aliases (rulebook `naming-conventions.md` D-NC-13..27).
   element and the controller — read `value`, or `getHTML()` / `getMarkdown()` /
   `getJSON()` for a fixed format. `setValue(value, format?)` stays (explicit format; the
   controller's write path).
+- **`readonly` reflects and uses native presence semantics** (D-NC-16): `el.isReadonly`
+  writes the `readonly` attribute back, and any value means on (`readonly="false"` is now
+  read-only, like a native control; remove the attribute instead).
+
+### Added (naming unification)
+
+- **`disabled` / `el.isDisabled`** (D-NC-16): no interaction — not editable, not focusable
+  or selectable (the shadow container is `inert`), toolbar hidden. Reflects to `disabled`.
+  The element is now **form-associated** (`static formAssociated = true`), so an ancestor
+  `<fieldset disabled>` disables it too (core `isEffectivelyDisabled`, without touching
+  `isDisabled`) and `el.form` resolves. The editor still submits nothing with a form.
 
 ### Changed — BREAKING (interaction model, web-components-core rc15)
 

@@ -53,6 +53,7 @@ export class ViewLayout {
   #outputFormat: SerializationFormat = 'html';
 
   #mode: EditorViewMode = 'edit';
+  #isInert = false;
   #anchorSelector: string | null = null;
   #anchorHandle?: AnchorHandle;
 
@@ -119,6 +120,7 @@ export class ViewLayout {
     if (!this.#root) {
       this.#root = document.createElement('div');
       this.#root.setAttribute('part', 'container');
+      this.#root.toggleAttribute('inert', this.#isInert);
       this.#shadow.appendChild(this.#root);
     }
     const root = this.#root;
@@ -174,6 +176,12 @@ export class ViewLayout {
   activate(): void {
     this.#teardownAnchor();
     if (this.#mode === 'inline') this.#setupInline();
+  }
+
+  /** `disabled`: make the whole surface (editor, toolbar, status, output) `inert`. */
+  setInert(isInert: boolean): void {
+    this.#isInert = isInert;
+    this.#root?.toggleAttribute('inert', isInert);
   }
 
   destroy(): void {
