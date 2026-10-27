@@ -84,7 +84,7 @@ export class ContextMenu {
     const menu = openMenu<EditorActionContext, EditorAction>(this.#entries, host.context(), {
       at: { x, y },
       host: this.#container,
-      className: 'we-context-menu',
+      cssClass: 'we-context-menu',
       returnFocusTo: this.#view.dom as HTMLElement,
       inheritThemeFrom: this.#view.dom as HTMLElement,
       defaults: (item) => commandDefaults(registry, item),
