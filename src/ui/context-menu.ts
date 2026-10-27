@@ -90,7 +90,7 @@ export class ContextMenu {
       defaults: (item) => commandDefaults(registry, item),
       runAction: (item, { triggerElement, sourceEvent }) =>
         host.activate(item, 'context-menu', sourceEvent, triggerElement),
-      onClose: () => {
+      closeCallback: () => {
         if (this.#menu === menu) this.#menu = null;
       },
     });
