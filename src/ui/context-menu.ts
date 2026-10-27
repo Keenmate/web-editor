@@ -87,7 +87,7 @@ export class ContextMenu {
       cssClass: 'we-context-menu',
       returnFocusTo: this.#view.dom as HTMLElement,
       inheritThemeFrom: this.#view.dom as HTMLElement,
-      defaults: (item) => commandDefaults(registry, item),
+      defaults: (item) => commandDefaults(registry, item, host.label),
       runAction: (item, { triggerElement, sourceEvent }) =>
         host.activate(item, 'context-menu', sourceEvent, triggerElement),
       closeCallback: () => {

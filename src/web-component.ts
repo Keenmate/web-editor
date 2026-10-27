@@ -32,6 +32,7 @@ import {
   toCustom,
   toEnum,
   toFunction,
+  toObject,
   toText,
   adoptStyles,
   type EventDef,
@@ -59,6 +60,7 @@ import { ViewLayout } from './ui/view-layout';
 import { EditorChrome } from './ui/chrome';
 import styles from './css/editor.css?inline';
 import { initLogger, contentLogger } from './logger';
+import type { EditorLabels } from './labels';
 
 // Build-time constant (vite `define`).
 declare const __VERSION__: string;
@@ -76,6 +78,9 @@ const VIEW_MODES = ['edit', 'split', 'preview', 'inline'] as const;
 const FORMATS = ['markdown', 'html', 'json'] as const;
 const TOOLBARS = ['top', 'bottom', 'start', 'end', 'none'] as const;
 const STATUSBARS = ['none', 'top', 'bottom', 'both'] as const;
+
+const isLabels = (v: unknown): v is EditorLabels =>
+  typeof v === 'object' && v !== null && !Array.isArray(v) && Object.values(v).every((x) => typeof x === 'string');
 
 const isInteractionHost = (v: unknown): v is InteractionHost | null =>
   v == null || (typeof v === 'object' && typeof (v as InteractionHost).request === 'function');
@@ -163,6 +168,14 @@ const INPUTS: readonly InputDef[] = [
       'For `view-mode="inline"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow.',
   },
   {
+    configKey: 'labels',
+    attribute: 'labels',
+    converter: toObject<EditorLabels>({ validate: isLabels }),
+    on: 'update',
+    description:
+      'Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`. Property (object) or JSON attribute (`labels=\'{"bold":"Tučně"}\'`). Applies live (no rebuild).',
+  },
+  {
     configKey: 'beforeActionCallback',
     converter: toFunction(),
     default: null,
@@ -244,6 +257,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   declare beforeActionCallback: ((detail: EditorActionEventDetail) => unknown) | null;
   /** The modal bridge for interactive pipeline stages. */
   declare interactionHost: InteractionHost | null;
+  /** UI-string overrides (partial; English defaults). */
+  declare labels: EditorLabels | null;
   /** Initial / default content (attribute `value`); the live content is {@link value}. */
   declare defaultValue: string | null;
 
@@ -338,6 +353,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     if ('format' in partial && this.#engine) {
       this.emit('change', this.#changeDetail());
     }
+    // UI strings are resolved on render: re-render the chrome with the new labels.
+    if ('labels' in partial) this.#chrome?.refresh();
     if ('interactionHost' in partial) {
       this.#engine?.setInteractionHost(this.#interactionHost());
     }
@@ -405,6 +422,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
       interactionHost: this.#interactionHost(),
       // Every ctx the engine builds carries this element + its controller.
       host: { element: this, getController: () => this.controller },
+      // UI strings: read live, so a `labels` change applies without a rebuild.
+      getLabels: () => this.config.labels as EditorLabels | null | undefined,
     };
     this.#applyContentOption(options, this.#seed.format, this.#seed.content);
 

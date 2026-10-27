@@ -86,6 +86,16 @@ Clean breaks, no aliases (rulebook `naming-conventions.md` D-NC-13..27).
 - **`readonly` reflects and uses native presence semantics** (D-NC-16): `el.isReadonly`
   writes the `readonly` attribute back, and any value means on (`readonly="false"` is now
   read-only, like a native control; remove the attribute instead).
+- **Built-in item texts follow their command** (one label per command, D-NC-24): the
+  command texts are now `Insert link` / `Insert image` / `Insert table` /
+  `Insert code block` (were `Link` / `Image` / `Table` / `Code block` — visible as
+  toolbar `aria-label`s; the context menu already said `Insert …`). The default
+  selection-toolbar / context-menu lists no longer carry per-item text / tooltip
+  copies, and `insert-link` / `insert-image` / `insert-table` / `insert-code-block`
+  lost their fixed tooltips (now `<text> (<shortcut>)`, e.g. `Insert link (Ctrl+K)`;
+  the old `Insert link (select text first)` hint is gone).
+- **`promptForCodeBlock` / `changeCodeBlockLanguage`** (exported) are now factories
+  `(label?) => Command` (were `Command` constants), so their prompts are translatable.
 
 ### Added (naming unification)
 
@@ -94,6 +104,13 @@ Clean breaks, no aliases (rulebook `naming-conventions.md` D-NC-13..27).
   The element is now **form-associated** (`static formAssociated = true`), so an ancestor
   `<fieldset disabled>` disables it too (core `isEffectivelyDisabled`, without touching
   `isDisabled`) and `el.form` resolves. The editor still submits nothing with a form.
+- **`labels`** (property or JSON attribute, D-NC-24): every UI string — command item
+  texts / tooltips (key = camel-cased command id, `<key>Tooltip`), toolbar group names
+  (`<groupId>Group`), status items (`words`, `chars`), the link / image / code-language
+  prompts and the cloud-image picker texts. Partial over built-in English, `{name}`
+  placeholders, applied live. One resolver seam (`engine.label`, `ctx.label`, plugin
+  builder `label`, stage `rt.label`) for the future core `/locale`. Exported:
+  `DEFAULT_LABELS`, `labelKey`, `formatLabel`, types `EditorLabels`, `LabelResolver`, ….
 
 ### Changed — BREAKING (interaction model, web-components-core rc15)
 

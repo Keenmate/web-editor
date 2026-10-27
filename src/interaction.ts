@@ -17,6 +17,7 @@ import type {
 } from '@keenmate/web-components-core/actions';
 import type { Command, EditorState } from 'prosemirror-state';
 import type { SerializationFormat } from './engine/serialization';
+import type { LabelResolver } from './labels';
 import type { EditorViewMode } from './web-component';
 
 // ============================================================================
@@ -83,12 +84,21 @@ export function createEditorController(getTarget: () => ControllerTarget): Edito
 /** The component context every editor ctx / detail carries. */
 export type EditorComponentContext = ComponentContext<EditorController, HTMLElement>;
 
+/** What every engine-built ctx inherits: the component context + `label`. */
+export interface EditorLabelContext extends EditorComponentContext {
+  /**
+   * Resolve a UI string through the element's `labels` (non-enumerable):
+   * `ctx.label('words', { count: 3 })`. See `src/labels.ts` for the keys.
+   */
+  readonly label: LabelResolver;
+}
+
 /**
  * The ctx of command predicates (`CommandSpec.getIsToggledCallback` /
  * `getIsEnabledCallback`), status items (`StatusItem.render`) and toolbar /
  * menu item callbacks: the current ProseMirror state.
  */
-export interface EditorStateContext extends EditorComponentContext {
+export interface EditorStateContext extends EditorLabelContext {
   /** The current (read-only) ProseMirror editor state. */
   state: EditorState;
 }

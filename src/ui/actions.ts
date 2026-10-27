@@ -14,6 +14,7 @@ import {
   type ResolvedActionItem,
 } from '@keenmate/web-components-core/actions';
 import type { CommandRegistry } from '../engine/command-registry';
+import { labelKey, type LabelResolver } from '../labels';
 import type { EditorEngine } from '../engine/editor-engine';
 import type {
   EditorAction,
@@ -26,6 +27,8 @@ import type {
 /** What a presenter needs to resolve and activate its items. */
 export interface ActionSurfaceHost {
   readonly registry: CommandRegistry;
+  /** The engine's label resolver (the element's `labels` → English). */
+  readonly label: LabelResolver;
   /** The surface ctx (current state + component context) for render-time callbacks. */
   context(): EditorActionContext;
   /** Activate an item (core `runAction`). Resolves `false` when vetoed or busy. */
@@ -50,6 +53,7 @@ export function createActionHost(opts: ActionHostOptions): ActionSurfaceHost {
   const { engine } = opts;
   return {
     registry: engine.commands,
+    label: engine.label,
     context: () => engine.createContext({ state: engine.view.state }),
     activate(item, source, event, trigger) {
       const detail = engine.createContext({
@@ -76,26 +80,30 @@ export function createActionHost(opts: ActionHostOptions): ActionSurfaceHost {
 
 /**
  * The built-in defaults of an item naming a registered command: text / icon /
- * tooltip / shortcut from the `CommandSpec`, `isDisabled` from its predicates and
+ * tooltip / shortcut from the `CommandSpec` — text and tooltip through `labels`
+ * (key = camel-cased command id, `<key>Tooltip`; the spec's text is the English default) — `isDisabled` from its predicates and
  * — only for a toggle command (one with `getIsToggledCallback`) — `isToggled`. An unknown command (its plugin isn't loaded) is disabled. A
  * custom item has no defaults.
  */
 export function commandDefaults(
   registry: CommandRegistry,
-  item: EditorActionItem
+  item: EditorActionItem,
+  label: LabelResolver
 ): Partial<ResolvedActionItem<EditorAction>> | undefined {
   const name = item.action;
   if (!name || name === 'custom') return undefined;
   const spec = registry.get(name);
-  if (!spec) return { text: name, isDisabled: true };
+  const key = labelKey(name);
+  if (!spec) return { text: label(key, undefined, name), isDisabled: true };
   const shortcut = registry.shortcut(name);
-  const text = spec.text ?? name;
-  const label = item.text ?? text;
+  const text = label(key, undefined, spec.text ?? name);
+  const shown = item.text ?? text;
+  const tooltip = label(`${key}Tooltip`, undefined, spec.tooltip ?? '');
   return {
     text,
     icon: spec.icon,
     shortcut,
-    tooltip: spec.tooltip ?? (shortcut ? `${label} (${shortcut})` : label),
+    tooltip: tooltip || (shortcut ? `${shown} (${shortcut})` : shown),
     isDisabled: !registry.isEnabled(name),
     ...(spec.getIsToggledCallback ? { isToggled: registry.isToggled(name) } : {}),
   };

@@ -88,6 +88,7 @@ Every attribute is also a property (e.g. `el.viewMode = 'preview'` ↔ `view-mod
 | `statusbar` | `none` \| `top` \| `bottom` \| `both`           | `none`       | A dedicated strip of live indicators (word/char count, plugin items). `both` splits items across two strips. |
 | `theme`     | string                                          | —            | Theme name, reflected to the host for CSS theming (`:host([theme="…"])`). |
 | `anchor`    | CSS selector                                    | —            | For `view-mode="inline"` only: the page element the floating card tracks. |
+| `labels`    | JSON object                                     | English      | UI strings — see [Labels](#labels). Also a property (object). |
 
 Property-only inputs:
 
@@ -126,6 +127,30 @@ before the DOM event. Every detail carries `controller` and `element` (non-enume
 
 The internal engine is not exposed on the element; `EditorEngine` is exported for
 standalone (headless) use.
+
+## Labels
+
+Every UI string goes through one `labels` object — partial (unset keys stay English),
+`{name}` placeholders, applied live (no rebuild):
+
+```html
+<km-editor labels='{"bold":"Tučně","insertLink":"Vložit odkaz","linkUrlPrompt":"Adresa odkazu:","words":"Slova: {count}"}'></km-editor>
+```
+
+| Key | English default |
+| --- | --------------- |
+| `<commandKey>` — the command id camel-cased (`bold`, `insertLink`, `insertTable`, `bulletList`, `undo`, a plugin's `imageBrowserPick`, …) | the command's own text (`Bold`, `Insert link`, …) — item text, menu label, button `aria-label` |
+| `<commandKey>Tooltip` | the command's tooltip, else `<text> (<shortcut>)` |
+| `<groupId>Group` — `formatGroup`, `blockGroup`, `listGroup`, `insertGroup`, `historyGroup`, `linkGroup`, `imageGroup`, `tableGroup`, `imageBrowserGroup` | toolbar group accessible names (`Format`, `Block`, `Lists`, …) |
+| `words` / `chars` | `Words: {count}` / `Chars: {count}` (status bar) |
+| `linkUrlPrompt` | `Enter link URL:` |
+| `imageUrlPrompt` / `imageAltPrompt` | `Enter image URL:` / `Enter alt text (optional):` |
+| `codeLanguagePrompt` / `codeLanguageChangePrompt` | `Enter language ({languages}):` / `Change language ({languages}):` |
+| `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage` | cloud-image plugin texts |
+
+Plugin code resolves strings with `label(key, params?, fallback?)` — on the plugin
+builder ctx (`commands: ({ schema, label }) => …`), on every callback ctx (`ctx.label`)
+and on pipeline stages (`rt.label`). `DEFAULT_LABELS` and `labelKey()` are exported.
 
 ## Theming
 

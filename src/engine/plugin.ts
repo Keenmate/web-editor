@@ -12,6 +12,7 @@
  * resolve to earlier plugins, so a plugin can rely on another's schema/commands
  * already being present.
  */
+import type { LabelResolver } from '../labels';
 import type { NodeSpec, MarkSpec, Schema } from 'prosemirror-model';
 import type { SchemaExtensions } from '../schema';
 import type { Command, EditorState, Plugin as PMPlugin } from 'prosemirror-state';
@@ -40,6 +41,12 @@ export interface MarkdownContribution {
 /** Context handed to a plugin's builder callbacks once the schema is assembled. */
 export interface PluginContext {
   schema: Schema;
+  /**
+   * Resolve a UI string through the element's `labels` — call it when the string
+   * is shown (e.g. inside a command, for a `prompt()`), not at assembly, so a
+   * `labels` change applies live. `(key, params?, fallback?)`; see `src/labels.ts`.
+   */
+  label: LabelResolver;
 }
 
 /** Context handed to {@link EditorPlugin.setup} (after the view exists). */

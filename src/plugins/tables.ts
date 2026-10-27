@@ -73,9 +73,8 @@ export const tablePlugin = definePlugin({
     {
       id: 'insert-table',
       run: insertTable(schema),
-      text: 'Table',
+      text: 'Insert table',
       icon: '⊞',
-      tooltip: 'Insert table',
       getIsEnabledCallback: () => true,
     },
     { id: 'add-column-before', run: addColumnBefore },
@@ -91,5 +90,5 @@ export const tablePlugin = definePlugin({
     { id: 'delete-table', run: deleteTable },
   ],
   toolbarGroups: [{ id: 'table', text: 'Table', items: ['insert-table'] }],
-  menuItems: [{ action: 'insert-table', text: 'Insert table' }],
+  menuItems: ['insert-table'],
 });

@@ -7,6 +7,10 @@
  * Each helper is a ProseMirror `Command`: `(state, dispatch?, view?) => boolean`.
  */
 import type { Command } from 'prosemirror-state';
+import { createLabelResolver, type LabelResolver } from './labels';
+
+/** English-only resolver for standalone use (no element `labels`). */
+const englishLabels: LabelResolver = createLabelResolver(() => null);
 
 const LANGUAGES = [
   'javascript',
@@ -30,27 +34,32 @@ export function insertCodeBlock(language = 'javascript'): Command {
   };
 }
 
-/** Prompt for a code-block language, then insert. */
-export const promptForCodeBlock: Command = (state, dispatch) => {
-  const language = prompt(`Enter language (${LANGUAGES.join(', ')}):`, 'javascript');
-  if (!language) return false;
-  return insertCodeBlock(language.toLowerCase())(state, dispatch);
-};
+/** Prompt for a code-block language (label `codeLanguagePrompt`), then insert. */
+export function promptForCodeBlock(label: LabelResolver = englishLabels): Command {
+  return (state, dispatch) => {
+    const language = prompt(label('codeLanguagePrompt', { languages: LANGUAGES.join(', ') }), 'javascript');
+    if (!language) return false;
+    return insertCodeBlock(language.toLowerCase())(state, dispatch);
+  };
+}
 
-/** Change the language of the code block the cursor is in. */
-export const changeCodeBlockLanguage: Command = (state, dispatch) => {
-  const { $from } = state.selection;
-  for (let d = $from.depth; d > 0; d--) {
-    const node = $from.node(d);
-    if (node.type.name === 'code_block') {
-      const pos = $from.before(d);
-      const language = prompt(`Change language (${LANGUAGES.join(', ')}):`, node.attrs.language);
-      if (!language) return false;
-      if (dispatch) {
-        dispatch(state.tr.setNodeMarkup(pos, undefined, { language: language.toLowerCase() }));
+/** Change the language of the code block the cursor is in (label `codeLanguageChangePrompt`). */
+export function changeCodeBlockLanguage(label: LabelResolver = englishLabels): Command {
+  return (state, dispatch) => {
+    const { $from } = state.selection;
+    for (let d = $from.depth; d > 0; d--) {
+      const node = $from.node(d);
+      if (node.type.name === 'code_block') {
+        const pos = $from.before(d);
+        const languages = LANGUAGES.join(', ');
+        const language = prompt(label('codeLanguageChangePrompt', { languages }), node.attrs.language);
+        if (!language) return false;
+        if (dispatch) {
+          dispatch(state.tr.setNodeMarkup(pos, undefined, { language: language.toLowerCase() }));
+        }
+        return true;
       }
-      return true;
     }
-  }
-  return false;
-};
+    return false;
+  };
+}

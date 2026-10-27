@@ -54,8 +54,8 @@ export function imageBrowserPlugin(opts: ImageBrowserOptions = {}): EditorPlugin
         run: async (_c, rt) => {
           const res = await rt.ui.request({
             kind: 'cloud-picker',
-            title: 'Choose a cloud image',
-            message: 'Pick an image to insert.',
+            title: rt.label?.('cloudImagePickerTitle') ?? 'Choose a cloud image',
+            message: rt.label?.('cloudImagePickerMessage') ?? 'Pick an image to insert.',
             signal: rt.signal,
           });
           if (res.cancelled || !res.value) return { action: 'halt', reason: 'no image chosen' };
@@ -98,13 +98,14 @@ export function imageBrowserPlugin(opts: ImageBrowserOptions = {}): EditorPlugin
         items: [
           {
             action: 'image:browser:pick',
-            text: 'Cloud image',
             icon: '☁',
-            tooltip: 'Insert image from the cloud',
+            // Pipeline-only action (no CommandSpec): texts come from `labels`.
+            getTextCallback: (ctx) => ctx.label('cloudImage'),
+            getTooltipCallback: (ctx) => ctx.label('cloudImageTooltip'),
           },
         ],
       },
     ],
-    menuItems: [{ action: 'image:browser:pick', text: 'Insert cloud image…' }],
+    menuItems: [{ action: 'image:browser:pick', getTextCallback: (ctx) => ctx.label('insertCloudImage') }],
   });
 }

@@ -18,6 +18,18 @@ test.describe('links', () => {
         await expect(toolbarButton(page, 'insert-link')).toHaveAttribute('aria-pressed', 'true');
     });
 
+    test('labels translate the prompt and the item (set live, no rebuild)', async ({ page, dialogs }) => {
+        await page.evaluate(() => {
+            (document.getElementById('subject') as any).labels = { linkUrlPrompt: 'Adresa odkazu:', insertLink: 'Vložit odkaz' };
+        });
+        await expect(toolbarButton(page, 'insert-link')).toHaveAttribute('aria-label', 'Vložit odkaz');
+        await selectText(page, 'link');
+        dialogs.answer('https://example.com/');
+        await toolbarButton(page, 'insert-link').click();
+        expect(dialogs.seen).toEqual([{ type: 'prompt', message: 'Adresa odkazu:', defaultValue: 'https://' }]);
+        await expect(pm(page).locator('a')).toHaveText('link');
+    });
+
     test('Mod-k prompts; Mod-k on a linked selection removes the link', async ({ page, dialogs }) => {
         await selectText(page, 'link');
         dialogs.answer('https://a.test/');

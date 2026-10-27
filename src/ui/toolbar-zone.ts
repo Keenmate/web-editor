@@ -8,15 +8,20 @@
 import type { ToolGroup } from './items';
 import type { ActionSurfaceHost } from './actions';
 import { CommandBar } from './command-bar';
+import { labelKey } from '../labels';
 
 export class ToolbarZone {
   readonly el: HTMLDivElement;
   #groups: CommandBar[] = [];
+  #groupDefs: readonly ToolGroup[];
+  #host: ActionSurfaceHost;
 
   constructor(parent: HTMLElement, groups: readonly ToolGroup[], host: ActionSurfaceHost) {
     this.el = document.createElement('div');
     this.el.className = 'we-toolbar-zone';
     this.el.setAttribute('role', 'toolbar');
+    this.#groupDefs = groups;
+    this.#host = host;
 
     groups.forEach((group, i) => {
       if (i > 0) {
@@ -29,7 +34,6 @@ export class ToolbarZone {
         source: 'toolbar',
       });
       bar.el.dataset.group = group.id;
-      if (group.text) bar.el.setAttribute('aria-label', group.text);
       this.#groups.push(bar);
     });
 
@@ -37,7 +41,14 @@ export class ToolbarZone {
   }
 
   refresh(): void {
-    for (const bar of this.#groups) bar.refresh();
+    this.#groups.forEach((bar, i) => {
+      // Accessible group name through `labels` (`<groupId>Group`, English: the group's `text`).
+      const group = this.#groupDefs[i];
+      const name = this.#host.label(`${labelKey(group.id)}Group`, undefined, group.text ?? '');
+      if (name) bar.el.setAttribute('aria-label', name);
+      else bar.el.removeAttribute('aria-label');
+      bar.refresh();
+    });
   }
 
   setVisible(visible: boolean): void {

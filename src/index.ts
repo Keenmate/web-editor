@@ -22,6 +22,7 @@ export type { EditorViewMode, EditorFormat, EditorToolbar, EditorStatusBar } fro
 export type {
   EditorController,
   EditorComponentContext,
+  EditorLabelContext,
   EditorStateContext,
   EditorActionContext,
   CommandContext,
@@ -38,6 +39,10 @@ export type {
   EditorEventMap,
 } from './interaction';
 export { menuDivider } from '@keenmate/web-components-core/actions';
+
+// UI strings (`labels`, rulebook D-NC-24): built-in English + the key helpers.
+export { DEFAULT_LABELS, labelKey, formatLabel } from './labels';
+export type { EditorLabels, EditorLabelKey, LabelParams, LabelResolver } from './labels';
 
 // Toolbar zones / tool groups / status items model. Override the core groups or
 // contribute via plugins to customise the zone toolbar, selection toolbar,

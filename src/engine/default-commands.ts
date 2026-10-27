@@ -14,10 +14,15 @@ import { wrapInList } from 'prosemirror-schema-list';
 import { undo, redo } from 'prosemirror-history';
 import type { Schema } from 'prosemirror-model';
 import type { CommandRegistry } from './command-registry';
+import type { LabelResolver } from '../labels';
 import { markActive, blockActive, ancestorActive, inCodeBlock } from '../predicates';
 import { promptForCodeBlock, changeCodeBlockLanguage } from '../commands';
 
-export function registerCoreCommands(registry: CommandRegistry, schema: Schema): void {
+/**
+ * `text` / `tooltip` are the English defaults; an element's `labels` override them
+ * per command (key = camel-cased id, `<key>Tooltip`). `label` resolves the prompts.
+ */
+export function registerCoreCommands(registry: CommandRegistry, schema: Schema, label?: LabelResolver): void {
   registry.register({
     id: 'bold',
     run: toggleMark(schema.marks.bold),
@@ -73,15 +78,14 @@ export function registerCoreCommands(registry: CommandRegistry, schema: Schema):
   });
   registry.register({
     id: 'insert-code-block',
-    run: promptForCodeBlock,
-    text: 'Code block',
+    run: promptForCodeBlock(label),
+    text: 'Insert code block',
     icon: '</>',
-    tooltip: 'Insert code block',
     getIsEnabledCallback: () => true,
   });
   registry.register({
     id: 'change-code-language',
-    run: changeCodeBlockLanguage,
+    run: changeCodeBlockLanguage(label),
     text: 'Change code language',
     getIsEnabledCallback: ({ state }) => inCodeBlock(state),
   });

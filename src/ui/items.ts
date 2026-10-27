@@ -115,8 +115,8 @@ function wordCount({ state }: StatusContext): number {
  * on each; single-edge status bars (`top`/`bottom`) show every item regardless.
  */
 export const coreStatusItems: readonly StatusItem[] = [
-  { id: 'words', align: 'end', bar: 'bottom', render: (ctx) => `Words: ${wordCount(ctx)}` },
-  { id: 'chars', align: 'end', bar: 'top', render: ({ state }) => `Chars: ${state.doc.textContent.length}` },
+  { id: 'words', align: 'end', bar: 'bottom', render: (ctx) => ctx.label('words', { count: wordCount(ctx) }) },
+  { id: 'chars', align: 'end', bar: 'top', render: (ctx) => ctx.label('chars', { count: ctx.state.doc.textContent.length }) },
 ];
 
 /** The default static toolbar — the full editing command set. */
@@ -146,7 +146,7 @@ export const defaultSelectionItems: readonly EditorToolbarEntry[] = [
   'italic',
   'underline',
   divider,
-  { action: 'insert-link', tooltip: 'Insert link' },
+  'insert-link',
   divider,
   'heading',
   'paragraph',
@@ -158,10 +158,10 @@ export const defaultContextMenuItems: readonly EditorToolbarEntry[] = [
   'italic',
   'underline',
   divider,
-  { action: 'insert-link', text: 'Insert link' },
-  { action: 'insert-image', text: 'Insert image' },
-  { action: 'insert-code-block', text: 'Insert code block' },
-  { action: 'insert-table', text: 'Insert table' },
+  'insert-link',
+  'insert-image',
+  'insert-code-block',
+  'insert-table',
   divider,
   'undo',
   'redo',

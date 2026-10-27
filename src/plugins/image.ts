@@ -5,6 +5,7 @@
 import type { Command } from 'prosemirror-state';
 import type { Schema } from 'prosemirror-model';
 import { definePlugin } from '../engine/plugin';
+import type { LabelResolver } from '../labels';
 import type { CommandSpec } from '../engine/command-registry';
 import { imageNodeSpec } from '../schema';
 import { markdownDestination, markdownTitle } from '../engine/serialization/markdown';
@@ -19,11 +20,11 @@ function insertImage(schema: Schema, src: string, alt = '', title: string | null
 }
 
 /** Prompt for an image URL (and alt text), then insert. */
-function promptForImage(schema: Schema): Command {
+function promptForImage(schema: Schema, label: LabelResolver): Command {
   return (state, dispatch) => {
-    const src = prompt('Enter image URL:', 'https://picsum.photos/300/200');
+    const src = prompt(label('imageUrlPrompt'), 'https://picsum.photos/300/200');
     if (!src) return false;
-    const alt = prompt('Enter alt text (optional):', '') || '';
+    const alt = prompt(label('imageAltPrompt'), '') || '';
     return insertImage(schema, src, alt)(state, dispatch);
   };
 }
@@ -50,16 +51,15 @@ export const imagePlugin = definePlugin({
       },
     },
   },
-  commands: ({ schema }): CommandSpec[] => [
+  commands: ({ schema, label }): CommandSpec[] => [
     {
       id: 'insert-image',
-      run: promptForImage(schema),
-      text: 'Image',
+      run: promptForImage(schema, label),
+      text: 'Insert image',
       icon: '🖼',
-      tooltip: 'Insert image',
       getIsEnabledCallback: () => true,
     },
   ],
   toolbarGroups: [{ id: 'image', text: 'Image', items: ['insert-image'] }],
-  menuItems: [{ action: 'insert-image', text: 'Insert image' }],
+  menuItems: ['insert-image'],
 });

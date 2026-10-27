@@ -35,6 +35,8 @@ export interface PipelineRegistryDeps {
   getInteractionHost: () => InteractionHost;
   /** Lock / unlock the surface for a gating run (a true `setEditable(false)`). */
   setLock: (locked: boolean) => void;
+  /** Label resolver handed to stages as `rt.label` (optional). */
+  label?: StageServices['label'];
 }
 
 /** A sensible headless default: route an interactive request through
@@ -93,6 +95,7 @@ export class PipelineRegistry {
       view,
       dispatch: (tr) => view?.dispatch(tr),
       runCommand: (cmd) => (view ? cmd(view.state, view.dispatch, view) : false),
+      ...(this.#deps.label ? { label: this.#deps.label } : {}),
     };
   }
 

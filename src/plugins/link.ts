@@ -7,6 +7,7 @@
 import type { Command } from 'prosemirror-state';
 import type { Schema } from 'prosemirror-model';
 import { definePlugin } from '../engine/plugin';
+import type { LabelResolver } from '../labels';
 import type { CommandSpec } from '../engine/command-registry';
 import { linkMarkSpec } from '../schema';
 import { markActive } from '../predicates';
@@ -29,7 +30,7 @@ function toggleLink(schema: Schema, href?: string, title: string | null = null):
 }
 
 /** Prompt for a URL (or remove an existing link on the selection). */
-function promptForLink(schema: Schema): Command {
+function promptForLink(schema: Schema, label: LabelResolver): Command {
   return (state, dispatch) => {
     const { from, to, empty } = state.selection;
     // Nothing to link: a silent no-op (the toolbar / menu entry is disabled here;
@@ -38,7 +39,7 @@ function promptForLink(schema: Schema): Command {
     if (state.doc.rangeHasMark(from, to, schema.marks.link)) {
       return toggleLink(schema)(state, dispatch);
     }
-    const href = prompt('Enter link URL:', 'https://');
+    const href = prompt(label('linkUrlPrompt'), 'https://');
     if (!href) return false;
     return toggleLink(schema, href)(state, dispatch);
   };
@@ -64,20 +65,19 @@ export const linkPlugin = definePlugin({
       },
     },
   },
-  commands: ({ schema }): CommandSpec[] => [
+  commands: ({ schema, label }): CommandSpec[] => [
     {
       id: 'insert-link',
-      run: promptForLink(schema),
+      run: promptForLink(schema, label),
       keys: ['Mod-k'],
-      text: 'Link',
+      text: 'Insert link',
       icon: '🔗',
-      tooltip: 'Insert link (select text first)',
       getIsToggledCallback: ({ state }) => markActive(state, schema.marks.link),
       // Non-empty selection only.
       getIsEnabledCallback: ({ state }) => !state.selection.empty,
     },
   ],
   toolbarGroups: [{ id: 'link', text: 'Link', items: ['insert-link'] }],
-  selectionItems: [{ divider: true }, { action: 'insert-link', tooltip: 'Insert link' }],
-  menuItems: [{ action: 'insert-link', text: 'Insert link' }],
+  selectionItems: [{ divider: true }, 'insert-link'],
+  menuItems: ['insert-link'],
 });

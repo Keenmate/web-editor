@@ -45,7 +45,8 @@ import {
   type ToolGroup,
   type StatusItem,
 } from '../ui/items';
-import type { EditorComponentContext, EditorController, EditorToolbarEntry } from '../interaction';
+import type { EditorController, EditorLabelContext, EditorToolbarEntry } from '../interaction';
+import { createLabelResolver, type EditorLabels, type LabelResolver } from '../labels';
 import {
   docToHTML,
   htmlToDoc,
@@ -88,6 +89,8 @@ export interface EditorEngineOptions {
   interactionHost?: InteractionHost;
   /** The element hosting this engine (set by `<km-editor>`; omit standalone). */
   host?: EditorEngineHost;
+  /** UI-string overrides, read live on every use (`<km-editor>` passes its `labels`). Default: English. */
+  getLabels?: () => EditorLabels | null | undefined;
 }
 
 export interface EngineEventMap {
@@ -111,6 +114,11 @@ export class EditorEngine {
   readonly selectionItems: EditorToolbarEntry[];
   readonly menuItems: EditorToolbarEntry[];
   readonly statusItems: StatusItem[];
+  /**
+   * Resolve a UI string: the `labels` override → built-in English → `fallback`.
+   * Every ctx the engine builds carries it as `ctx.label` (non-enumerable).
+   */
+  readonly label: LabelResolver;
   view: EditorView;
 
   #isEditable: boolean;
@@ -127,19 +135,25 @@ export class EditorEngine {
 
   constructor(options: EditorEngineOptions) {
     const host = options.host;
-    this.#ctxProto = host
-      ? Object.create(Object.prototype, {
-          controller: { get: () => host.getController(), enumerable: false },
-          element: { get: () => host.element, enumerable: false },
-        })
-      : Object.prototype;
+    const getLabels = options.getLabels;
+    const label = createLabelResolver(() => getLabels?.());
+    this.label = label;
+    this.#ctxProto = Object.create(Object.prototype, {
+      label: { value: label, enumerable: false },
+      ...(host
+        ? {
+            controller: { get: () => host.getController(), enumerable: false },
+            element: { get: () => host.element, enumerable: false },
+          }
+        : {}),
+    });
 
     const plugins = orderPlugins(options.editorPlugins ?? defaultPlugins());
     this.#plugins = plugins;
 
     const schema = options.schema ?? buildSchema(mergeSchemaSpecs(plugins));
     this.schema = schema;
-    const ctx = { schema };
+    const ctx = { schema, label };
 
     // Markdown I/O — enforces the serializer contract (throws if a node/mark has
     // no Markdown serializer).
@@ -150,7 +164,7 @@ export class EditorEngine {
       () => this.view,
       (fields) => this.createContext(fields)
     );
-    registerCoreCommands(this.commands, schema);
+    registerCoreCommands(this.commands, schema, label);
     for (const plugin of plugins) {
       const specs = plugin.commands?.(ctx);
       if (specs) this.commands.registerMany(specs);
@@ -175,6 +189,7 @@ export class EditorEngine {
         request: (ctx) => this.#interactionHost.request(this.createContext(ctx)),
       }),
       setLock: (locked) => this.#setLock(locked),
+      label,
     });
     this.commands.attachRunner((id) => this.#pipelines.run(id));
 
@@ -229,7 +244,7 @@ export class EditorEngine {
 
     try {
       for (const plugin of plugins) {
-        plugin.setup?.({ schema, view: this.view, getState: () => this.view.state });
+        plugin.setup?.({ schema, label: this.label, view: this.view, getState: () => this.view.state });
       }
     } catch (err) {
       // A failed setup must not leave a live half-built view (DOM + document
@@ -257,11 +272,11 @@ export class EditorEngine {
   /**
    * Build a callback ctx from `fields`. Hosted by `<km-editor>`, it carries
    * `controller` + `element` (inherited getters — non-enumerable, so
-   * `JSON.stringify` / `Object.keys` see only the fields); standalone it is
-   * just the fields.
+   * `JSON.stringify` / `Object.keys` see only the fields). Every ctx also
+   * inherits `label` ({@link label}), hosted or standalone.
    */
-  createContext<T extends object>(fields: T): T & EditorComponentContext {
-    return Object.assign(Object.create(this.#ctxProto), fields) as T & EditorComponentContext;
+  createContext<T extends object>(fields: T): T & EditorLabelContext {
+    return Object.assign(Object.create(this.#ctxProto), fields) as T & EditorLabelContext;
   }
 
   // ── Pipelines (Phase 7) ───────────────────────────────────────────────

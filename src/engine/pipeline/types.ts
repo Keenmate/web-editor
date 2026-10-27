@@ -42,6 +42,8 @@ export interface StageServices {
   dispatch?: (tr: any) => void;
   /** Run a ProseMirror `Command` against the live view; returns whether it applied. */
   runCommand?: (command: (state: any, dispatch?: any, view?: any) => boolean) => boolean;
+  /** Resolve a UI string through the element's `labels` (see `src/labels.ts`). */
+  label?: (key: string, params?: Record<string, string | number>, fallback?: string) => string;
 }
 
 /** Per-run services handed to a stage. */
