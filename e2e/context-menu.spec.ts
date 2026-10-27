@@ -120,6 +120,12 @@ test.describe('context menu', () => {
         await expect(menu(page)).toHaveCSS('background-color', 'rgb(4, 5, 6)');
     });
 
+    test('theme="dark" gets a dark menu (color-scheme: dark → core light-dark() defaults)', async ({ page }) => {
+        await editor(page).evaluate((el) => el.setAttribute('theme', 'dark'));
+        await openMenu(page);
+        await expect(menu(page)).toHaveCSS('background-color', 'rgb(43, 43, 43)');
+    });
+
     test('--we-context-menu-hover-color colours the hovered item text (unset → unchanged)', async ({ page }) => {
         await openMenu(page);
         const item = menu(page).locator('[data-action="italic"]');

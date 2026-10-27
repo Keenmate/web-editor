@@ -13,6 +13,8 @@ released to a registry yet.
 
 ### Fixed
 
+- `theme="dark"` sets `color-scheme: dark`, so the core-rendered context menu (and native controls) render dark instead of light.
+
 - **Page-wide menu theming reaches the context menu.** `:host` set
   `--km-menu-bg: var(--we-context-menu-bg, var(--we-bg))` etc., which shadowed a page-level
   `:root { --km-menu-* }`. The `--we-context-menu-*` properties now map onto core's

@@ -381,6 +381,7 @@
 
 /* ── dark theme (opt-in via theme="dark") ── */
 :host([theme='dark']) {
+  color-scheme: dark;
   --we-border: #3d3d3d;
   --we-bg: #1e1e1e;
   --we-muted-bg: #2d2d2d;
