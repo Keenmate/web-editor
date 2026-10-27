@@ -61,7 +61,7 @@ test.describe('lifecycle', () => {
 
         await move(page);
         expect(await selection(page)).toEqual(sel);
-        await expect(page.locator('km-editor#subject .km-toolbar-zone [data-action="undo"]')).toBeEnabled();
+        await expect(page.locator('km-editor#subject .we-toolbar-zone [data-action="undo"]')).toBeEnabled();
         await page.evaluate(() => (document.getElementById('subject') as any).controller.runCommand('undo'));
         expect(await markdown(page)).toBe('# Hello\n\nFirst paragraph.');
         // The surface still edits after the move.

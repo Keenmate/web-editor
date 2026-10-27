@@ -9,10 +9,10 @@
 <link rel="stylesheet" href="/src/dev/playground.css" />
 
 <!-- ── <km-editor> element showcase (Phase 2–3) ───────────────────── -->
-<section class="km-demo">
-  <div class="km-demo-controls">
+<section class="we-demo">
+  <div class="we-demo-controls">
     <label>Mode:
-      <select id="km-mode">
+      <select id="we-mode">
         <option value="edit">edit</option>
         <option value="split" selected>split</option>
         <option value="preview">preview</option>
@@ -20,15 +20,15 @@
       </select>
     </label>
     <label>I/O format:
-      <select id="km-format">
+      <select id="we-format">
         <option value="markdown" selected>markdown</option>
         <option value="html">html</option>
         <option value="json">json</option>
       </select>
     </label>
-    <label><input type="checkbox" id="km-readonly" /> readonly</label>
+    <label><input type="checkbox" id="we-readonly" /> readonly</label>
     <label>Toolbar:
-      <select id="km-toolbar">
+      <select id="we-toolbar">
         <option value="top" selected>top</option>
         <option value="bottom">bottom</option>
         <option value="start">start</option>
@@ -37,15 +37,15 @@
       </select>
     </label>
     <label>Status bar:
-      <select id="km-statusbar">
+      <select id="we-statusbar">
         <option value="none" selected>none</option>
         <option value="bottom">bottom</option>
         <option value="top">top</option>
         <option value="both">both</option>
       </select>
     </label>
-    <label><input type="checkbox" id="km-theme" /> dark theme</label>
-    <span class="km-demo-status" id="km-status">—</span>
+    <label><input type="checkbox" id="we-theme" /> dark theme</label>
+    <span class="we-demo-status" id="we-status">—</span>
   </div>
 
   <km-editor id="km" mode="split" format="markdown"
@@ -58,7 +58,7 @@ This is the **shipped** Web Component — one ProseMirror document, with Markdow
 - Edit here and watch the live output panel"></km-editor>
 </section>
 
-<hr class="km-demo-divider" />
+<hr class="we-demo-divider" />
 <h2 class="subtitle" style="margin-top: 24px;">Raw engine harness</h2>
 
 <!-- Floating text toolbar (appears on text selection) -->

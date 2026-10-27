@@ -9,11 +9,11 @@
    examples-shared.css — this file carries only the raw-harness chrome below. */
 
 /* Playground-only: the <km-editor> showcase controls (light DOM). */
-.km-demo {
+.we-demo {
   margin-bottom: 24px;
 }
 
-.km-demo-controls {
+.we-demo-controls {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -23,20 +23,20 @@
   color: #444;
 }
 
-.km-demo-controls label {
+.we-demo-controls label {
   display: inline-flex;
   align-items: center;
   gap: 4px;
 }
 
-.km-demo-status {
+.we-demo-status {
   margin-left: auto;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 12px;
   color: #0066cc;
 }
 
-.km-demo-divider {
+.we-demo-divider {
   border: none;
   border-top: 1px dashed #ccc;
   margin: 32px 0 0;

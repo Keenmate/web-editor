@@ -22,7 +22,7 @@ test.describe('inputs', () => {
         expect(rejected.map((w) => w.match(/ (\w+)="/)?.[1]).sort()).toEqual(['format', 'mode', 'statusbar', 'toolbar']);
         // The editor still works on the defaults.
         await expect(pm(page).locator('h1')).toHaveText('Title');
-        await expect(page.locator('km-editor#subject .km-toolbar-zone')).toBeVisible();
+        await expect(page.locator('km-editor#subject .we-toolbar-zone')).toBeVisible();
     });
 
     test('invalid property assignments are rejected (value kept) with a warning', async ({ page }) => {

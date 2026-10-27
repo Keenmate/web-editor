@@ -25,7 +25,7 @@ export type CommandBarVariant = 'bar' | 'menu';
 
 export interface CommandBarOptions {
   variant?: CommandBarVariant;
-  /** Override the wrapper class (e.g. `'km-group'` when used as a tool group). */
+  /** Override the wrapper class (e.g. `'we-group'` when used as a tool group). */
   className?: string;
   /** The `source` reported on the `action` event. Default `'toolbar'`. */
   source?: EditorActionSource;
@@ -64,7 +64,7 @@ export class CommandBar {
     this.#onActivate = opts.onActivate;
 
     this.el = document.createElement('div');
-    this.el.className = opts.className ?? (this.#variant === 'menu' ? 'km-menu' : 'km-command-bar');
+    this.el.className = opts.className ?? (this.#variant === 'menu' ? 'we-menu' : 'we-command-bar');
     this.el.setAttribute('role', this.#variant === 'menu' ? 'menu' : 'toolbar');
 
     parent.appendChild(this.el);
@@ -111,7 +111,7 @@ export class CommandBar {
 
   #divider(): HTMLElement {
     const s = document.createElement('span');
-    s.className = this.#variant === 'menu' ? 'km-menu-sep' : 'km-sep';
+    s.className = this.#variant === 'menu' ? 'we-menu-sep' : 'we-sep';
     s.setAttribute('role', 'separator');
     return s;
   }
@@ -139,7 +139,7 @@ export class CommandBar {
     btn.dataset.action = r.action;
     if (r.id !== undefined) btn.dataset.id = r.id;
     else delete btn.dataset.id;
-    btn.className = [isMenu ? 'km-menu-item' : 'km-cmd', r.cssClass, r.isToggled && 'toggled', r.isDanger && 'km-danger']
+    btn.className = [isMenu ? 'we-menu-item' : 'we-cmd', r.cssClass, r.isToggled && 'toggled', r.isDanger && 'we-danger']
       .filter(Boolean)
       .join(' ');
     if (isMenu) {
@@ -151,12 +151,12 @@ export class CommandBar {
 
     if (isMenu) {
       const label = document.createElement('span');
-      label.className = 'km-menu-label';
+      label.className = 'we-menu-label';
       label.textContent = r.text;
       const parts: Node[] = [label];
       if (r.shortcut) {
         const shortcut = document.createElement('span');
-        shortcut.className = 'km-menu-shortcut';
+        shortcut.className = 'we-menu-shortcut';
         shortcut.textContent = r.shortcut;
         parts.push(shortcut);
       }

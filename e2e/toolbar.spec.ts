@@ -4,8 +4,8 @@ import { test, expect, load, editor, pm, caretAfter, toolbarButton, type Page } 
 // attribute; the default group / item set; active state follows the caret.
 // Fixture: test/toolbar.html (value "# Title\n\nplain words here").
 
-const zone = (page: Page) => page.locator('km-editor#subject .km-toolbar-zone');
-const body = (page: Page) => page.locator('km-editor#subject .km-body');
+const zone = (page: Page) => page.locator('km-editor#subject .we-toolbar-zone');
+const body = (page: Page) => page.locator('km-editor#subject .we-body');
 const setToolbar = (page: Page, side: string) =>
     editor(page).evaluate((el: any, s) => (el.toolbar = s), side);
 
@@ -16,7 +16,7 @@ test.describe('toolbar', () => {
         await expect(zone(page)).toBeVisible();
         const [z, b] = await Promise.all([zone(page).boundingBox(), body(page).boundingBox()]);
         expect(z!.y + z!.height).toBeLessThanOrEqual(b!.y + 1);
-        const groups = await page.locator('km-editor#subject .km-toolbar-zone .km-group').evaluateAll((gs) => gs.map((g) => (g as HTMLElement).dataset.group));
+        const groups = await page.locator('km-editor#subject .we-toolbar-zone .we-group').evaluateAll((gs) => gs.map((g) => (g as HTMLElement).dataset.group));
         expect(groups).toEqual(['format', 'block', 'list', 'insert', 'link', 'image', 'table', 'history']);
         await expect(toolbarButton(page, 'bold')).toHaveAttribute('title', 'Bold (Ctrl+B)');
         await expect(toolbarButton(page, 'redo')).toHaveAttribute('title', /Redo/);
@@ -32,7 +32,7 @@ test.describe('toolbar', () => {
         test(`toolbar="${side}" docks the toolbar on that edge`, async ({ page }) => {
             await setToolbar(page, side);
             await expect(editor(page)).toHaveAttribute('toolbar', side);
-            await expect(page.locator('km-editor#subject .km-surface')).toHaveClass(new RegExp('km-tb-' + side));
+            await expect(page.locator('km-editor#subject .we-surface')).toHaveClass(new RegExp('we-tb-' + side));
             const [z, b] = await Promise.all([zone(page).boundingBox(), body(page).boundingBox()]);
             expect(check(z, b), JSON.stringify({ z, b })).toBe(true);
         });

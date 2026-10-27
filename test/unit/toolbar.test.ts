@@ -33,9 +33,9 @@ async function mount(attrs: Record<string, string> = {}): Promise<KmEditorElemen
   return el;
 }
 
-const bar = (el: KmEditorElement) => el.shadowRoot!.querySelector('.km-toolbar-zone') as HTMLElement;
+const bar = (el: KmEditorElement) => el.shadowRoot!.querySelector('.we-toolbar-zone') as HTMLElement;
 const cmd = (el: KmEditorElement, id: string) =>
-  el.shadowRoot!.querySelector(`.km-toolbar-zone [data-action="${id}"]`) as HTMLButtonElement;
+  el.shadowRoot!.querySelector(`.we-toolbar-zone [data-action="${id}"]`) as HTMLButtonElement;
 
 describe('<km-editor> static toolbar', () => {
   it('renders the command toolbar above the editor in edit mode', async () => {
@@ -44,53 +44,53 @@ describe('<km-editor> static toolbar', () => {
     expect(cmd(el, 'bold')).toBeTruthy();
     expect(cmd(el, 'insert-table')).toBeTruthy();
     // Surface = toolbar + body(editor); toolbar first (flush, 'top').
-    const surface = el.shadowRoot!.querySelector('.km-surface')!;
-    expect(surface.classList.contains('km-tb-top')).toBe(true);
+    const surface = el.shadowRoot!.querySelector('.we-surface')!;
+    expect(surface.classList.contains('we-tb-top')).toBe(true);
     const kids = Array.from(surface.children);
-    expect(kids.indexOf(el.shadowRoot!.querySelector('.km-toolbar')!)).toBeLessThan(
-      kids.indexOf(el.shadowRoot!.querySelector('.km-body')!)
+    expect(kids.indexOf(el.shadowRoot!.querySelector('.we-toolbar')!)).toBeLessThan(
+      kids.indexOf(el.shadowRoot!.querySelector('.we-body')!)
     );
   });
 
   it('places the toolbar on the requested side', async () => {
     const el = await mount({ value: 'x', toolbar: 'start' });
-    expect(el.shadowRoot!.querySelector('.km-surface')!.classList.contains('km-tb-start')).toBe(true);
+    expect(el.shadowRoot!.querySelector('.we-surface')!.classList.contains('we-tb-start')).toBe(true);
     el.setAttribute('toolbar', 'bottom');
     await el.whenSettled();
-    expect(el.shadowRoot!.querySelector('.km-surface')!.classList.contains('km-tb-bottom')).toBe(true);
+    expect(el.shadowRoot!.querySelector('.we-surface')!.classList.contains('we-tb-bottom')).toBe(true);
     expect(bar(el).hidden).toBe(false);
   });
 
   it('renders divider-separated tool groups (core + plugin)', async () => {
     const el = await mount({ value: 'x' });
-    const groups = el.shadowRoot!.querySelectorAll('.km-toolbar-zone .km-group');
+    const groups = el.shadowRoot!.querySelectorAll('.we-toolbar-zone .we-group');
     expect(groups.length).toBeGreaterThan(1);
-    const format = el.shadowRoot!.querySelector('.km-group[data-group="format"]')!;
+    const format = el.shadowRoot!.querySelector('.we-group[data-group="format"]')!;
     expect(format.querySelectorAll('[data-action]').length).toBe(3); // bold/italic/underline
     // A plugin contributes its own group.
-    expect(el.shadowRoot!.querySelector('.km-group[data-group="table"]')).toBeTruthy();
+    expect(el.shadowRoot!.querySelector('.we-group[data-group="table"]')).toBeTruthy();
   });
 });
 
 describe('<km-editor> status bar', () => {
   it('is absent by default (statusbar="none")', async () => {
     const el = await mount({ value: 'x' });
-    expect(el.shadowRoot!.querySelector('.km-statusbar')).toBeNull();
+    expect(el.shadowRoot!.querySelector('.we-statusbar')).toBeNull();
   });
 
   it('renders live indicators when enabled', async () => {
     const el = await mount({ value: 'one two three', statusbar: 'bottom' });
-    const status = el.shadowRoot!.querySelector('.km-statusbar') as HTMLElement;
+    const status = el.shadowRoot!.querySelector('.we-statusbar') as HTMLElement;
     expect(status).toBeTruthy();
     expect(status.hidden).toBe(false);
-    const words = el.shadowRoot!.querySelector('.km-status-item[data-status="words"]');
+    const words = el.shadowRoot!.querySelector('.we-status-item[data-status="words"]');
     expect(words?.textContent).toBe('Words: 3');
-    const chars = el.shadowRoot!.querySelector('.km-status-item[data-status="chars"]');
+    const chars = el.shadowRoot!.querySelector('.we-status-item[data-status="chars"]');
     expect(chars?.textContent).toBe(`Chars: ${'one two three'.length}`);
     // Hugs the body: status lives inside the body group, after the editor (bottom).
-    const body = el.shadowRoot!.querySelector('.km-body')!;
+    const body = el.shadowRoot!.querySelector('.we-body')!;
     const kids = Array.from(body.children);
-    expect(kids.indexOf(el.shadowRoot!.querySelector('.km-status')!)).toBeGreaterThan(
+    expect(kids.indexOf(el.shadowRoot!.querySelector('.we-status')!)).toBeGreaterThan(
       kids.indexOf(el.shadowRoot!.querySelector('.km-editor')!)
     );
   });
@@ -98,22 +98,22 @@ describe('<km-editor> status bar', () => {
   it('hugs the body in top position (status between toolbar and editor)', async () => {
     const el = await mount({ value: 'x', toolbar: 'top', statusbar: 'top' });
     // Toolbar is the outer surface child; status sits inside the body, before the editor.
-    const body = el.shadowRoot!.querySelector('.km-body')!;
+    const body = el.shadowRoot!.querySelector('.we-body')!;
     const kids = Array.from(body.children);
-    expect(kids.indexOf(el.shadowRoot!.querySelector('.km-status')!)).toBeLessThan(
+    expect(kids.indexOf(el.shadowRoot!.querySelector('.we-status')!)).toBeLessThan(
       kids.indexOf(el.shadowRoot!.querySelector('.km-editor')!)
     );
     // The toolbar is outside the body group (direct child of the surface).
-    expect(el.shadowRoot!.querySelector('.km-surface > .km-toolbar')).toBeTruthy();
-    expect(el.shadowRoot!.querySelector('.km-body .km-toolbar')).toBeNull();
+    expect(el.shadowRoot!.querySelector('.we-surface > .we-toolbar')).toBeTruthy();
+    expect(el.shadowRoot!.querySelector('.we-body .we-toolbar')).toBeNull();
   });
 
   it('supports a status bar on both edges (Chars top, Words bottom)', async () => {
     const el = await mount({ value: 'hi there', statusbar: 'both' });
-    const body = el.shadowRoot!.querySelector('.km-body')!;
-    const slots = Array.from(body.children).filter((c) => c.classList.contains('km-status'));
+    const body = el.shadowRoot!.querySelector('.we-body')!;
+    const slots = Array.from(body.children).filter((c) => c.classList.contains('we-status'));
     expect(slots.length).toBe(2); // top + bottom slots both present
-    const [top, bottom] = slots.map((s) => s.querySelector('.km-statusbar') as HTMLElement);
+    const [top, bottom] = slots.map((s) => s.querySelector('.we-statusbar') as HTMLElement);
     expect(top.hidden).toBe(false);
     expect(bottom.hidden).toBe(false);
     // Top strip shows Chars; Words is hidden there. Bottom strip shows Words.
@@ -135,7 +135,7 @@ describe('<km-editor> status bar', () => {
     el.plugins = [...defaultPlugins(), p];
     await el.whenSettled();
     expect(getEditorEngine(el)!.statusItems.some((i) => i.id === 'custom')).toBe(true);
-    const node = el.shadowRoot!.querySelector('.km-status-item[data-status="custom"]');
+    const node = el.shadowRoot!.querySelector('.we-status-item[data-status="custom"]');
     expect(node?.textContent).toBe('CUSTOM');
   });
 
@@ -302,7 +302,7 @@ describe('ContextMenu', () => {
     engine.view.dom.dispatchEvent(ev);
     expect(menu.open).toBe(true);
     expect(ev.defaultPrevented).toBe(true);
-    expect(container.querySelector('.km-context-menu .km-menu-item')).toBeTruthy();
+    expect(container.querySelector('.we-context-menu .we-menu-item')).toBeTruthy();
     menu.destroy();
   });
 

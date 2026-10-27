@@ -55,7 +55,7 @@
     "title": "Web Editor",
     "tagline": "A framework-agnostic WYSIWYG / Markdown editor built on ProseMirror, shipped as the <km-editor> Web Component.",
     "tag": "km-editor",
-    "prefix": "km",
+    "prefix": "we",
     "library": {
       "globalName": "WebEditor",
       "fileName": "web-editor",

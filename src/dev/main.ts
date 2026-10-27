@@ -20,7 +20,7 @@ import type { KmEditorElement, EditorMode } from '../index';
 // ── <km-editor> element showcase (Phase 2–3) ──────────────────────────────
 const km = document.querySelector('#km') as KmEditorElement | null;
 if (km) {
-  const status = document.querySelector('#km-status') as HTMLElement | null;
+  const status = document.querySelector('#we-status') as HTMLElement | null;
   const setStatus = (msg: string) => {
     if (status) status.textContent = msg;
   };
@@ -35,23 +35,23 @@ if (km) {
   });
   km.addEventListener('mode-change', (e) => setStatus(`mode → ${(e as CustomEvent).detail.mode}`));
 
-  document.querySelector('#km-mode')?.addEventListener('change', (e) => {
+  document.querySelector('#we-mode')?.addEventListener('change', (e) => {
     km.setAttribute('mode', (e.target as HTMLSelectElement).value as EditorMode);
   });
-  document.querySelector('#km-format')?.addEventListener('change', (e) => {
+  document.querySelector('#we-format')?.addEventListener('change', (e) => {
     km.setAttribute('format', (e.target as HTMLSelectElement).value);
   });
-  document.querySelector('#km-readonly')?.addEventListener('change', (e) => {
+  document.querySelector('#we-readonly')?.addEventListener('change', (e) => {
     if ((e.target as HTMLInputElement).checked) km.setAttribute('readonly', '');
     else km.removeAttribute('readonly');
   });
-  document.querySelector('#km-toolbar')?.addEventListener('change', (e) => {
+  document.querySelector('#we-toolbar')?.addEventListener('change', (e) => {
     km.setAttribute('toolbar', (e.target as HTMLSelectElement).value);
   });
-  document.querySelector('#km-statusbar')?.addEventListener('change', (e) => {
+  document.querySelector('#we-statusbar')?.addEventListener('change', (e) => {
     km.setAttribute('statusbar', (e.target as HTMLSelectElement).value);
   });
-  document.querySelector('#km-theme')?.addEventListener('change', (e) => {
+  document.querySelector('#we-theme')?.addEventListener('change', (e) => {
     if ((e.target as HTMLInputElement).checked) km.setAttribute('theme', 'dark');
     else km.removeAttribute('theme');
   });

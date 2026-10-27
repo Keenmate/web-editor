@@ -28,7 +28,7 @@ export const pm = (page: Page, id = 'subject'): Locator => page.locator(`km-edit
 
 /** A toolbar-zone button by command name. */
 export const toolbarButton = (page: Page, action: string, id = 'subject'): Locator =>
-    page.locator(`km-editor#${id} .km-toolbar-zone [data-action="${action}"]`);
+    page.locator(`km-editor#${id} .we-toolbar-zone [data-action="${action}"]`);
 
 /** Call a public method on the element and return its (serialisable) result. */
 export async function call<T = unknown>(page: Page, method: string, args: unknown[] = [], id = 'subject'): Promise<T> {

@@ -38,7 +38,7 @@ export class SelectionToolbar {
     this.#view = opts.view;
 
     this.#panel = document.createElement('div');
-    this.#panel.className = 'km-floating km-selection-toolbar';
+    this.#panel.className = 'we-floating we-selection-toolbar';
     this.#panel.setAttribute('part', 'selection-toolbar');
     this.#bar = new CommandBar(this.#panel, opts.items, opts.host, { variant: 'bar', source: 'selection-toolbar' });
 

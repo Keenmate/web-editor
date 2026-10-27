@@ -4,8 +4,8 @@ import { test, expect, load, pm, editor, markdown, type Page } from './fixtures'
 // removing the attribute re-enables. Fixture: test/readonly.html
 // (`<km-editor readonly value="# Locked\n\nbody text">`).
 
-const menu = (page: Page) => page.locator('km-editor#subject .km-context-menu');
-const toolbar = (page: Page) => page.locator('km-editor#subject .km-toolbar-zone');
+const menu = (page: Page) => page.locator('km-editor#subject .we-context-menu');
+const toolbar = (page: Page) => page.locator('km-editor#subject .we-toolbar-zone');
 
 test.describe('readonly', () => {
     test.beforeEach(async ({ page }) => load(page, 'readonly.html', { flag: 'fixtureReady' }));

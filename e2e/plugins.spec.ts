@@ -6,7 +6,7 @@ import { test, expect, load, pm, call, markdown, selectText, toolbarButton, type
 
 const groups = (page: Page, id: string) =>
     page
-        .locator(`km-editor#${id} .km-toolbar-zone .km-group`)
+        .locator(`km-editor#${id} .we-toolbar-zone .we-group`)
         .evaluateAll((gs) => gs.map((g) => (g as HTMLElement).dataset.group));
 
 test.describe('plugins', () => {
@@ -35,7 +35,7 @@ test.describe('plugins', () => {
     });
 
     test('custom plugin: its status item renders live', async ({ page }) => {
-        const hl = page.locator('km-editor#custom .km-status-item[data-status="hl"]');
+        const hl = page.locator('km-editor#custom .we-status-item[data-status="hl"]');
         await expect(hl).toHaveText('HL: 15');
         await call(page, 'setValue', ['abc'], 'custom');
         await expect(hl).toHaveText('HL: 3');
@@ -55,7 +55,7 @@ test.describe('plugins', () => {
         });
         expect(enabled).toEqual([false, false, false, true]);
         await pm(page, 'bare').locator('p').click({ button: 'right' });
-        const menu = page.locator('km-editor#bare .km-context-menu');
+        const menu = page.locator('km-editor#bare .we-context-menu');
         await expect(menu).toBeVisible();
         await expect(menu.locator('[data-action="insert-table"]')).toHaveCount(0);
         await expect(menu.locator('[data-action="insert-link"]')).toHaveCount(0);

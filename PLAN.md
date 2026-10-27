@@ -112,7 +112,7 @@ modes; the element delegates to it and re-renders on `mode`/`anchor` change.
   web-components-core/positioning`), else renders in normal flow.
 - The editor **mount node is persistent** — switching modes re-parents it, so the
   live document + selection survive (covered by a test).
-- Component-scoped CSS (`:host` / `.km-*`, theme vars, `theme="dark"`) added to
+- Component-scoped CSS (`:host` / `.we-*`, theme vars, `theme="dark"`) added to
   `editor.css` (inert in the playground's light DOM). New `anchor` input.
 - Playground now dogfoods the shipped `<km-editor>` (mode / format / readonly /
   theme controls + status line) above the raw-engine harness. 29 unit tests.
@@ -157,13 +157,13 @@ engine's `CommandRegistry` and reflecting `isActive` / `isEnabled`:
 Generalised the single static toolbar into **edge zones** + a dedicated **status
 bar**:
 - The `toolbar` input gained all four edges (`top`/`bottom`/`start`/`end`/`none`);
-  the toolbar + editor are wrapped in one bordered `.km-shell` frame so the
+  the toolbar + editor are wrapped in one bordered `.we-shell` frame so the
   toolbar sits flush (a divider, not a detached card). `start`/`end` render a
   vertical strip.
 - The toolbar lays out **tool groups** (`ToolGroup`): contiguous, divider-separated
   button clusters that wrap into rows/columns — the Word-style grouped toolbar and
   the self-contained unit a future drag-and-drop will reorder. `ToolbarZone`
-  renders one `CommandBar` (class `km-group`) per group.
+  renders one `CommandBar` (class `we-group`) per group.
 - New **status bar** (`statusbar` input: `none`/`top`/`bottom`/`both`) — a
   dedicated strip of live `StatusItem` indicators (`Words`/`Chars`, + plugin
   items) that **hugs the editor body** (toolbar stays on the outside), deliberately

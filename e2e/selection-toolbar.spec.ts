@@ -4,7 +4,7 @@ import { test, expect, load, editor, pm, call, selectText, caretAfter, type Page
 // collapsed caret, inside a code block, and in read-only; its items run commands.
 // Fixture: test/selection-toolbar.html (value "# Title\n\nplain words here").
 
-const bar = (page: Page) => page.locator('km-editor#subject .km-selection-toolbar');
+const bar = (page: Page) => page.locator('km-editor#subject .we-selection-toolbar');
 
 test.describe('selection toolbar', () => {
     test.beforeEach(async ({ page }) => load(page, 'selection-toolbar.html', { flag: 'fixtureReady' }));
@@ -56,7 +56,7 @@ test.describe('selection toolbar', () => {
         const isOpen = () =>
             page.evaluate(() => {
                 const el = (window as any).held ?? document.getElementById('subject');
-                const p = el.shadowRoot.querySelector('.km-selection-toolbar') as HTMLElement | null;
+                const p = el.shadowRoot.querySelector('.we-selection-toolbar') as HTMLElement | null;
                 return !!p && p.isConnected && p.checkVisibility();
             });
         expect(await isOpen()).toBe(true);

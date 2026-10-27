@@ -102,19 +102,19 @@ describe('<km-editor>', () => {
 });
 
 describe('<km-editor> view modes', () => {
-  const root = (el: KmEditorElement) => el.shadowRoot!.querySelector('.km-root')!;
+  const root = (el: KmEditorElement) => el.shadowRoot!.querySelector('.we-root')!;
 
   it('edit (default) renders just the editor surface', async () => {
     const el = await mount({ value: '# Edit' });
-    expect(root(el).classList.contains('km-edit')).toBe(true);
+    expect(root(el).classList.contains('we-edit')).toBe(true);
     expect(el.shadowRoot!.querySelector('.km-editor')).toBeTruthy();
-    expect(el.shadowRoot!.querySelector('.km-output')).toBeNull();
+    expect(el.shadowRoot!.querySelector('.we-output')).toBeNull();
   });
 
   it('split renders a live output panel reflecting the document', async () => {
     const el = await mount({ value: '# Split', mode: 'split' });
-    expect(root(el).classList.contains('km-split')).toBe(true);
-    const pre = el.shadowRoot!.querySelector('.km-output-pre') as HTMLPreElement;
+    expect(root(el).classList.contains('we-split')).toBe(true);
+    const pre = el.shadowRoot!.querySelector('.we-output-pre') as HTMLPreElement;
     expect(pre).toBeTruthy();
     // Default output lens is the I/O format (markdown here).
     expect(pre.textContent).toContain('# Split');
@@ -122,8 +122,8 @@ describe('<km-editor> view modes', () => {
 
   it('split output tabs switch the serialization lens', async () => {
     const el = await mount({ value: '# Tabs', mode: 'split' });
-    const pre = el.shadowRoot!.querySelector('.km-output-pre') as HTMLPreElement;
-    const htmlTab = el.shadowRoot!.querySelector('.km-output-tabs button[data-format="html"]') as HTMLButtonElement;
+    const pre = el.shadowRoot!.querySelector('.we-output-pre') as HTMLPreElement;
+    const htmlTab = el.shadowRoot!.querySelector('.we-output-tabs button[data-format="html"]') as HTMLButtonElement;
     htmlTab.click();
     expect(htmlTab.classList.contains('active')).toBe(true);
     expect(pre.textContent).toContain('<h1');
@@ -142,12 +142,12 @@ describe('<km-editor> view modes', () => {
 
   it('preview renders read-only', async () => {
     const el = await mount({ value: 'x', mode: 'preview' });
-    expect(root(el).classList.contains('km-preview')).toBe(true);
+    expect(root(el).classList.contains('we-preview')).toBe(true);
     expect(getEditorEngine(el)!.isEditable()).toBe(false);
   });
 
   it('inline renders a floating card (no anchor → normal flow, no throw)', async () => {
     const el = await mount({ value: 'x', mode: 'inline' });
-    expect(root(el).classList.contains('km-inline')).toBe(true);
+    expect(root(el).classList.contains('we-inline')).toBe(true);
   });
 });

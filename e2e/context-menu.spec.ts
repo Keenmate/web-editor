@@ -4,7 +4,7 @@ import { test, expect, load, editor, pm, selectText, type Page } from './fixture
 // outside pointerdown / after activating an item, runs commands; read-only gets
 // the native menu. Fixture: test/context-menu.html (value "# Title\n\nplain words here").
 
-const menu = (page: Page) => page.locator('km-editor#subject .km-context-menu');
+const menu = (page: Page) => page.locator('km-editor#subject .we-context-menu');
 
 test.describe('context menu', () => {
     test.beforeEach(async ({ page }) => load(page, 'context-menu.html', { flag: 'fixtureReady' }));

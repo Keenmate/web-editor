@@ -40,7 +40,7 @@ export class ContextMenu {
     this.#view = opts.view;
 
     this.#panel = document.createElement('div');
-    this.#panel.className = 'km-floating km-context-menu';
+    this.#panel.className = 'we-floating we-context-menu';
     this.#panel.setAttribute('part', 'context-menu');
     this.#bar = new CommandBar(this.#panel, opts.items, opts.host, {
       variant: 'menu',

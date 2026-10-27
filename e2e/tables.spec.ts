@@ -28,7 +28,7 @@ test.describe('tables', () => {
 
     test('context menu inserts a table', async ({ page }) => {
         await pm(page).locator('p').click({ button: 'right' });
-        await page.locator('km-editor#subject .km-context-menu [data-action="insert-table"]').click();
+        await page.locator('km-editor#subject .we-context-menu [data-action="insert-table"]').click();
         await expect(pm(page).locator('table')).toHaveCount(1);
     });
 

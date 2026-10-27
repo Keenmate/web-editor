@@ -118,6 +118,14 @@ it never left "idle"; it now uses `onLockChange({ isLocked })`.
 
 ### Changed
 
+- **CSS prefix `km-` → `we-`** (BREAKING for custom styling). Every class and
+  custom property of the editor's own chrome is renamed with the same BEM shape:
+  `.km-root` → `.we-root`, `.km-surface` → `.we-surface`, `.km-toolbar-zone` →
+  `.we-toolbar-zone`, `.km-cmd` → `.we-cmd`, `.km-status-item` → `.we-status-item`, …;
+  `--km-border` / `--km-bg` / `--km-accent` / `--km-danger` / … → `--we-*`.
+  `km-` is reserved for shared UI rendered by `@keenmate/web-components-core` (its
+  `/menu` renders `.km-menu*` / `--km-menu-*`), which the editor's own `.km-menu`
+  collided with. The tag stays `<km-editor>`.
 - **Built on `@keenmate/web-components-core` 1.0.0-rc15** — the input table uses its renamed
   `shouldReflect` flag (the interaction-model change above is the only API change).
 - **Moved onto `@keenmate/web-components-devkit` and flattened to a single-package

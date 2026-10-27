@@ -68,23 +68,23 @@ export class ViewLayout {
     // Toolbar slot — placed at the top of the root on every render; the chrome
     // fills it with the static toolbar (empty + zero-height until it does).
     this.toolbarMount = document.createElement('div');
-    this.toolbarMount.className = 'km-toolbar';
+    this.toolbarMount.className = 'we-toolbar';
     this.toolbarMount.setAttribute('part', 'toolbar');
 
     // Status-bar slots — dedicated strips (top / bottom edges of the body),
     // separate from the toolbar zones.
     this.statusTopMount = document.createElement('div');
-    this.statusTopMount.className = 'km-status';
+    this.statusTopMount.className = 'we-status';
     this.statusTopMount.setAttribute('part', 'status-top');
     this.statusBottomMount = document.createElement('div');
-    this.statusBottomMount.className = 'km-status';
+    this.statusBottomMount.className = 'we-status';
     this.statusBottomMount.setAttribute('part', 'status-bottom');
 
     // Overlay layer — a sibling of the root (not re-rendered), so portaled
     // floating panels survive a view-mode change. Positioned panels are fixed,
     // so this layer itself takes no space.
     this.overlayLayer = document.createElement('div');
-    this.overlayLayer.className = 'km-overlays';
+    this.overlayLayer.className = 'we-overlays';
     this.#shadow.appendChild(this.overlayLayer);
   }
 
@@ -95,7 +95,7 @@ export class ViewLayout {
 
   /**
    * (Re)build the shadow structure for `mode` + `toolbarSide`. The toolbar slot
-   * and the editor mount are wrapped in one bordered `.km-surface` frame (so the
+   * and the editor mount are wrapped in one bordered `.we-surface` frame (so the
    * toolbar sits flush against the editor, with a divider, rather than floating as
    * a separate card); `toolbarSide` sets which edge the toolbar occupies. Builds
    * the output panel only for `split`; (re)anchors only for `inline`.
@@ -122,7 +122,7 @@ export class ViewLayout {
       this.#shadow.appendChild(this.#root);
     }
     const root = this.#root;
-    root.className = `km-root km-${mode}`;
+    root.className = `we-root we-${mode}`;
     root.replaceChildren();
     this.#outputTabs = undefined;
     this.#outputPre = undefined;
@@ -131,13 +131,13 @@ export class ViewLayout {
     // side. The status bar lives INSIDE, in the body group next to the editor —
     // so it always hugs the content, with the toolbar on the outside.
     const body = document.createElement('div');
-    body.className = 'km-body';
+    body.className = 'we-body';
     if (statusSide === 'top' || statusSide === 'both') body.appendChild(this.statusTopMount);
     body.appendChild(this.mount);
     if (statusSide === 'bottom' || statusSide === 'both') body.appendChild(this.statusBottomMount);
 
     const surface = document.createElement('div');
-    surface.className = `km-surface km-tb-${toolbarSide}`;
+    surface.className = `we-surface we-tb-${toolbarSide}`;
     surface.setAttribute('part', 'surface');
     surface.appendChild(this.toolbarMount);
     surface.appendChild(body);
@@ -187,11 +187,11 @@ export class ViewLayout {
 
   #buildOutputPanel(): HTMLDivElement {
     const panel = document.createElement('div');
-    panel.className = 'km-output';
+    panel.className = 'we-output';
     panel.setAttribute('part', 'output');
 
     const tabs = document.createElement('div');
-    tabs.className = 'km-output-tabs';
+    tabs.className = 'we-output-tabs';
     for (const fmt of OUTPUT_FORMATS) {
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -203,7 +203,7 @@ export class ViewLayout {
     }
 
     const pre = document.createElement('pre');
-    pre.className = 'km-output-pre';
+    pre.className = 'we-output-pre';
     pre.setAttribute('part', 'output-content');
 
     panel.append(tabs, pre);

@@ -45,7 +45,7 @@ test.describe('inline anchor', () => {
     test('an anchor selector that matches nothing renders in normal flow', async ({ page }) => {
         await editor(page).evaluate((el: any) => (el.anchor = '#missing'));
         await expect.poll(() => editor(page).evaluate((el) => el.style.position)).toBe('');
-        await expect(page.locator('km-editor#subject .km-root')).toHaveClass(/km-inline/);
+        await expect(page.locator('km-editor#subject .we-root')).toHaveClass(/we-inline/);
     });
 
     test('changing the anchor re-targets', async ({ page }) => {

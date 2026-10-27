@@ -19,18 +19,18 @@ export class StatusBar {
     this.#getContext = getContext;
 
     this.el = document.createElement('div');
-    this.el.className = 'km-statusbar';
+    this.el.className = 'we-statusbar';
     this.el.setAttribute('part', 'statusbar');
 
     const start = document.createElement('div');
-    start.className = 'km-status-start';
+    start.className = 'we-status-start';
     const end = document.createElement('div');
-    end.className = 'km-status-end';
+    end.className = 'we-status-end';
     this.el.append(start, end);
 
     for (const item of items) {
       const node = document.createElement('span');
-      node.className = 'km-status-item';
+      node.className = 'we-status-item';
       node.dataset.status = item.id;
       if (item.tooltip) node.title = item.tooltip;
       (item.align === 'end' ? end : start).appendChild(node);

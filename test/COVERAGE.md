@@ -108,7 +108,7 @@ dialog stub), `e2e/helpers.ts`.
 | Feature | Status | Spec | Fixture |
 | --- | :-: | --- | --- |
 | Examples hub + pages open without errors | ✓ | `examples.spec.ts` | (example pages) |
-| `theme="dark"` tokens + `--km-accent` on active buttons + live theme property | ✓ | `theming.spec.ts` | `theming.html` |
+| `theme="dark"` tokens + `--we-accent` on active buttons + live theme property | ✓ | `theming.spec.ts` | `theming.html` |
 | Logging silent by default; global enable / disable (EDITOR:INIT) | ✓ | `logging.spec.ts` | `logging.html` |
 | Global registration: define, `window.components` (version / config / getInstances), re-import | ✓ | `registration.spec.ts` | `registration.html` |
 | Invalid enum attributes → default (silent, ED-11); invalid property rejected + warn; boolean `readonly` | ✓ | `inputs.spec.ts` | `inputs.html` |

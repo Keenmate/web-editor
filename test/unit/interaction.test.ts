@@ -32,7 +32,7 @@ const tick = async () => {
   for (let i = 0; i < 5; i++) await Promise.resolve();
 };
 const toolbarButton = (el: KmEditorElement, action: string) =>
-  el.shadowRoot!.querySelector(`.km-toolbar-zone [data-action="${action}"]`) as HTMLButtonElement;
+  el.shadowRoot!.querySelector(`.we-toolbar-zone [data-action="${action}"]`) as HTMLButtonElement;
 
 describe('events', () => {
   it('ready: twin and DOM event share one detail carrying controller + element (non-enumerable)', async () => {
@@ -192,10 +192,10 @@ describe('toolbar items are core action items', () => {
     });
     const el = await mount({ value: 'x' }, (e) => (e.plugins = [...defaultPlugins(), custom]));
     el.onAction = (d) => actions.push(d);
-    const group = el.shadowRoot!.querySelector('.km-group[data-group="mine"]')!;
+    const group = el.shadowRoot!.querySelector('.we-group[data-group="mine"]')!;
     // Hidden item dropped → the trailing divider is trimmed too.
     expect(group.querySelectorAll('button').length).toBe(1);
-    expect(group.querySelector('.km-sep')).toBeNull();
+    expect(group.querySelector('.we-sep')).toBeNull();
     const save = group.querySelector('[data-id="save"]') as HTMLButtonElement;
     expect(save.dataset.action).toBe('custom');
     expect(save.classList.contains('my-save')).toBe(true);

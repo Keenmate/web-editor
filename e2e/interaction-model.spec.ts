@@ -74,7 +74,7 @@ test.describe('interaction model', () => {
   test('toolbar click: command → onAction twin → action event (not composed); aria-pressed reflects', async ({ page }) => {
     await selectPlain(page);
     await clearLog(page);
-    const bold = page.locator('#subject .km-toolbar-zone [data-action="bold"]');
+    const bold = page.locator('#subject .we-toolbar-zone [data-action="bold"]');
     await expect(bold).toHaveAttribute('title', 'Bold (Ctrl+B)');
     await bold.click();
     await expect(page.locator('#subject .ProseMirror p strong')).toHaveText('plain');
@@ -110,7 +110,7 @@ test.describe('interaction model', () => {
       };
     });
     await clearLog(page);
-    const bold = page.locator('#subject .km-toolbar-zone [data-action="bold"]');
+    const bold = page.locator('#subject .we-toolbar-zone [data-action="bold"]');
     await bold.click();
     await page.waitForTimeout(50);
     expect(await log(page)).toEqual([{ kind: 'before', action: 'bold', ctx: true }]);
@@ -135,7 +135,7 @@ test.describe('interaction model', () => {
 
   test('custom item: onClick then action event, with id; render-time ctx carries controller', async ({ page }) => {
     await clearLog(page);
-    const save = page.locator('#subject .km-group[data-group="ix"] [data-id="save"]');
+    const save = page.locator('#subject .we-group[data-group="ix"] [data-id="save"]');
     await expect(save).toHaveAttribute('data-action', 'custom');
     await save.click();
     await expect.poll(() => log(page)).toEqual([
@@ -150,14 +150,14 @@ test.describe('interaction model', () => {
       return { item: check(ix.ctx.item), command: check(ix.ctx.command), status: check(ix.ctx.status) };
     });
     for (const c of Object.values(ctx)) expect(c).toEqual({ state: true, ctx: true, keys: ['state'] });
-    await expect(page.locator('#subject .km-status-item[data-status="ix"]')).toHaveText('IX');
+    await expect(page.locator('#subject .we-status-item[data-status="ix"]')).toHaveText('IX');
   });
 
   test('context menu: items show shortcuts; activation reports source context-menu', async ({ page }) => {
     await page.locator('#subject .ProseMirror p').click({ button: 'right' });
-    const menu = page.locator('#subject .km-context-menu');
+    const menu = page.locator('#subject .we-context-menu');
     await expect(menu).toBeVisible();
-    await expect(menu.locator('[data-action="bold"] .km-menu-shortcut')).toHaveText('Ctrl+B');
+    await expect(menu.locator('[data-action="bold"] .we-menu-shortcut')).toHaveText('Ctrl+B');
     await clearLog(page);
     await menu.locator('[data-action="insert-table"]').click();
     await expect(page.locator('#subject .ProseMirror table')).toHaveCount(1);
@@ -167,7 +167,7 @@ test.describe('interaction model', () => {
 
   test('selection toolbar reports source selection-toolbar', async ({ page }) => {
     await selectPlain(page);
-    const bar = page.locator('#subject .km-selection-toolbar');
+    const bar = page.locator('#subject .we-selection-toolbar');
     await expect(bar).toBeVisible();
     await clearLog(page);
     await bar.locator('[data-action="italic"]').click();
@@ -185,7 +185,7 @@ test.describe('interaction model', () => {
 
   test('interactionHost.request(ctx) carries request + signal + context; lock-change brackets the run', async ({ page }) => {
     await clearLog(page);
-    await page.locator('#subject .km-toolbar-zone [data-action="image:browser:pick"]').click();
+    await page.locator('#subject .we-toolbar-zone [data-action="image:browser:pick"]').click();
     await expect(page.locator('#subject .ProseMirror img[src^="data:"]')).toHaveCount(1);
     await expect.poll(async () => (await log(page)).filter((e) => e.kind === 'lock')).toEqual([
       { kind: 'lock', isLocked: true },

@@ -1,7 +1,7 @@
 /**
  * ToolbarZone — the static (zone) toolbar: a row/column of divider-separated
  * {@link ToolGroup}s docked to one editor edge. Each group is rendered as its own
- * {@link CommandBar} (class `km-group`), so a group is one contiguous cluster and
+ * {@link CommandBar} (class `we-group`), so a group is one contiguous cluster and
  * the unit future drag-and-drop will move. Groups wrap into multiple rows (top /
  * bottom zones) or columns (start / end zones) via CSS.
  */
@@ -15,18 +15,18 @@ export class ToolbarZone {
 
   constructor(parent: HTMLElement, groups: readonly ToolGroup[], host: ActionSurfaceHost) {
     this.el = document.createElement('div');
-    this.el.className = 'km-toolbar-zone';
+    this.el.className = 'we-toolbar-zone';
     this.el.setAttribute('role', 'toolbar');
 
     groups.forEach((group, i) => {
       if (i > 0) {
         const divider = document.createElement('span');
-        divider.className = 'km-group-sep';
+        divider.className = 'we-group-sep';
         this.el.appendChild(divider);
       }
       const bar = new CommandBar(this.el, group.items, host, {
         variant: 'bar',
-        className: 'km-group',
+        className: 'we-group',
         source: 'toolbar',
       });
       bar.el.dataset.group = group.id;

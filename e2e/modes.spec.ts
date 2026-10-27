@@ -6,8 +6,8 @@ import { test, expect, load, pm, editor, markdown, selectText, caretAfter, logLi
 
 const setMode = (page: Page, mode: string) =>
     page.evaluate((m) => ((document.getElementById('subject') as any).mode = m), mode);
-const root = (page: Page) => page.locator('km-editor#subject .km-root');
-const output = (page: Page) => page.locator('km-editor#subject .km-output-pre');
+const root = (page: Page) => page.locator('km-editor#subject .we-root');
+const output = (page: Page) => page.locator('km-editor#subject .we-output-pre');
 
 test.describe('modes', () => {
     test.beforeEach(async ({ page }) => load(page, 'modes.html', { flag: 'fixtureReady' }));
@@ -16,8 +16,8 @@ test.describe('modes', () => {
         // Core reflects explicit values only — an untouched default leaves no attribute.
         expect(await editor(page).evaluate((el: any) => el.mode)).toBe('edit');
         await expect(editor(page)).not.toHaveAttribute('mode');
-        await expect(root(page)).toHaveClass(/km-edit/);
-        await expect(page.locator('km-editor#subject .km-output')).toHaveCount(0);
+        await expect(root(page)).toHaveClass(/we-edit/);
+        await expect(page.locator('km-editor#subject .we-output')).toHaveCount(0);
         await expect(pm(page)).toHaveAttribute('contenteditable', 'true');
     });
 
@@ -26,7 +26,7 @@ test.describe('modes', () => {
         for (const m of ['split', 'preview', 'inline', 'edit']) {
             await setMode(page, m);
             await expect(editor(page)).toHaveAttribute('mode', m);
-            await expect(root(page)).toHaveClass(new RegExp('km-' + m));
+            await expect(root(page)).toHaveClass(new RegExp('we-' + m));
         }
         expect((await logLines(page, 'modes')).filter((l) => l.startsWith('mode-change'))).toEqual([
             'mode-change:split',
@@ -42,25 +42,25 @@ test.describe('modes', () => {
         await caretAfter(page, 'here');
         await page.keyboard.type(' more');
         await expect(output(page)).toHaveText('# Title\n\nplain words here more');
-        const htmlTab = page.locator('km-editor#subject .km-output-tabs [data-format="html"]');
+        const htmlTab = page.locator('km-editor#subject .we-output-tabs [data-format="html"]');
         await htmlTab.click();
         await expect(output(page)).toHaveText('<h1>Title</h1><p>plain words here more</p>');
         await expect(htmlTab).toHaveClass(/active/);
-        await page.locator('km-editor#subject .km-output-tabs [data-format="json"]').click();
+        await page.locator('km-editor#subject .we-output-tabs [data-format="json"]').click();
         expect(JSON.parse((await output(page).textContent())!).type).toBe('doc');
     });
 
     test('preview: not editable, toolbar hidden, typing ignored', async ({ page }) => {
         await setMode(page, 'preview');
         await expect(pm(page)).toHaveAttribute('contenteditable', 'false');
-        await expect(page.locator('km-editor#subject .km-toolbar-zone')).toBeHidden();
+        await expect(page.locator('km-editor#subject .we-toolbar-zone')).toBeHidden();
         await pm(page).locator('p').click();
         await page.keyboard.type('nope');
         expect(await markdown(page)).toBe('# Title\n\nplain words here');
         // Back to edit re-enables.
         await setMode(page, 'edit');
         await expect(pm(page)).toHaveAttribute('contenteditable', 'true');
-        await expect(page.locator('km-editor#subject .km-toolbar-zone')).toBeVisible();
+        await expect(page.locator('km-editor#subject .we-toolbar-zone')).toBeVisible();
     });
 
     test('inline with anchor: the host floats below the anchor target', async ({ page }) => {
@@ -69,7 +69,7 @@ test.describe('modes', () => {
             el.anchor = '#target';
             el.mode = 'inline';
         });
-        await expect(root(page)).toHaveClass(/km-inline/);
+        await expect(root(page)).toHaveClass(/we-inline/);
         await expect.poll(() => editor(page).evaluate((el) => getComputedStyle(el).position)).toBe('fixed');
         await expect
             .poll(async () => {

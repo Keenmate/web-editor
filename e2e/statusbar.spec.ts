@@ -5,8 +5,8 @@ import { test, expect, load, editor, caretAfter, type Page } from './fixtures';
 // (statusbar="bottom", value "# Title\n\nplain words here").
 
 const item = (page: Page, id: string) =>
-    page.locator(`km-editor#subject .km-status-item[data-status="${id}"]`).filter({ visible: true });
-const strip = (page: Page, part: string) => page.locator(`km-editor#subject [part="${part}"] .km-statusbar`);
+    page.locator(`km-editor#subject .we-status-item[data-status="${id}"]`).filter({ visible: true });
+const strip = (page: Page, part: string) => page.locator(`km-editor#subject [part="${part}"] .we-statusbar`);
 const setBar = (page: Page, v: string) => editor(page).evaluate((el: any, s) => (el.statusbar = s), v);
 
 test.describe('statusbar', () => {
@@ -43,15 +43,15 @@ test.describe('statusbar', () => {
 
     test('both: items split by their bar (chars top, words bottom)', async ({ page }) => {
         await setBar(page, 'both');
-        await expect(strip(page, 'status-top').locator('.km-status-item[data-status="chars"]')).toBeVisible();
-        await expect(strip(page, 'status-top').locator('.km-status-item[data-status="words"]')).toBeHidden();
-        await expect(strip(page, 'status-bottom').locator('.km-status-item[data-status="words"]')).toBeVisible();
-        await expect(strip(page, 'status-bottom').locator('.km-status-item[data-status="chars"]')).toBeHidden();
+        await expect(strip(page, 'status-top').locator('.we-status-item[data-status="chars"]')).toBeVisible();
+        await expect(strip(page, 'status-top').locator('.we-status-item[data-status="words"]')).toBeHidden();
+        await expect(strip(page, 'status-bottom').locator('.we-status-item[data-status="words"]')).toBeVisible();
+        await expect(strip(page, 'status-bottom').locator('.we-status-item[data-status="chars"]')).toBeHidden();
     });
 
     test('none hides the status bar', async ({ page }) => {
         await setBar(page, 'none');
-        await expect(page.locator('km-editor#subject .km-statusbar').filter({ visible: true })).toHaveCount(0);
+        await expect(page.locator('km-editor#subject .we-statusbar').filter({ visible: true })).toHaveCount(0);
     });
 
     test('shown in read-only', async ({ page }) => {

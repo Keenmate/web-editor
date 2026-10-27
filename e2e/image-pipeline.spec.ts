@@ -12,7 +12,7 @@ const PNG = Buffer.from(
 );
 
 const pickButton = (page: Page, id: string) =>
-    page.locator(`km-editor#${id} .km-toolbar-zone [data-action="image:browser:pick"]`);
+    page.locator(`km-editor#${id} .we-toolbar-zone [data-action="image:browser:pick"]`);
 
 // ProseMirror adds an `img.ProseMirror-separator` after a trailing inline node.
 const IMG = 'img:not(.ProseMirror-separator)';
