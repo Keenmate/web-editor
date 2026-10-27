@@ -13,6 +13,15 @@ released to a registry yet.
 
 ### Fixed
 
+- **Page-wide menu theming reaches the context menu.** `:host` set
+  `--km-menu-bg: var(--we-context-menu-bg, var(--we-bg))` etc., which shadowed a page-level
+  `:root { --km-menu-* }`. The `--we-context-menu-*` properties now map onto core's
+  private `--_km-menu-*` layer with no fallback, so the chain is `--we-context-menu-*` →
+  `--km-menu-*` → `--base-*` → core default. The menu no longer falls back to
+  `--we-bg` / `--we-border` / `--we-accent` / `--we-muted-fg` / `--we-danger` or the
+  editor's own literals (190px, 13px, 0.4, the 1100 z-index): unthemed, it takes core's
+  defaults. New `--we-context-menu-hover-color` (hovered item text).
+
 - **A DOM move no longer destroys the editor** (core build-once + activate/deactivate
   model). Moving / re-parenting a `<km-editor>` used to tear the engine down and
   rebuild it from a markdown snapshot: tables were lost (their markdown is raw HTML,

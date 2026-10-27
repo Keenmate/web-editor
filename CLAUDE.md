@@ -119,7 +119,8 @@ small framework-free chrome layer in `ui/`. Things the code won't tell you:
   `beforeActionCallback` → `onClick` → `commands.run` → `action` event).
   `CommandBar` (the button bars) resolves with core `resolveMenuEntries` on every
   refresh; the context menu is core `openMenu()` (`/menu`, renders `.km-menu*`,
-  themed by `--we-context-menu-*` → `--km-menu-*` on `:host`) — no menu markup,
+  themed by `--we-context-menu-*` → core's private `--_km-menu-*` on `:host`, no
+  fallback — never set `--km-menu-*`, that is the page-wide layer) — no menu markup,
   keyboard or dismiss code of our own.
 - **CSS prefix is `we-`** (classes and custom properties). `km-` is core's (shared
   UI like `.km-menu*`); the tag stays `<km-editor>`.

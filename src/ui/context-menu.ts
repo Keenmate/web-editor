@@ -2,7 +2,8 @@
  * ContextMenu — the right-click editing menu. On `contextmenu` inside the editor
  * it opens the items at the cursor with core `openMenu()`
  * (`@keenmate/web-components-core/menu`), which owns the rendering (`.km-menu*`,
- * themed through `--km-menu-*` — mapped from `--we-context-menu-*` on the host),
+ * themed through core's private `--_km-menu-*` — mapped from `--we-context-menu-*` on
+ * the host, falling through to the page-wide `--km-menu-*`),
  * positioning, the WAI-ARIA keyboard (arrows / Home / End / Enter / Space /
  * Escape / Tab) and dismissal (outside press, scroll, blur, another overlay).
  * Each item resolves against the current state (`commandDefaults`: text,

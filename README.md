@@ -140,9 +140,21 @@ The editor's own classes and custom properties use the `we-` prefix (`--we-bg`,
 from `@keenmate/web-components-core` (`.km-menu*`, `::part(context-menu)`); restyle it
 with the `--we-context-menu-*` properties on the element — `bg`, `text-color`,
 `border`, `border-radius`, `shadow`, `min-width`, `padding`, `font-size`,
-`item-padding`, `hover-bg`, `toggled-color`, `shortcut-color`, `danger-color`,
-`divider-color`, `disabled-opacity`, `z-index` (they default to the theme
-properties above).
+`item-padding`, `hover-bg`, `hover-color`, `toggled-color`, `shortcut-color`,
+`danger-color`, `divider-color`, `disabled-opacity`, `z-index`.
+
+Each menu value resolves, highest precedence first: **`--we-context-menu-*`** (this
+editor) → **`--km-menu-*`** (every KeenMate menu on the page) → **`--base-*`** (theme)
+→ core's default. The `--we-context-menu-*` properties are unset by default, so a
+page-wide `--km-menu-*` reaches the editor's menu:
+
+```css
+:root { --km-menu-bg: #fffbe6; }                /* every menu on the page */
+km-editor.notes { --we-context-menu-bg: #eef; } /* just this editor's menu */
+```
+
+The list of `--km-menu-*` variables ships in core's
+`@keenmate/web-components-core/component-variables.manifest.json`.
 
 ## Extending
 

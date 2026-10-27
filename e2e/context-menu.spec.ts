@@ -89,6 +89,50 @@ test.describe('context menu', () => {
         await expect(editor(page).locator('.km-menu')).toHaveCount(1);
     });
 
+    // Variable chain (core SPEC §12.13): --we-context-menu-* (this editor) → --km-menu-*
+    // (every menu on the page) → --base-* (theme) → core default.
+    const openMenu = async (page: Page) => {
+        await pm(page).locator('p').click({ button: 'right' });
+        await expect(menu(page)).toBeVisible();
+    };
+    const setRoot = (page: Page, name: string, value: string) =>
+        page.evaluate(([n, v]) => document.documentElement.style.setProperty(n!, v!), [name, value]);
+
+    test('variable chain: a page-level --km-menu-bg on :root themes the menu when --we-context-menu-bg is unset', async ({ page }) => {
+        await setRoot(page, '--km-menu-bg', 'rgb(10, 20, 30)');
+        await openMenu(page);
+        await expect(menu(page)).toHaveCSS('background-color', 'rgb(10, 20, 30)');
+    });
+
+    test('variable chain: --we-context-menu-bg on the editor wins over the page-level --km-menu-bg', async ({ page }) => {
+        await setRoot(page, '--km-menu-bg', 'rgb(10, 20, 30)');
+        await editor(page).evaluate((el) => (el as HTMLElement).style.setProperty('--we-context-menu-bg', 'rgb(1, 2, 3)'));
+        await openMenu(page);
+        await expect(menu(page)).toHaveCSS('background-color', 'rgb(1, 2, 3)');
+    });
+
+    test('variable chain: neither set → --base-dropdown-bg, then the core default', async ({ page }) => {
+        await openMenu(page);
+        await expect(menu(page)).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+        await page.keyboard.press('Escape');
+        await setRoot(page, '--base-dropdown-bg', 'rgb(4, 5, 6)');
+        await openMenu(page);
+        await expect(menu(page)).toHaveCSS('background-color', 'rgb(4, 5, 6)');
+    });
+
+    test('--we-context-menu-hover-color colours the hovered item text (unset → unchanged)', async ({ page }) => {
+        await openMenu(page);
+        const item = menu(page).locator('[data-action="italic"]');
+        const before = await item.evaluate((el) => getComputedStyle(el).color);
+        await item.hover();
+        await expect(item).toHaveCSS('color', before);
+        await page.keyboard.press('Escape');
+        await editor(page).evaluate((el) => (el as HTMLElement).style.setProperty('--we-context-menu-hover-color', 'rgb(200, 0, 100)'));
+        await openMenu(page);
+        await item.hover();
+        await expect(item).toHaveCSS('color', 'rgb(200, 0, 100)');
+    });
+
     test('keyboard: arrows move focus (skipping disabled), Enter runs the item, focus returns to the editor', async ({ page }) => {
         await selectText(page, 'words');
         const p = (await pm(page).locator('p').boundingBox())!;
