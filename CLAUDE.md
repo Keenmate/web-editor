@@ -157,7 +157,7 @@ small framework-free chrome layer in `ui/`. Things the code won't tell you:
 
 - Work is committed on branch `prod`. Commit/push **only when asked**.
 - Commit messages must end with:
-  `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>`
+  `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`
 - `~/.npmrc` holds `@keenmate` GitHub Packages auth tokens — **redact
   `_authToken` values** if its contents are ever displayed.
 - Publishing goes through the `Makefile` (`publish`, `publish-rc`, `publish-dry`).
