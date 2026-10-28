@@ -47,6 +47,13 @@ describe('label helpers', () => {
 });
 
 describe('<km-editor> labels', () => {
+  it("resolver: '' is deliberately empty, undefined falls back to English", () => {
+    const label = createLabelResolver(() => ({ words: '', bold: undefined }));
+    expect(label('words', { count: 3 })).toBe('');
+    expect(label('bold', undefined, 'Bold')).toBe('Bold');
+    expect(label('placeholder')).toBe('');
+  });
+
   it('English defaults: command text / tooltip, group name, status items', async () => {
     const el = await mount({ value: 'one two', statusbar: 'bottom' });
     expect(cmd(el, 'bold').getAttribute('aria-label')).toBe('Bold');

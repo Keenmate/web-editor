@@ -4,21 +4,26 @@
   "tags": [
     {
       "name": "km-editor",
-      "description": "\n---\n\n\n### **Events:**\n - **change** - The document changed (or `format` switched). `detail`: `{ value, format }` — the content serialized in the active `format`. Twin: `onChange(detail)`.\n- **ready** - The editor was built and is live for the first time (once per element lifetime; core `BlissElement`). Fires right after the first build — during upgrade for a normal element, or when the `defer` gate is released (`el.release()` / removing `defer`). The host then has the `ready` attribute and matches `:state(ready)`; `el.whenReady()` resolves. `detail`: `controller` / `element`. Twin: `onReady(detail)`.\n- **view-mode-change** - The `viewMode` (attribute `view-mode`) changed. `detail`: `{ viewMode }`. Twin: `onViewModeChange(detail)`.\n- **lock-change** - A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`.\n- **action** - A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick` and the command (a notification after the fact; `state` is the snapshot from activation); `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`.\n\n### **Methods:**\n \n\n\n\n\n\n- **setValue(value: _string_, format: _EditorFormat_): _void_** - Replace the document with `value`, parsed in `format` (defaults to the active\none) — the `value` setter with an explicit format, and the controller's write path.\n",
+      "description": "\n---\n\n\n### **Events:**\n - **change** - The document changed (or `valueFormat` switched). `detail`: `{ value, format }` — the content serialized in the active `valueFormat`. Twin: `onChange(detail)`.\n- **ready** - The editor was built and is live for the first time (once per element lifetime; core `BlissElement`). Fires right after the first build — during upgrade for a normal element, or when the `defer` gate is released (`el.release()` / removing `defer`). The host then has the `ready` attribute and matches `:state(ready)`; `el.whenReady()` resolves. `detail`: `controller` / `element`. Twin: `onReady(detail)`.\n- **view-mode-change** - The `viewMode` (attribute `view-mode`) changed. `detail`: `{ viewMode }`. Twin: `onViewModeChange(detail)`.\n- **lock-change** - A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`.\n- **action** - A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick` and the command (a notification after the fact; `state` is the snapshot from activation); `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`.\n\n### **Methods:**\n \n\n- **formResetCallback(): _void_** - The surrounding `<form>` was reset: restore the initial content (`defaultValue`,\nattribute `value`), like a native control. Not a user edit, but the document\nchanges, so `change` fires.\n\n\n\n\n- **setValue(value: _string_, format: _EditorFormat_): _void_** - Replace the document with `value`, parsed in `format` (defaults to the active\n`valueFormat`) — the `value` setter with an explicit format, and the controller's\nwrite path. Without a format, just assign `value`.\n",
       "attributes": [
         {
           "name": "value",
-          "description": "Initial / default content, interpreted per `format` (like a native input’s `value` attribute ↔ `defaultValue`). Changing it replaces the document. The live content is the `value` PROPERTY.",
+          "description": "Initial / default content, interpreted per `valueFormat` (like a native input’s `value` attribute ↔ `defaultValue`). Changing it replaces the document. The live content is the `value` PROPERTY.",
           "values": []
         },
         {
-          "name": "format",
+          "name": "value-format",
           "description": "Serialization lens for content I/O (the `value` attribute and property, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document.",
           "values": [
             { "name": "markdown" },
             { "name": "html" },
             { "name": "json" }
           ]
+        },
+        {
+          "name": "name",
+          "description": "Form field name. When set, a light-DOM `<input type=\"hidden\" name=\"…\">` child of the host carries the live content (serialized in `valueFormat`) and submits with the surrounding `<form>`; it is disabled (not submitted) while the editor is disabled, including by a `<fieldset disabled>`. A form reset restores `defaultValue` (attribute `value`).",
+          "values": []
         },
         {
           "name": "view-mode",
@@ -73,7 +78,7 @@
         },
         {
           "name": "labels",
-          "description": "Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`. Property (object) or JSON attribute (`labels='{\"bold\":\"Tučně\"}'`). Applies live (no rebuild).",
+          "description": "Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders; an empty string = deliberately empty. `placeholder` (default empty = off) is shown while the document is empty. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`. Property (object) or JSON attribute (`labels='{\"bold\":\"Tučně\"}'`). Applies live (no rebuild).",
           "values": [{ "name": "object" }]
         }
       ],

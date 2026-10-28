@@ -108,7 +108,8 @@
                 "text": "typeof schema"
               }
             }
-          ]
+          ],
+          "description": "A short welcome document — demo content (the editor itself starts empty)."
         },
         {
           "kind": "function",
@@ -190,9 +191,9 @@
           "kind": "variable",
           "name": "DEFAULT_LABELS",
           "type": {
-            "text": "{\n  /** Status bar: word count. */\n  words: 'Words: {count}',\n  /** Status bar: character count. */\n  chars: 'Chars: {count}',\n  /** Toolbar group accessible names (`<groupId>Group`). */\n  formatGroup: 'Format',\n  blockGroup: 'Block',\n  listGroup: 'Lists',\n  insertGroup: 'Insert',\n  historyGroup: 'History',\n  linkGroup: 'Link',\n  imageGroup: 'Image',\n  tableGroup: 'Table',\n  imageBrowserGroup: 'Cloud image',\n  /** `insert-link` prompt. */\n  linkUrlPrompt: 'Enter link URL:',\n  /** `insert-image` prompts. */\n  imageUrlPrompt: 'Enter image URL:',\n  imageAltPrompt: 'Enter alt text (optional):',\n  /** `insert-code-block` / `change-code-language` prompts (`{languages}` = the list). */\n  codeLanguagePrompt: 'Enter language ({languages}):',\n  codeLanguageChangePrompt: 'Change language ({languages}):',\n  /** Cloud-image plugin (`image:browser:pick`): toolbar button, its tooltip, the menu item, the picker request. */\n  cloudImage: 'Cloud image',\n  cloudImageTooltip: 'Insert image from the cloud',\n  insertCloudImage: 'Insert cloud image…',\n  cloudImagePickerTitle: 'Choose a cloud image',\n  cloudImagePickerMessage: 'Pick an image to insert.',\n}"
+            "text": "{\n  /** Shown (as text) while the document is empty, like a native `placeholder`. `''` = none. */\n  placeholder: '',\n  /** Status bar: word count. */\n  words: 'Words: {count}',\n  /** Status bar: character count. */\n  chars: 'Chars: {count}',\n  /** Toolbar group accessible names (`<groupId>Group`). */\n  formatGroup: 'Format',\n  blockGroup: 'Block',\n  listGroup: 'Lists',\n  insertGroup: 'Insert',\n  historyGroup: 'History',\n  linkGroup: 'Link',\n  imageGroup: 'Image',\n  tableGroup: 'Table',\n  imageBrowserGroup: 'Cloud image',\n  /** `insert-link` prompt. */\n  linkUrlPrompt: 'Enter link URL:',\n  /** `insert-image` prompts. */\n  imageUrlPrompt: 'Enter image URL:',\n  imageAltPrompt: 'Enter alt text (optional):',\n  /** `insert-code-block` / `change-code-language` prompts (`{languages}` = the list). */\n  codeLanguagePrompt: 'Enter language ({languages}):',\n  codeLanguageChangePrompt: 'Change language ({languages}):',\n  /** Cloud-image plugin (`image:browser:pick`): toolbar button, its tooltip, the menu item, the picker request. */\n  cloudImage: 'Cloud image',\n  cloudImageTooltip: 'Insert image from the cloud',\n  insertCloudImage: 'Insert cloud image…',\n  cloudImagePickerTitle: 'Choose a cloud image',\n  cloudImagePickerMessage: 'Pick an image to insert.',\n}"
           },
-          "default": "{ /** Status bar: word count. */ words: 'Words: {count}', /** Status bar: character count. */ chars: 'Chars: {count}', /** Toolbar group accessible names (`<groupId>Group`). */ formatGroup: 'Format', blockGroup: 'Block', listGroup: 'Lists', insertGroup: 'Insert', historyGroup: 'History', linkGroup: 'Link', imageGroup: 'Image', tableGroup: 'Table', imageBrowserGroup: 'Cloud image', /** `insert-link` prompt. */ linkUrlPrompt: 'Enter link URL:', /** `insert-image` prompts. */ imageUrlPrompt: 'Enter image URL:', imageAltPrompt: 'Enter alt text (optional):', /** `insert-code-block` / `change-code-language` prompts (`{languages}` = the list). */ codeLanguagePrompt: 'Enter language ({languages}):', codeLanguageChangePrompt: 'Change language ({languages}):', /** Cloud-image plugin (`image:browser:pick`): toolbar button, its tooltip, the menu item, the picker request. */ cloudImage: 'Cloud image', cloudImageTooltip: 'Insert image from the cloud', insertCloudImage: 'Insert cloud image…', cloudImagePickerTitle: 'Choose a cloud image', cloudImagePickerMessage: 'Pick an image to insert.', }",
+          "default": "{ /** Shown (as text) while the document is empty, like a native `placeholder`. `''` = none. */ placeholder: '', /** Status bar: word count. */ words: 'Words: {count}', /** Status bar: character count. */ chars: 'Chars: {count}', /** Toolbar group accessible names (`<groupId>Group`). */ formatGroup: 'Format', blockGroup: 'Block', listGroup: 'Lists', insertGroup: 'Insert', historyGroup: 'History', linkGroup: 'Link', imageGroup: 'Image', tableGroup: 'Table', imageBrowserGroup: 'Cloud image', /** `insert-link` prompt. */ linkUrlPrompt: 'Enter link URL:', /** `insert-image` prompts. */ imageUrlPrompt: 'Enter image URL:', imageAltPrompt: 'Enter alt text (optional):', /** `insert-code-block` / `change-code-language` prompts (`{languages}` = the list). */ codeLanguagePrompt: 'Enter language ({languages}):', codeLanguageChangePrompt: 'Change language ({languages}):', /** Cloud-image plugin (`image:browser:pick`): toolbar button, its tooltip, the menu item, the picker request. */ cloudImage: 'Cloud image', cloudImageTooltip: 'Insert image from the cloud', insertCloudImage: 'Insert cloud image…', cloudImagePickerTitle: 'Choose a cloud image', cloudImagePickerMessage: 'Pick an image to insert.', }",
           "description": "Built-in English strings for the non-command keys."
         },
         {
@@ -776,7 +777,7 @@
               "name": "inputs",
               "privacy": "protected",
               "static": true,
-              "default": "[ { configKey: 'defaultValue', attribute: 'value', converter: toText({ isNullable: true }), on: 'reinit', description: 'Initial / default content, interpreted per `format` (like a native input’s `value` attribute ↔ `defaultValue`). Changing it replaces the document. The live content is the `value` PROPERTY.', }, { configKey: 'format', attribute: 'format', converter: toEnum(FORMATS, { default: 'markdown' }), shouldReflect: true, on: 'update', description: \"Serialization lens for content I/O (the `value` attribute and property, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document.\", }, { configKey: 'viewMode', attribute: 'view-mode', converter: toEnum(VIEW_MODES, { default: 'edit' }), shouldReflect: true, on: 'update', description: \"Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the view mode is stored, reflected, and announced via `view-mode-change`.\", }, { configKey: 'isReadonly', attribute: 'readonly', converter: toBool('presence'), shouldReflect: true, on: 'update', description: 'Read-only: the content can’t change (no typing, toolbar hidden), but it stays focusable, selectable and copyable. `view-mode=\"preview\"` also forces this on. Reflects to `readonly`.', }, { configKey: 'isDisabled', attribute: 'disabled', converter: toBool('presence'), shouldReflect: true, on: 'update', description: 'Disabled: no interaction at all — not editable, not focusable or selectable (the surface is `inert`), toolbar hidden. An ancestor `<fieldset disabled>` disables it too (core). Reflects to `disabled`, like a native control.', }, { configKey: 'toolbar', attribute: 'toolbar', converter: toEnum(TOOLBARS, { default: 'top' }), shouldReflect: true, on: 'update', description: \"Static toolbar edge: 'top' (default), 'bottom', 'start', or 'end' places the command toolbar flush against that side of the editor; 'none' hides it. The selection toolbar and context menu are always available while editing (independent of this).\", }, { configKey: 'statusbar', attribute: 'statusbar', converter: toEnum(STATUSBARS, { default: 'none' }), shouldReflect: true, on: 'update', description: \"Status bar edge: 'none' (default), 'top', 'bottom', or 'both'. A dedicated strip of live indicators (word/char count, plus any plugin status items), hugging the editor body — separate from the toolbar zones and shown in read-only too. With 'both', items split across the two strips by their `bar` ('top'/'bottom', default 'bottom').\", }, { configKey: 'theme', attribute: 'theme', converter: toText({ isNullable: true }), shouldReflect: true, on: 'update', description: 'Theme name, reflected to the host attribute for CSS theming (`:host([theme=\"…\"])`).', }, { configKey: 'anchor', attribute: 'anchor', converter: toText({ isNullable: true }), on: 'update', description: 'For `view-mode=\"inline\"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow.', }, { configKey: 'labels', attribute: 'labels', converter: toObject<EditorLabels>({ validate: isLabels }), on: 'update', description: 'Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`. Property (object) or JSON attribute (`labels=\\'{\"bold\":\"Tučně\"}\\'`). Applies live (no rebuild).', }, { configKey: 'beforeActionCallback', converter: toFunction(), default: null, on: 'none', description: 'Property only. `(detail) => false | void` (may be async) — runs first on every toolbar / selection-toolbar / context-menu activation, with the `action` event detail. Return `false` to cancel: no `onClick`, no `action` event, no command. Keyboard shortcuts do not pass through it.', }, { configKey: 'interactionHost', converter: toCustom<InteractionHost | null>(() => null, { validate: isInteractionHost }), default: null, on: 'update', description: 'Property only. The modal bridge interactive pipeline stages call: `{ request(ctx) }`, `ctx` = the request (`kind`, `title`, `message`, `payload`) + `signal` + `controller` / `element`. Default: a `window.confirm`-backed host. Survives engine rebuilds (e.g. a `plugins` reassignment).', }, ]",
+              "default": "[ { configKey: 'defaultValue', attribute: 'value', converter: toText({ isNullable: true }), on: 'reinit', description: 'Initial / default content, interpreted per `valueFormat` (like a native input’s `value` attribute ↔ `defaultValue`). Changing it replaces the document. The live content is the `value` PROPERTY.', }, { configKey: 'valueFormat', attribute: 'value-format', converter: toEnum(FORMATS, { default: 'markdown' }), shouldReflect: true, on: 'update', description: \"Serialization lens for content I/O (the `value` attribute and property, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document.\", }, { configKey: 'name', attribute: 'name', converter: toText({ isNullable: true }), on: 'update', description: 'Form field name. When set, a light-DOM `<input type=\"hidden\" name=\"…\">` child of the host carries the live content (serialized in `valueFormat`) and submits with the surrounding `<form>`; it is disabled (not submitted) while the editor is disabled, including by a `<fieldset disabled>`. A form reset restores `defaultValue` (attribute `value`).', }, { configKey: 'viewMode', attribute: 'view-mode', converter: toEnum(VIEW_MODES, { default: 'edit' }), shouldReflect: true, on: 'update', description: \"Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the view mode is stored, reflected, and announced via `view-mode-change`.\", }, { configKey: 'isReadonly', attribute: 'readonly', converter: toBool('presence'), shouldReflect: true, on: 'update', description: 'Read-only: the content can’t change (no typing, toolbar hidden), but it stays focusable, selectable and copyable. `view-mode=\"preview\"` also forces this on. Reflects to `readonly`.', }, { configKey: 'isDisabled', attribute: 'disabled', converter: toBool('presence'), shouldReflect: true, on: 'update', description: 'Disabled: no interaction at all — not editable, not focusable or selectable (the surface is `inert`), toolbar hidden. An ancestor `<fieldset disabled>` disables it too (core). Reflects to `disabled`, like a native control.', }, { configKey: 'toolbar', attribute: 'toolbar', converter: toEnum(TOOLBARS, { default: 'top' }), shouldReflect: true, on: 'update', description: \"Static toolbar edge: 'top' (default), 'bottom', 'start', or 'end' places the command toolbar flush against that side of the editor; 'none' hides it. The selection toolbar and context menu are always available while editing (independent of this).\", }, { configKey: 'statusbar', attribute: 'statusbar', converter: toEnum(STATUSBARS, { default: 'none' }), shouldReflect: true, on: 'update', description: \"Status bar edge: 'none' (default), 'top', 'bottom', or 'both'. A dedicated strip of live indicators (word/char count, plus any plugin status items), hugging the editor body — separate from the toolbar zones and shown in read-only too. With 'both', items split across the two strips by their `bar` ('top'/'bottom', default 'bottom').\", }, { configKey: 'theme', attribute: 'theme', converter: toText({ isNullable: true }), shouldReflect: true, on: 'update', description: 'Theme name, reflected to the host attribute for CSS theming (`:host([theme=\"…\"])`).', }, { configKey: 'anchor', attribute: 'anchor', converter: toText({ isNullable: true }), on: 'update', description: 'For `view-mode=\"inline\"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow.', }, { configKey: 'labels', attribute: 'labels', converter: toObject<EditorLabels>({ validate: isLabels }), on: 'update', description: 'Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders; an empty string = deliberately empty. `placeholder` (default empty = off) is shown while the document is empty. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`. Property (object) or JSON attribute (`labels=\\'{\"bold\":\"Tučně\"}\\'`). Applies live (no rebuild).', }, { configKey: 'beforeActionCallback', converter: toFunction(), default: null, on: 'none', description: 'Property only. `(detail) => false | void` (may be async) — runs first on every toolbar / selection-toolbar / context-menu activation, with the `action` event detail. Return `false` to cancel: no `onClick`, no `action` event, no command. Keyboard shortcuts do not pass through it.', }, { configKey: 'interactionHost', converter: toCustom<InteractionHost | null>(() => null, { validate: isInteractionHost }), default: null, on: 'update', description: 'Property only. The modal bridge interactive pipeline stages call: `{ request(ctx) }`, `ctx` = the request (`kind`, `title`, `message`, `payload`) + `signal` + `controller` / `element`. Default: a `window.confirm`-backed host. Survives engine rebuilds (e.g. a `plugins` reassignment).', }, ]",
               "type": {
                 "text": "readonly InputDef[]"
               }
@@ -786,7 +787,7 @@
               "name": "events",
               "privacy": "protected",
               "static": true,
-              "default": "[ { name: 'change', description: 'The document changed (or `format` switched). `detail`: `{ value, format }` — the content serialized in the active `format`. Twin: `onChange(detail)`.', }, { name: 'ready', description: 'The editor was built and is live for the first time (once per element lifetime; core `BlissElement`). Fires right after the first build — during upgrade for a normal element, or when the `defer` gate is released (`el.release()` / removing `defer`). The host then has the `ready` attribute and matches `:state(ready)`; `el.whenReady()` resolves. `detail`: `controller` / `element`. Twin: `onReady(detail)`.', }, { name: 'view-mode-change', description: 'The `viewMode` (attribute `view-mode`) changed. `detail`: `{ viewMode }`. Twin: `onViewModeChange(detail)`.', }, { name: 'lock-change', description: 'A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`.', }, { name: 'action', description: 'A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick` and the command (a notification after the fact; `state` is the snapshot from activation); `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`.', }, ]",
+              "default": "[ { name: 'change', description: 'The document changed (or `valueFormat` switched). `detail`: `{ value, format }` — the content serialized in the active `valueFormat`. Twin: `onChange(detail)`.', }, { name: 'ready', description: 'The editor was built and is live for the first time (once per element lifetime; core `BlissElement`). Fires right after the first build — during upgrade for a normal element, or when the `defer` gate is released (`el.release()` / removing `defer`). The host then has the `ready` attribute and matches `:state(ready)`; `el.whenReady()` resolves. `detail`: `controller` / `element`. Twin: `onReady(detail)`.', }, { name: 'view-mode-change', description: 'The `viewMode` (attribute `view-mode`) changed. `detail`: `{ viewMode }`. Twin: `onViewModeChange(detail)`.', }, { name: 'lock-change', description: 'A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`.', }, { name: 'action', description: 'A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick` and the command (a notification after the fact; `state` is the snapshot from activation); `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`.', }, ]",
               "type": {
                 "text": "readonly EventDef[]"
               }
@@ -862,7 +863,7 @@
               "type": {
                 "text": "object"
               },
-              "description": "Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`. Property (object) or JSON attribute (`labels='{\"bold\":\"Tučně\"}'`). Applies live (no rebuild).",
+              "description": "Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders; an empty string = deliberately empty. `placeholder` (default empty = off) is shown while the document is empty. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`. Property (object) or JSON attribute (`labels='{\"bold\":\"Tučně\"}'`). Applies live (no rebuild).",
               "privacy": "public",
               "attribute": "labels"
             },
@@ -872,9 +873,31 @@
               "type": {
                 "text": "string | null"
               },
-              "description": "Initial / default content, interpreted per `format` (like a native input’s `value` attribute ↔ `defaultValue`). Changing it replaces the document. The live content is the `value` PROPERTY.",
+              "description": "Initial / default content, interpreted per `valueFormat` (like a native input’s `value` attribute ↔ `defaultValue`). Changing it replaces the document. The live content is the `value` PROPERTY.",
               "privacy": "public",
               "attribute": "value"
+            },
+            {
+              "kind": "field",
+              "name": "valueFormat",
+              "type": {
+                "text": "'markdown' | 'html' | 'json'"
+              },
+              "description": "Serialization lens for content I/O (the `value` attribute and property, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document.",
+              "privacy": "public",
+              "default": "'markdown'",
+              "attribute": "value-format",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "name",
+              "type": {
+                "text": "string | null"
+              },
+              "description": "Form field name. When set, a light-DOM `<input type=\"hidden\" name=\"…\">` child of the host carries the live content (serialized in `valueFormat`) and submits with the surrounding `<form>`; it is disabled (not submitted) while the editor is disabled, including by a `<fieldset disabled>`. A form reset restores `defaultValue` (attribute `value`).",
+              "privacy": "public",
+              "attribute": "name"
             },
             {
               "kind": "field",
@@ -915,6 +938,14 @@
               "privacy": "private",
               "type": {
                 "text": "() => void | undefined"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "#formInput",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLInputElement | undefined"
               }
             },
             {
@@ -963,6 +994,16 @@
                 }
               },
               "description": "`isDisabled` or an ancestor `<fieldset disabled>` flipped (core merges both\ninto `isEffectivelyDisabled`): toggle editing, the chrome and `inert`."
+            },
+            {
+              "kind": "method",
+              "name": "formResetCallback",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "description": "The surrounding `<form>` was reset: restore the initial content (`defaultValue`,\nattribute `value`), like a native control. Not a user edit, but the document\nchanges, so `change` fires."
             },
             {
               "kind": "method",
@@ -1064,6 +1105,17 @@
                   "text": "void"
                 }
               }
+            },
+            {
+              "kind": "method",
+              "name": "#syncFormInput",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "description": "Form convention (KeenMate suite, like web-multiselect): a light-DOM hidden\ninput named by `name` carries the live content in `valueFormat` — the host\nnever calls `setFormValue`. No `name` → no input. Disabled (not submitted)\nwhile the editor is effectively disabled."
             },
             {
               "kind": "method",
@@ -1194,7 +1246,7 @@
               "type": {
                 "text": "string"
               },
-              "description": "The live content, serialized in the active `format` (`''` before the first\nbuild). Assigning replaces the document, parsed in `format` — like\n`setValue(value)`. The `value` ATTRIBUTE is the initial content\n(defaultValue) and is never written."
+              "description": "The live content, serialized in the active `valueFormat` (`''` before the first\nbuild). Assigning replaces the document, parsed in `valueFormat` — like\n`setValue(value)`. The `value` ATTRIBUTE is the initial content\n(defaultValue) and is never written."
             },
             {
               "kind": "method",
@@ -1246,7 +1298,7 @@
                   }
                 }
               ],
-              "description": "Replace the document with `value`, parsed in `format` (defaults to the active\none) — the `value` setter with an explicit format, and the controller's write path."
+              "description": "Replace the document with `value`, parsed in `format` (defaults to the active\n`valueFormat`) — the `value` setter with an explicit format, and the controller's\nwrite path. Without a format, just assign `value`."
             },
             {
               "kind": "field",
@@ -1275,18 +1327,6 @@
                 }
               },
               "description": "Final teardown (core `destroy()` calls this once): the engine — document,\nundo history, plugins' `destroy()` — and the shadow layout. `disconnect()`\nkeeps both alive for a DOM move; this releases them for good."
-            },
-            {
-              "kind": "field",
-              "name": "format",
-              "privacy": "public",
-              "type": {
-                "text": "'markdown' | 'html' | 'json'"
-              },
-              "default": "'markdown'",
-              "attribute": "format",
-              "reflects": true,
-              "description": "Serialization lens for content I/O (the `value` attribute and property, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document."
             },
             {
               "kind": "field",
@@ -1379,16 +1419,24 @@
               "type": {
                 "text": "string | null"
               },
-              "description": "Initial / default content, interpreted per `format` (like a native input’s `value` attribute ↔ `defaultValue`). Changing it replaces the document. The live content is the `value` PROPERTY."
+              "description": "Initial / default content, interpreted per `valueFormat` (like a native input’s `value` attribute ↔ `defaultValue`). Changing it replaces the document. The live content is the `value` PROPERTY."
             },
             {
-              "name": "format",
-              "fieldName": "format",
+              "name": "value-format",
+              "fieldName": "valueFormat",
               "type": {
                 "text": "'markdown' | 'html' | 'json'"
               },
               "default": "'markdown'",
               "description": "Serialization lens for content I/O (the `value` attribute and property, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document."
+            },
+            {
+              "name": "name",
+              "fieldName": "name",
+              "type": {
+                "text": "string | null"
+              },
+              "description": "Form field name. When set, a light-DOM `<input type=\"hidden\" name=\"…\">` child of the host carries the live content (serialized in `valueFormat`) and submits with the surrounding `<form>`; it is disabled (not submitted) while the editor is disabled, including by a `<fieldset disabled>`. A form reset restores `defaultValue` (attribute `value`)."
             },
             {
               "name": "view-mode",
@@ -1455,13 +1503,13 @@
               "type": {
                 "text": "object"
               },
-              "description": "Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`. Property (object) or JSON attribute (`labels='{\"bold\":\"Tučně\"}'`). Applies live (no rebuild)."
+              "description": "Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders; an empty string = deliberately empty. `placeholder` (default empty = off) is shown while the document is empty. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`. Property (object) or JSON attribute (`labels='{\"bold\":\"Tučně\"}'`). Applies live (no rebuild)."
             }
           ],
           "events": [
             {
               "name": "change",
-              "description": "The document changed (or `format` switched). `detail`: `{ value, format }` — the content serialized in the active `format`. Twin: `onChange(detail)`."
+              "description": "The document changed (or `valueFormat` switched). `detail`: `{ value, format }` — the content serialized in the active `valueFormat`. Twin: `onChange(detail)`."
             },
             {
               "name": "ready",
@@ -2057,6 +2105,16 @@
             },
             {
               "kind": "method",
+              "name": "refreshView",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "description": "Re-render view decorations / attributes that read live settings (e.g. the\n`labels.placeholder` text) without touching the document."
+            },
+            {
+              "kind": "method",
               "name": "setInteractionHost",
               "return": {
                 "type": {
@@ -2522,6 +2580,79 @@
           "declaration": {
             "name": "buildMarkdownIO",
             "module": "src/engine/markdown-io.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/engine/placeholder.ts",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "placeholderKey",
+          "default": "new PluginKey('we-placeholder')"
+        },
+        {
+          "kind": "function",
+          "name": "isDocEmpty",
+          "return": {
+            "type": {
+              "text": "boolean"
+            }
+          },
+          "parameters": [
+            {
+              "name": "state",
+              "type": {
+                "text": "EditorState"
+              }
+            }
+          ],
+          "description": "True when the document is a single empty paragraph (the empty-editor state)."
+        },
+        {
+          "kind": "function",
+          "name": "placeholderPlugin",
+          "return": {
+            "type": {
+              "text": "Plugin"
+            }
+          },
+          "parameters": [
+            {
+              "name": "getText",
+              "type": {
+                "text": "() => string"
+              }
+            }
+          ],
+          "description": "`getText` is read on every view update, so a `labels` change applies on the next redraw."
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "placeholderKey",
+          "declaration": {
+            "name": "placeholderKey",
+            "module": "src/engine/placeholder.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "isDocEmpty",
+          "declaration": {
+            "name": "isDocEmpty",
+            "module": "src/engine/placeholder.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "placeholderPlugin",
+          "declaration": {
+            "name": "placeholderPlugin",
+            "module": "src/engine/placeholder.ts"
           }
         }
       ]
