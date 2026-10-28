@@ -8,7 +8,7 @@
       "elements": [
         {
           "name": "km-editor",
-          "description": "\n\n---\n\n\n### **Events:**\n - **change** - The document changed (or `contentFormat` switched). `detail`: `{ value, contentFormat }` — the content serialized in the active `contentFormat`. Twin: `onChange(detail)`.\n- **ready** - The editor was built and is live for the first time (once per element lifetime; core `BlissElement`). Fires right after the first build — during upgrade for a normal element, or when the `defer` gate is released (`el.release()` / removing `defer`). The host then has the `ready` attribute and matches `:state(ready)`; `el.whenReady()` resolves. `detail`: `controller` / `element`. Twin: `onReady(detail)`.\n- **view-mode-change** - The `viewMode` (attribute `view-mode`) changed. `detail`: `{ viewMode }`. Twin: `onViewModeChange(detail)`.\n- **lock-change** - A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`.\n- **action** - A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick` and the command (a notification after the fact; `state` is the snapshot from activation); `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`.\n\n### **Methods:**\n \n\n- **formResetCallback(): _void_** - The surrounding `<form>` was reset: restore the initial content (`defaultValue`,\nattribute `value`), like a native control. Not a user edit, but the document\nchanges, so `change` fires.\n\n\n\n\n- **setValue(value: _string_, format: _EditorFormat_): _void_** - Replace the document with `value`, parsed in `format` (defaults to the active\n`contentFormat`) — the `value` setter with an explicit format, and the controller's\nwrite path. Without a format, just assign `value`.\n",
+          "description": "\n\n---\n\n\n### **Events:**\n - **change** - The document changed (or `contentFormat` switched). `detail`: `{ value, contentFormat }` — the content serialized in the active `contentFormat`. Twin: `onChange(detail)`.\n- **ready** - The editor was built and is live for the first time (once per element lifetime; core `BlissElement`). Fires right after the first build — during upgrade for a normal element, or when the `defer` gate is released (`el.release()` / removing `defer`). The host then has the `ready` attribute and matches `:state(ready)`; `el.whenReady()` resolves. `detail`: `controller` / `element`. Twin: `onReady(detail)`.\n- **view-mode-change** - The `viewMode` (attribute `view-mode`) changed. `detail`: `{ viewMode }`. Twin: `onViewModeChange(detail)`.\n- **lock-change** - A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`.\n- **value-format-error** - A `getValueFormatCallback` threw while formatting the submitted value. The hidden input then carries an empty string and the host is invalid (`customError`, message = label `valueFormatError`), so the form refuses to submit (`<form novalidate>` submits an empty string); the next successful format clears it. `detail`: `{ error, value }` (`value` = the unformatted document in `contentFormat`). Twin: `onValueFormatError(detail)`.\n- **action** - A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick` and the command (a notification after the fact; `state` is the snapshot from activation); `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`.\n\n### **Methods:**\n \n\n- **formResetCallback(): _void_** - The surrounding `<form>` was reset: restore the initial content (`defaultValue`,\nattribute `value`), like a native control. Not a user edit, but the document\nchanges, so `change` fires.\n\n\n\n\n- **setValue(value: _string_, format: _EditorFormat_): _void_** - Replace the document with `value`, parsed in `format` (defaults to the active\n`contentFormat`) — the `value` setter with an explicit format, and the controller's\nwrite path. Without a format, just assign `value`.\n",
           "doc-url": "",
           "attributes": [
             {
@@ -97,6 +97,10 @@
               "description": "A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`."
             },
             {
+              "name": "value-format-error",
+              "description": "A `getValueFormatCallback` threw while formatting the submitted value. The hidden input then carries an empty string and the host is invalid (`customError`, message = label `valueFormatError`), so the form refuses to submit (`<form novalidate>` submits an empty string); the next successful format clears it. `detail`: `{ error, value }` (`value` = the unformatted document in `contentFormat`). Twin: `onValueFormatError(detail)`."
+            },
+            {
               "name": "action",
               "description": "A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick` and the command (a notification after the fact; `state` is the snapshot from activation); `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`."
             }
@@ -118,6 +122,10 @@
               {
                 "name": "onLockChange",
                 "type": "((detail: LockChangeEventDetail) => void) | null"
+              },
+              {
+                "name": "onValueFormatError",
+                "type": "((detail: ValueFormatErrorEventDetail) => void) | null"
               },
               {
                 "name": "onAction",
@@ -155,7 +163,7 @@
               },
               {
                 "name": "getValueFormatCallback",
-                "description": "Property only. `(ctx) => string` — formats the value written into the hidden form input (`name`), e.g. to sanitize HTML. `ctx`: `{ value, contentFormat }` (the document in the active `contentFormat`) + `controller` / `element`. Affects ONLY the submitted form value: `el.value` and the `change` detail stay the document in `contentFormat`. Called on every sync of the form input (each change); a throw is logged and the unformatted value is submitted.",
+                "description": "Property only. `(ctx) => string` — formats the value written into the hidden form input (`name`), e.g. to sanitize HTML. `ctx`: `{ value, contentFormat }` (the document in the active `contentFormat`) + `controller` / `element`. Affects ONLY the submitted form value: `el.value` and the `change` detail stay the document in `contentFormat`. Called on every sync of the form input (each change). A throw is logged (error), the hidden input gets an empty string, the host turns invalid (label `valueFormatError`) and `value-format-error` fires; the next successful format clears it.",
                 "type": "Function"
               },
               {
@@ -220,6 +228,10 @@
               {
                 "name": "lock-change",
                 "description": "A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`."
+              },
+              {
+                "name": "value-format-error",
+                "description": "A `getValueFormatCallback` threw while formatting the submitted value. The hidden input then carries an empty string and the host is invalid (`customError`, message = label `valueFormatError`), so the form refuses to submit (`<form novalidate>` submits an empty string); the next successful format clears it. `detail`: `{ error, value }` (`value` = the unformatted document in `contentFormat`). Twin: `onValueFormatError(detail)`."
               },
               {
                 "name": "action",
