@@ -56,6 +56,12 @@ released to a registry yet.
 - **An image inserted from the prompt or `image:browser:pick` has `title: null`**, like
   a parsed one (it was `''`) — same inconsistency as ED-7, for images.
 
+### Changed — BREAKING (naming round 2)
+
+- **Pipeline booleans take the `is`/`should` prefix:** `PipelineStage.interactive` →
+  `isInteractive`, `PipelinePolicy.lock` → `shouldLock`, `InteractionResult.cancelled` →
+  `isCancelled` (an `InteractionHost.request()` now resolves `{ isCancelled, value? }`).
+
 ### Changed — BREAKING (suite-wide naming unification)
 
 Clean breaks, no aliases (rulebook `naming-conventions.md` D-NC-13..27).

@@ -94,24 +94,24 @@ function createMockInteractionHost(): InteractionHost {
           signal.removeEventListener('abort', onAbort);
           overlay.remove();
         };
-        const onAbort = () => { close(); resolve({ cancelled: true }); };
+        const onAbort = () => { close(); resolve({ isCancelled: true }); };
         signal.addEventListener('abort', onAbort);
         // Cloud picker: clicking a thumbnail resolves with that asset.
         overlay.querySelectorAll('[data-pick]').forEach((el) => {
           el.addEventListener('click', () => {
             const asset = CLOUD_IMAGES[Number((el as HTMLElement).dataset.pick)];
             close();
-            resolve({ cancelled: false, value: asset });
+            resolve({ isCancelled: false, value: asset });
           });
         });
         overlay.querySelector('[data-role=ok]')?.addEventListener('click', () => {
           const value = (overlay.querySelector('[data-role=value]') as HTMLSelectElement).value;
           close();
-          resolve({ cancelled: false, value });
+          resolve({ isCancelled: false, value });
         });
         overlay.querySelector('[data-role=cancel]')?.addEventListener('click', () => {
           close();
-          resolve({ cancelled: true });
+          resolve({ isCancelled: true });
         });
         document.body.appendChild(overlay);
       });
@@ -140,7 +140,7 @@ const idlePipeline: Pipeline = {
     },
     {
       id: 'classify',
-      interactive: true,
+      isInteractive: true,
       run: async (c, rt) => {
         if (!classifyEnabled.on) return { action: 'skip' };
         const res = await rt.ui.request({
@@ -149,7 +149,7 @@ const idlePipeline: Pipeline = {
           message: 'Pick a sensitivity level.',
           signal: rt.signal,
         });
-        if (res.cancelled) return { action: 'halt', reason: 'classification cancelled' };
+        if (res.isCancelled) return { action: 'halt', reason: 'classification cancelled' };
         return { action: 'resolve', patch: { classification: res.value } };
       },
     },
@@ -281,7 +281,7 @@ const asyncPastePipeline: Pipeline = {
     {
       // The thing a sync paste cannot do: pause on a modal before deciding.
       id: 'confirm-import',
-      interactive: true,
+      isInteractive: true,
       run: async (c, rt) => {
         const res = await rt.ui.request({
           kind: 'confirm',
@@ -289,7 +289,7 @@ const asyncPastePipeline: Pipeline = {
           message: 'The native paste was cancelled. This async step can pause here (modal). Pick an import level, or Cancel to insert nothing.',
           signal: rt.signal,
         });
-        if (res.cancelled) return { action: 'halt', reason: 'import cancelled' };
+        if (res.isCancelled) return { action: 'halt', reason: 'import cancelled' };
         return { action: 'resolve', patch: { importAs: res.value } };
       },
     },
@@ -331,7 +331,7 @@ function buildLane(pipeline: Pipeline): {
     }
     const chip = document.createElement('span');
     chip.className = 'pv-stage';
-    chip.textContent = stage.id + (stage.interactive ? ' ⧉' : '');
+    chip.textContent = stage.id + (stage.isInteractive ? ' ⧉' : '');
     stagesEl.appendChild(chip);
     chips.set(stage.id, chip);
   });

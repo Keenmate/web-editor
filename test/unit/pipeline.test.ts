@@ -9,7 +9,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { runStages, runStagesSync, DeferredRunner } from '../../src/engine/pipeline/runner';
 import type { InteractionHost, Pipeline, PipelineContext, RunStatus } from '../../src/engine/pipeline/types';
 
-const noopUi: InteractionHost = { request: async () => ({ cancelled: true }) };
+const noopUi: InteractionHost = { request: async () => ({ isCancelled: true }) };
 const ctx = (extra: Record<string, unknown> = {}): PipelineContext => ({ doc: null, extra });
 const rt = (signal = new AbortController().signal) => ({ signal, ui: noopUi, generation: 1 });
 
@@ -100,7 +100,7 @@ describe('runStagesSync', () => {
   it('throws on an interactive stage', () => {
     const pipeline: Pipeline = {
       name: 'paste', timing: 'sync',
-      stages: [{ id: 'dialog', interactive: true, run: () => ({ action: 'skip' }) }],
+      stages: [{ id: 'dialog', isInteractive: true, run: () => ({ action: 'skip' }) }],
     };
     expect(() => runStagesSync(pipeline, ctx())).toThrow(/interactive/);
   });

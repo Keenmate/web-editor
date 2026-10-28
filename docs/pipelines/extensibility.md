@@ -54,10 +54,10 @@ definePlugin({
   pipelines: [{
     name: 'image:browser:pick',
     timing: 'deferred',
-    policy: { lock: true },
+    policy: { shouldLock: true },
     stages: [
-      { id: 'pick',   interactive: true, run: (c, rt) => rt.ui.request({ kind: 'cloud-picker', title: 'Choose image', signal: rt.signal })
-                                                           .then(r => r.cancelled ? { action: 'halt' }
+      { id: 'pick',   isInteractive: true, run: (c, rt) => rt.ui.request({ kind: 'cloud-picker', title: 'Choose image', signal: rt.signal })
+                                                           .then(r => r.isCancelled ? { action: 'halt' }
                                                                                   : { action: 'resolve', patch: { file: r.value } }) },
       { id: 'upload', run: async (c, rt) => ({ action: 'resolve', patch: { src: await upload(c.extra.file, rt.signal) } }) },
       { id: 'insert', run: (c, rt) => { rt.dispatch(insertImage(c.extra.src)); return { action: 'resolve' }; } },

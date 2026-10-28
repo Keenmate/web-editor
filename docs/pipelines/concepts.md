@@ -33,7 +33,7 @@ flowchart LR
 interface PipelineStage {
   id: string;
   run: (ctx: PipelineContext, rt: StageRuntime) => StageOutcome | Promise<StageOutcome>;
-  interactive?: boolean; // opens a modal — allowed only in deferred pipelines
+  isInteractive?: boolean; // opens a modal — allowed only in deferred pipelines
 }
 ```
 
@@ -72,7 +72,7 @@ interface Pipeline {
   name: string;          // "bold" | "image:browser:pick" | "paste" | …
   timing: 'sync' | 'deferred';
   stages: PipelineStage[];
-  policy?: { debounceMs?: number; thresholdMs?: number; lock?: boolean };
+  policy?: { debounceMs?: number; thresholdMs?: number; shouldLock?: boolean };
 }
 ```
 

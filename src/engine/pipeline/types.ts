@@ -60,7 +60,7 @@ export interface PipelineStage {
   id: string;
   run: (ctx: PipelineContext, rt: StageRuntime) => Promise<StageOutcome> | StageOutcome;
   /** Opens a modal — allowed only in suspendable (deferred) pipelines. */
-  interactive?: boolean;
+  isInteractive?: boolean;
 }
 
 /**
@@ -96,7 +96,7 @@ export interface PipelinePolicy {
   /** Delay before a pending indicator shows (the "defer the spinner" window). */
   thresholdMs?: number;
   /** Whether a run locks the surface. Dialogs always lock regardless. */
-  lock?: boolean;
+  shouldLock?: boolean;
 }
 
 export interface Pipeline {
@@ -150,7 +150,7 @@ export interface InteractionRequest {
 }
 
 export interface InteractionResult {
-  cancelled: boolean;
+  isCancelled: boolean;
   value?: unknown;
 }
 

@@ -80,7 +80,7 @@ function modal(
       signal.removeEventListener('abort', onAbort);
       resolve(r);
     };
-    const onAbort = () => close({ cancelled: true });
+    const onAbort = () => close({ isCancelled: true });
     signal.addEventListener('abort', onAbort);
     for (const b of buttons) {
       actions.append(
@@ -90,7 +90,7 @@ function modal(
           onclick: () => {
             const v = b.value();
             if (v === undefined) return; // not ready (e.g. nothing picked yet) — ignore the click
-            close(v === null ? { cancelled: true } : { cancelled: false, value: v });
+            close(v === null ? { isCancelled: true } : { isCancelled: false, value: v });
           },
         }, [b.label])
       );
@@ -190,12 +190,12 @@ const host: ProtoInteractionHost = {
         ],
         signal
       );
-      if (r.cancelled) return r;
+      if (r.isCancelled) return r;
       const out = await cropAsset(image, (r.value as { aspect: string }).aspect);
-      return { cancelled: false, value: out };
+      return { isCancelled: false, value: out };
     }
 
-    return { cancelled: true };
+    return { isCancelled: true };
   },
 };
 

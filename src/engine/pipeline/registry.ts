@@ -47,9 +47,9 @@ export function defaultInteractionHost(): InteractionHost {
     async request(req) {
       if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
         const ok = window.confirm([req.title, req.message].filter(Boolean).join('\n\n'));
-        return { cancelled: !ok };
+        return { isCancelled: !ok };
       }
-      return { cancelled: true };
+      return { isCancelled: true };
     },
   };
 }
@@ -139,7 +139,7 @@ export class PipelineRegistry {
     const generation = ++this.#generation;
     this.#emit(name, { type: 'start', generation });
 
-    const lock = pipeline.policy?.lock === true;
+    const lock = pipeline.policy?.shouldLock === true;
     if (lock) this.#deps.setLock(true);
 
     const thresholdMs = pipeline.policy?.thresholdMs ?? 200;

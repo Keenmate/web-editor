@@ -45,7 +45,7 @@ test.describe('image pipeline', () => {
     });
 
     test('a cancelled pick inserts nothing and releases the lock', async ({ page }) => {
-        await page.evaluate(() => ((window as any).pick = { cancelled: true }));
+        await page.evaluate(() => ((window as any).pick = { isCancelled: true }));
         await pm(page, 'b64').locator('p').click();
         await pickButton(page, 'b64').click();
         await expect.poll(async () => (await logLines(page, 'image-pipeline')).filter((l) => l.startsWith('request'))).toHaveLength(1);

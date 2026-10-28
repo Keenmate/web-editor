@@ -257,7 +257,7 @@ describe('single-ctx callbacks carry controller + element', () => {
       e.interactionHost = {
         request: async (ctx) => {
           reqCtx = ctx;
-          return { cancelled: false, value: { url: 'data:image/png;base64,AAAA' } };
+          return { isCancelled: false, value: { url: 'data:image/png;base64,AAAA' } };
         },
       };
       e.onLockChange = (d) => locks.push(d.isLocked);

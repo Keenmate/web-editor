@@ -136,10 +136,10 @@ export function kb(b: Blob): string {
 const pick: PhasedStage = {
   id: 'pick',
   phase: 'acquire',
-  interactive: true,
+  isInteractive: true,
   run: async (_c, rt) => {
     const r = await rt.ui!.request({ kind: 'cloud-picker', title: 'Choose image', payload: { multi: false } }, rt.signal);
-    if (r.cancelled) return { action: 'halt', reason: 'cancelled' };
+    if (r.isCancelled) return { action: 'halt', reason: 'cancelled' };
     const asset = r.value as ImageAsset;
     rt.log(`pick → ${asset.name} ${asset.w}×${asset.h} (${kb(asset.blob)})`);
     return { action: 'resolve', patch: { image: asset } };
@@ -163,7 +163,7 @@ const autoPlan: PhasedStage = {
 const crop: PhasedStage = {
   id: 'crop',
   phase: 'geometry',
-  interactive: true,
+  isInteractive: true,
   defaultConfig: { aspect: 'free' },
   run: async (c, rt) => {
     const img = c.extra.image as ImageAsset;
@@ -177,7 +177,7 @@ const crop: PhasedStage = {
       { kind: 'crop-editor', title: 'Edit image', payload: { image: img, aspect: rt.config.aspect } },
       rt.signal
     );
-    if (r.cancelled) return { action: 'halt', reason: 'crop cancelled' };
+    if (r.isCancelled) return { action: 'halt', reason: 'crop cancelled' };
     const out = r.value as ImageAsset;
     rt.log(`crop (interactive) → ${out.w}×${out.h}`);
     return { action: 'resolve', patch: { image: out } };
@@ -271,10 +271,10 @@ interface GalleryApi {
 const pickMany: PhasedStage = {
   id: 'pick-many',
   phase: 'acquire',
-  interactive: true,
+  isInteractive: true,
   run: async (_c, rt) => {
     const r = await rt.ui!.request({ kind: 'cloud-picker', title: 'Choose images', payload: { multi: true } }, rt.signal);
-    if (r.cancelled) return { action: 'halt', reason: 'cancelled' };
+    if (r.isCancelled) return { action: 'halt', reason: 'cancelled' };
     const assets = r.value as ImageAsset[];
     rt.log(`pick-many → ${assets.length} images`);
     return { action: 'resolve', patch: { images: assets } };

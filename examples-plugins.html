@@ -127,11 +127,11 @@ pick an aspect ratio, and apply — the cropped result lands here."></km-editor>
                     CLOUD_IMAGES.map((img, i) => '<img data-i="' + i + '" src="' + img.url + '" alt="' + img.name + '">').join('') +
                     '</div><div class="pick-actions"><button data-cancel>Cancel</button></div></div>';
                 const close = () => { signal.removeEventListener('abort', onAbort); overlay.remove(); };
-                const onAbort = () => { close(); resolve({ cancelled: true }); };
+                const onAbort = () => { close(); resolve({ isCancelled: true }); };
                 signal.addEventListener('abort', onAbort);
                 overlay.querySelectorAll('[data-i]').forEach((el) =>
-                    el.addEventListener('click', () => { close(); resolve({ cancelled: false, value: CLOUD_IMAGES[+el.dataset.i] }); }));
-                overlay.querySelector('[data-cancel]').addEventListener('click', () => { close(); resolve({ cancelled: true }); });
+                    el.addEventListener('click', () => { close(); resolve({ isCancelled: false, value: CLOUD_IMAGES[+el.dataset.i] }); }));
+                overlay.querySelector('[data-cancel]').addEventListener('click', () => { close(); resolve({ isCancelled: true }); });
                 document.body.appendChild(overlay);
             });
         },
@@ -199,7 +199,7 @@ pick an aspect ratio, and apply — the cropped result lands here."></km-editor>
                     after: 'upload',
                     stage: {
                         id: 'crop',
-                        interactive: true,
+                        isInteractive: true,
                         run: async (c, rt) => {
                             const res = await rt.ui.request({
                                 kind: 'crop-editor',
@@ -207,7 +207,7 @@ pick an aspect ratio, and apply — the cropped result lands here."></km-editor>
                                 payload: { src: c.extra.src },
                                 signal: rt.signal,
                             });
-                            if (res.cancelled || !res.value) return { action: 'halt', reason: 'crop cancelled' };
+                            if (res.isCancelled || !res.value) return { action: 'halt', reason: 'crop cancelled' };
                             return { action: 'resolve', patch: { src: res.value.src } };
                         },
                     },
@@ -230,11 +230,11 @@ pick an aspect ratio, and apply — the cropped result lands here."></km-editor>
                         CROP_CATALOG.map((img, i) => '<img data-i="' + i + '" src="' + img.url + '" alt="' + img.name + '" title="' + img.name + ' · ' + img.w + '×' + img.h + '">').join('') +
                         '</div><div class="pick-actions"><button class="btn-outline" data-cancel>Cancel</button></div></div>';
                     const close = () => { signal.removeEventListener('abort', onAbort); overlay.remove(); };
-                    const onAbort = () => { close(); resolve({ cancelled: true }); };
+                    const onAbort = () => { close(); resolve({ isCancelled: true }); };
                     signal.addEventListener('abort', onAbort);
                     overlay.querySelectorAll('[data-i]').forEach((el) =>
-                        el.addEventListener('click', () => { close(); resolve({ cancelled: false, value: CROP_CATALOG[+el.dataset.i] }); }));
-                    overlay.querySelector('[data-cancel]').addEventListener('click', () => { close(); resolve({ cancelled: true }); });
+                        el.addEventListener('click', () => { close(); resolve({ isCancelled: false, value: CROP_CATALOG[+el.dataset.i] }); }));
+                    overlay.querySelector('[data-cancel]').addEventListener('click', () => { close(); resolve({ isCancelled: true }); });
                     document.body.appendChild(overlay);
                 });
             }
@@ -252,20 +252,20 @@ pick an aspect ratio, and apply — the cropped result lands here."></km-editor>
                         '</select></div>' +
                         '<div class="pick-actions"><button class="btn-outline" data-cancel>Cancel</button><button data-role=apply>Apply crop</button></div></div>';
                     const close = () => { signal.removeEventListener('abort', onAbort); overlay.remove(); };
-                    const onAbort = () => { close(); resolve({ cancelled: true }); };
+                    const onAbort = () => { close(); resolve({ isCancelled: true }); };
                     signal.addEventListener('abort', onAbort);
-                    overlay.querySelector('[data-cancel]').addEventListener('click', () => { close(); resolve({ cancelled: true }); });
+                    overlay.querySelector('[data-cancel]').addEventListener('click', () => { close(); resolve({ isCancelled: true }); });
                     overlay.querySelector('[data-role=apply]').addEventListener('click', async () => {
                         const aspect = overlay.querySelector('[data-role=aspect]').value;
                         const out = await cropToAspect(src, aspect);
                         close();
-                        resolve({ cancelled: false, value: out });
+                        resolve({ isCancelled: false, value: out });
                     });
                     document.body.appendChild(overlay);
                 });
             }
 
-            return Promise.resolve({ cancelled: true });
+            return Promise.resolve({ isCancelled: true });
         },
     };
 

@@ -68,11 +68,11 @@ describe('assemblePipelines', () => {
   it('inserts after, replaces in place, and removes', () => {
     const owner: EditorPlugin = { name: 'owner', pipelines: [{ name: 'flow', timing: 'deferred', stages: [stage('a'), stage('b')] }] };
     const after: EditorPlugin = { name: 'af', stages: { flow: [{ after: 'a', stage: stage('a2') }] } };
-    const replace: EditorPlugin = { name: 'rp', stages: { flow: [{ stage: stage('b', { interactive: true }) }] } };
+    const replace: EditorPlugin = { name: 'rp', stages: { flow: [{ stage: stage('b', { isInteractive: true }) }] } };
     const remove: EditorPlugin = { name: 'rm', stages: { flow: [{ remove: 'a' }] } };
     const flow = assemblePipelines([owner, after, replace, remove], specs).get('flow')!;
     expect(flow.stages.map((s) => s.id)).toEqual(['a2', 'b']);
-    expect(flow.stages.find((s) => s.id === 'b')!.interactive).toBe(true);
+    expect(flow.stages.find((s) => s.id === 'b')!.isInteractive).toBe(true);
   });
 
   it('throws on a stage contribution to an unknown pipeline', () => {
@@ -132,7 +132,7 @@ describe('EditorEngine pipeline integration', () => {
 
   it('runs a deferred locking pipeline: pick → upload → insert an image, unlocking after', async () => {
     const host: InteractionHost = {
-      request: async () => ({ cancelled: false, value: { url: 'data:image/png;base64,AAAA', name: 'x' } }),
+      request: async () => ({ isCancelled: false, value: { url: 'data:image/png;base64,AAAA', name: 'x' } }),
     };
     const engine = new EditorEngine({
       mount: mount(),

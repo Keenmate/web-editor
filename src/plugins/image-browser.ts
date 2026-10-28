@@ -46,11 +46,11 @@ export function imageBrowserPlugin(opts: ImageBrowserOptions = {}): EditorPlugin
   const pipeline: Pipeline = {
     name: 'image:browser:pick',
     timing: 'deferred',
-    policy: { lock: true, thresholdMs: 150 },
+    policy: { shouldLock: true, thresholdMs: 150 },
     stages: [
       {
         id: 'pick',
-        interactive: true,
+        isInteractive: true,
         run: async (_c, rt) => {
           const res = await rt.ui.request({
             kind: 'cloud-picker',
@@ -58,7 +58,7 @@ export function imageBrowserPlugin(opts: ImageBrowserOptions = {}): EditorPlugin
             message: rt.label?.('cloudImagePickerMessage') ?? 'Pick an image to insert.',
             signal: rt.signal,
           });
-          if (res.cancelled || !res.value) return { action: 'halt', reason: 'no image chosen' };
+          if (res.isCancelled || !res.value) return { action: 'halt', reason: 'no image chosen' };
           return { action: 'resolve', patch: { asset: res.value as CloudAsset } };
         },
       },

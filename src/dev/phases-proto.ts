@@ -43,7 +43,7 @@ export interface ProtoInteractionRequest {
   payload?: unknown;
 }
 export interface ProtoInteractionResult {
-  cancelled: boolean;
+  isCancelled: boolean;
   value?: unknown;
 }
 export interface ProtoInteractionHost {
@@ -68,7 +68,7 @@ export interface PhasedStage {
   /** Which phase this stage joins — the plugin's proposal; owner `assign` overrides. */
   phase?: string;
   /** Opens a modal — needs `rt.ui` (A: the interactive editor stage). */
-  interactive?: boolean;
+  isInteractive?: boolean;
   /** Soft intra-phase order: run before a peer IF it's present in the same phase. */
   beforeIfPresent?: string;
   /** Soft intra-phase order: run after a peer IF it's present in the same phase. */
@@ -316,7 +316,7 @@ export async function runAssembled(
   const controller = new AbortController();
   for (const s of asm.stages) {
     if (!s.run) continue;
-    if (s.interactive && !deps.ui) {
+    if (s.isInteractive && !deps.ui) {
       log(`⚠ ${s.id} is interactive but no host was provided — skipping.`);
       continue;
     }

@@ -49,7 +49,7 @@ type StageOutcome =
 interface PipelineStage {
   id: string;
   run: (ctx: PipelineContext, rt: StageRuntime) => Promise<StageOutcome> | StageOutcome;
-  interactive?: boolean; // opens a modal — allowed only in suspendable pipelines
+  isInteractive?: boolean; // opens a modal — allowed only in suspendable pipelines
 }
 
 interface StageRuntime {
@@ -72,7 +72,7 @@ interface Pipeline {
   name: string;                 // "paste" | "copy" | "keydown" | "idle" | custom
   timing: Timing;
   stages: PipelineStage[];
-  policy?: { debounceMs?: number; thresholdMs?: number; lock?: boolean };
+  policy?: { debounceMs?: number; thresholdMs?: number; shouldLock?: boolean };
 }
 ```
 
@@ -131,7 +131,7 @@ the host injects the UI:
 
 ```ts
 interface InteractionRequest { kind: string; title: string; message?: string; payload?: unknown }
-interface InteractionResult  { cancelled: boolean; value?: unknown }
+interface InteractionResult  { isCancelled: boolean; value?: unknown }
 interface InteractionContext extends InteractionRequest { signal: AbortSignal } // + controller / element inside <km-editor>
 interface InteractionHost    { request(ctx: InteractionContext): Promise<InteractionResult> }
 ```
@@ -226,10 +226,10 @@ definePlugin({
   pipelines: [{
     name: 'image:browser:pick',
     timing: 'deferred',
-    policy: { lock: true },                 // gating: locks the editor for the run
+    policy: { shouldLock: true },                 // gating: locks the editor for the run
     stages: [
-      { id: 'pick',   interactive: true, run: (c, rt) => rt.ui.request({ kind: 'cloud-picker', title: 'Choose image', signal: rt.signal })
-                                                           .then(r => r.cancelled ? { action: 'halt' }
+      { id: 'pick',   isInteractive: true, run: (c, rt) => rt.ui.request({ kind: 'cloud-picker', title: 'Choose image', signal: rt.signal })
+                                                           .then(r => r.isCancelled ? { action: 'halt' }
                                                                                   : { action: 'resolve', patch: { file: r.value } }) },
       { id: 'upload', run: async (c, rt) => ({ action: 'resolve', patch: { src: await uploadToCloud(c.extra.file, rt.signal) } }) },
       { id: 'insert', run: (c, rt) => { rt.dispatch(insertImageNode(c.extra.src)); return { action: 'resolve' }; } },
@@ -443,7 +443,7 @@ run(ctx, rt) {
   const r = await rt.ui.request({
     kind: 'crop', title: 'Crop', payload: { src: ctx.extra.src, aspect, min }, signal: rt.signal,
   });
-  return r.cancelled ? { action: 'halt' } : { action: 'resolve', patch: { src: r.value } };
+  return r.isCancelled ? { action: 'halt' } : { action: 'resolve', patch: { src: r.value } };
 }
 ```
 
@@ -546,7 +546,7 @@ it can emit **instructions** another stage executes.
     const plan = ctx.extra.cropPlan as CropPlan | undefined;
     if (plan) return { action: 'resolve', patch: { blob: await applyCrop(ctx.extra.blob, plan) } }; // headless
     const r = await rt.ui.request({ kind: 'crop', payload: { ...rt.config, blob: ctx.extra.blob }, signal: rt.signal });
-    return r.cancelled ? { action: 'halt' } : { action: 'resolve', patch: { blob: r.value } };
+    return r.isCancelled ? { action: 'halt' } : { action: 'resolve', patch: { blob: r.value } };
   }
   ```
 

@@ -88,7 +88,7 @@ sequenceDiagram
   R->>P: run stages (signal, ui, generation, write port)
   Note over P,H: interactive stage pauses here
   P->>H: rt.ui.request(cloud-picker)
-  H-->>P: { value } or { cancelled }
+  H-->>P: { value } or { isCancelled }
   P->>P: upload (await; honors signal)
   P->>V: rt.dispatch(insert image)
   P-->>R: resolved

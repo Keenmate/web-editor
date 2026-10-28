@@ -44,7 +44,7 @@ export function runStagesSync(
 ): RunResult {
   let ctx = context;
   for (const stage of pipeline.stages) {
-    if (stage.interactive) {
+    if (stage.isInteractive) {
       throw new Error(`Sync pipeline "${pipeline.name}" cannot contain interactive stage "${stage.id}".`);
     }
     report?.({ stageId: stage.id, phase: 'running' });

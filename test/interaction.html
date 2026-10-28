@@ -52,7 +52,7 @@
         el.interactionHost = {
             request: async (ctx) => {
                 window.ix.ctx.request = ctx;
-                return { cancelled: false, value: { url: 'data:image/png;base64,iVBORw0KGgo=', name: 'px' } };
+                return { isCancelled: false, value: { url: 'data:image/png;base64,iVBORw0KGgo=', name: 'px' } };
             },
         };
         el.onReady = (d) => log.push({ kind: 'onReady', keys: Object.keys(d), json: JSON.stringify(d), isElement: d.element === el, hasController: d.controller === el.controller });
