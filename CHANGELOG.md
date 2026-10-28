@@ -11,6 +11,14 @@ Target: **1.0.0-rc01** (first release).
 Pre-1.0, pre-publish. Everything below is the work to date; nothing has been
 released to a registry yet.
 
+### Changed
+
+- **Disabled commands fade by the contract's opacity:** new `--we-disabled-opacity:
+  var(--base-disabled-opacity, 0.65)` on `:host`; `.we-cmd:disabled` used a hard-coded `0.4`
+  (now `0.65` by default — a lighter fade, the same as every other Keenmate component). The
+  context menu's disabled items keep `--we-context-menu-disabled-opacity` → `--km-menu-*` →
+  `--base-disabled-opacity`. The editor has no transitions / animations of its own.
+
 ### Fixed
 
 - `theme="dark"` sets `color-scheme: dark`, so the core-rendered context menu (and native controls) render dark instead of light.

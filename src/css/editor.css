@@ -19,6 +19,8 @@
   --we-min-height: 160px;
   --we-accent: #0066cc;
   --we-danger: #c62828;
+  /* Disabled toolbar / selection-toolbar commands: the contract's one fade. */
+  --we-disabled-opacity: var(--base-disabled-opacity, 0.65);
 
   /* Context menu = core `openMenu()` (.km-menu*). Each public --we-context-menu-*
      maps onto core's PRIVATE --_km-menu-* layer with NO fallback: unset → the
@@ -280,7 +282,7 @@
   color: #fff;
 }
 .we-cmd:disabled {
-  opacity: 0.4;
+  opacity: var(--we-disabled-opacity);
   cursor: default;
 }
 

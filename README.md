@@ -201,7 +201,10 @@ bleed in. Ship the stylesheet once:
 Set `theme="…"` to target a theme from your own CSS via `:host([theme="…"])`.
 
 The editor's own classes and custom properties use the `we-` prefix (`--we-bg`,
-`--we-border`, `--we-accent`, …). The right-click menu is the shared KeenMate menu
+`--we-border`, `--we-accent`, …). Disabled commands fade by `--we-disabled-opacity`
+(default `var(--base-disabled-opacity, 0.65)`). The editor has no transitions or animations of
+its own; the right-click menu's motion follows core's `--km-menu-*` / `--base-duration-*`
+(`--base-duration-*: 0s` turns it off page-wide). The right-click menu is the shared KeenMate menu
 from `@keenmate/web-components-core` (`.km-menu*`, `::part(context-menu)`); restyle it
 with the `--we-context-menu-*` properties on the element — `bg`, `text-color`,
 `border`, `border-radius`, `shadow`, `min-width`, `padding`, `font-size`,
