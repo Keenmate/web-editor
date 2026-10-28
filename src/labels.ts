@@ -16,6 +16,8 @@
 
 /** Built-in English strings for the non-command keys. */
 export const DEFAULT_LABELS = {
+  /** Shown (as text) while the document is empty, like a native `placeholder`. `''` = none. */
+  placeholder: '',
   /** Status bar: word count. */
   words: 'Words: {count}',
   /** Status bar: character count. */

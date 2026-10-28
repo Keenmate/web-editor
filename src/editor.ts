@@ -19,12 +19,13 @@ import { schema } from './schema';
 import { syntaxHighlightPlugin } from './plugins/syntax-highlight';
 
 export interface CreateEditorStateOptions {
-  /** Initial document. Defaults to a short welcome document. */
+  /** Initial document. Defaults to an empty document (one empty paragraph). */
   doc?: PMNode;
   /** Extra ProseMirror plugins appended after the core set. */
   plugins?: Plugin[];
 }
 
+/** A short welcome document — demo content (the editor itself starts empty). */
 export function createDefaultDoc(docSchema: typeof schema = schema): PMNode {
   return docSchema.node('doc', null, [
     docSchema.node('paragraph', null, [docSchema.text('Welcome to the KeenMate Web Editor.')]),
@@ -37,7 +38,7 @@ export function createDefaultDoc(docSchema: typeof schema = schema): PMNode {
 }
 
 export function createEditorState(options: CreateEditorStateOptions = {}): EditorState {
-  const { doc = createDefaultDoc(), plugins = [] } = options;
+  const { doc = schema.topNodeType.createAndFill()!, plugins = [] } = options;
 
   return EditorState.create({
     doc,

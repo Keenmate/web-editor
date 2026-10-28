@@ -18,7 +18,7 @@ import { baseKeymap } from 'prosemirror-commands';
 import { splitListItem, liftListItem, sinkListItem } from 'prosemirror-schema-list';
 
 import { buildSchema } from '../schema';
-import { createDefaultDoc } from '../editor';
+import { placeholderPlugin, placeholderKey } from './placeholder';
 import { EventEmitter } from './event-emitter';
 import { CommandRegistry } from './command-registry';
 import { registerCoreCommands } from './default-commands';
@@ -225,6 +225,8 @@ export class EditorEngine {
           'Shift-Tab': liftListItem(schema.nodes.list_item),
         }),
         keymap(baseKeymap),
+        // `labels.placeholder` while the document is empty ('' = off).
+        placeholderPlugin(() => this.label('placeholder')),
         ...(options.plugins ?? []),
       ],
     });
@@ -262,7 +264,8 @@ export class EditorEngine {
     if (options.html != null) return htmlToDoc(options.html, schema);
     if (options.markdown != null) return markdownToDoc(options.markdown, this.#markdown.parser);
     if (options.json != null) return PMNode.fromJSON(schema, options.json);
-    return createDefaultDoc(schema);
+    // No content → an empty document (one empty paragraph).
+    return schema.topNodeType.createAndFill()!;
   }
 
   get state(): EditorState {
@@ -289,6 +292,14 @@ export class EditorEngine {
   run(name: string): boolean {
     return this.#pipelines.run(name);
   }
+  /**
+   * Re-render view decorations / attributes that read live settings (e.g. the
+   * `labels.placeholder` text) without touching the document.
+   */
+  refreshView(): void {
+    this.view.dispatch(this.view.state.tr.setMeta(placeholderKey, 'refresh').setMeta('addToHistory', false));
+  }
+
   /** Replace the host modal bridge used by interactive pipeline stages. */
   setInteractionHost(host: InteractionHost): void {
     this.#interactionHost = host;

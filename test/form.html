@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>km-editor — form</title>
+</head>
+<body>
+    <!-- Targeted by e2e/form.spec.ts: light-DOM hidden input, reset, fieldset disabled, placeholder. -->
+    <form id="form">
+        <fieldset id="fs">
+            <km-editor id="subject" name="body" value="# Initial"></km-editor>
+        </fieldset>
+    </form>
+    <km-editor id="empty" labels='{"placeholder":"Start writing…"}'></km-editor>
+
+    <script type="module">
+        import '/src/index.ts';
+        window.formBody = () => new FormData(document.getElementById('form')).getAll('body');
+        window.fixtureReady = true;
+    </script>
+</body>
+</html>

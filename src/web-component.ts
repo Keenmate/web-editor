@@ -107,6 +107,14 @@ const INPUTS: readonly InputDef[] = [
       "Serialization lens for content I/O (the `value` attribute and property, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document.",
   },
   {
+    configKey: 'name',
+    attribute: 'name',
+    converter: toText({ isNullable: true }),
+    on: 'update',
+    description:
+      'Form field name. When set, a light-DOM `<input type="hidden" name="…">` child of the host carries the live content (serialized in `valueFormat`) and submits with the surrounding `<form>`; it is disabled (not submitted) while the editor is disabled, including by a `<fieldset disabled>`. A form reset restores `defaultValue` (attribute `value`).',
+  },
+  {
     configKey: 'viewMode',
     attribute: 'view-mode',
     converter: toEnum(VIEW_MODES, { default: 'edit' }),
@@ -173,7 +181,7 @@ const INPUTS: readonly InputDef[] = [
     converter: toObject<EditorLabels>({ validate: isLabels }),
     on: 'update',
     description:
-      'Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`. Property (object) or JSON attribute (`labels=\'{"bold":"Tučně"}\'`). Applies live (no rebuild).',
+      'Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders; an empty string = deliberately empty. `placeholder` (default empty = off) is shown while the document is empty. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`. Property (object) or JSON attribute (`labels=\'{"bold":"Tučně"}\'`). Applies live (no rebuild).',
   },
   {
     configKey: 'beforeActionCallback',
@@ -261,12 +269,18 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   declare labels: EditorLabels | null;
   /** Initial / default content (attribute `value`); the live content is {@link value}. */
   declare defaultValue: string | null;
+  /** Serialization lens for content I/O (attribute `value-format`). */
+  declare valueFormat: EditorFormat;
+  /** Form field name (light-DOM hidden input; attribute `name`). */
+  declare name: string | null;
 
   #shadow: ShadowRoot;
   #layout: ViewLayout;
   #engine?: EditorEngine;
   #chrome?: EditorChrome;
   #unsubscribe?: () => void;
+  // The light-DOM hidden form input (only while `name` is set).
+  #formInput?: HTMLInputElement;
   // Custom editor plugin set. `undefined` → the engine's defaultPlugins(). Not an
   // attribute input (plugins are objects); set via the `plugins` property.
   #customPlugins?: EditorPlugin[];
@@ -329,6 +343,20 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     this.#engine?.setEditable(this.#resolveEditable());
     this.#layout.setInert(this.isEffectivelyDisabled);
     this.#applyChromeState();
+    this.#syncFormInput();
+  }
+
+  /**
+   * The surrounding `<form>` was reset: restore the initial content (`defaultValue`,
+   * attribute `value`), like a native control. Not a user edit, but the document
+   * changes, so `change` fires.
+   */
+  formResetCallback(): void {
+    this.flush();
+    if (!this.#engine) return; // not built yet: the build loads defaultValue anyway
+    this.#pendingSet = undefined;
+    const content = (this.config.defaultValue as string | null) ?? '';
+    this.setValue(content);
   }
 
   /** Cosmetic/behavioural change: patch the live engine without a rebuild. */
@@ -353,8 +381,13 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     if ('valueFormat' in partial && this.#engine) {
       this.emit('change', this.#changeDetail());
     }
-    // UI strings are resolved on render: re-render the chrome with the new labels.
-    if ('labels' in partial) this.#chrome?.refresh();
+    // UI strings are resolved on render: re-render the chrome (and the empty-document
+    // placeholder) with the new labels.
+    if ('labels' in partial) {
+      this.#chrome?.refresh();
+      this.#engine?.refreshView();
+    }
+    if ('name' in partial || 'valueFormat' in partial) this.#syncFormInput();
     if ('interactionHost' in partial) {
       this.#engine?.setInteractionHost(this.#interactionHost());
     }
@@ -449,6 +482,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     // Bridge engine → outward events, and keep the split output panel live.
     const offChange = engine.events.on('change', () => {
       this.#layout.refreshOutput();
+      this.#syncFormInput();
       this.emit('change', this.#changeDetail());
     });
     const offLock = engine.events.on('lock', ({ isLocked }) => this.emit('lock-change', { isLocked }));
@@ -457,6 +491,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
       offLock();
     };
     this.#layout.refreshOutput(); // initial fill (engine now exists)
+    this.#syncFormInput();
 
     // Command-driven chrome (zone toolbar + status bar + selection toolbar +
     // context menu). Bound to this engine's view/registry and the lists it
@@ -496,6 +531,31 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     engines.delete(this);
   }
 
+  /**
+   * Form convention (KeenMate suite, like web-multiselect): a light-DOM hidden
+   * input named by `name` carries the live content in `valueFormat` — the host
+   * never calls `setFormValue`. No `name` → no input. Disabled (not submitted)
+   * while the editor is effectively disabled.
+   */
+  #syncFormInput(): void {
+    const name = this.config.name as string | null;
+    if (!name) {
+      this.#formInput?.remove();
+      this.#formInput = undefined;
+      return;
+    }
+    let input = this.#formInput;
+    if (!input) {
+      input = this.ownerDocument.createElement('input');
+      input.type = 'hidden';
+      this.#formInput = input;
+    }
+    if (input.parentNode !== this) this.appendChild(input);
+    input.name = name;
+    input.value = this.#engine ? this.#engine.serialize(this.#format()) : '';
+    input.disabled = this.isEffectivelyDisabled;
+  }
+
   /** (Re)arrange the shadow layout for the current view mode + anchor + toolbar + status side. */
   #applyLayout(): void {
     this.#layout.render(
@@ -518,7 +578,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
 
   /** Map a content string + format onto the matching engine option. */
   #applyContentOption(options: EditorEngineOptions, format: EditorFormat, content: string | null): void {
-    if (content == null || content === '') return; // engine falls back to the default doc
+    if (content == null || content === '') return; // engine starts with an empty document
     try {
       if (format === 'json') options.json = JSON.parse(content);
       else if (format === 'html') options.html = content;
@@ -681,6 +741,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   protected override destroyCallback(): void {
     this.#teardownEngine();
     this.#layout.destroy();
+    this.#formInput?.remove();
+    this.#formInput = undefined;
   }
 }
 

@@ -81,6 +81,7 @@ Every attribute is also a property (e.g. `el.viewMode = 'preview'` ↔ `view-mod
 | ----------- | ----------------------------------------------- | ------------ | ----------- |
 | `value`     | string                                          | —            | Initial content, interpreted per `valueFormat` (property `defaultValue`, like a native input). Changing it replaces the document. The live content is the `value` **property**. |
 | `value-format` | `markdown` \| `html` \| `json`                  | `markdown`   | Serialization lens for content I/O (the `value` attribute and property, the `change` detail). Switching re-reports the same document in the new format — it never rebuilds it. |
+| `name`      | string                                          | —            | Form field name: a light-DOM hidden `<input name="…">` carries the live content (in `value-format`) and submits with the `<form>` — see [Forms](#forms). |
 | `view-mode` | `edit` \| `split` \| `preview` \| `inline`      | `edit`       | Presentation. `preview` forces read-only. `inline` renders a floating card (see `anchor`). |
 | `readonly`  | boolean                                         | `false`      | Read-only (`isReadonly`): the content can't change, toolbar hidden, but it stays focusable / selectable / copyable. `view-mode="preview"` also forces this on. Reflects. |
 | `disabled`  | boolean                                         | `false`      | Disabled (`isDisabled`): no interaction — not editable, focusable or selectable (the surface is `inert`). An ancestor `<fieldset disabled>` disables it too. Reflects, like a native control. |
@@ -131,7 +132,9 @@ standalone (headless) use.
 ## Labels
 
 Every UI string goes through one `labels` object — partial (unset keys stay English),
-`{name}` placeholders, applied live (no rebuild):
+`{name}` placeholders, applied live (no rebuild). `''` means deliberately empty (renders
+nothing); a missing key falls back to English. Every editor label is inserted as **text**
+(none is HTML), so there are no HTML-injection labels:
 
 ```html
 <km-editor labels='{"bold":"Tučně","insertLink":"Vložit odkaz","linkUrlPrompt":"Adresa odkazu:","words":"Slova: {count}"}'></km-editor>
@@ -142,6 +145,7 @@ Every UI string goes through one `labels` object — partial (unset keys stay En
 | `<commandKey>` — the command id camel-cased (`bold`, `insertLink`, `insertTable`, `bulletList`, `undo`, a plugin's `imageBrowserPick`, …) | the command's own text (`Bold`, `Insert link`, …) — item text, menu label, button `aria-label` |
 | `<commandKey>Tooltip` | the command's tooltip, else `<text> (<shortcut>)` |
 | `<groupId>Group` — `formatGroup`, `blockGroup`, `listGroup`, `insertGroup`, `historyGroup`, `linkGroup`, `imageGroup`, `tableGroup`, `imageBrowserGroup` | toolbar group accessible names (`Format`, `Block`, `Lists`, …) |
+| `placeholder` | `''` (off) — shown (as text) while the document is empty |
 | `words` / `chars` | `Words: {count}` / `Chars: {count}` (status bar) |
 | `linkUrlPrompt` | `Enter link URL:` |
 | `imageUrlPrompt` / `imageAltPrompt` | `Enter image URL:` / `Enter alt text (optional):` |
@@ -151,6 +155,22 @@ Every UI string goes through one `labels` object — partial (unset keys stay En
 Plugin code resolves strings with `label(key, params?, fallback?)` — on the plugin
 builder ctx (`commands: ({ schema, label }) => …`), on every callback ctx (`ctx.label`)
 and on pipeline stages (`rt.label`). `DEFAULT_LABELS` and `labelKey()` are exported.
+
+## Forms
+
+`<km-editor name="body">` inside a `<form>` submits the live content under `body`,
+serialized in `value-format` (`markdown` by default). Like the suite's other form
+components it uses a **light-DOM hidden input** (a child of the host) — not
+`ElementInternals.setFormValue` — so there is exactly one entry. The editor starts
+**empty** unless `value` is given; `form.reset()` restores the `value` attribute
+(`defaultValue`), and a disabled editor (`disabled`, or an ancestor
+`<fieldset disabled>`) is left out of the submission.
+
+```html
+<form>
+  <km-editor name="body" value-format="html" labels='{"placeholder":"Write your post…"}'></km-editor>
+</form>
+```
 
 ## Theming
 

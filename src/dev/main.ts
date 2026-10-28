@@ -9,6 +9,7 @@
  */
 import { EditorEngine } from '../engine/editor-engine';
 import { schema } from '../schema';
+import { createDefaultDoc } from '../editor';
 import { createFloatingToolbarPlugin } from '../plugins/floating-toolbar';
 import { createDebugPlugins, updateDebugPanel } from '../plugins/debug';
 import type { SerializationFormat } from '../engine/serialization';
@@ -64,6 +65,7 @@ const mount = document.querySelector('#editor') as HTMLElement;
 
 const engine = new EditorEngine({
   mount,
+  doc: createDefaultDoc(schema), // demo welcome text (the editor itself starts empty)
   plugins: [createFloatingToolbarPlugin(schema), ...createDebugPlugins()],
 });
 

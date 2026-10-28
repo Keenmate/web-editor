@@ -26,6 +26,9 @@ dialog stub), `e2e/helpers.ts`.
 | `setValue(v, fmt)` + `change` | ✓ | `content.spec.ts` | `content.html` |
 | `value` property / attribute replace the document without re-firing `ready`; `value` before upgrade | ✓ | `content.spec.ts` | `content.html` |
 | `focus()` | ✓ | `content.spec.ts` | `content.html` |
+| Form: `name` → light-DOM hidden input (live value in `valueFormat`, one entry) | ✓ | `form.spec.ts` | `form.html` |
+| Form reset → `defaultValue`; `<fieldset disabled>` excludes it | ✓ | `form.spec.ts` | `form.html` |
+| Empty document by default; `labels.placeholder` while empty | ✓ | `form.spec.ts` | `form.html` |
 
 ## 2. Lifecycle
 

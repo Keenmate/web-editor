@@ -1,6 +1,6 @@
 /**
  * `<km-editor>` element tests — the BlissElement shell over the engine. Exercises
- * registration, content I/O through the `format` lens, readonly/editable, and the
+ * registration, content I/O through the `valueFormat` lens, readonly/editable, and the
  * outward `change` / `ready` / `view-mode-change` events. Runs in happy-dom (the same
  * environment the engine tests use, so EditorView works here).
  */
@@ -28,7 +28,7 @@ describe('<km-editor>', () => {
   });
 
   it('builds from a markdown value and becomes ready', async () => {
-    const el = await mount({ value: '# Hello', format: 'markdown' });
+    const el = await mount({ value: '# Hello', 'value-format': 'markdown' });
     expect(el.isReady).toBe(true);
     expect(el.getMarkdown()).toContain('# Hello');
     expect(el.getHTML()).toContain('<h1');
@@ -82,7 +82,7 @@ describe('<km-editor>', () => {
   });
 
   it('reads live content via the active format lens', async () => {
-    const el = await mount({ value: '# Title', format: 'markdown' });
+    const el = await mount({ value: '# Title', 'value-format': 'markdown' });
     expect(el.value).toContain('# Title');
     expect(el.defaultValue).toBe('# Title');
     el.valueFormat = 'html';
@@ -100,7 +100,7 @@ describe('<km-editor>', () => {
   });
 
   it('emits `change` with the content in the active format', async () => {
-    const el = await mount({ value: 'start', format: 'markdown' });
+    const el = await mount({ value: 'start', 'value-format': 'markdown' });
     const details: Array<{ value: string; format: string }> = [];
     el.addEventListener('change', (e) => details.push((e as CustomEvent).detail));
     el.setValue('changed', 'markdown');
@@ -122,8 +122,8 @@ describe('<km-editor>', () => {
     expect(getEditorEngine(el)!.isEditable()).toBe(false);
   });
 
-  it('reflects `format` and re-announces change when it switches', async () => {
-    const el = await mount({ value: '# H', format: 'markdown' });
+  it('reflects `valueFormat` and re-announces change when it switches', async () => {
+    const el = await mount({ value: '# H', 'value-format': 'markdown' });
     const formats: string[] = [];
     el.addEventListener('change', (e) => formats.push((e as CustomEvent).detail.format));
     el.setAttribute('value-format', 'html');
@@ -191,5 +191,79 @@ describe('<km-editor> view modes', () => {
   it('inline renders a floating card (no anchor → normal flow, no throw)', async () => {
     const el = await mount({ value: 'x', 'view-mode': 'inline' });
     expect(root(el).classList.contains('we-inline')).toBe(true);
+  });
+});
+
+describe('<km-editor> empty document + placeholder', () => {
+  it('starts with an empty document when no value is given', async () => {
+    const el = await mount();
+    expect(el.value).toBe('');
+    const pm = el.shadowRoot!.querySelector('.ProseMirror')!;
+    expect(pm.textContent).toBe('');
+    // labels.placeholder defaults to '' — no placeholder decoration.
+    expect(pm.querySelector('.we-placeholder')).toBeNull();
+  });
+
+  it('labels.placeholder shows while empty, hides with content, applies live', async () => {
+    const el = await mount();
+    el.labels = { placeholder: 'Write something…' };
+    await el.whenSettled();
+    const pm = el.shadowRoot!.querySelector('.ProseMirror')!;
+    expect(pm.querySelector('.we-placeholder')?.getAttribute('data-placeholder')).toBe('Write something…');
+    expect(pm.getAttribute('aria-placeholder')).toBe('Write something…');
+    el.value = 'text';
+    expect(pm.querySelector('.we-placeholder')).toBeNull();
+    expect(pm.hasAttribute('aria-placeholder')).toBe(false);
+    el.value = '';
+    expect(pm.querySelector('.we-placeholder')).not.toBeNull();
+  });
+});
+
+describe('<km-editor> form', () => {
+  const hidden = (el: KmEditorElement) => (Array.from(el.children).find((c) => c instanceof HTMLInputElement && c.type === "hidden") as HTMLInputElement | undefined) ?? null;
+
+  it('no `name` → no hidden input', async () => {
+    const el = await mount({ value: '# A' });
+    expect(hidden(el)).toBeNull();
+  });
+
+  it('`name` renders a light-DOM hidden input synced with the live value', async () => {
+    const form = document.createElement('form');
+    document.body.appendChild(form);
+    const el = document.createElement('km-editor') as KmEditorElement;
+    el.setAttribute('name', 'body');
+    el.setAttribute('value', '# A');
+    form.appendChild(el);
+    await el.whenSettled();
+    const input = hidden(el)!;
+    expect(input.name).toBe('body');
+    expect(input.value).toBe(el.value);
+    expect(new FormData(form).get('body')).toBe(el.value);
+    el.value = 'changed';
+    expect(input.value).toBe('changed');
+    el.valueFormat = 'html';
+    await el.whenSettled();
+    expect(input.value).toContain('<p>changed</p>');
+    el.removeAttribute('name');
+    await el.whenSettled();
+    expect(hidden(el)).toBeNull();
+  });
+
+  it('disabled → the hidden input is disabled (not submitted)', async () => {
+    const el = await mount({ name: 'body', value: 'x' });
+    el.isDisabled = true;
+    await el.whenSettled();
+    expect(hidden(el)!.disabled).toBe(true);
+    el.isDisabled = false;
+    await el.whenSettled();
+    expect(hidden(el)!.disabled).toBe(false);
+  });
+
+  it('form reset restores defaultValue', async () => {
+    const el = await mount({ name: 'body', value: 'initial' });
+    el.value = 'edited';
+    el.formResetCallback();
+    expect(el.value).toBe('initial');
+    expect(hidden(el)!.value).toBe('initial');
   });
 });

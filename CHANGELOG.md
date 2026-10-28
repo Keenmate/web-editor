@@ -65,6 +65,9 @@ released to a registry yet.
   the serialization lens for `value` / `defaultValue` / the `change` detail, named like
   the suite's other form components. The `change` detail key stays `format`;
   `setValue(value, format?)` keeps its explicit-format argument (without one, assign `value`).
+- **The editor starts empty.** With no `value` the document is one empty paragraph
+  (was a two-paragraph "Welcome to the KeenMate Web Editor…" text); `createEditorState()`
+  defaults to an empty document too. `createDefaultDoc()` stays exported as demo content.
 
 ### Changed — BREAKING (suite-wide naming unification)
 
@@ -106,6 +109,16 @@ Clean breaks, no aliases (rulebook `naming-conventions.md` D-NC-13..27).
   the old `Insert link (select text first)` hint is gone).
 - **`promptForCodeBlock` / `changeCodeBlockLanguage`** (exported) are now factories
   `(label?) => Command` (were `Command` constants), so their prompts are translatable.
+
+### Added (round 2)
+
+- **Form participation (suite convention):** `name` attribute → a light-DOM hidden
+  `<input name="…">` child carrying the live content in `value-format`, kept in sync on
+  every change; `form.reset()` restores `defaultValue` (attribute `value`); disabled
+  (`disabled` or an ancestor `<fieldset disabled>`, via core) → the input is disabled and
+  not submitted. No `setFormValue` (one entry per name).
+- **`labels.placeholder`** (default `''` = off): text shown while the document is empty
+  (CSS `attr()` + `aria-placeholder`), applied live.
 
 ### Added (naming unification)
 

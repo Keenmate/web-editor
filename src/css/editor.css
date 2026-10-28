@@ -405,6 +405,15 @@
   margin-bottom: 0;
 }
 
+/* `labels.placeholder` while the document is empty (text, from the attribute). */
+.ProseMirror .we-placeholder::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: var(--we-muted-fg);
+  pointer-events: none;
+}
+
 .ProseMirror h1,
 .ProseMirror h2,
 .ProseMirror h3 {
