@@ -28,7 +28,7 @@ dialog stub), `e2e/helpers.ts`.
 | `focus()` | ✓ | `content.spec.ts` | `content.html` |
 | Form: `name` → light-DOM hidden input (live value in `contentFormat`, one entry) | ✓ | `form.spec.ts` | `form.html` |
 | Form reset → `defaultValue`; `<fieldset disabled>` excludes it | ✓ | `form.spec.ts` | `form.html` |
-| Form: `getValueFormatCallback` formats the submitted value only (`el.value` unchanged); a throw submits the unformatted value | ✓ | `form.spec.ts`, unit `web-component.test.ts` | `form.html` |
+| Form: `getValueFormatCallback` formats the submitted value only (`el.value` unchanged); a throw submits `''`, marks the host invalid (submit blocked, `invalid` fires; `novalidate` submits `''`), fires `value-format-error`; a working callback recovers | ✓ | `form.spec.ts`, unit `web-component.test.ts` | `form.html` |
 | Empty document by default; `labels.placeholder` while empty | ✓ | `form.spec.ts` | `form.html` |
 
 ## 2. Lifecycle

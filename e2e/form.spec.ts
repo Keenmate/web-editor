@@ -45,6 +45,49 @@ test.describe('form', () => {
         expect(await editor(page).evaluate((el: any) => el.value)).toBe('# Initial edited');
     });
 
+    test('a throwing getValueFormatCallback blocks the submit (invalid, value-format-error); a working one recovers', async ({ page }) => {
+        const probe = () => page.evaluate(() => ({ submits: (window as any).submits, invalids: (window as any).invalids }));
+        const requestSubmit = () => page.evaluate(() => (document.getElementById('form') as HTMLFormElement).requestSubmit());
+        await editor(page).evaluate((el: any) => {
+            const seen: string[] = [];
+            (window as any).fmtErrors = seen;
+            el.addEventListener('value-format-error', (e: CustomEvent) => seen.push(`${(e.detail.error as Error).message}|${e.detail.value}`));
+            el.getValueFormatCallback = () => {
+                throw new Error('boom');
+            };
+        });
+        await expect.poll(() => body(page)).toEqual(['']);
+        expect(await page.evaluate(() => (window as any).fmtErrors)).toEqual(['boom|# Initial']);
+        const state = await editor(page).evaluate((el: any) => ({
+            isValid: el.checkValidity(),
+            customError: el.validity.customError,
+            message: el.validationMessage,
+            matches: el.matches(':invalid'),
+        }));
+        expect(state).toEqual({ isValid: false, customError: true, message: 'The value could not be formatted.', matches: true });
+        await requestSubmit();
+        // checkValidity() above fired one `invalid`, the blocked submit another; no submit.
+        expect(await probe()).toEqual({ submits: 0, invalids: 2 });
+
+        await editor(page).evaluate((el: any) => (el.getValueFormatCallback = ({ value }: { value: string }) => value.toUpperCase()));
+        await expect.poll(() => body(page)).toEqual(['# INITIAL']);
+        expect(await editor(page).evaluate((el: any) => el.checkValidity() && el.validationMessage === '')).toBe(true);
+        await requestSubmit();
+        expect(await probe()).toEqual({ submits: 1, invalids: 2 });
+    });
+
+    test('<form novalidate> submits an empty value while getValueFormatCallback throws', async ({ page }) => {
+        await page.evaluate(() => document.getElementById('form')!.setAttribute('novalidate', ''));
+        await editor(page).evaluate((el: any) => {
+            el.getValueFormatCallback = () => {
+                throw new Error('boom');
+            };
+        });
+        await expect.poll(() => body(page)).toEqual(['']);
+        await page.evaluate(() => (document.getElementById('form') as HTMLFormElement).requestSubmit());
+        expect(await page.evaluate(() => (window as any).submits)).toBe(1);
+    });
+
     test('no value → empty document; labels.placeholder shows while empty', async ({ page }) => {
         const ph = pm(page, 'empty').locator('.we-placeholder');
         await expect(ph).toHaveAttribute('data-placeholder', 'Start writing…');

@@ -52,6 +52,7 @@ import {
   type EditorActionEventDetail,
   type ChangeEventDetail,
   type ValueFormatContext,
+  type ValueFormatErrorEventDetail,
   type ReadyEventDetail,
   type ViewModeChangeEventDetail,
   type LockChangeEventDetail,
@@ -121,7 +122,7 @@ const INPUTS: readonly InputDef[] = [
     default: null,
     on: 'update',
     description:
-      'Property only. `(ctx) => string` — formats the value written into the hidden form input (`name`), e.g. to sanitize HTML. `ctx`: `{ value, contentFormat }` (the document in the active `contentFormat`) + `controller` / `element`. Affects ONLY the submitted form value: `el.value` and the `change` detail stay the document in `contentFormat`. Called on every sync of the form input (each change); a throw is logged and the unformatted value is submitted.',
+      'Property only. `(ctx) => string` — formats the value written into the hidden form input (`name`), e.g. to sanitize HTML. `ctx`: `{ value, contentFormat }` (the document in the active `contentFormat`) + `controller` / `element`. Affects ONLY the submitted form value: `el.value` and the `change` detail stay the document in `contentFormat`. Called on every sync of the form input (each change). A throw is logged (error), the hidden input gets an empty string, the host turns invalid (label `valueFormatError`) and `value-format-error` fires; the next successful format clears it.',
   },
   {
     configKey: 'viewMode',
@@ -236,6 +237,11 @@ const EVENTS: readonly EventDef[] = [
       'A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`.',
   },
   {
+    name: 'value-format-error',
+    description:
+      'A `getValueFormatCallback` threw while formatting the submitted value. The hidden input then carries an empty string and the host is invalid (`customError`, message = label `valueFormatError`), so the form refuses to submit (`<form novalidate>` submits an empty string); the next successful format clears it. `detail`: `{ error, value }` (`value` = the unformatted document in `contentFormat`). Twin: `onValueFormatError(detail)`.',
+  },
+  {
     name: 'action',
     description:
       'A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick` and the command (a notification after the fact; `state` is the snapshot from activation); `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`.',
@@ -269,6 +275,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   declare onReady: ((detail: ReadyEventDetail) => void) | null;
   declare onViewModeChange: ((detail: ViewModeChangeEventDetail) => void) | null;
   declare onLockChange: ((detail: LockChangeEventDetail) => void) | null;
+  declare onValueFormatError: ((detail: ValueFormatErrorEventDetail) => void) | null;
   declare onAction: ((detail: EditorActionEventDetail) => void) | null;
   /** `false` (sync or async) cancels a toolbar / menu activation. */
   declare beforeActionCallback: ((detail: EditorActionEventDetail) => unknown) | null;
@@ -292,6 +299,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   #unsubscribe?: () => void;
   // The light-DOM hidden form input (only while `name` is set).
   #formInput?: HTMLInputElement;
+  /** Whether the host is currently invalid because of a throwing `getValueFormatCallback`. */
+  #hasFormatError = false;
   // Custom editor plugin set. `undefined` → the engine's defaultPlugins(). Not an
   // attribute input (plugins are objects); set via the `plugins` property.
   #customPlugins?: EditorPlugin[];
@@ -553,6 +562,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     if (!name) {
       this.#formInput?.remove();
       this.#formInput = undefined;
+      this.#clearFormatError();
       return;
     }
     let input = this.#formInput;
@@ -567,18 +577,39 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     input.disabled = this.isEffectivelyDisabled;
   }
 
-  /** The submitted form value: the document in `contentFormat`, through `getValueFormatCallback` when set. */
+  /**
+   * The submitted form value: the document in `contentFormat`, through
+   * `getValueFormatCallback` when set. A throwing callback submits `''`, marks the
+   * host invalid (core `setFormatError`, label `valueFormatError`) and fires
+   * `value-format-error`; the next successful format clears the invalid state.
+   */
   #formValue(): string {
+    const engine = this.#engine!;
     const contentFormat = this.#format();
-    const value = this.#engine!.serialize(contentFormat);
+    const value = engine.serialize(contentFormat);
     const format = this.config.getValueFormatCallback as ((ctx: ValueFormatContext) => string) | null;
-    if (!format) return value;
-    try {
-      return String(format(this.withContext({ value, contentFormat })) ?? '');
-    } catch (err) {
-      contentLogger.error('<km-editor> getValueFormatCallback threw; submitting the unformatted value', err);
+    if (!format) {
+      this.#clearFormatError();
       return value;
     }
+    let formatted: string;
+    try {
+      formatted = String(format(this.withContext({ value, contentFormat })) ?? '');
+    } catch (error) {
+      contentLogger.error('<km-editor> getValueFormatCallback threw; submitting an empty value and marking the field invalid', error);
+      this.#hasFormatError = true;
+      this.setFormatError(error, engine.label('valueFormatError'), engine.view.dom as HTMLElement);
+      this.emit('value-format-error', { error, value });
+      return '';
+    }
+    this.#clearFormatError();
+    return formatted;
+  }
+
+  #clearFormatError(): void {
+    if (!this.#hasFormatError) return;
+    this.#hasFormatError = false;
+    this.setFormatError(null);
   }
 
   /** (Re)arrange the shadow layout for the current view mode + anchor + toolbar + status side. */

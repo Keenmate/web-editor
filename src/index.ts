@@ -34,6 +34,7 @@ export type {
   EditorActionEventDetail,
   ChangeEventDetail,
   ValueFormatContext,
+  ValueFormatErrorEventDetail,
   ReadyEventDetail,
   ViewModeChangeEventDetail,
   LockChangeEventDetail,

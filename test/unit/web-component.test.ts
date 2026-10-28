@@ -277,13 +277,34 @@ describe('<km-editor> form', () => {
     expect(hidden(el)!.value).toBe(el.value);
   });
 
-  it('a throwing getValueFormatCallback submits the unformatted value', async () => {
+  it("a throwing getValueFormatCallback submits '', marks the host invalid, fires value-format-error; success clears", async () => {
     const el = await mount({ name: 'body', value: 'x' });
+    const calls: Array<[unknown, string | undefined]> = [];
+    (el as any).setFormatError = (error: unknown, message?: string) => calls.push([error, message]);
+    const events: Array<{ error: unknown; value: string }> = [];
+    el.addEventListener('value-format-error', (e) => events.push((e as CustomEvent).detail));
+    const twin: unknown[] = [];
+    el.onValueFormatError = (d) => twin.push(d);
+    const boom = new Error('boom');
     el.getValueFormatCallback = () => {
-      throw new Error('boom');
+      throw boom;
     };
     await el.whenSettled();
-    expect(hidden(el)!.value).toBe(el.value);
+    expect(hidden(el)!.value).toBe('');
+    expect(calls).toEqual([[boom, 'The value could not be formatted.']]);
+    expect(events).toEqual([{ error: boom, value: 'x' }]);
+    expect(twin[0]).toBe(events[0]);
+    el.labels = { valueFormatError: 'Nelze formátovat.' };
+    el.value = 'y';
+    expect(calls.at(-1)).toEqual([boom, 'Nelze formátovat.']);
+    expect(events.at(-1)).toEqual({ error: boom, value: 'y' });
+    el.getValueFormatCallback = ({ value }) => value + '!';
+    await el.whenSettled();
+    expect(hidden(el)!.value).toBe('y!');
+    expect(calls.at(-1)).toEqual([null, undefined]);
+    const n = calls.length;
+    el.value = 'z';
+    expect(calls.length).toBe(n); // no redundant clear while valid
   });
 
   it('form reset restores defaultValue', async () => {

@@ -46,6 +46,8 @@ export const DEFAULT_LABELS = {
   insertCloudImage: 'Insert cloud image…',
   cloudImagePickerTitle: 'Choose a cloud image',
   cloudImagePickerMessage: 'Pick an image to insert.',
+  /** Validation message while a throwing `getValueFormatCallback` keeps the field invalid. */
+  valueFormatError: 'The value could not be formatted.',
 } as const;
 
 /** A built-in non-command label key. */

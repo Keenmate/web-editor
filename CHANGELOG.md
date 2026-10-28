@@ -120,7 +120,12 @@ Clean breaks, no aliases (rulebook `naming-conventions.md` D-NC-13..27).
 - **`getValueFormatCallback(ctx) => string`** (property): formats the value written into
   the hidden form input (e.g. sanitizing HTML); `ctx` = `{ value, contentFormat }` +
   `controller` / `element`. Only the submitted value — `el.value` and the `change` detail
-  stay the document in `contentFormat`. A throw is logged; the unformatted value is submitted.
+  stay the document in `contentFormat`. A throw is logged (error level), the hidden input
+  gets `''`, the host turns invalid via core `setFormatError` (validation message = new label
+  `valueFormatError`, default "The value could not be formatted."), so the form refuses to
+  submit (`<form novalidate>` submits `''`), and the new **`value-format-error`** event
+  `{ error, value }` (twin `onValueFormatError`) fires. The next successful format clears it.
+  Core's `el.validity` / `validationMessage` / `checkValidity()` / `reportValidity()` apply.
 - **`labels.placeholder`** (default `''` = off): text shown while the document is empty
   (CSS `attr()` + `aria-placeholder`), applied live.
 

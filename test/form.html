@@ -5,7 +5,7 @@
     <title>km-editor — form</title>
 </head>
 <body>
-    <!-- Targeted by e2e/form.spec.ts: light-DOM hidden input, reset, fieldset disabled, placeholder. -->
+    <!-- Targeted by e2e/form.spec.ts: light-DOM hidden input, reset, fieldset disabled, value-format-error validity, placeholder. -->
     <form id="form">
         <fieldset id="fs">
             <km-editor id="subject" name="body" value="# Initial"></km-editor>
@@ -16,6 +16,11 @@
     <script type="module">
         import '/src/index.ts';
         window.formBody = () => new FormData(document.getElementById('form')).getAll('body');
+        // Submission probe (value-format-error): count submits / invalid events, never navigate.
+        window.submits = 0;
+        window.invalids = 0;
+        document.getElementById('form').addEventListener('submit', (e) => { e.preventDefault(); window.submits++; });
+        document.getElementById('subject').addEventListener('invalid', () => window.invalids++);
         window.fixtureReady = true;
     </script>
 </body>

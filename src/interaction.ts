@@ -165,6 +165,14 @@ export interface ValueFormatContext extends EditorComponentContext {
   contentFormat: SerializationFormat;
 }
 
+/** `value-format-error` — `getValueFormatCallback` threw; the field is invalid until the next successful format. */
+export interface ValueFormatErrorEventDetail extends EditorComponentContext {
+  /** What the callback threw. */
+  error: unknown;
+  /** The unformatted value (the document in `contentFormat`) the callback was given. */
+  value: string;
+}
+
 /** `ready` carries only the component context. */
 export type ReadyEventDetail = EditorComponentContext;
 
@@ -183,5 +191,6 @@ export type EditorEventMap = {
   ready: ReadyEventDetail;
   'view-mode-change': ViewModeChangeEventDetail;
   'lock-change': LockChangeEventDetail;
+  'value-format-error': ValueFormatErrorEventDetail;
   action: EditorActionEventDetail;
 };

@@ -100,7 +100,7 @@ Property-only inputs:
 | `interactionHost`      | `{ request(ctx) }` | The modal bridge interactive pipeline stages call (`ctx` = request + `signal` + `controller` / `element`). Default: `window.confirm`. Survives engine rebuilds. |
 
 **Events** — bubble, not composed. Each has a camelCase twin property (`onChange`,
-`onReady`, `onViewModeChange`, `onLockChange`, `onAction`) called with the **same detail**
+`onReady`, `onViewModeChange`, `onLockChange`, `onValueFormatError`, `onAction`) called with the **same detail**
 before the DOM event. Every detail carries `controller` and `element` (non-enumerable —
 `JSON.stringify(detail)` shows only the data).
 
@@ -110,6 +110,7 @@ before the DOM event. Every detail carries `controller` and `element` (non-enume
 | `ready`       | the context only      | The engine has mounted and is ready (once). |
 | `view-mode-change` | `{ viewMode }`   | The `viewMode` changes. |
 | `lock-change` | `{ isLocked }`        | A gating pipeline (e.g. the cloud-image picker) locks / unlocks the editor. |
+| `value-format-error` | `{ error, value }` | `getValueFormatCallback` threw (`value` = the unformatted document). The field is invalid until the next successful format — see [Forms](#forms). |
 | `action`      | `{ action, id, item, source, sourceEvent, triggerElement, dataset, state }` | A toolbar / selection-toolbar / context-menu item was activated (`source`: `toolbar` \| `selection-toolbar` \| `context-menu`). After the item's `onClick` and the command (a notification after the fact; `state` is the snapshot from activation). Keyboard shortcuts don't fire it. |
 
 **Methods & properties:**
@@ -152,6 +153,7 @@ nothing); a missing key falls back to English. Every editor label is inserted as
 | `imageUrlPrompt` / `imageAltPrompt` | `Enter image URL:` / `Enter alt text (optional):` |
 | `codeLanguagePrompt` / `codeLanguageChangePrompt` | `Enter language ({languages}):` / `Change language ({languages}):` |
 | `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage` | cloud-image plugin texts |
+| `valueFormatError` | validation message while `getValueFormatCallback` throws ("The value could not be formatted.") |
 
 Plugin code resolves strings with `label(key, params?, fallback?)` — on the plugin
 builder ctx (`commands: ({ schema, label }) => …`), on every callback ctx (`ctx.label`)
@@ -175,8 +177,12 @@ components it uses a **light-DOM hidden input** (a child of the host) — not
 
 To change what is **submitted** (e.g. sanitize the HTML), set `getValueFormatCallback`.
 It formats only the hidden input's value: `el.value` and the `change` detail stay the
-document in `contentFormat`. If the callback throws, the error is logged and the
-unformatted value is submitted.
+document in `contentFormat`. If the callback throws, the error is logged, the hidden
+input gets an empty value, the host turns **invalid** (`customError`, message = label
+`valueFormatError`) and `value-format-error` `{ error, value }` fires — so the form refuses
+to submit (`invalid` fires on the editor; `<form novalidate>` submits the empty value).
+The next successful format clears it. The standard `el.validity` / `validationMessage` /
+`checkValidity()` / `reportValidity()` and `:invalid` work (core).
 
 ```js
 editor.getValueFormatCallback = ({ value, contentFormat }) =>
