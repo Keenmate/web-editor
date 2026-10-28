@@ -32,7 +32,7 @@ if (km) {
   if (km.isReady) setStatus('ready');
   km.addEventListener('change', (e) => {
     const detail = (e as CustomEvent).detail;
-    setStatus(`changed · ${detail.format} · ${detail.value.length} chars`);
+    setStatus(`changed · ${detail.contentFormat} · ${detail.value.length} chars`);
   });
   km.addEventListener('view-mode-change', (e) => setStatus(`viewMode → ${(e as CustomEvent).detail.mode}`));
 
@@ -40,7 +40,7 @@ if (km) {
     km.setAttribute('view-mode', (e.target as HTMLSelectElement).value as EditorViewMode);
   });
   document.querySelector('#we-format')?.addEventListener('change', (e) => {
-    km.setAttribute('value-format', (e.target as HTMLSelectElement).value);
+    km.setAttribute('content-format', (e.target as HTMLSelectElement).value);
   });
   document.querySelector('#we-readonly')?.addEventListener('change', (e) => {
     if ((e.target as HTMLInputElement).checked) km.setAttribute('readonly', '');

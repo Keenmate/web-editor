@@ -15,7 +15,7 @@
         const el = document.getElementById('subject');
         for (const type of ['change', 'view-mode-change', 'action']) {
             el.addEventListener(type, (e) => {
-                const d = type === 'change' ? e.detail.format : type === 'view-mode-change' ? e.detail.viewMode : e.detail.action;
+                const d = type === 'change' ? e.detail.contentFormat : type === 'view-mode-change' ? e.detail.viewMode : e.detail.action;
                 log.textContent += `${type}:${d}\n`;
             });
         }

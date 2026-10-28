@@ -50,7 +50,7 @@ npm install @keenmate/web-editor
 </script>
 <link rel="stylesheet" href="@keenmate/web-editor/style.css" />
 
-<km-editor value="# Hello" value-format="markdown" toolbar="top"></km-editor>
+<km-editor value="# Hello" content-format="markdown" toolbar="top"></km-editor>
 ```
 
 **Programmatic — dynamic content + events:**
@@ -62,14 +62,14 @@ const editor = document.querySelector('km-editor');
 
 editor.addEventListener('ready', () => editor.focus());
 editor.addEventListener('change', (e) => {
-  console.log(e.detail.value, e.detail.format);
+  console.log(e.detail.value, e.detail.contentFormat);
 });
 // …or the camelCase twin, called with the same detail:
-editor.onChange = ({ value, format, controller }) => console.log(value, format);
+editor.onChange = ({ value, contentFormat, controller }) => console.log(value, contentFormat);
 
 editor.setValue('## New heading', 'markdown');
-editor.value;         // live content in the active `valueFormat` (the `value` attribute is only the initial content)
-editor.getMarkdown(); // live content as markdown, whatever `valueFormat` is
+editor.value;         // live content in the active `contentFormat` (the `value` attribute is only the initial content)
+editor.getMarkdown(); // live content as markdown, whatever `contentFormat` is
 editor.controller.runCommand('bold'); // the public facade (also on every event detail)
 ```
 
@@ -79,9 +79,9 @@ Every attribute is also a property (e.g. `el.viewMode = 'preview'` ↔ `view-mod
 
 | Attribute   | Values                                          | Default      | Description |
 | ----------- | ----------------------------------------------- | ------------ | ----------- |
-| `value`     | string                                          | —            | Initial content, interpreted per `valueFormat` (property `defaultValue`, like a native input). Changing it replaces the document. The live content is the `value` **property**. |
-| `value-format` | `markdown` \| `html` \| `json`                  | `markdown`   | Serialization lens for content I/O (the `value` attribute and property, the `change` detail). Switching re-reports the same document in the new format — it never rebuilds it. |
-| `name`      | string                                          | —            | Form field name: a light-DOM hidden `<input name="…">` carries the live content (in `value-format`) and submits with the `<form>` — see [Forms](#forms). |
+| `value`     | string                                          | —            | Initial content, interpreted per `contentFormat` (property `defaultValue`, like a native input). Changing it replaces the document. The live content is the `value` **property**. |
+| `content-format` | `markdown` \| `html` \| `json`                  | `markdown`   | The format of the one document — the lens for content I/O (the `value` attribute and property, the `change` detail). Switching re-reports the same document in the new format — it never rebuilds it. |
+| `name`      | string                                          | —            | Form field name: a light-DOM hidden `<input name="…">` carries the live content (in `content-format`) and submits with the `<form>` — see [Forms](#forms). |
 | `view-mode` | `edit` \| `split` \| `preview` \| `inline`      | `edit`       | Presentation. `preview` forces read-only. `inline` renders a floating card (see `anchor`). |
 | `readonly`  | boolean                                         | `false`      | Read-only (`isReadonly`): the content can't change, toolbar hidden, but it stays focusable / selectable / copyable. `view-mode="preview"` also forces this on. Reflects. |
 | `disabled`  | boolean                                         | `false`      | Disabled (`isDisabled`): no interaction — not editable, focusable or selectable (the surface is `inert`). An ancestor `<fieldset disabled>` disables it too. Reflects, like a native control. |
@@ -95,6 +95,7 @@ Property-only inputs:
 
 | Property               | Type | Description |
 | ---------------------- | ---- | ----------- |
+| `getValueFormatCallback` | `(ctx) => string` | Formats the value written into the hidden form input (e.g. sanitizing); `ctx` = `{ value, contentFormat }` + `controller` / `element`. Affects only the submitted value — see [Forms](#forms). |
 | `beforeActionCallback` | `(detail) => false \| void \| Promise<…>` | Runs first on every toolbar / selection-toolbar / context-menu activation; `false` cancels (no `onClick`, no `action` event, no command). |
 | `interactionHost`      | `{ request(ctx) }` | The modal bridge interactive pipeline stages call (`ctx` = request + `signal` + `controller` / `element`). Default: `window.confirm`. Survives engine rebuilds. |
 
@@ -105,7 +106,7 @@ before the DOM event. Every detail carries `controller` and `element` (non-enume
 
 | Event         | `detail`              | Fires when |
 | ------------- | --------------------- | ---------- |
-| `change`      | `{ value, format }`   | Content changes (serialized in the active `valueFormat`), or `valueFormat` switches. |
+| `change`      | `{ value, contentFormat }`   | Content changes (serialized in the active `contentFormat`), or `contentFormat` switches. |
 | `ready`       | the context only      | The engine has mounted and is ready (once). |
 | `view-mode-change` | `{ viewMode }`   | The `viewMode` changes. |
 | `lock-change` | `{ isLocked }`        | A gating pipeline (e.g. the cloud-image picker) locks / unlocks the editor. |
@@ -115,10 +116,10 @@ before the DOM event. Every detail carries `controller` and `element` (non-enume
 
 | Member                    | Returns              | Description |
 | ------------------------- | -------------------- | ----------- |
-| `value`                   | `string`             | The live content, serialized in the active `valueFormat`. Assigning replaces the document (the `value` attribute is not written). |
+| `value`                   | `string`             | The live content, serialized in the active `contentFormat`. Assigning replaces the document (the `value` attribute is not written). |
 | `getMarkdown()` / `getHTML()` | `string`         | Live content in that format. |
 | `getJSON()`               | `unknown`            | Live content as the ProseMirror JSON document. |
-| `setValue(value, format?)`| `void`               | Replace the document from `value`, parsed in `format` (default: the active `valueFormat`). Without a format, just assign `value`. |
+| `setValue(value, format?)`| `void`               | Replace the document from `value`, parsed in `format` (default: the active `contentFormat`). Without a format, just assign `value`. |
 | `focus()`                 | `void`               | Focus the editing surface. |
 | `isReady` / `whenReady()` | `boolean` / `Promise<void>` | Core: the first build is live (`ready` attribute, `:state(ready)`, `ready` event). |
 | `shouldDefer` / `release()` | `boolean` / `void` | Core: hold the first build (attribute `defer`) until `release()` / removing `defer`. |
@@ -159,7 +160,7 @@ and on pipeline stages (`rt.label`). `DEFAULT_LABELS` and `labelKey()` are expor
 ## Forms
 
 `<km-editor name="body">` inside a `<form>` submits the live content under `body`,
-serialized in `value-format` (`markdown` by default). Like the suite's other form
+serialized in `content-format` (`markdown` by default). Like the suite's other form
 components it uses a **light-DOM hidden input** (a child of the host) — not
 `ElementInternals.setFormValue` — so there is exactly one entry. The editor starts
 **empty** unless `value` is given; `form.reset()` restores the `value` attribute
@@ -168,8 +169,18 @@ components it uses a **light-DOM hidden input** (a child of the host) — not
 
 ```html
 <form>
-  <km-editor name="body" value-format="html" labels='{"placeholder":"Write your post…"}'></km-editor>
+  <km-editor name="body" content-format="html" labels='{"placeholder":"Write your post…"}'></km-editor>
 </form>
+```
+
+To change what is **submitted** (e.g. sanitize the HTML), set `getValueFormatCallback`.
+It formats only the hidden input's value: `el.value` and the `change` detail stay the
+document in `contentFormat`. If the callback throws, the error is logged and the
+unformatted value is submitted.
+
+```js
+editor.getValueFormatCallback = ({ value, contentFormat }) =>
+  contentFormat === 'html' ? DOMPurify.sanitize(value) : value;
 ```
 
 ## Theming

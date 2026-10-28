@@ -1,6 +1,6 @@
 /**
  * `<km-editor>` element tests — the BlissElement shell over the engine. Exercises
- * registration, content I/O through the `valueFormat` lens, readonly/editable, and the
+ * registration, content I/O through the `contentFormat` lens, readonly/editable, and the
  * outward `change` / `ready` / `view-mode-change` events. Runs in happy-dom (the same
  * environment the engine tests use, so EditorView works here).
  */
@@ -28,7 +28,7 @@ describe('<km-editor>', () => {
   });
 
   it('builds from a markdown value and becomes ready', async () => {
-    const el = await mount({ value: '# Hello', 'value-format': 'markdown' });
+    const el = await mount({ value: '# Hello', 'content-format': 'markdown' });
     expect(el.isReady).toBe(true);
     expect(el.getMarkdown()).toContain('# Hello');
     expect(el.getHTML()).toContain('<h1');
@@ -82,12 +82,12 @@ describe('<km-editor>', () => {
   });
 
   it('reads live content via the active format lens', async () => {
-    const el = await mount({ value: '# Title', 'value-format': 'markdown' });
+    const el = await mount({ value: '# Title', 'content-format': 'markdown' });
     expect(el.value).toContain('# Title');
     expect(el.defaultValue).toBe('# Title');
-    el.valueFormat = 'html';
+    el.contentFormat = 'html';
     expect(el.value).toContain('<h1');
-    el.valueFormat = 'json';
+    el.contentFormat = 'json';
     expect(typeof el.value).toBe('string'); // serialize() returns a JSON string
     expect('getValue' in el).toBe(false);
   });
@@ -100,12 +100,12 @@ describe('<km-editor>', () => {
   });
 
   it('emits `change` with the content in the active format', async () => {
-    const el = await mount({ value: 'start', 'value-format': 'markdown' });
-    const details: Array<{ value: string; format: string }> = [];
+    const el = await mount({ value: 'start', 'content-format': 'markdown' });
+    const details: Array<{ value: string; contentFormat: string }> = [];
     el.addEventListener('change', (e) => details.push((e as CustomEvent).detail));
     el.setValue('changed', 'markdown');
     expect(details.length).toBeGreaterThan(0);
-    expect(details.at(-1)!.format).toBe('markdown');
+    expect(details.at(-1)!.contentFormat).toBe('markdown');
     expect(details.at(-1)!.value).toContain('changed');
   });
 
@@ -122,13 +122,13 @@ describe('<km-editor>', () => {
     expect(getEditorEngine(el)!.isEditable()).toBe(false);
   });
 
-  it('reflects `valueFormat` and re-announces change when it switches', async () => {
-    const el = await mount({ value: '# H', 'value-format': 'markdown' });
+  it('reflects `contentFormat` and re-announces change when it switches', async () => {
+    const el = await mount({ value: '# H', 'content-format': 'markdown' });
     const formats: string[] = [];
-    el.addEventListener('change', (e) => formats.push((e as CustomEvent).detail.format));
-    el.setAttribute('value-format', 'html');
+    el.addEventListener('change', (e) => formats.push((e as CustomEvent).detail.contentFormat));
+    el.setAttribute('content-format', 'html');
     await el.whenSettled();
-    expect(el.getAttribute('value-format')).toBe('html');
+    expect(el.getAttribute('content-format')).toBe('html');
     expect(formats.at(-1)).toBe('html');
   });
 
@@ -241,7 +241,7 @@ describe('<km-editor> form', () => {
     expect(new FormData(form).get('body')).toBe(el.value);
     el.value = 'changed';
     expect(input.value).toBe('changed');
-    el.valueFormat = 'html';
+    el.contentFormat = 'html';
     await el.whenSettled();
     expect(input.value).toContain('<p>changed</p>');
     el.removeAttribute('name');
@@ -257,6 +257,33 @@ describe('<km-editor> form', () => {
     el.isDisabled = false;
     await el.whenSettled();
     expect(hidden(el)!.disabled).toBe(false);
+  });
+
+  it('getValueFormatCallback formats only the submitted value; el.value stays the document', async () => {
+    const el = await mount({ name: 'body', value: '<h1>A</h1>', 'content-format': 'html' });
+    const seen: Array<{ keys: string[]; contentFormat: string; isCtx: boolean }> = [];
+    el.getValueFormatCallback = (ctx) => {
+      seen.push({ keys: Object.keys(ctx).sort(), contentFormat: ctx.contentFormat, isCtx: ctx.element === el && ctx.controller === el.controller });
+      return ctx.value.replace(/<[^>]+>/g, '');
+    };
+    await el.whenSettled();
+    expect(hidden(el)!.value).toBe('A');
+    expect(el.value).toBe('<h1>A</h1>');
+    expect(seen.at(-1)).toEqual({ keys: ['contentFormat', 'value'], contentFormat: 'html', isCtx: true });
+    el.value = '<p>B <b>x</b></p>';
+    expect(hidden(el)!.value).toBe('B x');
+    el.getValueFormatCallback = null;
+    await el.whenSettled();
+    expect(hidden(el)!.value).toBe(el.value);
+  });
+
+  it('a throwing getValueFormatCallback submits the unformatted value', async () => {
+    const el = await mount({ name: 'body', value: 'x' });
+    el.getValueFormatCallback = () => {
+      throw new Error('boom');
+    };
+    await el.whenSettled();
+    expect(hidden(el)!.value).toBe(el.value);
   });
 
   it('form reset restores defaultValue', async () => {

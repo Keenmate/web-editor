@@ -61,9 +61,9 @@ released to a registry yet.
 - **Pipeline booleans take the `is`/`should` prefix:** `PipelineStage.interactive` →
   `isInteractive`, `PipelinePolicy.lock` → `shouldLock`, `InteractionResult.cancelled` →
   `isCancelled` (an `InteractionHost.request()` now resolves `{ isCancelled, value? }`).
-- **`format` → `valueFormat`** (attribute `value-format`; `markdown` | `html` | `json`) —
-  the serialization lens for `value` / `defaultValue` / the `change` detail, named like
-  the suite's other form components. The `change` detail key stays `format`;
+- **`format` → `contentFormat`** (attribute `content-format`; `markdown` | `html` | `json`) —
+  the format of the one document: the lens for `value` / `defaultValue` / the `change`
+  detail. The **`change` detail is `{ value, contentFormat }`** (was `{ value, format }`).
   `setValue(value, format?)` keeps its explicit-format argument (without one, assign `value`).
 - **The editor starts empty.** With no `value` the document is one empty paragraph
   (was a two-paragraph "Welcome to the KeenMate Web Editor…" text); `createEditorState()`
@@ -113,10 +113,14 @@ Clean breaks, no aliases (rulebook `naming-conventions.md` D-NC-13..27).
 ### Added (round 2)
 
 - **Form participation (suite convention):** `name` attribute → a light-DOM hidden
-  `<input name="…">` child carrying the live content in `value-format`, kept in sync on
+  `<input name="…">` child carrying the live content in `content-format`, kept in sync on
   every change; `form.reset()` restores `defaultValue` (attribute `value`); disabled
   (`disabled` or an ancestor `<fieldset disabled>`, via core) → the input is disabled and
   not submitted. No `setFormValue` (one entry per name).
+- **`getValueFormatCallback(ctx) => string`** (property): formats the value written into
+  the hidden form input (e.g. sanitizing HTML); `ctx` = `{ value, contentFormat }` +
+  `controller` / `element`. Only the submitted value — `el.value` and the `change` detail
+  stay the document in `contentFormat`. A throw is logged; the unformatted value is submitted.
 - **`labels.placeholder`** (default `''` = off): text shown while the document is empty
   (CSS `attr()` + `aria-placeholder`), applied live.
 

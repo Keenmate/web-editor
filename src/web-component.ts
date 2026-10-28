@@ -6,11 +6,11 @@
  *
  * Reactivity (per input `on:`):
  *   - `reinit` — content source changed (`defaultValue`, attribute `value`) → rebuild the engine.
- *   - `update` — `viewMode` / `isReadonly` / `isDisabled` (via `disabledChanged()`) / `theme` / `valueFormat` / `interactionHost`
+ *   - `update` — `viewMode` / `isReadonly` / `isDisabled` (via `disabledChanged()`) / `theme` / `contentFormat` / `interactionHost`
  *                → patch in place (toggle editable, reflect the attribute,
  *                re-report content, swap the modal bridge).
  *
- * The content model is ONE ProseMirror document (the engine's). `valueFormat` is the
+ * The content model is ONE ProseMirror document (the engine's). `contentFormat` is the
  * serialization lens for I/O (the `value` input, `getValue()`, and the `change`
  * event detail) — switching it never rebuilds the document, only changes how its
  * content is read in and out. This is the single-model design from PLAN.md: no
@@ -22,7 +22,7 @@
  * ctx carries `controller` (`el.controller`, the public facade) and `element`.
  * The engine is internal — `el.controller` is the imperative API.
  *
- * `el.value` is the LIVE content (serialized in `valueFormat`; assigning replaces the
+ * `el.value` is the LIVE content (serialized in `contentFormat`; assigning replaces the
  * document). The `value` ATTRIBUTE is the initial / default content —
  * `el.defaultValue`, like a native input's `defaultValue`.
  */
@@ -51,6 +51,7 @@ import {
   type EditorEventMap,
   type EditorActionEventDetail,
   type ChangeEventDetail,
+  type ValueFormatContext,
   type ReadyEventDetail,
   type ViewModeChangeEventDetail,
   type LockChangeEventDetail,
@@ -95,16 +96,16 @@ const INPUTS: readonly InputDef[] = [
     converter: toText({ isNullable: true }),
     on: 'reinit',
     description:
-      'Initial / default content, interpreted per `valueFormat` (like a native input’s `value` attribute ↔ `defaultValue`). Changing it replaces the document. The live content is the `value` PROPERTY.',
+      'Initial / default content, interpreted per `contentFormat` (like a native input’s `value` attribute ↔ `defaultValue`). Changing it replaces the document. The live content is the `value` PROPERTY.',
   },
   {
-    configKey: 'valueFormat',
-    attribute: 'value-format',
+    configKey: 'contentFormat',
+    attribute: 'content-format',
     converter: toEnum(FORMATS, { default: 'markdown' }),
     shouldReflect: true,
     on: 'update',
     description:
-      "Serialization lens for content I/O (the `value` attribute and property, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document.",
+      "The format of the one document — the lens for content I/O (the `value` attribute and property, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document.",
   },
   {
     configKey: 'name',
@@ -112,7 +113,15 @@ const INPUTS: readonly InputDef[] = [
     converter: toText({ isNullable: true }),
     on: 'update',
     description:
-      'Form field name. When set, a light-DOM `<input type="hidden" name="…">` child of the host carries the live content (serialized in `valueFormat`) and submits with the surrounding `<form>`; it is disabled (not submitted) while the editor is disabled, including by a `<fieldset disabled>`. A form reset restores `defaultValue` (attribute `value`).',
+      'Form field name. When set, a light-DOM `<input type="hidden" name="…">` child of the host carries the live content (serialized in `contentFormat`) and submits with the surrounding `<form>`; it is disabled (not submitted) while the editor is disabled, including by a `<fieldset disabled>`. A form reset restores `defaultValue` (attribute `value`).',
+  },
+  {
+    configKey: 'getValueFormatCallback',
+    converter: toFunction(),
+    default: null,
+    on: 'update',
+    description:
+      'Property only. `(ctx) => string` — formats the value written into the hidden form input (`name`), e.g. to sanitize HTML. `ctx`: `{ value, contentFormat }` (the document in the active `contentFormat`) + `controller` / `element`. Affects ONLY the submitted form value: `el.value` and the `change` detail stay the document in `contentFormat`. Called on every sync of the form input (each change); a throw is logged and the unformatted value is submitted.',
   },
   {
     configKey: 'viewMode',
@@ -210,7 +219,7 @@ const EVENTS: readonly EventDef[] = [
   {
     name: 'change',
     description:
-      'The document changed (or `valueFormat` switched). `detail`: `{ value, format }` — the content serialized in the active `valueFormat`. Twin: `onChange(detail)`.',
+      'The document changed (or `contentFormat` switched). `detail`: `{ value, contentFormat }` — the content serialized in the active `contentFormat`. Twin: `onChange(detail)`.',
   },
   {
     name: 'ready',
@@ -269,10 +278,12 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   declare labels: EditorLabels | null;
   /** Initial / default content (attribute `value`); the live content is {@link value}. */
   declare defaultValue: string | null;
-  /** Serialization lens for content I/O (attribute `value-format`). */
-  declare valueFormat: EditorFormat;
+  /** The format of the one document — the lens for content I/O (attribute `content-format`). */
+  declare contentFormat: EditorFormat;
   /** Form field name (light-DOM hidden input; attribute `name`). */
   declare name: string | null;
+  /** Formats the submitted form value (the hidden input) only — not `el.value`. */
+  declare getValueFormatCallback: ((ctx: ValueFormatContext) => string) | null;
 
   #shadow: ShadowRoot;
   #layout: ViewLayout;
@@ -376,9 +387,9 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     if ('viewMode' in partial) {
       this.emit('view-mode-change', { viewMode: this.config.viewMode as EditorViewMode });
     }
-    // `valueFormat` changed: the document is unchanged, but its reported serialization
+    // `contentFormat` changed: the document is unchanged, but its reported serialization
     // is — re-announce so split-view / bound consumers refresh their output.
-    if ('valueFormat' in partial && this.#engine) {
+    if ('contentFormat' in partial && this.#engine) {
       this.emit('change', this.#changeDetail());
     }
     // UI strings are resolved on render: re-render the chrome (and the empty-document
@@ -387,7 +398,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
       this.#chrome?.refresh();
       this.#engine?.refreshView();
     }
-    if ('name' in partial || 'valueFormat' in partial) this.#syncFormInput();
+    if ('name' in partial || 'contentFormat' in partial || 'getValueFormatCallback' in partial) this.#syncFormInput();
     if ('interactionHost' in partial) {
       this.#engine?.setInteractionHost(this.#interactionHost());
     }
@@ -533,7 +544,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
 
   /**
    * Form convention (KeenMate suite, like web-multiselect): a light-DOM hidden
-   * input named by `name` carries the live content in `valueFormat` — the host
+   * input named by `name` carries the live content in `contentFormat` — the host
    * never calls `setFormValue`. No `name` → no input. Disabled (not submitted)
    * while the editor is effectively disabled.
    */
@@ -552,8 +563,22 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     }
     if (input.parentNode !== this) this.appendChild(input);
     input.name = name;
-    input.value = this.#engine ? this.#engine.serialize(this.#format()) : '';
+    input.value = this.#engine ? this.#formValue() : '';
     input.disabled = this.isEffectivelyDisabled;
+  }
+
+  /** The submitted form value: the document in `contentFormat`, through `getValueFormatCallback` when set. */
+  #formValue(): string {
+    const contentFormat = this.#format();
+    const value = this.#engine!.serialize(contentFormat);
+    const format = this.config.getValueFormatCallback as ((ctx: ValueFormatContext) => string) | null;
+    if (!format) return value;
+    try {
+      return String(format(this.withContext({ value, contentFormat })) ?? '');
+    } catch (err) {
+      contentLogger.error('<km-editor> getValueFormatCallback threw; submitting the unformatted value', err);
+      return value;
+    }
   }
 
   /** (Re)arrange the shadow layout for the current view mode + anchor + toolbar + status side. */
@@ -596,11 +621,11 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   }
 
   #format(): EditorFormat {
-    return (this.config.valueFormat as EditorFormat) ?? 'markdown';
+    return (this.config.contentFormat as EditorFormat) ?? 'markdown';
   }
 
-  #changeDetail(): { value: string; format: EditorFormat } {
-    return { value: this.#engine!.serialize(this.#format()), format: this.#format() };
+  #changeDetail(): { value: string; contentFormat: EditorFormat } {
+    return { value: this.#engine!.serialize(this.#format()), contentFormat: this.#format() };
   }
 
   #interactionHost(): InteractionHost {
@@ -647,8 +672,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   // ── public content API (not inputs) ───────────────────────────────────────
 
   /**
-   * The live content, serialized in the active `valueFormat` (`''` before the first
-   * build). Assigning replaces the document, parsed in `valueFormat` — like
+   * The live content, serialized in the active `contentFormat` (`''` before the first
+   * build). Assigning replaces the document, parsed in `contentFormat` — like
    * `setValue(value)`. The `value` ATTRIBUTE is the initial content
    * ({@link defaultValue}) and is never written.
    */
@@ -677,7 +702,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
 
   /**
    * Replace the document with `value`, parsed in `format` (defaults to the active
-   * `valueFormat`) — the `value` setter with an explicit format, and the controller's
+   * `contentFormat`) — the `value` setter with an explicit format, and the controller's
    * write path. Without a format, just assign `value`.
    */
   setValue(value: string, format?: EditorFormat): void {

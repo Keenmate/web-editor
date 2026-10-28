@@ -33,6 +33,7 @@ export type {
   EditorActionSource,
   EditorActionEventDetail,
   ChangeEventDetail,
+  ValueFormatContext,
   ReadyEventDetail,
   ViewModeChangeEventDetail,
   LockChangeEventDetail,

@@ -56,18 +56,18 @@ test.describe('interaction model', () => {
     );
   });
 
-  test('change: twin and DOM event share the detail { value, format } + context', async ({ page }) => {
+  test('change: twin and DOM event share the detail { value, contentFormat } + context', async ({ page }) => {
     await page.locator('#subject .ProseMirror h1').click();
     await page.keyboard.press('End');
     await page.keyboard.type('!');
     const d = await page.evaluate(() => {
       const c = (window as any).ix.lastChange;
       const el = document.getElementById('subject') as any;
-      return { keys: Object.keys(c).sort(), value: c.value, format: c.format, ok: c.controller === el.controller && c.element === el };
+      return { keys: Object.keys(c).sort(), value: c.value, contentFormat: c.contentFormat, ok: c.controller === el.controller && c.element === el };
     });
-    expect(d.keys).toEqual(['format', 'value']);
+    expect(d.keys).toEqual(['contentFormat', 'value']);
     expect(d.value).toContain('# Hello!');
-    expect(d.format).toBe('markdown');
+    expect(d.contentFormat).toBe('markdown');
     expect(d.ok).toBe(true);
   });
 

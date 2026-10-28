@@ -31,12 +31,12 @@ import type { EditorViewMode } from './web-component';
  * return empty values.
  */
 export interface EditorController {
-  /** Live content serialized in the active `valueFormat` (read-only; same as `el.value`). */
+  /** Live content serialized in the active `contentFormat` (read-only; same as `el.value`). */
   readonly value: string;
   getHTML(): string;
   getMarkdown(): string;
   getJSON(): unknown;
-  /** Replace the document with `value`, parsed in `format` (default: the active `valueFormat`). Without a format, just assign `value`. */
+  /** Replace the document with `value`, parsed in `format` (default: the active `contentFormat`). Without a format, just assign `value`. */
   setValue(value: string, format?: SerializationFormat): void;
   focus(): void;
   /**
@@ -147,9 +147,22 @@ export type EditorActionEventDetail = ActionEventDetail<EditorActionContext, Edi
 // ============================================================================
 
 export interface ChangeEventDetail extends EditorComponentContext {
-  /** Current content serialized in the active `valueFormat`. */
+  /** Current content serialized in the active `contentFormat`. */
   value: string;
-  format: SerializationFormat;
+  /** The active `contentFormat` (`markdown` | `html` | `json`). */
+  contentFormat: SerializationFormat;
+}
+
+/**
+ * `ctx` of `getValueFormatCallback` — format the value written into the hidden
+ * form input (e.g. sanitize HTML). Only the SUBMITTED value is affected; `el.value`
+ * and the `change` detail stay the document in `contentFormat`.
+ */
+export interface ValueFormatContext extends EditorComponentContext {
+  /** The live content serialized in the active `contentFormat` (same as `el.value`). */
+  value: string;
+  /** The active `contentFormat` (`markdown` | `html` | `json`). */
+  contentFormat: SerializationFormat;
 }
 
 /** `ready` carries only the component context. */

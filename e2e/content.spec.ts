@@ -37,7 +37,7 @@ test.describe('content I/O', () => {
         expect(await prop(page, 'getContent', 'md')).toBeUndefined();
     });
 
-    test('setValue(v) parses in the active format and fires change { value, format }', async ({ page }) => {
+    test('setValue(v) parses in the active format and fires change { value, contentFormat }', async ({ page }) => {
         await clearLog(page, 'content');
         await call(page, 'setValue', ['## Replaced\n\nwith *text*']);
         await expect(pm(page).locator('h2')).toHaveText('Replaced');

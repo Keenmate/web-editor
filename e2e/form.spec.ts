@@ -1,7 +1,7 @@
 import { test, expect, load, pm, editor, markdown, caretAfter } from './fixtures';
 
 // Form convention (like web-multiselect): `name` → a light-DOM hidden input that
-// carries the live value in `valueFormat`; form reset → defaultValue; a disabled
+// carries the live value in `contentFormat`; form reset → defaultValue; a disabled
 // <fieldset> keeps it out of the submission. Plus the empty-document placeholder.
 // Fixture: test/form.html.
 
@@ -10,12 +10,12 @@ const body = (page: import('@playwright/test').Page) => page.evaluate(() => (win
 test.describe('form', () => {
     test.beforeEach(async ({ page }) => load(page, 'form.html', { flag: 'fixtureReady' }));
 
-    test('submits the live value under `name` (one entry), in valueFormat', async ({ page }) => {
+    test('submits the live value under `name` (one entry), in contentFormat', async ({ page }) => {
         expect(await body(page)).toEqual(['# Initial']);
         await caretAfter(page, 'Initial');
         await page.keyboard.type(' edited');
         expect(await body(page)).toEqual(['# Initial edited']);
-        await editor(page).evaluate((el: any) => (el.valueFormat = 'html'));
+        await editor(page).evaluate((el: any) => (el.contentFormat = 'html'));
         await expect.poll(() => body(page)).toEqual(['<h1>Initial edited</h1>']);
     });
 
@@ -32,6 +32,17 @@ test.describe('form', () => {
         await expect.poll(() => body(page)).toEqual([]);
         await page.evaluate(() => document.getElementById('fs')!.removeAttribute('disabled'));
         await expect.poll(() => body(page)).toEqual(['# Initial']);
+    });
+
+    test('getValueFormatCallback formats the submitted value only (el.value stays the document)', async ({ page }) => {
+        await editor(page).evaluate((el: any) => {
+            el.getValueFormatCallback = ({ value }: { value: string }) => value.toUpperCase();
+        });
+        await expect.poll(() => body(page)).toEqual(['# INITIAL']);
+        await caretAfter(page, 'Initial');
+        await page.keyboard.type(' edited');
+        expect(await body(page)).toEqual(['# INITIAL EDITED']);
+        expect(await editor(page).evaluate((el: any) => el.value)).toBe('# Initial edited');
     });
 
     test('no value → empty document; labels.placeholder shows while empty', async ({ page }) => {

@@ -27,7 +27,7 @@
     </div>
 
     <div class="demo-area">
-        <km-editor id="eb01" view-mode="edit" value-format="markdown" toolbar="top" value="# View modes
+        <km-editor id="eb01" view-mode="edit" content-format="markdown" toolbar="top" value="# View modes
 
 Edit me, then flip the **view-mode** switch above. Switch to *split* to see the live
 output, or *preview* for the read-only render.
@@ -57,7 +57,7 @@ output, or *preview* for the read-only render.
     </div>
 
     <div class="demo-area">
-        <km-editor id="eb02" view-mode="edit" value-format="markdown" toolbar="top" value="## Format lens
+        <km-editor id="eb02" view-mode="edit" content-format="markdown" toolbar="top" value="## Format lens
 
 Type here and watch the **output** below change format without rebuilding the
 document. Add a [link](https://keenmate.com) or some `code`."></km-editor>
@@ -98,7 +98,7 @@ document. Add a [link](https://keenmate.com) or some `code`."></km-editor>
     </div>
 
     <div class="demo-area">
-        <km-editor id="eb03" view-mode="edit" value-format="markdown" toolbar="top" statusbar="none" value="### Chrome placement
+        <km-editor id="eb03" view-mode="edit" content-format="markdown" toolbar="top" statusbar="none" value="### Chrome placement
 
 Move the **toolbar** to any edge, or hide it and use the selection toolbar.
 Turn on the **status bar** to see the live Words / Chars counters."></km-editor>
@@ -123,7 +123,7 @@ Turn on the **status bar** to see the live Words / Chars counters."></km-editor>
     </div>
 
     <div class="demo-area">
-        <km-editor id="eb04" view-mode="edit" value-format="markdown" toolbar="top" statusbar="bottom" value="#### Theming
+        <km-editor id="eb04" view-mode="edit" content-format="markdown" toolbar="top" statusbar="bottom" value="#### Theming
 
 The `theme` attribute is reflected to the host for CSS theming. Switch it above."></km-editor>
     </div>
@@ -143,7 +143,7 @@ The `theme` attribute is reflected to the host for CSS theming. Switch it above.
     <div class="demo-area">
         <km-editor
             view-mode="edit"
-            value-format="markdown"
+            content-format="markdown"
             toolbar="top"
             statusbar="both"
             value="# Declarative
@@ -178,7 +178,7 @@ This editor was set up entirely in **HTML** — no script wired it.
         const eb02 = document.getElementById('eb02');
         const out = document.getElementById('eb02-out');
         const refresh = () => { out.textContent = eb02.value ?? ''; };
-        onRadio('eb02-format', (v) => { eb02.setAttribute('value-format', v); refresh(); });
+        onRadio('eb02-format', (v) => { eb02.setAttribute('content-format', v); refresh(); });
         eb02.addEventListener('change', refresh);
         if (eb02.isReady) refresh(); else eb02.addEventListener('ready', refresh);
 

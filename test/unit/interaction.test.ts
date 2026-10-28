@@ -51,17 +51,17 @@ describe('events', () => {
     expect(JSON.stringify(detail)).toBe('{}');
   });
 
-  it('change: onChange receives { value, format } + context', async () => {
+  it('change: onChange receives { value, contentFormat } + context', async () => {
     const el = await mount({ value: 'a' });
     const seen: any[] = [];
     el.onChange = (d) => seen.push(d);
     el.setValue('# changed', 'markdown');
     const d = seen.at(-1);
     expect(d.value).toContain('# changed');
-    expect(d.format).toBe('markdown');
+    expect(d.contentFormat).toBe('markdown');
     expect(d.controller).toBe(el.controller);
     expect(d.element).toBe(el);
-    expect(Object.keys(d).sort()).toEqual(['format', 'value']);
+    expect(Object.keys(d).sort()).toEqual(['contentFormat', 'value']);
   });
 
   it('view-mode-change: onViewModeChange receives { viewMode }', async () => {
