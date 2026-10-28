@@ -85,9 +85,9 @@ describe('<km-editor>', () => {
     const el = await mount({ value: '# Title', format: 'markdown' });
     expect(el.value).toContain('# Title');
     expect(el.defaultValue).toBe('# Title');
-    el.format = 'html';
+    el.valueFormat = 'html';
     expect(el.value).toContain('<h1');
-    el.format = 'json';
+    el.valueFormat = 'json';
     expect(typeof el.value).toBe('string'); // serialize() returns a JSON string
     expect('getValue' in el).toBe(false);
   });
@@ -126,9 +126,9 @@ describe('<km-editor>', () => {
     const el = await mount({ value: '# H', format: 'markdown' });
     const formats: string[] = [];
     el.addEventListener('change', (e) => formats.push((e as CustomEvent).detail.format));
-    el.setAttribute('format', 'html');
+    el.setAttribute('value-format', 'html');
     await el.whenSettled();
-    expect(el.getAttribute('format')).toBe('html');
+    expect(el.getAttribute('value-format')).toBe('html');
     expect(formats.at(-1)).toBe('html');
   });
 

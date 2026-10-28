@@ -6,11 +6,11 @@
  *
  * Reactivity (per input `on:`):
  *   - `reinit` — content source changed (`defaultValue`, attribute `value`) → rebuild the engine.
- *   - `update` — `viewMode` / `isReadonly` / `isDisabled` (via `disabledChanged()`) / `theme` / `format` / `interactionHost`
+ *   - `update` — `viewMode` / `isReadonly` / `isDisabled` (via `disabledChanged()`) / `theme` / `valueFormat` / `interactionHost`
  *                → patch in place (toggle editable, reflect the attribute,
  *                re-report content, swap the modal bridge).
  *
- * The content model is ONE ProseMirror document (the engine's). `format` is the
+ * The content model is ONE ProseMirror document (the engine's). `valueFormat` is the
  * serialization lens for I/O (the `value` input, `getValue()`, and the `change`
  * event detail) — switching it never rebuilds the document, only changes how its
  * content is read in and out. This is the single-model design from PLAN.md: no
@@ -22,7 +22,7 @@
  * ctx carries `controller` (`el.controller`, the public facade) and `element`.
  * The engine is internal — `el.controller` is the imperative API.
  *
- * `el.value` is the LIVE content (serialized in `format`; assigning replaces the
+ * `el.value` is the LIVE content (serialized in `valueFormat`; assigning replaces the
  * document). The `value` ATTRIBUTE is the initial / default content —
  * `el.defaultValue`, like a native input's `defaultValue`.
  */
@@ -95,11 +95,11 @@ const INPUTS: readonly InputDef[] = [
     converter: toText({ isNullable: true }),
     on: 'reinit',
     description:
-      'Initial / default content, interpreted per `format` (like a native input’s `value` attribute ↔ `defaultValue`). Changing it replaces the document. The live content is the `value` PROPERTY.',
+      'Initial / default content, interpreted per `valueFormat` (like a native input’s `value` attribute ↔ `defaultValue`). Changing it replaces the document. The live content is the `value` PROPERTY.',
   },
   {
-    configKey: 'format',
-    attribute: 'format',
+    configKey: 'valueFormat',
+    attribute: 'value-format',
     converter: toEnum(FORMATS, { default: 'markdown' }),
     shouldReflect: true,
     on: 'update',
@@ -202,7 +202,7 @@ const EVENTS: readonly EventDef[] = [
   {
     name: 'change',
     description:
-      'The document changed (or `format` switched). `detail`: `{ value, format }` — the content serialized in the active `format`. Twin: `onChange(detail)`.',
+      'The document changed (or `valueFormat` switched). `detail`: `{ value, format }` — the content serialized in the active `valueFormat`. Twin: `onChange(detail)`.',
   },
   {
     name: 'ready',
@@ -348,9 +348,9 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     if ('viewMode' in partial) {
       this.emit('view-mode-change', { viewMode: this.config.viewMode as EditorViewMode });
     }
-    // `format` changed: the document is unchanged, but its reported serialization
+    // `valueFormat` changed: the document is unchanged, but its reported serialization
     // is — re-announce so split-view / bound consumers refresh their output.
-    if ('format' in partial && this.#engine) {
+    if ('valueFormat' in partial && this.#engine) {
       this.emit('change', this.#changeDetail());
     }
     // UI strings are resolved on render: re-render the chrome with the new labels.
@@ -536,7 +536,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   }
 
   #format(): EditorFormat {
-    return (this.config.format as EditorFormat) ?? 'markdown';
+    return (this.config.valueFormat as EditorFormat) ?? 'markdown';
   }
 
   #changeDetail(): { value: string; format: EditorFormat } {
@@ -587,8 +587,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   // ── public content API (not inputs) ───────────────────────────────────────
 
   /**
-   * The live content, serialized in the active `format` (`''` before the first
-   * build). Assigning replaces the document, parsed in `format` — like
+   * The live content, serialized in the active `valueFormat` (`''` before the first
+   * build). Assigning replaces the document, parsed in `valueFormat` — like
    * `setValue(value)`. The `value` ATTRIBUTE is the initial content
    * ({@link defaultValue}) and is never written.
    */
@@ -617,7 +617,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
 
   /**
    * Replace the document with `value`, parsed in `format` (defaults to the active
-   * one) — the `value` setter with an explicit format, and the controller's write path.
+   * `valueFormat`) — the `value` setter with an explicit format, and the controller's
+   * write path. Without a format, just assign `value`.
    */
   setValue(value: string, format?: EditorFormat): void {
     this.flush();

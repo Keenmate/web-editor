@@ -61,6 +61,10 @@ released to a registry yet.
 - **Pipeline booleans take the `is`/`should` prefix:** `PipelineStage.interactive` →
   `isInteractive`, `PipelinePolicy.lock` → `shouldLock`, `InteractionResult.cancelled` →
   `isCancelled` (an `InteractionHost.request()` now resolves `{ isCancelled, value? }`).
+- **`format` → `valueFormat`** (attribute `value-format`; `markdown` | `html` | `json`) —
+  the serialization lens for `value` / `defaultValue` / the `change` detail, named like
+  the suite's other form components. The `change` detail key stays `format`;
+  `setValue(value, format?)` keeps its explicit-format argument (without one, assign `value`).
 
 ### Changed — BREAKING (suite-wide naming unification)
 

@@ -39,7 +39,7 @@ if (km) {
     km.setAttribute('view-mode', (e.target as HTMLSelectElement).value as EditorViewMode);
   });
   document.querySelector('#we-format')?.addEventListener('change', (e) => {
-    km.setAttribute('format', (e.target as HTMLSelectElement).value);
+    km.setAttribute('value-format', (e.target as HTMLSelectElement).value);
   });
   document.querySelector('#we-readonly')?.addEventListener('change', (e) => {
     if ((e.target as HTMLInputElement).checked) km.setAttribute('readonly', '');

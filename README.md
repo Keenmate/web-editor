@@ -50,7 +50,7 @@ npm install @keenmate/web-editor
 </script>
 <link rel="stylesheet" href="@keenmate/web-editor/style.css" />
 
-<km-editor value="# Hello" format="markdown" toolbar="top"></km-editor>
+<km-editor value="# Hello" value-format="markdown" toolbar="top"></km-editor>
 ```
 
 **Programmatic — dynamic content + events:**
@@ -68,8 +68,8 @@ editor.addEventListener('change', (e) => {
 editor.onChange = ({ value, format, controller }) => console.log(value, format);
 
 editor.setValue('## New heading', 'markdown');
-editor.value;         // live content in the active `format` (the `value` attribute is only the initial content)
-editor.getMarkdown(); // live content as markdown, whatever `format` is
+editor.value;         // live content in the active `valueFormat` (the `value` attribute is only the initial content)
+editor.getMarkdown(); // live content as markdown, whatever `valueFormat` is
 editor.controller.runCommand('bold'); // the public facade (also on every event detail)
 ```
 
@@ -79,8 +79,8 @@ Every attribute is also a property (e.g. `el.viewMode = 'preview'` ↔ `view-mod
 
 | Attribute   | Values                                          | Default      | Description |
 | ----------- | ----------------------------------------------- | ------------ | ----------- |
-| `value`     | string                                          | —            | Initial content, interpreted per `format` (property `defaultValue`, like a native input). Changing it replaces the document. The live content is the `value` **property**. |
-| `format`    | `markdown` \| `html` \| `json`                  | `markdown`   | Serialization lens for content I/O (the `value` attribute and property, the `change` detail). Switching re-reports the same document in the new format — it never rebuilds it. |
+| `value`     | string                                          | —            | Initial content, interpreted per `valueFormat` (property `defaultValue`, like a native input). Changing it replaces the document. The live content is the `value` **property**. |
+| `value-format` | `markdown` \| `html` \| `json`                  | `markdown`   | Serialization lens for content I/O (the `value` attribute and property, the `change` detail). Switching re-reports the same document in the new format — it never rebuilds it. |
 | `view-mode` | `edit` \| `split` \| `preview` \| `inline`      | `edit`       | Presentation. `preview` forces read-only. `inline` renders a floating card (see `anchor`). |
 | `readonly`  | boolean                                         | `false`      | Read-only (`isReadonly`): the content can't change, toolbar hidden, but it stays focusable / selectable / copyable. `view-mode="preview"` also forces this on. Reflects. |
 | `disabled`  | boolean                                         | `false`      | Disabled (`isDisabled`): no interaction — not editable, focusable or selectable (the surface is `inert`). An ancestor `<fieldset disabled>` disables it too. Reflects, like a native control. |
@@ -104,7 +104,7 @@ before the DOM event. Every detail carries `controller` and `element` (non-enume
 
 | Event         | `detail`              | Fires when |
 | ------------- | --------------------- | ---------- |
-| `change`      | `{ value, format }`   | Content changes (serialized in the active `format`), or `format` switches. |
+| `change`      | `{ value, format }`   | Content changes (serialized in the active `valueFormat`), or `valueFormat` switches. |
 | `ready`       | the context only      | The engine has mounted and is ready (once). |
 | `view-mode-change` | `{ viewMode }`   | The `viewMode` changes. |
 | `lock-change` | `{ isLocked }`        | A gating pipeline (e.g. the cloud-image picker) locks / unlocks the editor. |
@@ -114,10 +114,10 @@ before the DOM event. Every detail carries `controller` and `element` (non-enume
 
 | Member                    | Returns              | Description |
 | ------------------------- | -------------------- | ----------- |
-| `value`                   | `string`             | The live content, serialized in the active `format`. Assigning replaces the document (the `value` attribute is not written). |
+| `value`                   | `string`             | The live content, serialized in the active `valueFormat`. Assigning replaces the document (the `value` attribute is not written). |
 | `getMarkdown()` / `getHTML()` | `string`         | Live content in that format. |
 | `getJSON()`               | `unknown`            | Live content as the ProseMirror JSON document. |
-| `setValue(value, format?)`| `void`               | Replace the document from `value`, parsed in `format` (default: the active one). |
+| `setValue(value, format?)`| `void`               | Replace the document from `value`, parsed in `format` (default: the active `valueFormat`). Without a format, just assign `value`. |
 | `focus()`                 | `void`               | Focus the editing surface. |
 | `isReady` / `whenReady()` | `boolean` / `Promise<void>` | Core: the first build is live (`ready` attribute, `:state(ready)`, `ready` event). |
 | `shouldDefer` / `release()` | `boolean` / `void` | Core: hold the first build (attribute `defer`) until `release()` / removing `defer`. |

@@ -31,12 +31,12 @@ import type { EditorViewMode } from './web-component';
  * return empty values.
  */
 export interface EditorController {
-  /** Live content serialized in the active `format` (read-only; same as `el.value`). */
+  /** Live content serialized in the active `valueFormat` (read-only; same as `el.value`). */
   readonly value: string;
   getHTML(): string;
   getMarkdown(): string;
   getJSON(): unknown;
-  /** Replace the document with `value`, parsed in `format` (default: the active one). */
+  /** Replace the document with `value`, parsed in `format` (default: the active `valueFormat`). Without a format, just assign `value`. */
   setValue(value: string, format?: SerializationFormat): void;
   focus(): void;
   /**
@@ -147,7 +147,7 @@ export type EditorActionEventDetail = ActionEventDetail<EditorActionContext, Edi
 // ============================================================================
 
 export interface ChangeEventDetail extends EditorComponentContext {
-  /** Current content serialized in the active `format`. */
+  /** Current content serialized in the active `valueFormat`. */
   value: string;
   format: SerializationFormat;
 }

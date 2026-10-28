@@ -128,7 +128,7 @@ test.describe('lifecycle', () => {
         await page.evaluate(() => {
             const el = document.getElementById('subject') as any;
             el.remove();
-            el.format = 'html';
+            el.valueFormat = 'html';
             document.getElementById('b')!.appendChild(el);
         });
         await expect(pm(page).locator('h1')).toHaveText('Title');
