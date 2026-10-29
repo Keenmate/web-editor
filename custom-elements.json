@@ -777,7 +777,7 @@
               "name": "inputs",
               "privacy": "protected",
               "static": true,
-              "default": "[ { configKey: 'defaultValue', attribute: 'value', converter: toText({ isNullable: true }), on: 'reinit', description: 'Initial / default content, interpreted per `contentFormat` (like a native input’s `value` attribute ↔ `defaultValue`). Changing it replaces the document. The live content is the `value` PROPERTY.', }, { configKey: 'contentFormat', attribute: 'content-format', converter: toEnum(FORMATS, { default: 'markdown' }), shouldReflect: true, on: 'update', description: \"The format of the one document — the lens for content I/O (the `value` attribute and property, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document, and (like any assignment) fires no `change`.\", }, { configKey: 'name', attribute: 'name', converter: toText({ isNullable: true }), on: 'update', description: 'Form field name. When set, a light-DOM `<input type=\"hidden\" name=\"…\">` child of the host carries the live content (serialized in `contentFormat`) and submits with the surrounding `<form>`; it is disabled (not submitted) while the editor is disabled, including by a `<fieldset disabled>`. A form reset restores `defaultValue` (attribute `value`) silently — no `change`, like a native `form.reset()`.', }, { configKey: 'getValueFormatCallback', converter: toFunction(), default: null, on: 'update', description: 'Property only. `(ctx) => string` — formats the value written into the hidden form input (`name`), e.g. to sanitize HTML. `ctx`: `{ value, contentFormat }` (the document in the active `contentFormat`) + `controller` / `element`. Affects ONLY the submitted form value: `el.value` and the `change` detail stay the document in `contentFormat`. Called on every sync of the form input (each change). A throw is logged (error), the hidden input gets an empty string, the host turns invalid (label `valueFormatError`) and `value-format-error` fires; the next successful format clears it.', }, { configKey: 'viewMode', attribute: 'view-mode', converter: toEnum(VIEW_MODES, { default: 'edit' }), shouldReflect: true, on: 'update', description: \"Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the view mode is stored and reflected. Assigning it (property or attribute) is silent — no `view-mode-change`; `setViewMode()` and the view-mode toolbar items fire it.\", }, { configKey: 'isReadonly', attribute: 'readonly', converter: toBool('presence'), shouldReflect: true, on: 'update', description: 'Read-only: the content can’t change (no typing, toolbar hidden), but it stays focusable, selectable and copyable. `view-mode=\"preview\"` also forces this on. Reflects to `readonly`.', }, { configKey: 'isDisabled', attribute: 'disabled', converter: toBool('presence'), shouldReflect: true, on: 'update', description: 'Disabled: no interaction at all — not editable, not focusable or selectable (the surface is `inert`), toolbar hidden. An ancestor `<fieldset disabled>` disables it too (core). Reflects to `disabled`, like a native control.', }, { configKey: 'toolbar', attribute: 'toolbar', converter: toEnum(TOOLBARS, { default: 'top' }), shouldReflect: true, on: 'update', description: \"Static toolbar edge: 'top' (default), 'bottom', 'start', or 'end' places the command toolbar flush against that side of the editor; 'none' hides it. The selection toolbar and context menu are always available while editing (independent of this).\", }, { configKey: 'statusbar', attribute: 'statusbar', converter: toEnum(STATUSBARS, { default: 'none' }), shouldReflect: true, on: 'update', description: \"Status bar edge: 'none' (default), 'top', 'bottom', or 'both'. A dedicated strip of live indicators (word/char count, plus any plugin status items), hugging the editor body — separate from the toolbar zones and shown in read-only too. With 'both', items split across the two strips by their `bar` ('top'/'bottom', default 'bottom').\", }, { configKey: 'theme', attribute: 'theme', converter: toText({ isNullable: true }), shouldReflect: true, on: 'update', description: 'Theme name, reflected to the host attribute for CSS theming (`:host([theme=\"…\"])`).', }, { configKey: 'anchor', attribute: 'anchor', converter: toText({ isNullable: true }), on: 'update', description: 'For `view-mode=\"inline\"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow.', }, { configKey: 'labels', attribute: 'labels', converter: toObject<EditorLabels>({ validate: isLabels }), on: 'update', description: 'Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders; an empty string = deliberately empty. `placeholder` (default empty = off) is shown while the document is empty. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`. Property (object) or JSON attribute (`labels=\\'{\"bold\":\"Tučně\"}\\'`). Applies live (no rebuild).', }, { configKey: 'beforeActionCallback', converter: toFunction(), default: null, on: 'none', description: 'Property only. `(detail) => false | void` (may be async) — runs first on every toolbar / selection-toolbar / context-menu activation, with the `action` event detail. Return `false` to cancel: no `onClick`, no `action` event, no command. Keyboard shortcuts do not pass through it.', }, { configKey: 'renderLoadingCallback', converter: toFunction(), default: null, on: 'update', description: \"Property only. Draws the pending loader (shown while a deferred pipeline — e.g. a cloud-image upload — outlives its loader threshold) instead of the default spinner: `({ component, context, containerElement, element, label }) => void | cleanup`, `context` = `'pipeline'`. Fill `containerElement` (it already has `role=\\\"status\\\"` + `aria-label` = label `loading`); a returned function runs when the loader is removed. Beats the page-wide `window.components.renderLoaderCallback` (core SPEC §12.14). Read each time the loader shows.\", }, { configKey: 'interactionHost', converter: toCustom<InteractionHost | null>(() => null, { validate: isInteractionHost }), default: null, on: 'update', description: 'Property only. The modal bridge interactive pipeline stages call: `{ request(ctx) }`, `ctx` = the request (`kind`, `title`, `message`, `payload`) + `signal` + `controller` / `element`. Default: a `window.confirm`-backed host. Survives engine rebuilds (e.g. a `plugins` reassignment).', }, ]",
+              "default": "[ { configKey: 'defaultValue', attribute: 'value', converter: toText({ isNullable: true }), on: 'reinit', description: 'Initial / default content, interpreted per `contentFormat` (like a native input’s `value` attribute ↔ `defaultValue`). Changing it replaces the document. The live content is the `value` PROPERTY.', }, { configKey: 'contentFormat', attribute: 'content-format', converter: toEnum(FORMATS, { default: 'markdown' }), shouldReflect: true, on: 'update', description: \"The format of the one document — the lens for content I/O (the `value` attribute and property, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document, and (like any assignment) fires no `change`.\", }, { configKey: 'name', attribute: 'name', converter: toText({ isNullable: true }), on: 'update', description: 'Form field name. When set, a light-DOM `<input type=\"hidden\" name=\"…\">` child of the host carries the live content (serialized in `contentFormat`) and submits with the surrounding `<form>`; it is disabled (not submitted) while the editor is disabled, including by a `<fieldset disabled>`. A form reset restores `defaultValue` (attribute `value`) silently — no `change`, like a native `form.reset()`.', }, { configKey: 'getValueFormatCallback', converter: toFunction(), default: null, on: 'update', description: 'Property only. `(ctx) => string` — formats the value written into the hidden form input (`name`), e.g. to sanitize HTML. `ctx`: `{ value, contentFormat }` (the document in the active `contentFormat`) + `controller` / `element`. Affects ONLY the submitted form value: `el.value` and the `change` detail stay the document in `contentFormat`. Called on every sync of the form input (each change). A throw is logged (error), the hidden input gets an empty string, the host turns invalid (label `valueFormatError`) and `value-format-error` fires; the next successful format clears it.', }, { configKey: 'viewMode', attribute: 'view-mode', converter: toEnum(VIEW_MODES, { default: 'edit' }), shouldReflect: true, on: 'update', description: \"Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the view mode is stored and reflected. Assigning it (property or attribute) is silent — no `view-mode-change`; `setViewMode()` and the view-mode toolbar items fire it.\", }, { configKey: 'isReadonly', attribute: 'readonly', converter: toBool('presence'), shouldReflect: true, on: 'update', description: 'Read-only: the content can’t change (no typing, toolbar hidden), but it stays focusable, selectable and copyable. `view-mode=\"preview\"` also forces this on. Reflects to `readonly`.', }, { configKey: 'isDisabled', attribute: 'disabled', converter: toBool('presence'), shouldReflect: true, on: 'update', description: 'Disabled: no interaction at all — not editable, not focusable or selectable (the surface is `inert`), toolbar hidden. An ancestor `<fieldset disabled>` disables it too (core). Reflects to `disabled`, like a native control.', }, { configKey: 'toolbar', attribute: 'toolbar', converter: toEnum(TOOLBARS, { default: 'top' }), shouldReflect: true, on: 'update', description: \"Static toolbar edge: 'top' (default), 'bottom', 'start', or 'end' places the command toolbar flush against that side of the editor; 'none' hides it. The selection toolbar and context menu are always available while editing (independent of this).\", }, { configKey: 'statusbar', attribute: 'statusbar', converter: toEnum(STATUSBARS, { default: 'none' }), shouldReflect: true, on: 'update', description: \"Status bar edge: 'none' (default), 'top', 'bottom', or 'both'. A dedicated strip of live indicators (word/char count, plus any plugin status items), hugging the editor body — separate from the toolbar zones and shown in read-only too. With 'both', items split across the two strips by their `bar` ('top'/'bottom', default 'bottom').\", }, { configKey: 'theme', attribute: 'theme', converter: toText({ isNullable: true }), shouldReflect: true, on: 'update', description: 'Theme name, reflected to the host attribute for CSS theming (`:host([theme=\"…\"])`).', }, { configKey: 'anchor', attribute: 'anchor', converter: toText({ isNullable: true }), on: 'update', description: 'For `view-mode=\"inline\"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow.', }, { configKey: 'labels', attribute: 'labels', converter: toObject<EditorLabels>({ validate: isLabels }), on: 'update', description: 'Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders; an empty string = deliberately empty. `placeholder` (default empty = off) is shown while the document is empty. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`. Property (object) or JSON attribute (`labels=\\'{\"bold\":\"Tučně\"}\\'`). Applies live (no rebuild).', }, { configKey: 'beforeActionCallback', converter: toFunction(), default: null, on: 'none', description: 'Property only. `(detail) => false | void` (may be async) — runs first on every toolbar / selection-toolbar / context-menu activation, with the `action` event detail. Return `false` to cancel: no `onClick`, no `action` event, no command. Keyboard shortcuts do not pass through it.', }, { configKey: 'renderLoadingCallback', converter: toFunction(), default: null, on: 'update', description: \"Property only. Draws the pending loader (shown while a deferred pipeline's work — e.g. a cloud-image upload — outlives its loader threshold; not while a dialog waits for the user) instead of the default spinner: `({ component, context, containerElement, element, label }) => void | cleanup`, `context` = `'pipeline'`. Fill `containerElement` (it already has `role=\\\"status\\\"` + `aria-label` = label `loading`); a returned function runs when the loader is removed. Beats the page-wide `window.components.renderLoaderCallback` (core SPEC §12.14). Read each time the loader shows.\", }, { configKey: 'interactionHost', converter: toCustom<InteractionHost | null>(() => null, { validate: isInteractionHost }), default: null, on: 'update', description: 'Property only. The modal bridge interactive pipeline stages call: `{ request(ctx) }`, `ctx` = the request (`kind`, `title`, `message`, `payload`) + `signal` + `controller` / `element`. Default: a `window.confirm`-backed host. Survives engine rebuilds (e.g. a `plugins` reassignment).', }, ]",
               "type": {
                 "text": "readonly InputDef[]"
               }
@@ -860,7 +860,7 @@
               "type": {
                 "text": "Function"
               },
-              "description": "Property only. Draws the pending loader (shown while a deferred pipeline — e.g. a cloud-image upload — outlives its loader threshold) instead of the default spinner: `({ component, context, containerElement, element, label }) => void | cleanup`, `context` = `'pipeline'`. Fill `containerElement` (it already has `role=\"status\"` + `aria-label` = label `loading`); a returned function runs when the loader is removed. Beats the page-wide `window.components.renderLoaderCallback` (core SPEC §12.14). Read each time the loader shows.",
+              "description": "Property only. Draws the pending loader (shown while a deferred pipeline's work — e.g. a cloud-image upload — outlives its loader threshold; not while a dialog waits for the user) instead of the default spinner: `({ component, context, containerElement, element, label }) => void | cleanup`, `context` = `'pipeline'`. Fill `containerElement` (it already has `role=\"status\"` + `aria-label` = label `loading`); a returned function runs when the loader is removed. Beats the page-wide `window.components.renderLoaderCallback` (core SPEC §12.14). Read each time the loader shows.",
               "privacy": "public",
               "default": "null"
             },
@@ -1069,7 +1069,7 @@
                   "text": "void"
                 }
               },
-              "description": "`isDisabled` or an ancestor `<fieldset disabled>` flipped (core merges both\r\ninto `isEffectivelyDisabled`): toggle editing, the chrome and `inert`."
+              "description": "`isDisabled` or an ancestor `<fieldset disabled>` flipped (core merges both\ninto `isEffectivelyDisabled`): toggle editing, the chrome and `inert`."
             },
             {
               "kind": "method",
@@ -1079,7 +1079,7 @@
                   "text": "void"
                 }
               },
-              "description": "The surrounding `<form>` was reset: restore the initial content (`defaultValue`,\r\nattribute `value`), like a native control — silently: a native `form.reset()`\r\nfires no `input` / `change`, so neither does this (the hidden input is synced)."
+              "description": "The surrounding `<form>` was reset: restore the initial content (`defaultValue`,\nattribute `value`), like a native control — silently: a native `form.reset()`\nfires no `input` / `change`, so neither does this (the hidden input is synced)."
             },
             {
               "kind": "method",
@@ -1109,7 +1109,7 @@
                   "text": "void"
                 }
               },
-              "description": "Activate (every connect, after any reinit()/update()). Core's build-once\r\nmodel: the engine survives a DOM move, so this only resumes live resources —\r\nthe view's DOM observer, the inline anchor, the chrome's selection state.\r\nContent, selection and undo history are exactly as they were."
+              "description": "Activate (every connect, after any reinit()/update()). Core's build-once\nmodel: the engine survives a DOM move, so this only resumes live resources —\nthe view's DOM observer, the inline anchor, the chrome's selection state.\nContent, selection and undo history are exactly as they were."
             },
             {
               "kind": "method",
@@ -1120,7 +1120,7 @@
                   "text": "void"
                 }
               },
-              "description": "Deactivate (every disconnect): release live resources only — the engine (and\r\nwith it the document, selection and undo history) stays alive, so a DOM move\r\nre-activates without a rebuild and a detached editor still answers `value`."
+              "description": "Deactivate (every disconnect): release live resources only — the engine (and\nwith it the document, selection and undo history) stays alive, so a DOM move\nre-activates without a rebuild and a detached editor still answers `value`."
             },
             {
               "kind": "method",
@@ -1189,7 +1189,7 @@
                   }
                 }
               ],
-              "description": "Show / hide the pipeline pending loader through core `renderLoader()`:\r\ninstance `renderLoadingCallback` → page-wide `renderLoaderCallback` →\r\nthe default `.we-loader` spinner; `role=\"status\"` + label `loading`."
+              "description": "Show / hide the pipeline pending loader through core `renderLoader()`:\ninstance `renderLoadingCallback` → page-wide `renderLoaderCallback` →\nthe default `.we-loader` spinner; `role=\"status\"` + label `loading`."
             },
             {
               "kind": "method",
@@ -1210,7 +1210,7 @@
                   "text": "void"
                 }
               },
-              "description": "Form convention (KeenMate suite, like web-multiselect): a light-DOM hidden\r\ninput named by `name` carries the live content in `contentFormat` — the host\r\nnever calls `setFormValue`. No `name` → no input. Disabled (not submitted)\r\nwhile the editor is effectively disabled."
+              "description": "Form convention (KeenMate suite, like web-multiselect): a light-DOM hidden\ninput named by `name` carries the live content in `contentFormat` — the host\nnever calls `setFormValue`. No `name` → no input. Disabled (not submitted)\nwhile the editor is effectively disabled."
             },
             {
               "kind": "method",
@@ -1221,7 +1221,7 @@
                   "text": "string"
                 }
               },
-              "description": "The submitted form value: the document in `contentFormat`, through\r\n`getValueFormatCallback` when set. A throwing callback submits `''`, marks the\r\nhost invalid (core `setFormatError`, label `valueFormatError`) and fires\r\n`value-format-error`; the next successful format clears the invalid state."
+              "description": "The submitted form value: the document in `contentFormat`, through\n`getValueFormatCallback` when set. A throwing callback submits `''`, marks the\nhost invalid (core `setFormatError`, label `valueFormatError`) and fires\n`value-format-error`; the next successful format clears the invalid state."
             },
             {
               "kind": "method",
@@ -1362,7 +1362,7 @@
               "type": {
                 "text": "string"
               },
-              "description": "The live content, serialized in the active `contentFormat` (`''` before the first\r\nbuild). Assigning replaces the document, parsed in `contentFormat` — like\r\n`setValue(value, undefined, { isSilent: true })`: silent (no `change`, like a\r\nnative `input.value`); the hidden form input is synced. The `value` ATTRIBUTE is the initial content\r\n(defaultValue) and is never written."
+              "description": "The live content, serialized in the active `contentFormat` (`''` before the first\nbuild). Assigning replaces the document, parsed in `contentFormat` — like\n`setValue(value, undefined, { isSilent: true })`: silent (no `change`, like a\nnative `input.value`); the hidden form input is synced. The `value` ATTRIBUTE is the initial content\n(defaultValue) and is never written."
             },
             {
               "kind": "method",
@@ -1421,7 +1421,7 @@
                   }
                 }
               ],
-              "description": "Replace the document with `value`, parsed in `format` (defaults to the active\r\n`contentFormat`) — the controller's write path. Fires `change` unless\r\n`options.isSilent`; assigning `el.value` is the silent form (like a native\r\n`input.value`). Either way the hidden form input is synced."
+              "description": "Replace the document with `value`, parsed in `format` (defaults to the active\n`contentFormat`) — the controller's write path. Fires `change` unless\n`options.isSilent`; assigning `el.value` is the silent form (like a native\n`input.value`). Either way the hidden form input is synced."
             },
             {
               "kind": "method",
@@ -1446,7 +1446,7 @@
                   }
                 }
               ],
-              "description": "Switch the view mode (`edit` | `split` | `preview` | `inline`). Fires\r\n`view-mode-change` (`source: 'api'`) unless `options.isSilent`; a no-op (no event)\r\nwhen `mode` is already active, and an invalid mode warns and keeps the current one.\r\nAssigning `el.viewMode` is the silent form."
+              "description": "Switch the view mode (`edit` | `split` | `preview` | `inline`). Fires\n`view-mode-change` (`source: 'api'`) unless `options.isSilent`; a no-op (no event)\nwhen `mode` is already active, and an invalid mode warns and keeps the current one.\nAssigning `el.viewMode` is the silent form."
             },
             {
               "kind": "method",
@@ -1485,7 +1485,7 @@
               "type": {
                 "text": "EditorPlugin[]"
               },
-              "description": "The editor plugin set. Assign to customise — compose with `defaultPlugins()`\r\nto keep the built-ins, and order the array to control conflict precedence\r\n(later plugins override earlier by id). Reassigning rebuilds the engine on the\r\nnew set, preserving the live content. Reading returns the active set.\r\n\r\n```js\r\nimport { defaultPlugins } from '@keenmate/web-editor';\r\nel.plugins = [...defaultPlugins(), myPlugin];\r\n```"
+              "description": "The editor plugin set. Assign to customise — compose with `defaultPlugins()`\nto keep the built-ins, and order the array to control conflict precedence\n(later plugins override earlier by id). Reassigning rebuilds the engine on the\nnew set, preserving the live content. Reading returns the active set.\n\n```js\nimport { defaultPlugins } from '@keenmate/web-editor';\nel.plugins = [...defaultPlugins(), myPlugin];\n```"
             },
             {
               "kind": "method",
@@ -1505,7 +1505,7 @@
                   "text": "void"
                 }
               },
-              "description": "Final teardown (core `destroy()` calls this once): the engine — document,\r\nundo history, plugins' `destroy()` — and the shadow layout. `disconnect()`\r\nkeeps both alive for a DOM move; this releases them for good."
+              "description": "Final teardown (core `destroy()` calls this once): the engine — document,\nundo history, plugins' `destroy()` — and the shadow layout. `disconnect()`\nkeeps both alive for a DOM move; this releases them for good."
             },
             {
               "kind": "field",
@@ -5025,7 +5025,7 @@
               "text": "InteractionHost"
             }
           },
-          "description": "A sensible headless default: route an interactive request through\r\n`window.confirm` (resolve on OK, cancel otherwise). A host that needs a richer\r\npicker injects its own via `engine.setInteractionHost`."
+          "description": "A sensible headless default: route an interactive request through\n`window.confirm` (resolve on OK, cancel otherwise). A host that needs a richer\npicker injects its own via `engine.setInteractionHost`."
         },
         {
           "kind": "class",
@@ -5213,7 +5213,7 @@
                   }
                 }
               ],
-              "description": "Fire a pipeline by name. Sync → runs now and returns whether it resolved;\r\ndeferred → kicks off an async run (superseding any in-flight run of the same\r\nname) and returns `true`. Unknown name → `false`."
+              "description": "Fire a pipeline by name. Sync → runs now and returns whether it resolved;\ndeferred → kicks off an async run (superseding any in-flight run of the same\nname) and returns `true`. Unknown name → `false`."
             },
             {
               "kind": "method",
@@ -5352,7 +5352,78 @@
         },
         {
           "kind": "class",
-          "description": "Debounced, cancellable runner for a single deferred pipeline. Call `schedule()`\non each change; it coalesces, runs once idle, drops stale results, and only\nsurfaces `pending` if the run outlasts the threshold.",
+          "description": "The loader threshold of one deferred run. `pending` fires only when actual work\noutlasts `thresholdMs`: the clock starts with the run and restarts after each\ninteractive request settles; while a request is open (a dialog waiting for the\nuser) the clock is stopped and the run reports `waiting` (which also retracts a\n`pending` already shown). Interactive stages must go through `wrap(host)`.",
+          "name": "PendingGate",
+          "members": [
+            {
+              "kind": "field",
+              "name": "#timer",
+              "privacy": "private",
+              "type": {
+                "text": "ReturnType<typeof setTimeout> | undefined"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "#openRequests",
+              "privacy": "private",
+              "type": {
+                "text": "number"
+              },
+              "default": "0"
+            },
+            {
+              "kind": "field",
+              "name": "#isStopped",
+              "privacy": "private",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false"
+            },
+            {
+              "kind": "method",
+              "name": "start",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "description": "Start (or restart) the threshold clock."
+            },
+            {
+              "kind": "method",
+              "name": "stop",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "description": "The run settled: no more `pending` / `waiting` from this gate."
+            },
+            {
+              "kind": "method",
+              "name": "wrap",
+              "return": {
+                "type": {
+                  "text": "InteractionHost"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "host",
+                  "type": {
+                    "text": "InteractionHost"
+                  }
+                }
+              ],
+              "description": "`host`, with the clock paused while each of its requests is open."
+            }
+          ]
+        },
+        {
+          "kind": "class",
+          "description": "Debounced, cancellable runner for a single deferred pipeline. Call `schedule()`\non each change; it coalesces, runs once idle, drops stale results, and only\nsurfaces `pending` if the run's work outlasts the threshold (`PendingGate`).",
           "name": "DeferredRunner",
           "members": [
             {
@@ -5365,9 +5436,9 @@
             },
             {
               "kind": "field",
-              "name": "thresholdTimer",
+              "name": "gate",
               "type": {
-                "text": "ReturnType<typeof setTimeout> | undefined"
+                "text": "PendingGate | undefined"
               },
               "privacy": "private"
             },
@@ -5434,6 +5505,14 @@
           "name": "runStages",
           "declaration": {
             "name": "runStages",
+            "module": "src/engine/pipeline/runner.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "PendingGate",
+          "declaration": {
+            "name": "PendingGate",
             "module": "src/engine/pipeline/runner.ts"
           }
         },

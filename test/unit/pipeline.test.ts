@@ -162,6 +162,38 @@ describe('DeferredRunner', () => {
     expect(r2.statuses[r2.statuses.length - 1].phase).toBe('ready');
   });
 
+  it('the threshold counts working time only: no pending while a dialog waits for the user', async () => {
+    let answer: (r: { isCancelled: boolean }) => void = () => {};
+    const ui: InteractionHost = { request: () => new Promise((res) => (answer = res)) };
+    const pipeline: Pipeline = {
+      name: 'ask', timing: 'deferred', policy: { debounceMs: 0, thresholdMs: 200 },
+      stages: [
+        { id: 'work1', run: () => new Promise((res) => setTimeout(() => res({ action: 'resolve' }), 300)) },
+        { id: 'pick', run: async (_c, r) => { await r.ui.request({ kind: 'pick', title: 'Pick', signal: r.signal }); return { action: 'resolve' }; } },
+        { id: 'work2', run: () => new Promise((res) => setTimeout(() => res({ action: 'resolve' }), 1000)) },
+      ],
+    };
+    const statuses: RunStatus[] = [];
+    const runner = new DeferredRunner(pipeline, {
+      getContext: () => ({ doc: null, extra: {} }), ui, onStatus: (s) => statuses.push(s), onResult: () => {},
+    });
+    const phases = () => statuses.map((s) => s.phase);
+    runner.schedule();
+    await vi.advanceTimersByTimeAsync(250);   // work1 outlasts the threshold → pending
+    expect(phases()).toEqual(['pending']);
+    await vi.advanceTimersByTimeAsync(100);   // work1 done → the dialog opens → waiting (retracts pending)
+    expect(phases()).toEqual(['pending', 'waiting']);
+    await vi.advanceTimersByTimeAsync(5000);  // the user takes their time: still no pending
+    expect(phases()).toEqual(['pending', 'waiting']);
+    answer({ isCancelled: false });
+    await vi.advanceTimersByTimeAsync(150);   // work2 running, the clock restarted on close
+    expect(phases()).toEqual(['pending', 'waiting']);
+    await vi.advanceTimersByTimeAsync(100);   // 250ms of work2 → pending again
+    expect(phases()).toEqual(['pending', 'waiting', 'pending']);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(phases()).toEqual(['pending', 'waiting', 'pending', 'ready']);
+  });
+
   it('drops a stale run: a newer schedule supersedes an in-flight one', async () => {
     let docValue = 'first';
     const slow: Pipeline = {

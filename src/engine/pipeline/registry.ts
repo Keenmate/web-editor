@@ -16,7 +16,7 @@
  * progress UI). The engine stays headless — the host provides the modal UI and
  * the lock implementation through the injected deps.
  */
-import { runStages, runStagesSync, type RunResult } from './runner';
+import { PendingGate, runStages, runStagesSync, type RunResult } from './runner';
 import type {
   InteractionHost,
   Pipeline,
@@ -153,19 +153,23 @@ export class PipelineRegistry {
     const lock = pipeline.policy?.shouldLock === true;
     if (lock) this.#deps.setLock(true);
 
-    const thresholdMs = pipeline.policy?.thresholdMs ?? 200;
-    const thresholdTimer = setTimeout(() => {
-      if (this.#running.get(name) === ac) this.#emit(name, { type: 'status', status: { phase: 'pending' } });
-    }, thresholdMs);
+    // The loader threshold counts working time only — paused while a dialog waits
+    // for the user (`waiting`), restarted when it closes.
+    const gate = new PendingGate(
+      pipeline.policy?.thresholdMs ?? 200,
+      (status) => this.#emit(name, { type: 'status', status }),
+      () => this.#running.get(name) === ac
+    );
+    gate.start();
 
     try {
       const result = await runStages(
         pipeline,
         this.#deps.getContext(),
-        { signal: ac.signal, ui: this.#deps.getInteractionHost(), generation, ...this.#services() },
+        { signal: ac.signal, ui: gate.wrap(this.#deps.getInteractionHost()), generation, ...this.#services() },
         (report) => this.#emit(name, { type: 'stage', report })
       );
-      clearTimeout(thresholdTimer);
+      gate.stop();
       if (this.#running.get(name) !== ac) return; // superseded — drop silently
       this.#emit(name, {
         type: 'status',
@@ -173,7 +177,7 @@ export class PipelineRegistry {
       });
       this.#emit(name, { type: 'result', context: result.context });
     } catch (err) {
-      clearTimeout(thresholdTimer);
+      gate.stop();
       if (this.#running.get(name) === ac && !ac.signal.aborted) {
         this.#emit(name, { type: 'status', status: { phase: 'error', error: err } });
       }

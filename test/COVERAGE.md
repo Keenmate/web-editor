@@ -41,7 +41,7 @@ dialog stub), `e2e/helpers.ts`.
 | `plugins` reassignment preserves content (incl. tables) | ✓ | `lifecycle.spec.ts` | `lifecycle.html` |
 | `setValue()` before first connect (ED-3, fixed) | ✓ | `lifecycle.spec.ts` | `lifecycle.html` |
 | `format` change while detached (ED-4, fixed) | ✓ | `lifecycle.spec.ts` | `lifecycle.html` |
-| Pending loader: default `.we-loader` + role=status/aria-label, page hook, instance hook wins, removed when settled | ✓ | `loader.spec.ts` | `loader.html` |
+| Pending loader: default `.we-loader` + role=status/aria-label, page hook, instance hook wins, removed when settled; none while an interactive stage waits for the user | ✓ | `loader.spec.ts` | `loader.html` |
 | `ready` fires once per element lifetime | ✓ | `lifecycle.spec.ts`, `content.spec.ts` | `lifecycle.html`, `content.html` |
 | `destroy()` | ✓ | `lifecycle.spec.ts` | `lifecycle.html` |
 | Detached editor: `value` live; document listeners released, restored on reconnect | ✓ | `lifecycle.spec.ts` | `lifecycle.html` |

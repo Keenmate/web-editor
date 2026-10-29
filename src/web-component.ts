@@ -210,7 +210,7 @@ const INPUTS: readonly InputDef[] = [
     default: null,
     on: 'update',
     description:
-      "Property only. Draws the pending loader (shown while a deferred pipeline — e.g. a cloud-image upload — outlives its loader threshold) instead of the default spinner: `({ component, context, containerElement, element, label }) => void | cleanup`, `context` = `'pipeline'`. Fill `containerElement` (it already has `role=\"status\"` + `aria-label` = label `loading`); a returned function runs when the loader is removed. Beats the page-wide `window.components.renderLoaderCallback` (core SPEC §12.14). Read each time the loader shows.",
+      "Property only. Draws the pending loader (shown while a deferred pipeline's work — e.g. a cloud-image upload — outlives its loader threshold; not while a dialog waits for the user) instead of the default spinner: `({ component, context, containerElement, element, label }) => void | cleanup`, `context` = `'pipeline'`. Fill `containerElement` (it already has `role=\"status\"` + `aria-label` = label `loading`); a returned function runs when the loader is removed. Beats the page-wide `window.components.renderLoaderCallback` (core SPEC §12.14). Read each time the loader shows.",
   },
   {
     configKey: 'interactionHost',

@@ -55,4 +55,15 @@ test.describe('pending loader', () => {
         await expect(slot(page).locator('.instance-hook')).toHaveCount(0);
         await page.evaluate(() => ((window as any).components.renderLoaderCallback = undefined));
     });
+
+    test('no loader while an interactive stage waits for the user; it shows once work runs again', async ({ page }) => {
+        await page.evaluate(() => (window as any).runAsk());
+        await page.waitForTimeout(300); // threshold is 0 — a working run would show the loader by now
+        await expect(slot(page)).toBeHidden();
+        await page.evaluate(() => (window as any).answerDialog());
+        await expect(slot(page)).toBeVisible(); // the upload stage is working
+        await expect(slot(page).locator('.we-loader')).toBeVisible();
+        await page.evaluate(() => (window as any).releaseSlow());
+        await expect(slot(page)).toBeHidden();
+    });
 });

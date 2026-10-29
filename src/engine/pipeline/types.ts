@@ -99,7 +99,9 @@ export type Timing = 'sync' | 'deferred';
 export interface PipelinePolicy {
   /** Coalesce rapid triggers; don't start a run until this much idle passes. */
   debounceMs?: number;
-  /** Delay before a pending indicator shows (the "defer the spinner" window). */
+  /** Delay before a pending indicator shows (the "defer the spinner" window).
+   * Counts only working time: the clock pauses while an interactive stage waits
+   * for the user (a dialog) and restarts when the dialog closes. */
   thresholdMs?: number;
   /** Whether a run locks the surface. Dialogs always lock regardless. */
   shouldLock?: boolean;
@@ -112,10 +114,16 @@ export interface Pipeline {
   policy?: PipelinePolicy;
 }
 
-/** Live status of a deferred run, for scoped per-feature indicators. */
+/**
+ * Live status of a deferred run, for scoped per-feature indicators. `pending` =
+ * work has outlasted the loader threshold (show a loader); `waiting` = an
+ * interactive stage is waiting for the user (a dialog is open — no loader; the
+ * threshold restarts when it closes).
+ */
 export type RunStatus =
   | { phase: 'idle' }
   | { phase: 'pending' }
+  | { phase: 'waiting' }
   | { phase: 'ready' }
   | { phase: 'error'; error: unknown }
   | { phase: 'halted'; reason?: string };

@@ -6,13 +6,16 @@
 </head>
 <body>
     <!-- Targeted by e2e/loader.spec.ts. A deferred `slow:run` pipeline (threshold 0)
-         stays pending until window.releaseSlow() — the editor shows its loader meanwhile. -->
+         stays pending until window.releaseSlow() — the editor shows its loader meanwhile.
+         `ask:run` first opens a host dialog (interactionHost; answered by window.answerDialog()),
+         then works until window.releaseSlow() — no loader while the dialog waits for the user. -->
     <km-editor id="subject" value="Hello"></km-editor>
 
     <script type="module">
         import { defaultPlugins } from '/src/index.ts';
         import { getEditorEngine } from '/src/web-component.ts';
         let release = () => {};
+        let answer = () => {};
         const slow = {
             name: 'slow',
             pipelines: [{
@@ -20,12 +23,27 @@
                 timing: 'deferred',
                 policy: { thresholdMs: 0 },
                 stages: [{ id: 'wait', run: () => new Promise((r) => (release = () => r({ action: 'resolve' }))) }],
+            }, {
+                name: 'ask:run',
+                timing: 'deferred',
+                policy: { thresholdMs: 0 },
+                stages: [
+                    { id: 'pick', run: async (_c, rt) => {
+                        await rt.ui.request({ kind: 'pick', title: 'Pick an image', signal: rt.signal });
+                        return { action: 'resolve' };
+                    } },
+                    { id: 'upload', run: () => new Promise((r) => (release = () => r({ action: 'resolve' }))) },
+                ],
             }],
         };
         const el = document.getElementById('subject');
         el.plugins = [...defaultPlugins(), slow];
+        // A host dialog (like a cloud-image picker) that stays open until answerDialog().
+        el.interactionHost = { request: () => new Promise((r) => (answer = () => r({ isCancelled: false }))) };
         window.runSlow = () => getEditorEngine(el).run('slow:run');
         window.releaseSlow = () => release();
+        window.runAsk = () => getEditorEngine(el).run('ask:run');
+        window.answerDialog = () => answer();
         window.loaderReady = true;
     </script>
 </body>

@@ -45,6 +45,11 @@ native `input.value`); methods and user interaction do.
   label }) => void | cleanup` draws it instead and beats the page-wide
   `window.components.renderLoaderCallback`. Engine: `pending` event `{ isPending }` + `isPending`;
   `PipelineRegistry.onAny(listener)`.
+- **The loader threshold counts working time only.** While an interactive stage waits for the user (a
+  host dialog, e.g. the cloud-image picker) the run reports the new status phase **`waiting`** — no
+  pending loader (one already showing is withdrawn); the threshold clock restarts when the dialog
+  closes, so the loader shows only if the work after it outlasts the threshold. Registry runs and
+  `DeferredRunner` alike (`PendingGate`).
 - **`setViewMode(mode, options?)`** on the element and `el.controller` — switches the view mode and
   fires `view-mode-change` (`source: 'api'`) unless `{ isSilent: true }`. No-op when the mode is
   already active; an invalid mode warns and is ignored. `controller.runCommand('view-…')` also

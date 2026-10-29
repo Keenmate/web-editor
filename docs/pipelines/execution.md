@@ -70,7 +70,10 @@ A deferred run gets a monotonic **generation** and an **AbortController**. Firin
 the same name again **supersedes** the in-flight run (aborts its `fetch`es, closes
 its modal); a superseded run's result is dropped silently. If the run outlives the
 **loader threshold** (default 200 ms) it surfaces a `pending` status — so a fast
-run shows no spinner. `<km-editor>` shows its pending loader (core `renderLoader()`,
+run shows no spinner. Only **working** time counts: while an interactive stage waits
+for the user (`ui.request` — a dialog is open) the run reports `waiting` instead (a
+`pending` already shown is withdrawn), and the threshold clock restarts when the
+dialog closes. `<km-editor>` shows its pending loader (core `renderLoader()`,
 context `'pipeline'`; replaceable via `renderLoadingCallback`) while any run is pending —
 the engine aggregates this as its `pending` event `{ isPending }` / `engine.isPending`. A pipeline with `policy.lock` **locks the surface** (a true
 `setEditable(false)`) for the whole run.
@@ -123,7 +126,7 @@ const off = engine.pipelines.on('image:browser:pick', (event) => {
   switch (event.type) {
     case 'start':  /* reset step UI (event.generation) */ break;
     case 'stage':  /* event.report: { stageId, phase } — running|ok|skipped|halted|error|aborted */ break;
-    case 'status': /* event.status.phase — pending|ready|halted|error */ break;
+    case 'status': /* event.status.phase — pending|waiting|ready|halted|error */ break;
     case 'result': /* event.context — final { doc, extra } */ break;
   }
 });

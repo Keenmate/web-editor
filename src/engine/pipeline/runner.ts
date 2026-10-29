@@ -4,11 +4,13 @@
  * `runStages` folds a context through a pipeline's stages sequentially, honoring
  * the three outcomes (resolve / halt / skip). `DeferredRunner` wraps a deferred
  * pipeline with the async machinery: debounce, a monotonic generation token
- * (stale runs are dropped), a loader threshold (the "defer the spinner" window),
- * and an `AbortSignal` that supersedes in-flight work.
+ * (stale runs are dropped), a loader threshold (the "defer the spinner" window,
+ * `PendingGate` — paused while a dialog waits for the user), and an `AbortSignal`
+ * that supersedes in-flight work.
  */
 import type {
   InteractionHost,
+  InteractionResult,
   Pipeline,
   PipelineContext,
   RunStatus,
@@ -113,6 +115,64 @@ export async function runStages(
   return { context: ctx, halted: false };
 }
 
+/**
+ * The loader threshold of one deferred run. `pending` fires only when actual work
+ * outlasts `thresholdMs`: the clock starts with the run and restarts after each
+ * interactive request settles; while a request is open (a dialog waiting for the
+ * user) the clock is stopped and the run reports `waiting` (which also retracts a
+ * `pending` already shown). Interactive stages must go through `wrap(host)`.
+ */
+export class PendingGate {
+  #timer: ReturnType<typeof setTimeout> | undefined;
+  #openRequests = 0;
+  #isStopped = false;
+
+  constructor(
+    private readonly thresholdMs: number,
+    private readonly emit: (status: RunStatus) => void,
+    /** Whether the run is still the latest (a superseded run reports nothing). */
+    private readonly isCurrent: () => boolean
+  ) {}
+
+  /** Start (or restart) the threshold clock. */
+  start(): void {
+    clearTimeout(this.#timer);
+    if (this.#isStopped || this.#openRequests > 0) return;
+    this.#timer = setTimeout(() => {
+      if (!this.#isStopped && this.#openRequests === 0 && this.isCurrent()) this.emit({ phase: 'pending' });
+    }, this.thresholdMs);
+  }
+
+  /** The run settled: no more `pending` / `waiting` from this gate. */
+  stop(): void {
+    this.#isStopped = true;
+    clearTimeout(this.#timer);
+  }
+
+  /** `host`, with the clock paused while each of its requests is open. */
+  wrap(host: InteractionHost): InteractionHost {
+    return {
+      request: (ctx) => {
+        this.#openRequests++;
+        clearTimeout(this.#timer);
+        if (!this.#isStopped && this.isCurrent()) this.emit({ phase: 'waiting' });
+        const settle = (): void => {
+          this.#openRequests--;
+          this.start();
+        };
+        let pending: Promise<InteractionResult>;
+        try {
+          pending = Promise.resolve(host.request(ctx));
+        } catch (err) {
+          settle();
+          throw err;
+        }
+        return pending.finally(settle);
+      },
+    };
+  }
+}
+
 export interface DeferredRunnerDeps {
   /** Snapshot the current context at the moment a run fires (post-debounce). */
   getContext: () => PipelineContext;
@@ -131,11 +191,11 @@ export interface DeferredRunnerDeps {
 /**
  * Debounced, cancellable runner for a single deferred pipeline. Call `schedule()`
  * on each change; it coalesces, runs once idle, drops stale results, and only
- * surfaces `pending` if the run outlasts the threshold.
+ * surfaces `pending` if the run's work outlasts the threshold (`PendingGate`).
  */
 export class DeferredRunner {
   private debounceTimer: ReturnType<typeof setTimeout> | undefined;
-  private thresholdTimer: ReturnType<typeof setTimeout> | undefined;
+  private gate: PendingGate | undefined;
   private generation = 0;
   private current: AbortController | undefined;
 
@@ -154,7 +214,7 @@ export class DeferredRunner {
   private async fire(): Promise<void> {
     // Supersede any in-flight run (aborts its fetches / closes its dialog).
     this.current?.abort();
-    clearTimeout(this.thresholdTimer);
+    this.gate?.stop();
 
     const generation = ++this.generation;
     const controller = new AbortController();
@@ -162,20 +222,23 @@ export class DeferredRunner {
     this.deps.onStart?.(generation);
 
     // Defer the pending indicator: only show it if the run is still the latest
-    // and still running when the threshold fires.
-    const threshold = this.pipeline.policy?.thresholdMs ?? 200;
-    this.thresholdTimer = setTimeout(() => {
-      if (generation === this.generation) this.deps.onStatus({ phase: 'pending' });
-    }, threshold);
+    // and still working (not waiting on a dialog) when the threshold fires.
+    const gate = new PendingGate(
+      this.pipeline.policy?.thresholdMs ?? 200,
+      (status) => this.deps.onStatus(status),
+      () => generation === this.generation
+    );
+    this.gate = gate;
+    gate.start();
 
     try {
       const result = await runStages(
         this.pipeline,
         this.deps.getContext(),
-        { signal: controller.signal, ui: this.deps.ui, generation },
+        { signal: controller.signal, ui: gate.wrap(this.deps.ui), generation },
         this.deps.onStage
       );
-      clearTimeout(this.thresholdTimer);
+      gate.stop();
       if (generation !== this.generation) return; // superseded — drop silently
       if (result.halted) {
         this.deps.onStatus({ phase: 'halted', reason: result.reason });
@@ -184,7 +247,7 @@ export class DeferredRunner {
       this.deps.onResult(result.context);
       this.deps.onStatus({ phase: 'ready' });
     } catch (err) {
-      clearTimeout(this.thresholdTimer);
+      gate.stop();
       // A superseded run that threw on abort is not an error the user cares about.
       if (generation === this.generation) this.deps.onStatus({ phase: 'error', error: err });
     }
@@ -192,7 +255,7 @@ export class DeferredRunner {
 
   dispose(): void {
     clearTimeout(this.debounceTimer);
-    clearTimeout(this.thresholdTimer);
+    this.gate?.stop();
     this.current?.abort();
   }
 }
