@@ -62,6 +62,7 @@ export class PipelineRegistry {
   #running = new Map<string, AbortController>();
   #generation = 0;
   #listeners = new Map<string, Set<PipelineListener>>();
+  #anyListeners = new Set<(name: string, event: PipelineEvent) => void>();
 
   constructor(map: Map<string, Pipeline>, deps: PipelineRegistryDeps) {
     this.#map = map;
@@ -86,8 +87,15 @@ export class PipelineRegistry {
     return () => set!.delete(listener);
   }
 
+  /** Subscribe to every pipeline's run events (`(name, event)`). Returns an unsubscribe fn. */
+  onAny(listener: (name: string, event: PipelineEvent) => void): () => void {
+    this.#anyListeners.add(listener);
+    return () => this.#anyListeners.delete(listener);
+  }
+
   #emit(name: string, event: PipelineEvent): void {
     this.#listeners.get(name)?.forEach((fn) => fn(event));
+    this.#anyListeners.forEach((fn) => fn(name, event));
   }
 
   /** The doc write port handed to every stage of an engine-run pipeline. */
@@ -181,5 +189,6 @@ export class PipelineRegistry {
     for (const ac of this.#running.values()) ac.abort();
     this.#running.clear();
     this.#listeners.clear();
+    this.#anyListeners.clear();
   }
 }

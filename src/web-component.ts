@@ -35,8 +35,10 @@ import {
   toObject,
   toText,
   adoptStyles,
+  renderLoader,
   type EventDef,
   type InputDef,
+  type RenderLoaderCallback,
 } from '@keenmate/web-components-core';
 import type { Command } from 'prosemirror-state';
 import { EditorEngine, type EditorEngineOptions } from './engine/editor-engine';
@@ -63,7 +65,7 @@ import { ViewLayout } from './ui/view-layout';
 import { EditorChrome } from './ui/chrome';
 import styles from './css/editor.css?inline';
 import { initLogger, contentLogger } from './logger';
-import type { EditorLabels } from './labels';
+import { createLabelResolver, type EditorLabels } from './labels';
 
 // Build-time constant (vite `define`).
 declare const __VERSION__: string;
@@ -203,6 +205,14 @@ const INPUTS: readonly InputDef[] = [
       'Property only. `(detail) => false | void` (may be async) — runs first on every toolbar / selection-toolbar / context-menu activation, with the `action` event detail. Return `false` to cancel: no `onClick`, no `action` event, no command. Keyboard shortcuts do not pass through it.',
   },
   {
+    configKey: 'renderLoadingCallback',
+    converter: toFunction(),
+    default: null,
+    on: 'update',
+    description:
+      "Property only. Draws the pending loader (shown while a deferred pipeline — e.g. a cloud-image upload — outlives its loader threshold) instead of the default spinner: `({ component, context, containerElement, element, label }) => void | cleanup`, `context` = `'pipeline'`. Fill `containerElement` (it already has `role=\"status\"` + `aria-label` = label `loading`); a returned function runs when the loader is removed. Beats the page-wide `window.components.renderLoaderCallback` (core SPEC §12.14). Read each time the loader shows.",
+  },
+  {
     configKey: 'interactionHost',
     converter: toCustom<InteractionHost | null>(() => null, { validate: isInteractionHost }),
     default: null,
@@ -281,6 +291,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   declare onAction: ((detail: EditorActionEventDetail) => void) | null;
   /** `false` (sync or async) cancels a toolbar / menu activation. */
   declare beforeActionCallback: ((detail: EditorActionEventDetail) => unknown) | null;
+  /** Draws the pending loader instead of the default spinner (core `renderLoader`, §12.14). */
+  declare renderLoadingCallback: RenderLoaderCallback | null;
   /** The modal bridge for interactive pipeline stages. */
   declare interactionHost: InteractionHost | null;
   /** UI-string overrides (partial; English defaults). */
@@ -301,6 +313,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   #engine?: EditorEngine;
   #chrome?: EditorChrome;
   #unsubscribe?: () => void;
+  /** Removes the pending loader (core `renderLoader`); set while it shows. */
+  #removeLoader?: () => void;
   // The light-DOM hidden form input (only while `name` is set).
   #formInput?: HTMLInputElement;
   /** Whether the host is currently invalid because of a throwing `getValueFormatCallback`. */
@@ -415,6 +429,11 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     if ('interactionHost' in partial) {
       this.#engine?.setInteractionHost(this.#interactionHost());
     }
+    // A showing pending loader re-renders with the new label / render hook.
+    if (('labels' in partial || 'renderLoadingCallback' in partial) && this.#removeLoader) {
+      this.#setPendingLoader(false);
+      this.#setPendingLoader(true);
+    }
     // `theme` reflects via the input table; nothing imperative to do here yet.
   }
 
@@ -519,9 +538,11 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
       if (!this.#isSilentChange) this.emit('change', this.#changeDetail());
     });
     const offLock = engine.events.on('lock', ({ isLocked }) => this.emit('lock-change', { isLocked }));
+    const offPending = engine.events.on('pending', ({ isPending }) => this.#setPendingLoader(isPending));
     this.#unsubscribe = () => {
       offChange();
       offLock();
+      offPending();
     };
     this.#layout.refreshOutput(); // initial fill (engine now exists)
     this.#syncFormInput();
@@ -554,7 +575,26 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     }
   }
 
+  /**
+   * Show / hide the pipeline pending loader through core `renderLoader()`:
+   * instance `renderLoadingCallback` → page-wide `renderLoaderCallback` →
+   * the default `.we-loader` spinner; `role="status"` + label `loading`.
+   */
+  #setPendingLoader(isPending: boolean): void {
+    const slot = this.#layout.pendingMount;
+    if (isPending && !this.#removeLoader) {
+      const label = createLabelResolver(() => this.config.labels as EditorLabels | null | undefined)('loading');
+      slot.hidden = false;
+      this.#removeLoader = renderLoader(this, slot, 'pipeline', { prefix: 'we', label });
+    } else if (!isPending && this.#removeLoader) {
+      this.#removeLoader();
+      this.#removeLoader = undefined;
+      slot.hidden = true;
+    }
+  }
+
   #teardownEngine(): void {
+    this.#setPendingLoader(false);
     this.#chrome?.destroy();
     this.#chrome = undefined;
     this.#unsubscribe?.();

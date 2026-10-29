@@ -21,6 +21,12 @@
   --we-danger: #c62828;
   /* Disabled toolbar / selection-toolbar commands: the contract's one fade. */
   --we-disabled-opacity: var(--base-disabled-opacity, 0.65);
+  /* Pending loader (a deferred pipeline outlived its threshold): the shared
+     loader contract (core SPEC §12.14) → --base-loader-* → the contract's arc. */
+  --we-loader-icon: var(--base-loader-icon, url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M21 12a9 9 0 1 1-6.219-8.56%22/%3E%3C/svg%3E"));
+  --we-loader-rotate: var(--base-loader-rotate, 1turn);
+  --we-loader-duration: var(--base-loader-duration, 0.8s);
+  --we-loader-size: var(--base-loader-size, 1.25em);
 
   /* Context menu = core `openMenu()` (.km-menu*). Each public --we-context-menu-*
      maps onto core's PRIVATE --_km-menu-* layer with NO fallback: unset → the
@@ -87,11 +93,40 @@
 /* Body group — the editor plus its hugging status bar; fills the surface
    alongside the toolbar. */
 .we-body {
+  position: relative; /* anchors the pending loader */
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
   min-width: 0;
   min-height: var(--we-min-height);
+}
+
+/* Pending loader slot (core renderLoader → role="status"); top-end corner of the body. */
+.we-pending {
+  position: absolute;
+  top: 6px;
+  inset-inline-end: 6px;
+  z-index: 2;
+  display: flex;
+  color: var(--we-accent);
+  pointer-events: none;
+}
+.we-pending[hidden] {
+  display: none;
+}
+/* The shared drawing rule (base-css-variables Loader contract, verbatim). */
+.we-loader {
+  display: inline-block;
+  inline-size: var(--we-loader-size);
+  block-size: var(--we-loader-size);
+  mask: var(--we-loader-icon) center / contain no-repeat;
+  background: currentColor;
+  animation: we-loader-spin var(--we-loader-duration) linear infinite;
+}
+@keyframes we-loader-spin {
+  to {
+    transform: rotate(var(--we-loader-rotate));
+  }
 }
 
 /* Editor mount — flush inside the frame (the frame owns the border/radius). */

@@ -70,7 +70,9 @@ A deferred run gets a monotonic **generation** and an **AbortController**. Firin
 the same name again **supersedes** the in-flight run (aborts its `fetch`es, closes
 its modal); a superseded run's result is dropped silently. If the run outlives the
 **loader threshold** (default 200 ms) it surfaces a `pending` status — so a fast
-run shows no spinner. A pipeline with `policy.lock` **locks the surface** (a true
+run shows no spinner. `<km-editor>` shows its pending loader (core `renderLoader()`,
+context `'pipeline'`; replaceable via `renderLoadingCallback`) while any run is pending —
+the engine aggregates this as its `pending` event `{ isPending }` / `engine.isPending`. A pipeline with `policy.lock` **locks the surface** (a true
 `setEditable(false)`) for the whole run.
 
 ```mermaid

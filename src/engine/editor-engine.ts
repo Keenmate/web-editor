@@ -113,6 +113,9 @@ export interface EngineEventMap {
   destroy: EditorEngine;
   /** A gating pipeline locked / unlocked the surface for the duration of a run. */
   lock: { engine: EditorEngine; isLocked: boolean };
+  /** A deferred pipeline outlived its loader threshold (`isPending: true`), or the
+   * last such run settled (`false`). Drives the host's pending loader. */
+  pending: { engine: EditorEngine; isPending: boolean };
 }
 
 export class EditorEngine {
@@ -142,6 +145,8 @@ export class EditorEngine {
   #interactionHost: InteractionHost;
   /** Editability to restore when a gating lock releases. */
   #preLockIsEditable?: boolean;
+  /** Names of deferred pipelines whose run is past its loader threshold. */
+  #pendingNames = new Set<string>();
   /** Prototype of every ctx: `controller` / `element` getters when hosted (inherited ⇒ non-enumerable). */
   #ctxProto: object;
 
@@ -214,6 +219,14 @@ export class EditorEngine {
       ...(setViewModeForPlugin ? { setViewMode: setViewModeForPlugin } : {}),
     });
     this.commands.attachRunner((id) => this.#pipelines.run(id));
+    this.#pipelines.onAny((name, event) => {
+      if (event.type !== 'status') return;
+      const wasPending = this.#pendingNames.size > 0;
+      if (event.status.phase === 'pending') this.#pendingNames.add(name);
+      else this.#pendingNames.delete(name);
+      const isPending = this.#pendingNames.size > 0;
+      if (isPending !== wasPending) this.events.emit('pending', { engine: this, isPending });
+    });
 
     // Presenter lists: core-leading + plugin + core-trailing.
     // Hosted: the view-mode group trails everything (the far end of the toolbar).
@@ -318,6 +331,10 @@ export class EditorEngine {
   /** The named pipeline registry (commands + plugin pipelines). */
   get pipelines(): PipelineRegistry {
     return this.#pipelines;
+  }
+  /** Whether any deferred pipeline run is past its loader threshold (see the `pending` event). */
+  get isPending(): boolean {
+    return this.#pendingNames.size > 0;
   }
   /** Fire a pipeline / command by name. Sync → returns whether it resolved;
    * deferred → kicks off async and returns `true`. */

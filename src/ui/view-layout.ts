@@ -42,6 +42,8 @@ export class ViewLayout {
   readonly statusBottomMount: HTMLDivElement;
   /** Persistent shadow-local layer the floating presenters portal into. */
   readonly overlayLayer: HTMLDivElement;
+  /** Persistent slot for the pipeline pending loader (corner of the editor body; `hidden` when idle). */
+  readonly pendingMount: HTMLDivElement;
 
   #shadow: ShadowRoot;
   #host: HTMLElement;
@@ -81,6 +83,13 @@ export class ViewLayout {
     this.statusBottomMount.className = 'we-status';
     this.statusBottomMount.setAttribute('part', 'status-bottom');
 
+    // Pending-loader slot — overlays the editor body's corner while a deferred
+    // pipeline (e.g. an image upload) outlives its loader threshold.
+    this.pendingMount = document.createElement('div');
+    this.pendingMount.className = 'we-pending';
+    this.pendingMount.setAttribute('part', 'loader');
+    this.pendingMount.hidden = true;
+
     // Overlay layer — a sibling of the root (not re-rendered), so portaled
     // floating panels survive a view-mode change. Positioned panels are fixed,
     // so this layer itself takes no space.
@@ -115,6 +124,7 @@ export class ViewLayout {
     this.toolbarMount.remove();
     this.statusTopMount.remove();
     this.statusBottomMount.remove();
+    this.pendingMount.remove();
     this.mount.remove();
 
     if (!this.#root) {
@@ -137,6 +147,7 @@ export class ViewLayout {
     if (statusSide === 'top' || statusSide === 'both') body.appendChild(this.statusTopMount);
     body.appendChild(this.mount);
     if (statusSide === 'bottom' || statusSide === 'both') body.appendChild(this.statusBottomMount);
+    body.appendChild(this.pendingMount);
 
     const surface = document.createElement('div');
     surface.className = `we-surface we-tb-${toolbarSide}`;

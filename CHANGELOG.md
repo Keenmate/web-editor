@@ -35,6 +35,16 @@ native `input.value`); methods and user interaction do.
 
 ### Added
 
+- **Pending loader (shared KeenMate loader, core `renderLoader()` / SPEC §12.14).** While a deferred
+  pipeline (e.g. the cloud-image `image:browser:pick` upload) outlives its loader threshold, a
+  loader shows in the top-end corner of the editor body (`.we-pending`, `::part(loader)`,
+  `role="status"`, `aria-label` = new label **`loading`** — "Loading…"). Default: the `.we-loader`
+  spinner drawn from the new tokens **`--we-loader-icon` / `-rotate` / `-duration` / `-size`**
+  (chained to `--base-loader-*`; it slows under reduced motion, never stops). New property-only
+  input **`renderLoadingCallback`** `({ component, context: 'pipeline', containerElement, element,
+  label }) => void | cleanup` draws it instead and beats the page-wide
+  `window.components.renderLoaderCallback`. Engine: `pending` event `{ isPending }` + `isPending`;
+  `PipelineRegistry.onAny(listener)`.
 - **`setViewMode(mode, options?)`** on the element and `el.controller` — switches the view mode and
   fires `view-mode-change` (`source: 'api'`) unless `{ isSilent: true }`. No-op when the mode is
   already active; an invalid mode warns and is ignored. `controller.runCommand('view-…')` also

@@ -97,6 +97,7 @@ Property-only inputs:
 | ---------------------- | ---- | ----------- |
 | `getValueFormatCallback` | `(ctx) => string` | Formats the value written into the hidden form input (e.g. sanitizing); `ctx` = `{ value, contentFormat }` + `controller` / `element`. Affects only the submitted value — see [Forms](#forms). |
 | `beforeActionCallback` | `(detail) => false \| void \| Promise<…>` | Runs first on every toolbar / selection-toolbar / context-menu activation; `false` cancels (no `onClick`, no `action` event, no command). |
+| `renderLoadingCallback` | `(ctx) => void \| cleanup` | Draws the pending loader (shown while a deferred pipeline — e.g. a cloud-image upload — outlives its threshold) instead of the default spinner; `ctx` = `{ component, context: 'pipeline', containerElement, element, label }`. Beats the page-wide `window.components.renderLoaderCallback`. See [Theming](#theming). |
 | `interactionHost`      | `{ request(ctx) }` | The modal bridge interactive pipeline stages call (`ctx` = request + `signal` + `controller` / `element`). Default: `window.confirm`. Survives engine rebuilds. |
 
 **Events** — bubble, not composed. Each has a camelCase twin property (`onChange`,
@@ -154,6 +155,7 @@ nothing); a missing key falls back to English. Every editor label is inserted as
 | `imageUrlPrompt` / `imageAltPrompt` | `Enter image URL:` / `Enter alt text (optional):` |
 | `codeLanguagePrompt` / `codeLanguageChangePrompt` | `Enter language ({languages}):` / `Change language ({languages}):` |
 | `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage` | cloud-image plugin texts |
+| `loading` | `aria-label` of the pending loader ("Loading…") |
 | `valueFormatError` | validation message while `getValueFormatCallback` throws ("The value could not be formatted.") |
 
 Plugin code resolves strings with `label(key, params?, fallback?)` — on the plugin
@@ -203,8 +205,13 @@ Set `theme="…"` to target a theme from your own CSS via `:host([theme="…"])`
 
 The editor's own classes and custom properties use the `we-` prefix (`--we-bg`,
 `--we-border`, `--we-accent`, …). Disabled commands fade by `--we-disabled-opacity`
-(default `var(--base-disabled-opacity, 0.65)`). The editor has no transitions or animations of
-its own; the right-click menu's motion follows core's `--km-menu-*` / `--base-duration-*`
+(default `var(--base-disabled-opacity, 0.65)`). While a deferred pipeline outlives its threshold a
+loader shows in the body's top-end corner (`::part(loader)`, `role="status"`, label `loading`): the
+shared KeenMate loader, drawn from `--we-loader-icon` / `--we-loader-rotate` / `--we-loader-duration`
+/ `--we-loader-size` (each chained to `--base-loader-*`, so one page-level change restyles every
+component's loader; it slows under reduced motion). For a richer loader set `renderLoadingCallback`
+on the element or `window.components.renderLoaderCallback` for the page. Apart from that spinner
+the editor has no transitions or animations of its own; the right-click menu's motion follows core's `--km-menu-*` / `--base-duration-*`
 (`--base-duration-*: 0s` turns it off page-wide). The right-click menu is the shared KeenMate menu
 from `@keenmate/web-components-core` (`.km-menu*`, `::part(context-menu)`); restyle it
 with the `--we-context-menu-*` properties on the element — `bg`, `text-color`,

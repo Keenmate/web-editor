@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>km-editor — pending loader</title>
+</head>
+<body>
+    <!-- Targeted by e2e/loader.spec.ts. A deferred `slow:run` pipeline (threshold 0)
+         stays pending until window.releaseSlow() — the editor shows its loader meanwhile. -->
+    <km-editor id="subject" value="Hello"></km-editor>
+
+    <script type="module">
+        import { defaultPlugins } from '/src/index.ts';
+        import { getEditorEngine } from '/src/web-component.ts';
+        let release = () => {};
+        const slow = {
+            name: 'slow',
+            pipelines: [{
+                name: 'slow:run',
+                timing: 'deferred',
+                policy: { thresholdMs: 0 },
+                stages: [{ id: 'wait', run: () => new Promise((r) => (release = () => r({ action: 'resolve' }))) }],
+            }],
+        };
+        const el = document.getElementById('subject');
+        el.plugins = [...defaultPlugins(), slow];
+        window.runSlow = () => getEditorEngine(el).run('slow:run');
+        window.releaseSlow = () => release();
+        window.loaderReady = true;
+    </script>
+</body>
+</html>

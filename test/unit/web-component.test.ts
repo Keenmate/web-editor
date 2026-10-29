@@ -394,3 +394,74 @@ describe('<km-editor> form', () => {
     expect(changes).toEqual([]);
   });
 });
+
+describe('<km-editor> pending loader (core renderLoader)', () => {
+  /** A deferred pipeline that resolves when `release()` is called. */
+  function slowPlugin() {
+    let release!: () => void;
+    const plugin = {
+      name: 'slow',
+      pipelines: [
+        {
+          name: 'slow:run',
+          timing: 'deferred' as const,
+          policy: { thresholdMs: 0 },
+          stages: [
+            {
+              id: 'wait',
+              run: () => new Promise<{ action: 'resolve' }>((r) => (release = () => r({ action: 'resolve' }))),
+            },
+          ],
+        },
+      ],
+    };
+    return { plugin, release: () => release() };
+  }
+
+  async function mountSlow() {
+    const { defaultPlugins } = await import('../../src/index');
+    const el = await mount();
+    const slow = slowPlugin();
+    el.plugins = [...defaultPlugins(), slow.plugin];
+    await el.whenSettled();
+    const slot = el.shadowRoot!.querySelector('.we-pending') as HTMLElement;
+    return { el, slot, release: slow.release };
+  }
+  const tick = (ms = 10) => new Promise((r) => setTimeout(r, ms));
+
+  it('shows the default .we-loader with role=status + labels.loading past the threshold, removes it after', async () => {
+    const { el, slot, release } = await mountSlow();
+    expect(slot.hidden).toBe(true);
+    getEditorEngine(el)!.run('slow:run');
+    await tick();
+    expect(slot.hidden).toBe(false);
+    expect(slot.getAttribute('role')).toBe('status');
+    expect(slot.getAttribute('aria-label')).toBe('Loading…');
+    expect(slot.querySelector('.we-loader')).toBeTruthy();
+    release();
+    await tick();
+    expect(slot.hidden).toBe(true);
+    expect(slot.hasAttribute('role')).toBe(false);
+    expect(slot.childElementCount).toBe(0);
+  });
+
+  it('renderLoadingCallback draws instead of the default (context "pipeline"), cleanup runs on remove', async () => {
+    const { el, slot, release } = await mountSlow();
+    const seen: string[] = [];
+    el.labels = { loading: 'Nahrávám…' };
+    el.renderLoadingCallback = ({ context, containerElement, label, component }) => {
+      seen.push(`${component}:${context}:${label}`);
+      containerElement.append(Object.assign(document.createElement('b'), { className: 'mine' }));
+      return () => seen.push('cleanup');
+    };
+    await el.whenSettled();
+    getEditorEngine(el)!.run('slow:run');
+    await tick();
+    expect(slot.querySelector('.mine')).toBeTruthy();
+    expect(slot.querySelector('.we-loader')).toBeNull();
+    release();
+    await tick();
+    expect(slot.querySelector('.mine')).toBeNull();
+    expect(seen).toEqual(['km-editor:pipeline:Nahrávám…', 'cleanup']);
+  });
+});

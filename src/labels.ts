@@ -49,6 +49,8 @@ export const DEFAULT_LABELS = {
   cloudImagePickerMessage: 'Pick an image to insert.',
   /** Validation message while a throwing `getValueFormatCallback` keeps the field invalid. */
   valueFormatError: 'The value could not be formatted.',
+  /** Accessible label (`aria-label`) of the pending loader shown while a deferred pipeline runs. */
+  loading: 'Loading…',
 } as const;
 
 /** A built-in non-command label key. */
