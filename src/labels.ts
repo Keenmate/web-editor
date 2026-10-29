@@ -28,6 +28,7 @@ export const DEFAULT_LABELS = {
   listGroup: 'Lists',
   insertGroup: 'Insert',
   historyGroup: 'History',
+  viewGroup: 'View',
   linkGroup: 'Link',
   imageGroup: 'Image',
   tableGroup: 'Table',

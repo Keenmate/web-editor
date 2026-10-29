@@ -37,6 +37,59 @@ const bar = (el: KmEditorElement) => el.shadowRoot!.querySelector('.we-toolbar-z
 const cmd = (el: KmEditorElement, id: string) =>
   el.shadowRoot!.querySelector(`.we-toolbar-zone [data-action="${id}"]`) as HTMLButtonElement;
 
+describe('<km-editor> view-mode toolbar items', () => {
+  it('the default toolbar ends with the view-edit / view-split / view-preview group', async () => {
+    const el = await mount({ value: 'x' });
+    const groups = [...bar(el).querySelectorAll<HTMLElement>('.we-group')];
+    const last = groups[groups.length - 1];
+    expect(last.dataset.group).toBe('view');
+    expect([...last.querySelectorAll('button')].map((b) => [b.dataset.action, b.textContent])).toEqual([
+      ['view-edit', 'Edit'],
+      ['view-split', 'Split'],
+      ['view-preview', 'Preview'],
+    ]);
+    expect(cmd(el, 'view-edit').getAttribute('aria-pressed')).toBe('true');
+    expect(cmd(el, 'view-split').hasAttribute('aria-pressed')).toBe(false);
+  });
+
+  it('click switches the mode with source "user"; toggled state follows any path', async () => {
+    // Running a command focuses the view: only one live editor in the document
+    // (happy-dom's shadow activeElement breaks with several).
+    document.querySelectorAll('km-editor').forEach((e) => e.remove());
+    const el = await mount({ value: 'x' });
+    const seen: unknown[] = [];
+    el.addEventListener('view-mode-change', (e) => {
+      const d = (e as CustomEvent).detail;
+      seen.push([d.viewMode, d.oldViewMode, d.source]);
+    });
+    cmd(el, 'view-split').click();
+    await el.whenSettled();
+    expect(el.viewMode).toBe('split');
+    expect(el.getAttribute('view-mode')).toBe('split');
+    expect(seen).toEqual([['split', 'edit', 'user']]);
+    expect(cmd(el, 'view-split').getAttribute('aria-pressed')).toBe('true');
+    expect(cmd(el, 'view-edit').hasAttribute('aria-pressed')).toBe(false);
+    // silent assignment still re-renders the toggled state
+    el.viewMode = 'preview';
+    await el.whenSettled();
+    expect(cmd(el, 'view-preview').getAttribute('aria-pressed')).toBe('true');
+    expect(seen).toHaveLength(1);
+    el.remove(); // the click focused the view: detach it (happy-dom shadow-selection quirk)
+  });
+
+  it('labels viewEdit / viewSplit / viewPreview / viewGroup override the texts', async () => {
+    const el = await mount({ value: 'x', labels: JSON.stringify({ viewEdit: 'Upravit', viewGroup: 'Zobrazení' }) });
+    expect(cmd(el, 'view-edit').textContent).toBe('Upravit');
+    expect(bar(el).querySelector('[data-group="view"]')!.getAttribute('aria-label')).toBe('Zobrazení');
+  });
+
+  it('is hidden in inline view mode', async () => {
+    const el = await mount({ value: 'x', 'view-mode': 'inline' });
+    expect(cmd(el, 'view-edit')).toBeNull();
+    expect((bar(el).querySelector('[data-group="view"]') as HTMLElement).hidden).toBe(true);
+  });
+});
+
 describe('<km-editor> static toolbar', () => {
   it('renders the command toolbar above the editor in edit mode', async () => {
     const el = await mount({ value: '# Hi' });
@@ -139,8 +192,21 @@ describe('<km-editor> status bar', () => {
     expect(node?.textContent).toBe('CUSTOM');
   });
 
-  it('hides the toolbar in preview (read-only) mode', async () => {
+  it('preview (read-only) keeps only the view-mode group', async () => {
     const el = await mount({ value: 'x', 'view-mode': 'preview' });
+    expect(bar(el).hidden).toBe(false);
+    const shown = [...bar(el).querySelectorAll<HTMLElement>('.we-group')].filter((g) => !g.hidden);
+    expect(shown.map((g) => g.dataset.group)).toEqual(['view']);
+    expect(cmd(el, 'view-preview').getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('readonly keeps only the view-mode group; disabled hides the toolbar', async () => {
+    const el = await mount({ value: 'x', readonly: '' });
+    const shown = () => [...bar(el).querySelectorAll<HTMLElement>('.we-group')].filter((g) => !g.hidden).map((g) => g.dataset.group);
+    expect(shown()).toEqual(['view']);
+    el.removeAttribute('readonly');
+    el.setAttribute('disabled', '');
+    await el.whenSettled();
     expect(bar(el).hidden).toBe(true);
   });
 

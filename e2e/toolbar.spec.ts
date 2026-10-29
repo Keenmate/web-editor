@@ -17,7 +17,7 @@ test.describe('toolbar', () => {
         const [z, b] = await Promise.all([zone(page).boundingBox(), body(page).boundingBox()]);
         expect(z!.y + z!.height).toBeLessThanOrEqual(b!.y + 1);
         const groups = await page.locator('km-editor#subject .we-toolbar-zone .we-group').evaluateAll((gs) => gs.map((g) => (g as HTMLElement).dataset.group));
-        expect(groups).toEqual(['format', 'block', 'list', 'insert', 'link', 'image', 'table', 'history']);
+        expect(groups).toEqual(['format', 'block', 'list', 'insert', 'link', 'image', 'table', 'history', 'view']);
         await expect(toolbarButton(page, 'bold')).toHaveAttribute('title', 'Bold (Ctrl+B)');
         await expect(toolbarButton(page, 'redo')).toHaveAttribute('title', /Redo/);
     });

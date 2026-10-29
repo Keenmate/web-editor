@@ -38,6 +38,12 @@ export interface EditorController {
   getJSON(): unknown;
   /** Replace the document with `value`, parsed in `format` (default: the active `contentFormat`). Fires `change` unless `{ isSilent: true }`. */
   setValue(value: string, format?: SerializationFormat, options?: { isSilent?: boolean }): void;
+  /**
+   * Switch the view mode (`edit` | `split` | `preview` | `inline`). Fires
+   * `view-mode-change` (`source: 'api'`) unless `{ isSilent: true }`; a no-op (no
+   * event) when `mode` is already active. Assigning `el.viewMode` is the silent form.
+   */
+  setViewMode(mode: EditorViewMode, options?: { isSilent?: boolean }): void;
   focus(): void;
   /**
    * Run a registered command / pipeline by name (`'bold'`, `'insert-table'`,
@@ -58,6 +64,7 @@ const CONTROLLER_METHODS = [
   'getMarkdown',
   'getJSON',
   'setValue',
+  'setViewMode',
   'focus',
   'runCommand',
   'isCommandToggled',
@@ -176,8 +183,21 @@ export interface ValueFormatErrorEventDetail extends EditorComponentContext {
 /** `ready` carries only the component context. */
 export type ReadyEventDetail = EditorComponentContext;
 
+/**
+ * Who switched the view mode: `'user'` — a view-mode toolbar item (`view-edit` /
+ * `view-split` / `view-preview`); `'plugin'` — a plugin / pipeline stage through its
+ * engine port (`SetupContext.setViewMode` / `StageServices.setViewMode`); `'api'` —
+ * `setViewMode()` on the element or `controller` (incl. `controller.runCommand('view-…')`).
+ */
+export type ViewModeChangeSource = 'user' | 'plugin' | 'api';
+
 export interface ViewModeChangeEventDetail extends EditorComponentContext {
+  /** The new view mode. */
   viewMode: EditorViewMode;
+  /** The view mode before the switch. */
+  oldViewMode: EditorViewMode;
+  /** Who switched it. */
+  source: ViewModeChangeSource;
 }
 
 export interface LockChangeEventDetail extends EditorComponentContext {

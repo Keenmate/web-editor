@@ -55,6 +55,7 @@ import {
   type ValueFormatErrorEventDetail,
   type ReadyEventDetail,
   type ViewModeChangeEventDetail,
+  type ViewModeChangeSource,
   type LockChangeEventDetail,
 } from './interaction';
 import { createActionHost } from './ui/actions';
@@ -114,7 +115,7 @@ const INPUTS: readonly InputDef[] = [
     converter: toText({ isNullable: true }),
     on: 'update',
     description:
-      'Form field name. When set, a light-DOM `<input type="hidden" name="…">` child of the host carries the live content (serialized in `contentFormat`) and submits with the surrounding `<form>`; it is disabled (not submitted) while the editor is disabled, including by a `<fieldset disabled>`. A form reset restores `defaultValue` (attribute `value`).',
+      'Form field name. When set, a light-DOM `<input type="hidden" name="…">` child of the host carries the live content (serialized in `contentFormat`) and submits with the surrounding `<form>`; it is disabled (not submitted) while the editor is disabled, including by a `<fieldset disabled>`. A form reset restores `defaultValue` (attribute `value`) silently — no `change`, like a native `form.reset()`.',
   },
   {
     configKey: 'getValueFormatCallback',
@@ -131,7 +132,7 @@ const INPUTS: readonly InputDef[] = [
     shouldReflect: true,
     on: 'update',
     description:
-      "Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the view mode is stored and reflected. Assigning it (property or attribute) is silent — no `view-mode-change`.",
+      "Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the view mode is stored and reflected. Assigning it (property or attribute) is silent — no `view-mode-change`; `setViewMode()` and the view-mode toolbar items fire it.",
   },
   {
     configKey: 'isReadonly',
@@ -220,7 +221,7 @@ const EVENTS: readonly EventDef[] = [
   {
     name: 'change',
     description:
-      'The document changed by the user (typing, toolbar, paste, …), `setValue()` (not `{ isSilent: true }`) or a form reset. Assigning `value` / `contentFormat` is silent, like a native `input.value`. `detail`: `{ value, contentFormat }` — the content serialized in the active `contentFormat`. Twin: `onChange(detail)`.',
+      'The document changed by the user (typing, toolbar, paste, …), a plugin, or `setValue()` (not `{ isSilent: true }`). Assigning `value` / `contentFormat` is silent, like a native `input.value`, and so is a form reset (like a native `form.reset()`). `detail`: `{ value, contentFormat }` — the content serialized in the active `contentFormat`. Twin: `onChange(detail)`.',
   },
   {
     name: 'ready',
@@ -229,7 +230,8 @@ const EVENTS: readonly EventDef[] = [
   },
   {
     name: 'view-mode-change',
-    description: 'Reserved for a user-driven view-mode switch (Phase 3 chrome). Assigning `viewMode` (attribute `view-mode`) is silent and does NOT fire it — so nothing fires it yet. `detail`: `{ viewMode }`. Twin: `onViewModeChange(detail)`.',
+    description:
+      "The view mode was switched by anything but the app's own assignment: a view-mode toolbar item (`source: 'user'`), `setViewMode()` on the element or `controller` (`'api'`, unless `{ isSilent: true }`), or a plugin / pipeline stage through its `setViewMode` port (`'plugin'`). Assigning `viewMode` (attribute `view-mode`) is silent. `detail`: `{ viewMode, oldViewMode, source }`. Twin: `onViewModeChange(detail)`.",
   },
   {
     name: 'lock-change',
@@ -289,6 +291,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   declare contentFormat: EditorFormat;
   /** Form field name (light-DOM hidden input; attribute `name`). */
   declare name: string | null;
+  /** Presentation (attribute `view-mode`). Assigning is silent; {@link setViewMode} fires `view-mode-change`. */
+  declare viewMode: EditorViewMode;
   /** Formats the submitted form value (the hidden input) only — not `el.value`. */
   declare getValueFormatCallback: ((ctx: ValueFormatContext) => string) | null;
 
@@ -316,6 +320,9 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   // True while a silent `setValue()` / `value` assignment replaces the document:
   // the engine's `change` still syncs the form input + output, but no outward `change`.
   #isSilentChange = false;
+  // Source a view-mode COMMAND reports: 'user' (toolbar activation) unless the
+  // controller's `runCommand()` is running it ('api').
+  #commandSource: ViewModeChangeSource = 'user';
 
   constructor() {
     super();
@@ -371,15 +378,15 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
 
   /**
    * The surrounding `<form>` was reset: restore the initial content (`defaultValue`,
-   * attribute `value`), like a native control. Not a user edit, but the document
-   * changes, so `change` fires.
+   * attribute `value`), like a native control — silently: a native `form.reset()`
+   * fires no `input` / `change`, so neither does this (the hidden input is synced).
    */
   formResetCallback(): void {
     this.flush();
     if (!this.#engine) return; // not built yet: the build loads defaultValue anyway
     this.#pendingSet = undefined;
     const content = (this.config.defaultValue as string | null) ?? '';
-    this.setValue(content);
+    this.setValue(content, undefined, { isSilent: true });
   }
 
   /** Cosmetic/behavioural change: patch the live engine without a rebuild. */
@@ -471,7 +478,16 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
       editorPlugins: this.#customPlugins, // undefined → engine uses defaultPlugins()
       interactionHost: this.#interactionHost(),
       // Every ctx the engine builds carries this element + its controller.
-      host: { element: this, getController: () => this.controller },
+      host: {
+        element: this,
+        getController: () => this.controller,
+        // View-mode commands (toolbar items) report 'user' ('api' under runCommand);
+        // the plugin port (setup ctx / stage services) reports 'plugin'.
+        viewMode: {
+          get: () => this.config.viewMode as EditorViewMode,
+          set: (mode, via) => this.#switchViewMode(mode, via === 'plugin' ? 'plugin' : this.#commandSource, false),
+        },
+      },
       // UI strings: read live, so a `labels` change applies without a rebuild.
       getLabels: () => this.config.labels as EditorLabels | null | undefined,
     };
@@ -624,6 +640,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   #applyChromeState(): void {
     this.#chrome?.setState({
       isEditable: this.#resolveEditable(),
+      isDisabled: this.isEffectivelyDisabled,
       isToolbarShown: (this.config.toolbar as EditorToolbar) !== 'none',
       status: this.config.statusbar as EditorStatusBar,
     });
@@ -669,6 +686,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
       getJSON: () => el.getJSON(),
       setValue: (value: string, format?: EditorFormat, options?: { isSilent?: boolean }) =>
         el.setValue(value, format, options),
+      setViewMode: (mode: EditorViewMode, options?: { isSilent?: boolean }) => el.setViewMode(mode, options),
       focus: () => el.focus(),
       runCommand: (command: string | Command) => el.#runCommand(command),
       isCommandToggled: (name: string) => {
@@ -691,7 +709,16 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     this.flush();
     const engine = this.#engine;
     if (!engine) return false;
-    if (typeof command === 'string') return engine.commands.run(command);
+    if (typeof command === 'string') {
+      // A view-mode command run programmatically reports `source: 'api'`.
+      const previous = this.#commandSource;
+      this.#commandSource = 'api';
+      try {
+        return engine.commands.run(command);
+      } finally {
+        this.#commandSource = previous;
+      }
+    }
     const view = engine.view;
     const ok = command(view.state, view.dispatch, view);
     view.focus();
@@ -752,6 +779,28 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
       // No engine yet (before the first build): the build loads it — unless `value` is reassigned in the meantime.
       this.#pendingSet = { value, format: fmt, valueAtSet: this.config.defaultValue };
     }
+  }
+
+  /**
+   * Switch the view mode (`edit` | `split` | `preview` | `inline`). Fires
+   * `view-mode-change` (`source: 'api'`) unless `options.isSilent`; a no-op (no event)
+   * when `mode` is already active, and an invalid mode warns and keeps the current one.
+   * Assigning `el.viewMode` is the silent form.
+   */
+  setViewMode(mode: EditorViewMode, options?: { isSilent?: boolean }): void {
+    this.#switchViewMode(mode, 'api', options?.isSilent === true);
+  }
+
+  /** The one view-mode write path behind `setViewMode()`, the view-mode commands and the plugin port. */
+  #switchViewMode(mode: EditorViewMode, source: ViewModeChangeSource, isSilent: boolean): void {
+    this.flush();
+    const oldViewMode = this.config.viewMode as EditorViewMode;
+    if (mode === oldViewMode) return;
+    // The input's converter validates (an invalid mode warns and keeps the current one).
+    this.viewMode = mode;
+    this.flush();
+    if (this.config.viewMode !== mode || isSilent) return;
+    this.emit('view-mode-change', { viewMode: mode, oldViewMode, source });
   }
 
   /**

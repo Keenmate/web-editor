@@ -28,7 +28,7 @@ dialog stub), `e2e/helpers.ts`.
 | `value` property / attribute replace the document without re-firing `ready`; `value` before upgrade | ✓ | `content.spec.ts` | `content.html` |
 | `focus()` | ✓ | `content.spec.ts` | `content.html` |
 | Form: `name` → light-DOM hidden input (live value in `contentFormat`, one entry) | ✓ | `form.spec.ts` | `form.html` |
-| Form reset → `defaultValue`; `<fieldset disabled>` excludes it | ✓ | `form.spec.ts` | `form.html` |
+| Form reset → `defaultValue` (silent: no `change`); `<fieldset disabled>` excludes it | ✓ | `form.spec.ts` | `form.html` |
 | Form: `getValueFormatCallback` formats the submitted value only (`el.value` unchanged); a throw submits `''`, marks the host invalid (submit blocked, `invalid` fires; `novalidate` submits `''`), fires `value-format-error`; a working callback recovers | ✓ | `form.spec.ts`, unit `web-component.test.ts` | `form.html` |
 | Empty document by default; `labels.placeholder` while empty | ✓ | `form.spec.ts` | `form.html` |
 
@@ -83,10 +83,12 @@ dialog stub), `e2e/helpers.ts`.
 | Feature | Status | Spec | Fixture |
 | --- | :-: | --- | --- |
 | `view-mode` edit / split / preview / inline; assignment fires no `view-mode-change` | ✓ | `modes.spec.ts` | `modes.html` |
+| `setViewMode()` / `controller.setViewMode()` → `view-mode-change` `{ viewMode, oldViewMode, source: 'api' }`; `isSilent`; plugin port → `'plugin'` (unit) | ✓ | `modes.spec.ts`, unit `web-component.test.ts` | `modes.html` |
+| View-mode toolbar items (`view-edit` / `view-split` / `view-preview`): last group, toggled = mode, click → `source: 'user'`, kept in preview, hidden in inline | ✓ | `modes.spec.ts`, unit `toolbar.test.ts` | `modes.html` |
 | Split output is live; output tabs switch format | ✓ | `modes.spec.ts` | `modes.html` |
 | Preview is non-editable | ✓ | `modes.spec.ts` | `modes.html` |
 | Mode switch keeps doc + selection + undo | ✓ | `modes.spec.ts` | `modes.html` |
-| `readonly`: typing ignored, toolbar hidden, native context menu, removal re-enables | ✓ | `readonly.spec.ts` | `readonly.html` |
+| `readonly`: typing ignored, editing toolbar groups hidden (view group stays), native context menu, removal re-enables | ✓ | `readonly.spec.ts` | `readonly.html` |
 | Inline mode `anchor`: placement, scroll tracking, detach releases / reattach re-anchors, unmatched selector, re-target | ✓ | `inline-anchor.spec.ts`, `modes.spec.ts` | `inline-anchor.html`, `modes.html` |
 
 ## 6. Chrome

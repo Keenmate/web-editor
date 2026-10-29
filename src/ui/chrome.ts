@@ -37,8 +37,10 @@ export interface EditorChromeOptions {
 }
 
 export interface ChromeState {
-  /** Whether editing is on — gates the toolbar + selection toolbar + context menu. */
+  /** Whether editing is on — gates the editing toolbar groups + selection toolbar + context menu. */
   isEditable: boolean;
+  /** Effectively disabled — hides the whole toolbar (the view-mode group too). */
+  isDisabled: boolean;
   /** Whether the static toolbar is wanted (the `toolbar` input, independent of `isEditable`). */
   isToolbarShown: boolean;
   /** Which status-bar edge(s) to show (the `statusbar` input; shows read-only too). */
@@ -99,8 +101,9 @@ export class EditorChrome {
 
   /** Apply presentation state (editable + whether the toolbar / status bar(s) are wanted). */
   setState(state: ChromeState): void {
-    const isToolbarShown = state.isEditable && state.isToolbarShown;
-    this.#toolbar.setVisible(isToolbarShown);
+    // Not editable (read-only / preview) keeps only the view-mode group — the way back.
+    const isToolbarShown = state.isToolbarShown && !state.isDisabled;
+    this.#toolbar.setVisible(isToolbarShown, state.isEditable);
     if (isToolbarShown) this.#toolbar.refresh();
 
     const top = state.status === 'top' || state.status === 'both';

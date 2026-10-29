@@ -20,6 +20,7 @@ import type { EditorView } from 'prosemirror-view';
 import type { CommandSpec } from './command-registry';
 import type { ToolGroup, StatusItem } from '../ui/items';
 import type { EditorToolbarEntry } from '../interaction';
+import type { EditorViewMode } from '../web-component';
 import type { Pipeline, StageContribution } from './pipeline/types';
 
 /**
@@ -53,6 +54,11 @@ export interface PluginContext {
 export interface SetupContext extends PluginContext {
   view: EditorView;
   getState: () => EditorState;
+  /**
+   * Switch the hosting `<km-editor>`'s view mode; fires `view-mode-change` with
+   * `source: 'plugin'`. Absent on a standalone engine (no host, no view mode).
+   */
+  setViewMode?: (mode: EditorViewMode) => void;
 }
 
 export interface EditorPlugin {

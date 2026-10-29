@@ -37,6 +37,8 @@ export interface PipelineRegistryDeps {
   setLock: (locked: boolean) => void;
   /** Label resolver handed to stages as `rt.label` (optional). */
   label?: StageServices['label'];
+  /** View-mode switch handed to stages as `rt.setViewMode` (hosted engines only). */
+  setViewMode?: StageServices['setViewMode'];
 }
 
 /** A sensible headless default: route an interactive request through
@@ -96,6 +98,7 @@ export class PipelineRegistry {
       dispatch: (tr) => view?.dispatch(tr),
       runCommand: (cmd) => (view ? cmd(view.state, view.dispatch, view) : false),
       ...(this.#deps.label ? { label: this.#deps.label } : {}),
+      ...(this.#deps.setViewMode ? { setViewMode: this.#deps.setViewMode } : {}),
     };
   }
 

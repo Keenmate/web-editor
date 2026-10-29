@@ -37,6 +37,7 @@ export type {
   ValueFormatErrorEventDetail,
   ReadyEventDetail,
   ViewModeChangeEventDetail,
+  ViewModeChangeSource,
   LockChangeEventDetail,
   EditorEventMap,
 } from './interaction';

@@ -23,7 +23,31 @@ native `input.value`); methods and user interaction do.
 - **Switching `contentFormat` (property or attribute) no longer fires `change`.** Read `el.value`
   after switching (it re-serializes on read).
 - **Assigning `viewMode` (property or `view-mode` attribute) no longer fires `view-mode-change`.**
-  The event stays declared for a future user-driven mode switch; nothing fires it yet.
+  `setViewMode()` and the view-mode toolbar items fire it (see Added).
+- **`view-mode-change` detail is `{ viewMode, oldViewMode, source }`** (was `{ viewMode }`);
+  `source`: `'user'` | `'plugin'` | `'api'`. `ViewModeChangeEventDetail` updated; new exported type
+  `ViewModeChangeSource`.
+- **A form reset no longer fires `change`.** `formResetCallback` restores `defaultValue` silently,
+  like a native `form.reset()` (no `input` / `change`); the hidden form input is synced.
+- **Read-only / `preview` keep the toolbar's view-mode group.** The editing groups are hidden as
+  before, but the Edit / Split / Preview group stays so the user can leave `preview`. Disabled still
+  hides the whole toolbar.
+
+### Added
+
+- **`setViewMode(mode, options?)`** on the element and `el.controller` — switches the view mode and
+  fires `view-mode-change` (`source: 'api'`) unless `{ isSilent: true }`. No-op when the mode is
+  already active; an invalid mode warns and is ignored. `controller.runCommand('view-…')` also
+  reports `'api'`.
+- **View-mode toolbar items `view-edit` / `view-split` / `view-preview`** — built-in commands /
+  core action items forming a radio group: toggled (`aria-pressed`) while their mode is active (by
+  any path, assignment included), a click switches with `source: 'user'`. The default toolbar's
+  last group (`view`, pushed to the far end; not shown in `inline`). Labels `viewEdit` /
+  `viewSplit` / `viewPreview` (`Edit` / `Split` / `Preview`) and `viewGroup` (`View`).
+- **Plugin view-mode port:** `SetupContext.setViewMode` (plugin `setup`) and
+  `StageServices.setViewMode` (`rt.setViewMode` in a pipeline stage) switch the mode with
+  `source: 'plugin'`; absent on a standalone engine. (`ctx.controller` is the public facade —
+  identical to `el.controller` — so calls through it report `'api'`.)
 
 ### Changed
 

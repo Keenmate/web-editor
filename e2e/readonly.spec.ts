@@ -1,11 +1,16 @@
 import { test, expect, load, pm, editor, markdown, type Page } from './fixtures';
 
-// readonly: typing ignored, toolbar hidden, native context menu (no custom menu);
+// readonly: typing ignored, editing toolbar hidden (only the view-mode group stays), native context menu (no custom menu);
 // removing the attribute re-enables. Fixture: test/readonly.html
 // (`<km-editor readonly value="# Locked\n\nbody text">`).
 
 const menu = (page: Page) => page.locator('km-editor#subject .we-context-menu');
 const toolbar = (page: Page) => page.locator('km-editor#subject .we-toolbar-zone');
+// Editing off keeps only the view-mode group (the way out of `preview`).
+const expectOnlyViewGroup = async (page: Page) => {
+    await expect(toolbar(page).locator('.we-group:visible')).toHaveCount(1);
+    await expect(toolbar(page).locator('.we-group:visible')).toHaveAttribute('data-group', 'view');
+};
 
 test.describe('readonly', () => {
     test.beforeEach(async ({ page }) => load(page, 'readonly.html', { flag: 'fixtureReady' }));
@@ -19,8 +24,8 @@ test.describe('readonly', () => {
         expect(await markdown(page)).toBe('# Locked\n\nbody text');
     });
 
-    test('toolbar is hidden', async ({ page }) => {
-        await expect(toolbar(page)).toBeHidden();
+    test('editing toolbar groups are hidden; the view-mode group stays', async ({ page }) => {
+        await expectOnlyViewGroup(page);
     });
 
     test('right-click does not open the custom context menu (native menu not prevented)', async ({ page }) => {
@@ -52,7 +57,7 @@ test.describe('readonly', () => {
         await expect(pm(page)).toHaveAttribute('contenteditable', 'true');
         await editor(page).evaluate((el: any) => (el.isReadonly = true));
         await expect(pm(page)).toHaveAttribute('contenteditable', 'false');
-        await expect(toolbar(page)).toBeHidden();
+        await expectOnlyViewGroup(page);
     });
 
     test('readonly reflects: attribute → property false → editable, attribute removed', async ({ page }) => {

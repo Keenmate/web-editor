@@ -51,7 +51,7 @@ test.describe('interaction model', () => {
     expect(out.keys).toEqual(
       [
         'focus', 'getHTML', 'getJSON', 'getMarkdown', 'isCommandToggled',
-        'isCommandEnabled', 'runCommand', 'setValue', 'value',
+        'isCommandEnabled', 'runCommand', 'setValue', 'setViewMode', 'value',
       ].sort()
     );
   });

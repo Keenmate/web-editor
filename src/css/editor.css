@@ -247,6 +247,22 @@
   align-items: stretch;
 }
 
+/* Hidden groups (editing off keeps only the view-mode group) + their dividers. */
+.we-group[hidden],
+.we-group-sep[hidden] {
+  display: none;
+}
+
+/* The view-mode group (Edit / Split / Preview) sits at the far end of the zone. */
+.we-group-view {
+  margin-inline-start: auto;
+}
+.we-surface.we-tb-start .we-group-view,
+.we-surface.we-tb-end .we-group-view {
+  margin-inline-start: 0;
+  margin-block-start: auto;
+}
+
 /* Divider between groups (vertical in a row zone, horizontal in a column zone). */
 .we-group-sep {
   align-self: stretch;

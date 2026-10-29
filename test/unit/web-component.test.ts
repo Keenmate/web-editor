@@ -147,6 +147,58 @@ describe('<km-editor>', () => {
     expect(modes).toEqual([]);
   });
 
+  it('setViewMode() fires `view-mode-change` { viewMode, oldViewMode, source: "api" } unless isSilent', async () => {
+    const el = await mount({ value: 'x' });
+    const seen: unknown[] = [];
+    el.onViewModeChange = (d) => seen.push(['twin', d.viewMode, d.oldViewMode, d.source]);
+    el.addEventListener('view-mode-change', (e) => {
+      const d = (e as CustomEvent).detail;
+      seen.push(['event', d.viewMode, d.oldViewMode, d.source, Object.keys(d).sort(), d.controller === el.controller]);
+    });
+    el.setViewMode('split');
+    expect(el.viewMode).toBe('split');
+    expect(el.getAttribute('view-mode')).toBe('split');
+    expect(el.shadowRoot!.querySelector('.we-root')!.classList.contains('we-split')).toBe(true);
+    el.controller.setViewMode('preview');
+    el.setViewMode('preview'); // already active: no event
+    el.setViewMode('edit', { isSilent: true });
+    expect(el.viewMode).toBe('edit');
+    el.setViewMode('bogus' as never); // invalid: warns, keeps the current mode, no event
+    expect(el.viewMode).toBe('edit');
+    expect(seen).toEqual([
+      ['twin', 'split', 'edit', 'api'],
+      ['event', 'split', 'edit', 'api', ['oldViewMode', 'source', 'viewMode'], true],
+      ['twin', 'preview', 'split', 'api'],
+      ['event', 'preview', 'split', 'api', ['oldViewMode', 'source', 'viewMode'], true],
+    ]);
+  });
+
+  it('controller.runCommand("view-…") reports source "api"; a plugin port reports "plugin"', async () => {
+    // Running a command focuses the view: only one live editor in the document
+    // (happy-dom's shadow activeElement breaks with several).
+    document.querySelectorAll('km-editor').forEach((e) => e.remove());
+    const el = await mount({ value: 'x' });
+    let setup: { setViewMode?: (m: 'edit' | 'split' | 'preview' | 'inline') => void } = {};
+    let stageSet: ((m: 'edit' | 'split' | 'preview' | 'inline') => void) | undefined;
+    const { defaultPlugins } = await import('../../src/engine/default-plugins');
+    el.plugins = [
+      ...defaultPlugins(),
+      {
+        name: 'vm-probe',
+        setup: (ctx) => { setup = ctx; },
+        pipelines: [{ name: 'vm:probe', timing: 'sync', stages: [{ id: 'grab', kind: 'derive', run: (_c: unknown, rt: { setViewMode?: typeof stageSet }) => { stageSet = rt.setViewMode; return { action: 'resolve' }; } }] }],
+      } as never,
+    ];
+    const sources: string[] = [];
+    el.addEventListener('view-mode-change', (e) => sources.push(`${(e as CustomEvent).detail.viewMode}:${(e as CustomEvent).detail.source}`));
+    el.controller.runCommand('view-split');
+    setup.setViewMode!('preview');
+    el.controller.runCommand('vm:probe');
+    stageSet!('edit');
+    expect(sources).toEqual(['split:api', 'preview:plugin', 'edit:plugin']);
+    el.remove(); // runCommand focused the view: detach it (happy-dom shadow-selection quirk)
+  });
+
   it('assigning `value` / setValue({ isSilent }) is silent but syncs the hidden form input', async () => {
     const el = await mount({ value: 'a', name: 'body', 'content-format': 'markdown' });
     const changes: string[] = [];
@@ -331,11 +383,14 @@ describe('<km-editor> form', () => {
     expect(calls.length).toBe(n); // no redundant clear while valid
   });
 
-  it('form reset restores defaultValue', async () => {
+  it('form reset restores defaultValue silently (no `change`, like native form.reset())', async () => {
     const el = await mount({ name: 'body', value: 'initial' });
     el.value = 'edited';
+    const changes: unknown[] = [];
+    el.addEventListener('change', (e) => changes.push(e));
     el.formResetCallback();
     expect(el.value).toBe('initial');
     expect(hidden(el)!.value).toBe('initial');
+    expect(changes).toEqual([]);
   });
 });

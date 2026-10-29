@@ -41,14 +41,14 @@ test.describe('plugins', () => {
         await expect(hl).toHaveText('HL: 3');
     });
 
-    test('custom group slots after the core leading groups, before history', async ({ page }) => {
+    test('custom group slots after the core leading groups, before history (+ the trailing view group)', async ({ page }) => {
         const g = await groups(page, 'custom');
         expect(g.indexOf('highlight')).toBeGreaterThan(g.indexOf('table'));
-        expect(g.at(-1)).toBe('history');
+        expect(g.slice(-2)).toEqual(['history', 'view']);
     });
 
     test('plugins = [] drops link / image / table (toolbar, commands, menu)', async ({ page }) => {
-        expect(await groups(page, 'bare')).toEqual(['format', 'block', 'list', 'insert', 'history']);
+        expect(await groups(page, 'bare')).toEqual(['format', 'block', 'list', 'insert', 'history', 'view']);
         const enabled = await page.evaluate(() => {
             const c = (document.getElementById('bare') as any).controller;
             return ['insert-link', 'insert-image', 'insert-table', 'bold'].map((n) => c.runCommand(n));

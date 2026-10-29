@@ -15,6 +15,7 @@ import { undo, redo } from 'prosemirror-history';
 import type { Schema } from 'prosemirror-model';
 import type { CommandRegistry } from './command-registry';
 import type { LabelResolver } from '../labels';
+import type { EditorViewMode } from '../web-component';
 import { markActive, blockActive, ancestorActive, inCodeBlock } from '../predicates';
 import { promptForCodeBlock, changeCodeBlockLanguage } from '../commands';
 
@@ -106,4 +107,41 @@ export function registerCoreCommands(registry: CommandRegistry, schema: Schema, 
   });
   registry.register({ id: 'undo', run: undo, keys: ['Mod-z'], text: 'Undo', icon: '↶' });
   registry.register({ id: 'redo', run: redo, keys: ['Mod-y', 'Mod-Shift-z'], text: 'Redo', icon: '↷' });
+}
+
+/** The view-mode port the view-mode commands drive (the hosting `<km-editor>`). */
+export interface ViewModePort {
+  /** The active view mode. */
+  getViewMode(): EditorViewMode;
+  /** Switch the view mode on behalf of a command run (the element reports `source: 'user'`, or `'api'` for `controller.runCommand()`). */
+  setViewMode(mode: EditorViewMode): void;
+}
+
+/** The view-mode commands: id → mode + English text. Labels: `viewEdit` / `viewSplit` / `viewPreview`. */
+export const VIEW_MODE_COMMANDS = [
+  { id: 'view-edit', mode: 'edit', text: 'Edit' },
+  { id: 'view-split', mode: 'split', text: 'Split' },
+  { id: 'view-preview', mode: 'preview', text: 'Preview' },
+] as const satisfies readonly { id: string; mode: EditorViewMode; text: string }[];
+
+/**
+ * Register the view-mode commands (`view-edit` / `view-split` / `view-preview`) — a
+ * radio group: each is toggled while its mode is active (`aria-pressed`) and switches
+ * to it when run. Only a hosted engine has a view mode, so `<km-editor>` registers them.
+ */
+export function registerViewModeCommands(registry: CommandRegistry, port: ViewModePort): void {
+  for (const { id, mode, text } of VIEW_MODE_COMMANDS) {
+    registry.register({
+      id,
+      run: (_state, dispatch) => {
+        if (dispatch) port.setViewMode(mode);
+        return true;
+      },
+      text,
+      // Always available — switching the presentation never edits the document
+      // (stays usable in `preview` / read-only, where the editing commands are off).
+      getIsEnabledCallback: () => true,
+      getIsToggledCallback: () => port.getViewMode() === mode,
+    });
+  }
 }

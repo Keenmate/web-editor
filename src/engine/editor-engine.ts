@@ -21,7 +21,7 @@ import { buildSchema } from '../schema';
 import { placeholderPlugin, placeholderKey } from './placeholder';
 import { EventEmitter } from './event-emitter';
 import { CommandRegistry } from './command-registry';
-import { registerCoreCommands } from './default-commands';
+import { registerCoreCommands, registerViewModeCommands } from './default-commands';
 import {
   type EditorPlugin,
   orderPlugins,
@@ -42,10 +42,12 @@ import {
   coreMenuItems,
   coreMenuHistoryItems,
   coreStatusItems,
+  viewModeGroup,
   type ToolGroup,
   type StatusItem,
 } from '../ui/items';
 import type { EditorController, EditorLabelContext, EditorToolbarEntry } from '../interaction';
+import type { EditorViewMode } from '../web-component';
 import { createLabelResolver, type EditorLabels, type LabelResolver } from '../labels';
 import {
   docToHTML,
@@ -65,6 +67,16 @@ import {
 export interface EditorEngineHost {
   element: HTMLElement;
   getController(): EditorController;
+  /**
+   * The view-mode port. With it the engine registers the `view-edit` / `view-split` /
+   * `view-preview` commands + the trailing `view` tool group, and hands plugins a
+   * `setViewMode` (setup ctx + stage services) that reports `source: 'plugin'`.
+   */
+  viewMode?: {
+    get(): EditorViewMode;
+    /** `'command'` = a view-mode command ran (toolbar / `runCommand`); `'plugin'` = a plugin / stage port. */
+    set(mode: EditorViewMode, via: 'command' | 'plugin'): void;
+  };
 }
 
 export interface EditorEngineOptions {
@@ -165,6 +177,15 @@ export class EditorEngine {
       (fields) => this.createContext(fields)
     );
     registerCoreCommands(this.commands, schema, label);
+    const viewMode = host?.viewMode;
+    if (viewMode) {
+      registerViewModeCommands(this.commands, {
+        getViewMode: () => viewMode.get(),
+        setViewMode: (mode) => viewMode.set(mode, 'command'),
+      });
+    }
+    // The plugin-facing view-mode switch (setup ctx + stage services): `source: 'plugin'`.
+    const setViewModeForPlugin = viewMode ? (mode: EditorViewMode) => viewMode.set(mode, 'plugin') : undefined;
     for (const plugin of plugins) {
       const specs = plugin.commands?.(ctx);
       if (specs) this.commands.registerMany(specs);
@@ -190,11 +211,16 @@ export class EditorEngine {
       }),
       setLock: (locked) => this.#setLock(locked),
       label,
+      ...(setViewModeForPlugin ? { setViewMode: setViewModeForPlugin } : {}),
     });
     this.commands.attachRunner((id) => this.#pipelines.run(id));
 
     // Presenter lists: core-leading + plugin + core-trailing.
-    this.toolbarGroups = assembleGroups(plugins, coreToolbarGroups, coreHistoryGroups);
+    // Hosted: the view-mode group trails everything (the far end of the toolbar).
+    this.toolbarGroups = assembleGroups(plugins, coreToolbarGroups, [
+      ...coreHistoryGroups,
+      ...(viewMode ? [viewModeGroup(() => viewMode.get())] : []),
+    ]);
     this.toolbarItems = this.toolbarGroups.flatMap((g) => [...g.items]);
     this.selectionItems = assembleItems(plugins, 'selectionItems', coreSelectionItems);
     this.menuItems = assembleItems(plugins, 'menuItems', coreMenuItems, coreMenuHistoryItems);
@@ -246,7 +272,13 @@ export class EditorEngine {
 
     try {
       for (const plugin of plugins) {
-        plugin.setup?.({ schema, label: this.label, view: this.view, getState: () => this.view.state });
+        plugin.setup?.({
+          schema,
+          label: this.label,
+          view: this.view,
+          getState: () => this.view.state,
+          ...(setViewModeForPlugin ? { setViewMode: setViewModeForPlugin } : {}),
+        });
       }
     } catch (err) {
       // A failed setup must not leave a live half-built view (DOM + document

@@ -1,6 +1,7 @@
 import { test, expect, load, pm, editor, markdown, selectText, caretAfter, logLines, clearLog, type Page } from './fixtures';
 
-// View modes: edit / split / preview / inline (assigning is silent — no `view-mode-change`); split output is
+// View modes: edit / split / preview / inline (assigning is silent — no `view-mode-change`; setViewMode() /
+// the view-mode toolbar items fire it); split output is
 // live; preview is read-only; switching keeps the document + selection.
 // Fixture: test/modes.html (value "# Title\n\nplain words here", #target paragraph).
 
@@ -33,6 +34,52 @@ test.describe('modes', () => {
         expect((await logLines(page, 'modes')).filter((l) => l.startsWith('view-mode-change'))).toEqual([]);
     });
 
+    test('setViewMode() fires view-mode-change { viewMode, oldViewMode, source: api }; isSilent does not', async ({ page }) => {
+        await clearLog(page, 'modes');
+        await editor(page).evaluate((el: any) => el.setViewMode('split'));
+        await expect(root(page)).toHaveClass(/we-split/);
+        await expect(editor(page)).toHaveAttribute('view-mode', 'split');
+        await editor(page).evaluate((el: any) => el.controller.setViewMode('preview'));
+        await editor(page).evaluate((el: any) => el.setViewMode('preview')); // already active
+        await editor(page).evaluate((el: any) => el.setViewMode('edit', { isSilent: true }));
+        await expect(root(page)).toHaveClass(/we-edit/);
+        expect((await logLines(page, 'modes')).filter((l) => l.startsWith('view-mode-change'))).toEqual([
+            'view-mode-change:split:edit:api',
+            'view-mode-change:preview:split:api',
+        ]);
+    });
+
+    test('view-mode toolbar items: last group, radio toggled state, click switches with source user', async ({ page }) => {
+        const zone = page.locator('km-editor#subject .we-toolbar-zone');
+        const btn = (a: string) => zone.locator(`[data-action="${a}"]`);
+        await expect(zone.locator('.we-group').last()).toHaveAttribute('data-group', 'view');
+        await expect(btn('view-edit')).toHaveText('Edit');
+        await expect(btn('view-edit')).toHaveAttribute('aria-pressed', 'true');
+        await clearLog(page, 'modes');
+        await btn('view-split').click();
+        await expect(root(page)).toHaveClass(/we-split/);
+        await expect(btn('view-split')).toHaveAttribute('aria-pressed', 'true');
+        await expect(btn('view-edit')).not.toHaveAttribute('aria-pressed');
+        // Preview: editing groups go, the view group stays — the way back.
+        await btn('view-preview').click();
+        await expect(pm(page)).toHaveAttribute('contenteditable', 'false');
+        await expect(zone).toBeVisible();
+        await expect(zone.locator('[data-group="format"]')).toBeHidden();
+        await btn('view-edit').click();
+        await expect(pm(page)).toHaveAttribute('contenteditable', 'true');
+        expect((await logLines(page, 'modes')).filter((l) => l.startsWith('view-mode-change'))).toEqual([
+            'view-mode-change:split:edit:user',
+            'view-mode-change:preview:split:user',
+            'view-mode-change:edit:preview:user',
+        ]);
+        // A silent assignment still moves the toggled state.
+        await setMode(page, 'split');
+        await expect(btn('view-split')).toHaveAttribute('aria-pressed', 'true');
+        // Inline: the view group is not shown.
+        await setMode(page, 'inline');
+        await expect(btn('view-edit')).toHaveCount(0);
+    });
+
     test('split: output panel shows the active format and updates live; tabs switch format', async ({ page }) => {
         await setMode(page, 'split');
         await expect(output(page)).toHaveText('# Title\n\nplain words here');
@@ -47,10 +94,11 @@ test.describe('modes', () => {
         expect(JSON.parse((await output(page).textContent())!).type).toBe('doc');
     });
 
-    test('preview: not editable, toolbar hidden, typing ignored', async ({ page }) => {
+    test('preview: not editable, only the view-mode toolbar group, typing ignored', async ({ page }) => {
         await setMode(page, 'preview');
         await expect(pm(page)).toHaveAttribute('contenteditable', 'false');
-        await expect(page.locator('km-editor#subject .we-toolbar-zone')).toBeHidden();
+        await expect(page.locator('km-editor#subject .we-toolbar-zone .we-group:visible')).toHaveCount(1);
+        await expect(page.locator('km-editor#subject .we-toolbar-zone .we-group:visible')).toHaveAttribute('data-group', 'view');
         await pm(page).locator('p').click();
         await page.keyboard.type('nope');
         expect(await markdown(page)).toBe('# Title\n\nplain words here');

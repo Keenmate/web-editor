@@ -12,6 +12,7 @@
  */
 
 import type { EditorController } from '../../interaction';
+import type { EditorViewMode } from '../../web-component';
 
 /** The value threaded through a pipeline run. `extra` is derived data outside the text. */
 export interface PipelineContext {
@@ -44,6 +45,11 @@ export interface StageServices {
   runCommand?: (command: (state: any, dispatch?: any, view?: any) => boolean) => boolean;
   /** Resolve a UI string through the element's `labels` (see `src/labels.ts`). */
   label?: (key: string, params?: Record<string, string | number>, fallback?: string) => string;
+  /**
+   * Switch the hosting `<km-editor>`'s view mode (`'edit' | 'split' | 'preview' | 'inline'`);
+   * fires `view-mode-change` with `source: 'plugin'`. Absent on a standalone engine.
+   */
+  setViewMode?: (mode: EditorViewMode) => void;
 }
 
 /** Per-run services handed to a stage. */

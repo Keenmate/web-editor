@@ -26,10 +26,17 @@ test.describe('form', () => {
         expect(await body(page)).toEqual(['# Quiet']);
     });
 
-    test('form.reset() restores defaultValue', async ({ page }) => {
+    test('form.reset() restores defaultValue silently (no change, like a native control)', async ({ page }) => {
         await caretAfter(page, 'Initial');
         await page.keyboard.type(' edited');
-        await page.evaluate(() => (document.getElementById('form') as HTMLFormElement).reset());
+        const changes = await page.evaluate(() => {
+            const el = document.getElementById('subject')!;
+            let n = 0;
+            el.addEventListener('change', () => n++);
+            (document.getElementById('form') as HTMLFormElement).reset();
+            return new Promise<number>((r) => setTimeout(() => r(n), 50));
+        });
+        expect(changes).toBe(0);
         expect(await markdown(page)).toBe('# Initial');
         expect(await body(page)).toEqual(['# Initial']);
     });

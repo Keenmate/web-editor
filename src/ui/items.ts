@@ -83,6 +83,26 @@ export const coreToolbarGroups: readonly ToolGroup[] = [
 /** Core tool groups (trailing — history sits after plugin groups). */
 export const coreHistoryGroups: readonly ToolGroup[] = [{ id: 'history', text: 'History', items: ['undo', 'redo'] }];
 
+/** Id of the view-mode tool group (the zone toolbar keeps it when editing is off). */
+export const VIEW_MODE_GROUP_ID = 'view';
+
+/**
+ * The view-mode tool group — `view-edit` / `view-split` / `view-preview` (a radio
+ * group), the LAST group, pushed to the far end of the zone toolbar. Hosted engines
+ * only (a standalone engine has no view mode). Hidden in `inline` view mode.
+ */
+export function viewModeGroup(getViewMode: () => string): ToolGroup {
+  const isShown = () => getViewMode() !== 'inline';
+  return {
+    id: VIEW_MODE_GROUP_ID,
+    text: 'View',
+    items: (['view-edit', 'view-split', 'view-preview'] as const).map((action) => ({
+      action,
+      getIsVisibleCallback: isShown,
+    })),
+  };
+}
+
 // ── Status items (the dedicated status-bar unit) ─────────────────────────────
 
 /**
