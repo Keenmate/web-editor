@@ -36,8 +36,8 @@ export interface EditorController {
   getHTML(): string;
   getMarkdown(): string;
   getJSON(): unknown;
-  /** Replace the document with `value`, parsed in `format` (default: the active `contentFormat`). Without a format, just assign `value`. */
-  setValue(value: string, format?: SerializationFormat): void;
+  /** Replace the document with `value`, parsed in `format` (default: the active `contentFormat`). Fires `change` unless `{ isSilent: true }`. */
+  setValue(value: string, format?: SerializationFormat, options?: { isSilent?: boolean }): void;
   focus(): void;
   /**
    * Run a registered command / pipeline by name (`'bold'`, `'insert-table'`,

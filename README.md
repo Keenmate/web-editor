@@ -80,7 +80,7 @@ Every attribute is also a property (e.g. `el.viewMode = 'preview'` ↔ `view-mod
 | Attribute   | Values                                          | Default      | Description |
 | ----------- | ----------------------------------------------- | ------------ | ----------- |
 | `value`     | string                                          | —            | Initial content, interpreted per `contentFormat` (property `defaultValue`, like a native input). Changing it replaces the document. The live content is the `value` **property**. |
-| `content-format` | `markdown` \| `html` \| `json`                  | `markdown`   | The format of the one document — the lens for content I/O (the `value` attribute and property, the `change` detail). Switching re-reports the same document in the new format — it never rebuilds it. |
+| `content-format` | `markdown` \| `html` \| `json`                  | `markdown`   | The format of the one document — the lens for content I/O (the `value` attribute and property, the `change` detail). Switching re-reports the same document in the new format — it never rebuilds it, and fires no `change`. |
 | `name`      | string                                          | —            | Form field name: a light-DOM hidden `<input name="…">` carries the live content (in `content-format`) and submits with the `<form>` — see [Forms](#forms). |
 | `view-mode` | `edit` \| `split` \| `preview` \| `inline`      | `edit`       | Presentation. `preview` forces read-only. `inline` renders a floating card (see `anchor`). |
 | `readonly`  | boolean                                         | `false`      | Read-only (`isReadonly`): the content can't change, toolbar hidden, but it stays focusable / selectable / copyable. `view-mode="preview"` also forces this on. Reflects. |
@@ -106,9 +106,9 @@ before the DOM event. Every detail carries `controller` and `element` (non-enume
 
 | Event         | `detail`              | Fires when |
 | ------------- | --------------------- | ---------- |
-| `change`      | `{ value, contentFormat }`   | Content changes (serialized in the active `contentFormat`), or `contentFormat` switches. |
+| `change`      | `{ value, contentFormat }`   | Content changes by the user, `setValue()` (unless `{ isSilent: true }`) or a form reset (serialized in the active `contentFormat`). Assigning `value` / `contentFormat` is silent, like a native `input.value`. |
 | `ready`       | the context only      | The engine has mounted and is ready (once). |
-| `view-mode-change` | `{ viewMode }`   | The `viewMode` changes. |
+| `view-mode-change` | `{ viewMode }`   | Reserved for a user-driven view-mode switch. Assigning `viewMode` / `view-mode` is silent, so nothing fires it yet. |
 | `lock-change` | `{ isLocked }`        | A gating pipeline (e.g. the cloud-image picker) locks / unlocks the editor. |
 | `value-format-error` | `{ error, value }` | `getValueFormatCallback` threw (`value` = the unformatted document). The field is invalid until the next successful format — see [Forms](#forms). |
 | `action`      | `{ action, id, item, source, sourceEvent, triggerElement, dataset, state }` | A toolbar / selection-toolbar / context-menu item was activated (`source`: `toolbar` \| `selection-toolbar` \| `context-menu`). After the item's `onClick` and the command (a notification after the fact; `state` is the snapshot from activation). Keyboard shortcuts don't fire it. |
@@ -117,10 +117,10 @@ before the DOM event. Every detail carries `controller` and `element` (non-enume
 
 | Member                    | Returns              | Description |
 | ------------------------- | -------------------- | ----------- |
-| `value`                   | `string`             | The live content, serialized in the active `contentFormat`. Assigning replaces the document (the `value` attribute is not written). |
+| `value`                   | `string`             | The live content, serialized in the active `contentFormat`. Assigning replaces the document silently — no `change`, like a native `input.value`; the hidden form input is synced (the `value` attribute is not written). |
 | `getMarkdown()` / `getHTML()` | `string`         | Live content in that format. |
 | `getJSON()`               | `unknown`            | Live content as the ProseMirror JSON document. |
-| `setValue(value, format?)`| `void`               | Replace the document from `value`, parsed in `format` (default: the active `contentFormat`). Without a format, just assign `value`. |
+| `setValue(value, format?, options?)`| `void` | Replace the document from `value`, parsed in `format` (default: the active `contentFormat`). Fires `change` unless `options.isSilent` (`{ isSilent: true }`); also on `el.controller`. |
 | `focus()`                 | `void`               | Focus the editing surface. |
 | `isReady` / `whenReady()` | `boolean` / `Promise<void>` | Core: the first build is live (`ready` attribute, `:state(ready)`, `ready` event). |
 | `shouldDefer` / `release()` | `boolean` / `void` | Core: hold the first build (attribute `defer`) until `release()` / removing `defer`. |

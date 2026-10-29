@@ -122,23 +122,47 @@ describe('<km-editor>', () => {
     expect(getEditorEngine(el)!.isEditable()).toBe(false);
   });
 
-  it('reflects `contentFormat` and re-announces change when it switches', async () => {
+  it('reflects `contentFormat`; switching it is silent (no `change`)', async () => {
     const el = await mount({ value: '# H', 'content-format': 'markdown' });
     const formats: string[] = [];
     el.addEventListener('change', (e) => formats.push((e as CustomEvent).detail.contentFormat));
     el.setAttribute('content-format', 'html');
     await el.whenSettled();
-    expect(el.getAttribute('content-format')).toBe('html');
-    expect(formats.at(-1)).toBe('html');
+    el.contentFormat = 'markdown';
+    await el.whenSettled();
+    expect(el.getAttribute('content-format')).toBe('markdown');
+    expect(el.value).toContain('# H');
+    expect(formats).toEqual([]);
   });
 
-  it('emits `view-mode-change` when the mode switches', async () => {
+  it('switching `viewMode` (attribute or property) is silent (no `view-mode-change`)', async () => {
     const el = await mount({ value: 'x' });
     const modes: string[] = [];
     el.addEventListener('view-mode-change', (e) => modes.push((e as CustomEvent).detail.viewMode));
     el.setAttribute('view-mode', 'split');
     await el.whenSettled();
-    expect(modes.at(-1)).toBe('split');
+    el.viewMode = 'preview';
+    await el.whenSettled();
+    expect(el.getAttribute('view-mode')).toBe('preview');
+    expect(modes).toEqual([]);
+  });
+
+  it('assigning `value` / setValue({ isSilent }) is silent but syncs the hidden form input', async () => {
+    const el = await mount({ value: 'a', name: 'body', 'content-format': 'markdown' });
+    const changes: string[] = [];
+    el.addEventListener('change', (e) => changes.push((e as CustomEvent).detail.value));
+    el.value = '# assigned';
+    expect(el.value).toContain('# assigned');
+    const input = el.querySelector('input[type="hidden"]') as HTMLInputElement;
+    expect(input.value).toContain('# assigned');
+    el.setValue('# quiet', 'markdown', { isSilent: true });
+    expect(input.value).toContain('# quiet');
+    el.controller.setValue('# quiet too', undefined, { isSilent: true });
+    expect(input.value).toContain('# quiet too');
+    expect(changes).toEqual([]);
+    el.setValue('# loud');
+    expect(changes).toHaveLength(1);
+    expect(changes[0]).toContain('# loud');
   });
 });
 

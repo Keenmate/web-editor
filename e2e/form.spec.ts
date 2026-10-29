@@ -19,6 +19,13 @@ test.describe('form', () => {
         await expect.poll(() => body(page)).toEqual(['<h1>Initial edited</h1>']);
     });
 
+    test('a silent `value` assignment still syncs the hidden input', async ({ page }) => {
+        await editor(page).evaluate((el: any) => (el.value = '# Assigned'));
+        expect(await body(page)).toEqual(['# Assigned']);
+        await editor(page).evaluate((el: any) => el.setValue('# Quiet', undefined, { isSilent: true }));
+        expect(await body(page)).toEqual(['# Quiet']);
+    });
+
     test('form.reset() restores defaultValue', async ({ page }) => {
         await caretAfter(page, 'Initial');
         await page.keyboard.type(' edited');

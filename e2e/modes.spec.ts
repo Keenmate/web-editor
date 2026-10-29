@@ -1,6 +1,6 @@
 import { test, expect, load, pm, editor, markdown, selectText, caretAfter, logLines, clearLog, type Page } from './fixtures';
 
-// View modes: edit / split / preview / inline + `view-mode-change`; split output is
+// View modes: edit / split / preview / inline (assigning is silent — no `view-mode-change`); split output is
 // live; preview is read-only; switching keeps the document + selection.
 // Fixture: test/modes.html (value "# Title\n\nplain words here", #target paragraph).
 
@@ -21,19 +21,16 @@ test.describe('modes', () => {
         await expect(pm(page)).toHaveAttribute('contenteditable', 'true');
     });
 
-    test('each switch fires view-mode-change and reflects the attribute', async ({ page }) => {
+    test('each switch reflects the attribute; assignment is silent (no view-mode-change)', async ({ page }) => {
         await clearLog(page, 'modes');
         for (const m of ['split', 'preview', 'inline', 'edit']) {
             await setMode(page, m);
             await expect(editor(page)).toHaveAttribute('view-mode', m);
             await expect(root(page)).toHaveClass(new RegExp('we-' + m));
         }
-        expect((await logLines(page, 'modes')).filter((l) => l.startsWith('view-mode-change'))).toEqual([
-            'view-mode-change:split',
-            'view-mode-change:preview',
-            'view-mode-change:inline',
-            'view-mode-change:edit',
-        ]);
+        await page.evaluate(() => document.getElementById('subject')!.setAttribute('view-mode', 'split'));
+        await expect(root(page)).toHaveClass(/we-split/);
+        expect((await logLines(page, 'modes')).filter((l) => l.startsWith('view-mode-change'))).toEqual([]);
     });
 
     test('split: output panel shows the active format and updates live; tabs switch format', async ({ page }) => {

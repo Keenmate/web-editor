@@ -60,6 +60,26 @@ test.describe('content I/O', () => {
         expect(last).toBe(`change:markdown:${JSON.stringify('From JSON')}`);
     });
 
+    test('assigning `value` and setValue(v, fmt, { isSilent }) are silent; typing still fires change', async ({ page }) => {
+        await clearLog(page, 'content');
+        await page.evaluate(() => ((document.getElementById('subject') as any).value = '# Quiet\n\nbody'));
+        await expect(pm(page).locator('h1')).toHaveText('Quiet');
+        await call(page, 'setValue', ['<h2>Hush</h2>', 'html', { isSilent: true }]);
+        await expect(pm(page).locator('h2')).toHaveText('Hush');
+        await page.evaluate(() => (document.getElementById('subject') as any).controller.setValue('## Shh', undefined, { isSilent: true }));
+        await expect(pm(page).locator('h2')).toHaveText('Shh');
+        await page.evaluate(() => ((document.getElementById('subject') as any).contentFormat = 'html'));
+        await expect.poll(() => page.evaluate(() => (document.getElementById('subject') as any).contentFormat)).toBe('html');
+        expect((await logLines(page, 'content')).filter((l) => l.startsWith('change:'))).toEqual([]);
+        // user interaction still fires
+        await pm(page).locator('h2').click();
+        await page.keyboard.press('End');
+        await page.keyboard.type('!');
+        await expect.poll(async () => (await logLines(page, 'content')).filter((l) => l.startsWith('change:'))).toEqual([
+            `change:html:${JSON.stringify('<h2>Shh!</h2>')}`,
+        ]);
+    });
+
     test('`value` property / attribute replace the document without re-firing ready', async ({ page }) => {
         await clearLog(page, 'content');
         await page.evaluate(() => ((document.getElementById('subject') as any).value = '# Second\n\nbody'));

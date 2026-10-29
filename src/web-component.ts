@@ -106,7 +106,7 @@ const INPUTS: readonly InputDef[] = [
     shouldReflect: true,
     on: 'update',
     description:
-      "The format of the one document — the lens for content I/O (the `value` attribute and property, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document.",
+      "The format of the one document — the lens for content I/O (the `value` attribute and property, the `change` event): 'markdown' (default), 'html', or 'json'. Switching it re-reports the SAME document in the new format — it never rebuilds the document, and (like any assignment) fires no `change`.",
   },
   {
     configKey: 'name',
@@ -131,7 +131,7 @@ const INPUTS: readonly InputDef[] = [
     shouldReflect: true,
     on: 'update',
     description:
-      "Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the view mode is stored, reflected, and announced via `view-mode-change`.",
+      "Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the view mode is stored and reflected. Assigning it (property or attribute) is silent — no `view-mode-change`.",
   },
   {
     configKey: 'isReadonly',
@@ -220,7 +220,7 @@ const EVENTS: readonly EventDef[] = [
   {
     name: 'change',
     description:
-      'The document changed (or `contentFormat` switched). `detail`: `{ value, contentFormat }` — the content serialized in the active `contentFormat`. Twin: `onChange(detail)`.',
+      'The document changed by the user (typing, toolbar, paste, …), `setValue()` (not `{ isSilent: true }`) or a form reset. Assigning `value` / `contentFormat` is silent, like a native `input.value`. `detail`: `{ value, contentFormat }` — the content serialized in the active `contentFormat`. Twin: `onChange(detail)`.',
   },
   {
     name: 'ready',
@@ -229,7 +229,7 @@ const EVENTS: readonly EventDef[] = [
   },
   {
     name: 'view-mode-change',
-    description: 'The `viewMode` (attribute `view-mode`) changed. `detail`: `{ viewMode }`. Twin: `onViewModeChange(detail)`.',
+    description: 'Reserved for a user-driven view-mode switch (Phase 3 chrome). Assigning `viewMode` (attribute `view-mode`) is silent and does NOT fire it — so nothing fires it yet. `detail`: `{ viewMode }`. Twin: `onViewModeChange(detail)`.',
   },
   {
     name: 'lock-change',
@@ -313,6 +313,9 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   // A `setValue()` made while no engine exists (before the first build). Applied by the next build unless `value` was reassigned since —
   // `valueAtSet` is the `defaultValue` config it was made on top of.
   #pendingSet?: { value: string; format: EditorFormat; valueAtSet: unknown };
+  // True while a silent `setValue()` / `value` assignment replaces the document:
+  // the engine's `change` still syncs the form input + output, but no outward `change`.
+  #isSilentChange = false;
 
   constructor() {
     super();
@@ -393,14 +396,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     if ('isReadonly' in partial || 'viewMode' in partial || 'toolbar' in partial || 'statusbar' in partial) {
       this.#applyChromeState();
     }
-    if ('viewMode' in partial) {
-      this.emit('view-mode-change', { viewMode: this.config.viewMode as EditorViewMode });
-    }
-    // `contentFormat` changed: the document is unchanged, but its reported serialization
-    // is — re-announce so split-view / bound consumers refresh their output.
-    if ('contentFormat' in partial && this.#engine) {
-      this.emit('change', this.#changeDetail());
-    }
+    // Assigning `viewMode` / `contentFormat` (property or attribute) is silent — like a
+    // native `input.value`, state assignment never fires events (suite rule).
     // UI strings are resolved on render: re-render the chrome (and the empty-document
     // placeholder) with the new labels.
     if ('labels' in partial) {
@@ -503,7 +500,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     const offChange = engine.events.on('change', () => {
       this.#layout.refreshOutput();
       this.#syncFormInput();
-      this.emit('change', this.#changeDetail());
+      if (!this.#isSilentChange) this.emit('change', this.#changeDetail());
     });
     const offLock = engine.events.on('lock', ({ isLocked }) => this.emit('lock-change', { isLocked }));
     this.#unsubscribe = () => {
@@ -670,7 +667,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
       getHTML: () => el.getHTML(),
       getMarkdown: () => el.getMarkdown(),
       getJSON: () => el.getJSON(),
-      setValue: (value: string, format?: EditorFormat) => el.setValue(value, format),
+      setValue: (value: string, format?: EditorFormat, options?: { isSilent?: boolean }) =>
+        el.setValue(value, format, options),
       focus: () => el.focus(),
       runCommand: (command: string | Command) => el.#runCommand(command),
       isCommandToggled: (name: string) => {
@@ -705,7 +703,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   /**
    * The live content, serialized in the active `contentFormat` (`''` before the first
    * build). Assigning replaces the document, parsed in `contentFormat` — like
-   * `setValue(value)`. The `value` ATTRIBUTE is the initial content
+   * `setValue(value, undefined, { isSilent: true })`: silent (no `change`, like a
+   * native `input.value`); the hidden form input is synced. The `value` ATTRIBUTE is the initial content
    * ({@link defaultValue}) and is never written.
    */
   get value(): string {
@@ -713,7 +712,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     return this.#engine ? this.#engine.serialize(this.#format()) : '';
   }
   set value(value: string) {
-    this.setValue(value ?? '');
+    this.setValue(value ?? '', undefined, { isSilent: true });
   }
 
   getHTML(): string {
@@ -733,15 +732,22 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
 
   /**
    * Replace the document with `value`, parsed in `format` (defaults to the active
-   * `contentFormat`) — the `value` setter with an explicit format, and the controller's
-   * write path. Without a format, just assign `value`.
+   * `contentFormat`) — the controller's write path. Fires `change` unless
+   * `options.isSilent`; assigning `el.value` is the silent form (like a native
+   * `input.value`). Either way the hidden form input is synced.
    */
-  setValue(value: string, format?: EditorFormat): void {
+  setValue(value: string, format?: EditorFormat, options?: { isSilent?: boolean }): void {
     this.flush();
     const fmt = format ?? this.#format();
     if (this.#engine) {
-      if (fmt === 'json') this.#engine.setJSON(JSON.parse(value));
-      else this.#engine.setContent(value, fmt);
+      const wasSilent = this.#isSilentChange;
+      this.#isSilentChange = options?.isSilent === true;
+      try {
+        if (fmt === 'json') this.#engine.setJSON(JSON.parse(value));
+        else this.#engine.setContent(value, fmt);
+      } finally {
+        this.#isSilentChange = wasSilent;
+      }
     } else {
       // No engine yet (before the first build): the build loads it — unless `value` is reassigned in the meantime.
       this.#pendingSet = { value, format: fmt, valueAtSet: this.config.defaultValue };

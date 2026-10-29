@@ -64,13 +64,13 @@ describe('events', () => {
     expect(Object.keys(d).sort()).toEqual(['contentFormat', 'value']);
   });
 
-  it('view-mode-change: onViewModeChange receives { viewMode }', async () => {
+  it('view-mode-change: assigning viewMode is silent — the twin is not called', async () => {
     const el = await mount({ value: 'x' });
     const modes: string[] = [];
     el.onViewModeChange = (d) => modes.push(d.viewMode);
     el.setAttribute('view-mode', 'split');
     await el.whenSettled();
-    expect(modes).toEqual(['split']);
+    expect(modes).toEqual([]);
   });
 
   it('events are not composed', async () => {

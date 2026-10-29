@@ -11,6 +11,20 @@ Target: **1.0.0-rc01** (first release).
 Pre-1.0, pre-publish. Everything below is the work to date; nothing has been
 released to a registry yet.
 
+### Changed — BREAKING (assigning state is silent)
+
+Suite rule: assigning a value / state property never fires the component's events (like a
+native `input.value`); methods and user interaction do.
+
+- **`el.value = …` no longer fires `change`.** The hidden form input (`name`) is still synced.
+  Typing / toolbar / paste and `setValue()` still fire it.
+- **`setValue(value, format?, options?)`** — new `options.isSilent` (`{ isSilent: true }` skips
+  `change`); non-silent by default. Same on `el.controller.setValue`.
+- **Switching `contentFormat` (property or attribute) no longer fires `change`.** Read `el.value`
+  after switching (it re-serializes on read).
+- **Assigning `viewMode` (property or `view-mode` attribute) no longer fires `view-mode-change`.**
+  The event stays declared for a future user-driven mode switch; nothing fires it yet.
+
 ### Changed
 
 - **Disabled commands fade by the contract's opacity:** new `--we-disabled-opacity:

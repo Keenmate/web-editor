@@ -24,6 +24,7 @@ dialog stub), `e2e/helpers.ts`.
 | md / html / json `value` render the same DOM | ✓ | `content.spec.ts` | `content.html` |
 | `getHTML()` / `getMarkdown()` / `getJSON()` | ✓ | `content.spec.ts` | `content.html` |
 | `setValue(v, fmt)` + `change` | ✓ | `content.spec.ts` | `content.html` |
+| Assigning `value` / `contentFormat`, `setValue(…, { isSilent: true })` fire no `change`; hidden input still synced | ✓ | `content.spec.ts`, `form.spec.ts` | `content.html`, `form.html` |
 | `value` property / attribute replace the document without re-firing `ready`; `value` before upgrade | ✓ | `content.spec.ts` | `content.html` |
 | `focus()` | ✓ | `content.spec.ts` | `content.html` |
 | Form: `name` → light-DOM hidden input (live value in `contentFormat`, one entry) | ✓ | `form.spec.ts` | `form.html` |
@@ -81,7 +82,7 @@ dialog stub), `e2e/helpers.ts`.
 
 | Feature | Status | Spec | Fixture |
 | --- | :-: | --- | --- |
-| `view-mode` edit / split / preview / inline + `view-mode-change` | ✓ | `modes.spec.ts` | `modes.html` |
+| `view-mode` edit / split / preview / inline; assignment fires no `view-mode-change` | ✓ | `modes.spec.ts` | `modes.html` |
 | Split output is live; output tabs switch format | ✓ | `modes.spec.ts` | `modes.html` |
 | Preview is non-editable | ✓ | `modes.spec.ts` | `modes.html` |
 | Mode switch keeps doc + selection + undo | ✓ | `modes.spec.ts` | `modes.html` |

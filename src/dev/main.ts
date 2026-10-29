@@ -34,10 +34,10 @@ if (km) {
     const detail = (e as CustomEvent).detail;
     setStatus(`changed · ${detail.contentFormat} · ${detail.value.length} chars`);
   });
-  km.addEventListener('view-mode-change', (e) => setStatus(`viewMode → ${(e as CustomEvent).detail.mode}`));
 
   document.querySelector('#we-mode')?.addEventListener('change', (e) => {
     km.setAttribute('view-mode', (e.target as HTMLSelectElement).value as EditorViewMode);
+    setStatus(`viewMode → ${km.getAttribute('view-mode')}`); // assignment is silent (no view-mode-change)
   });
   document.querySelector('#we-format')?.addEventListener('change', (e) => {
     km.setAttribute('content-format', (e.target as HTMLSelectElement).value);
