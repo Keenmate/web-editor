@@ -39,6 +39,8 @@ import {
   type EventDef,
   type InputDef,
   type RenderLoaderCallback,
+  type ResponsiveCallback,
+  type ResponsiveMap,
 } from '@keenmate/web-components-core';
 import type { Command } from 'prosemirror-state';
 import { EditorEngine, type EditorEngineOptions } from './engine/editor-engine';
@@ -78,6 +80,38 @@ export type EditorFormat = SerializationFormat; // 'html' | 'markdown' | 'json'
 export type EditorToolbar = 'top' | 'bottom' | 'start' | 'end' | 'none';
 /** Status-bar placement — a dedicated strip docked top, bottom, or both (`'none'` hides it). */
 export type EditorStatusBar = 'none' | 'top' | 'bottom' | 'both';
+
+/**
+ * The `<km-editor>` input config — one key per input-table row (`configKey`), as
+ * `el.config` exposes it. The type the responsive rules (core SPEC §6.7) range over.
+ */
+export interface EditorConfig {
+  defaultValue: string | null;
+  contentFormat: EditorFormat;
+  name: string | null;
+  getValueFormatCallback: ((ctx: ValueFormatContext) => string) | null;
+  viewMode: EditorViewMode;
+  isReadonly: boolean;
+  isDisabled: boolean;
+  toolbar: EditorToolbar;
+  statusbar: EditorStatusBar;
+  theme: string | null;
+  anchor: string | null;
+  labels: EditorLabels | null;
+  beforeActionCallback: ((detail: EditorActionEventDetail) => unknown) | null;
+  renderLoadingCallback: RenderLoaderCallback | null;
+  interactionHost: InteractionHost | null;
+}
+
+/**
+ * Responsive rules map (core SPEC §6.7): device class → partial editor config,
+ * e.g. `{ mobile: { toolbar: 'bottom', statusbar: 'none' } }`. Set page-wide
+ * (`window.components.responsive`), per tag (`window.components['km-editor'].responsive`)
+ * or per instance (`el.responsive` / JSON attribute `responsive`).
+ */
+export type EditorResponsiveMap = ResponsiveMap<EditorConfig>;
+/** Responsive rules callback (core SPEC §6.7): `(ctx) => Partial<EditorConfig> | null | undefined`. */
+export type EditorResponsiveCallback = ResponsiveCallback<EditorConfig>;
 
 const VIEW_MODES = ['edit', 'split', 'preview', 'inline'] as const;
 const FORMATS = ['markdown', 'html', 'json'] as const;

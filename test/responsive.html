@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>km-editor — responsive rules</title>
+</head>
+<body>
+    <!-- Targeted by e2e/responsive.spec.ts (core SPEC §6.7). -->
+    <km-editor id="plain" value="plain"></km-editor>
+    <km-editor id="explicit" toolbar="top" value="explicit"></km-editor>
+
+    <script type="module">
+        import '/src/index.ts';
+        // Page rule for every device class the 1440px e2e viewport can be in.
+        window.components.responsive = { desktop: { toolbar: 'bottom' }, tablet: { toolbar: 'bottom' } };
+        window.components['km-editor'].responsiveCallback = ({ breakpoint }) =>
+            breakpoint === 'mobile' ? { toolbar: 'none' } : undefined;
+        window.fixtureReady = true;
+    </script>
+</body>
+</html>
