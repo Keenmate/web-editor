@@ -104,8 +104,10 @@ export interface EditorConfig {
 }
 
 /**
- * Responsive rules map (core SPEC §6.7): device class → partial editor config,
- * e.g. `{ mobile: { toolbar: 'bottom', statusbar: 'none' } }`. Set page-wide
+ * Responsive rules map (core SPEC §6.7): two axes, each `mobile | tablet | desktop` →
+ * partial editor config — `device` (classified by capability: touch phone / tablet) and
+ * `breakpoint` (window width), e.g. `{ device: { mobile: { toolbar: 'bottom' } },
+ * breakpoint: { mobile: { toolbar: 'none' } } }` (device wins on the same key). Set page-wide
  * (`window.components.responsive`), per tag (`window.components['km-editor'].responsive`)
  * or per instance (`el.responsive` / JSON attribute `responsive`).
  */

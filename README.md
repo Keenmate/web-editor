@@ -194,19 +194,26 @@ editor.getValueFormatCallback = ({ value, contentFormat }) =>
 
 ## Responsive rules
 
-Tune any input per device class without app-side resize code — the shared
+Tune any input per device class or window width without app-side resize code — the shared
 `@keenmate/web-components-core` mechanism
 ([SPEC §6.7](https://github.com/KeenMate/web-components-core/blob/main/docs/SPEC.md)).
-A **map** (`{ mobile | tablet | desktop: partial config }`) or a **callback**
-(`(ctx) => partial config`, `ctx` = `{ env, deviceClass, breakpoint, element, component, config }`)
-can be set at three levels:
+A **map** has two axes, each keyed `mobile | tablet | desktop` → partial config:
+
+- `device` — what the device *is*: a touch phone (`mobile`) / tablet by capability; a mouse /
+  trackpad device is `desktop` at any width.
+- `breakpoint` — the window width (768 / 1024 px lines), so a narrowed desktop window is `mobile`.
+
+Both apply; on the same key `device` wins. Own widths or combinations (device AND width,
+orientation, …) go in a **callback** (`(ctx) => partial config`,
+`ctx` = `{ env, deviceClass, breakpoint, element, component, config }`). Either can be set at
+three levels:
 
 ```js
-window.components.responsive = { mobile: { toolbar: 'bottom' } };              // page — every component
-window.components['km-editor'].responsiveCallback = ({ breakpoint }) =>         // page — every <km-editor>
-  breakpoint === 'mobile' ? { toolbar: 'bottom', statusbar: 'none' } : undefined;
-editor.responsive = { mobile: { statusbar: 'none' } };                         // this instance
-// or <km-editor responsive='{"mobile":{"statusbar":"none"}}'>
+window.components.responsive = { device: { mobile: { toolbar: 'bottom' } } };  // page — every component
+window.components['km-editor'].responsiveCallback = ({ env }) =>               // page — every <km-editor>
+  env.viewportWidth < 600 ? { toolbar: 'bottom' } : undefined;
+editor.responsive = { breakpoint: { mobile: { toolbar: 'none' } } };            // this instance
+// or <km-editor responsive='{"breakpoint":{"mobile":{"toolbar":"none"}}}'>
 ```
 
 Precedence (later wins, key by key): page map → page callback → per-tag map → per-tag
@@ -215,7 +222,7 @@ callback. So `<km-editor toolbar="top">` keeps its toolbar on top whatever the p
 say; only the instance's own rules beat it. Overrides never reflect to attributes, `el.config`
 / the property getters return the effective value, and a key a rule stops returning goes
 back to its base value. Rules re-run when the device class / breakpoint / orientation
-changes. Types: `EditorResponsiveMap`, `EditorResponsiveCallback` (over `EditorConfig`).
+changes (callbacks also on every viewport-width change). Types: `EditorResponsiveMap`, `EditorResponsiveCallback` (over `EditorConfig`).
 
 ## Theming
 

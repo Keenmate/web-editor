@@ -36,7 +36,8 @@ native `input.value`); methods and user interaction do.
 ### Added
 
 - **Responsive rules (core SPEC §6.7).** `<km-editor>` takes the shared core responsive rules — a
-  device-class map or a callback, page-wide (`window.components.responsive*`), per tag
+  map with a `device` axis (touch phone / tablet by capability) and a `breakpoint` axis (window
+  width), `{ device: { mobile: {…} }, breakpoint: { mobile: {…} } }`, or a callback, page-wide (`window.components.responsive*`), per tag
   (`window.components['km-editor'].responsive*`) or per instance (`el.responsive` / JSON attribute
   `responsive`, `el.responsiveCallback`); an attribute / property set on the instance beats page
   rules. New exported types `EditorConfig`, `EditorResponsiveMap`, `EditorResponsiveCallback`.
