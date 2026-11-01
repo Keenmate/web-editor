@@ -73,6 +73,7 @@ native `input.value`); methods and user interaction do.
 
 ### Changed
 
+- Depends on the published `@keenmate/web-components-core@^1.0.0-rc15` (was the local `file:` link).
 - **Disabled commands fade by the contract's opacity:** new `--we-disabled-opacity:
   var(--base-disabled-opacity, 0.65)` on `:host`; `.we-cmd:disabled` used a hard-coded `0.4`
   (now `0.65` by default — a lighter fade, the same as every other Keenmate component). The
