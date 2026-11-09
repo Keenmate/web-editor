@@ -196,7 +196,7 @@ declare const __LICENSE__: string;
 declare const __REPOSITORY__: string;
 declare const __HOMEPAGE__: string;
 
-registerComponent('km-editor', KmEditorElement as unknown as CustomElementConstructor, {
+registerComponent('km-editor', KmEditorElement, {
   config: {
     name: typeof __PACKAGE_NAME__ !== 'undefined' ? __PACKAGE_NAME__ : '@keenmate/web-editor',
     version: typeof __VERSION__ !== 'undefined' ? __VERSION__ : '0.0.0',

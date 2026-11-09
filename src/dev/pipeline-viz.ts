@@ -11,6 +11,7 @@
  *                              keywords, to exercise the amber/red states)
  */
 import { DOMParser as PMDOMParser } from 'prosemirror-model';
+import { escapeHtml } from '@keenmate/web-components-core';
 import { DeferredRunner, runStages, runStagesSync, type RunResult } from '../engine/pipeline/runner';
 import type {
   InteractionHost,
@@ -251,9 +252,6 @@ const WORD_SAMPLE = `<html xmlns:o="urn:schemas-microsoft-com:office:office">
 </body></html>`;
 
 const squish = (h: string): string => h.replace(/\s+/g, ' ').trim().slice(0, 240);
-
-const escapeHtml = (s: string): string =>
-  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 /** Prefer clipboard HTML; fall back to wrapping plain text. */
 const toHtml = (html: string, plain: string): string =>
