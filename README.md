@@ -75,7 +75,10 @@ editor.controller.runCommand('bold'); // the public facade (also on every event 
 
 ## Options
 
-Every attribute is also a property (e.g. `el.viewMode = 'preview'` ↔ `view-mode`).
+Every attribute is also a property (e.g. `el.viewMode = 'preview'` ↔ `view-mode`), typed on
+`KmEditorElement` (TypeScript: `el.viewMode`, `el.customStyles`, … — the `EditorConfig` keys).
+An invalid value warns, keeps the previous one and fires `input-rejected`; `el.x = undefined` (or
+removing the attribute) resets an input to its default.
 
 | Attribute   | Values                                          | Default      | Description |
 | ----------- | ----------------------------------------------- | ------------ | ----------- |
@@ -87,9 +90,10 @@ Every attribute is also a property (e.g. `el.viewMode = 'preview'` ↔ `view-mod
 | `disabled`  | boolean                                         | `false`      | Disabled (`isDisabled`): no interaction — not editable, focusable or selectable (the surface is `inert`). An ancestor `<fieldset disabled>` disables it too. Reflects, like a native control. |
 | `toolbar`   | `top` \| `bottom` \| `start` \| `end` \| `none` | `top`        | Which edge the command toolbar docks to (`none` hides it). Its last group, at the far end, is the view-mode radio group — `view-edit` / `view-split` / `view-preview` (`Edit` / `Split` / `Preview`; toggled = the active mode; not shown in `inline`). While read-only / `preview` only that group shows; disabled hides the toolbar. The selection toolbar and context menu are always available while editing. |
 | `statusbar` | `none` \| `top` \| `bottom` \| `both`           | `none`       | A dedicated strip of live indicators (word/char count, plugin items). `both` splits items across two strips. |
-| `theme`     | string                                          | —            | Theme name, reflected to the host for CSS theming (`:host([theme="…"])`). |
+| `theme`     | `light` \| `dark`                               | —            | Forced colour scheme: `dark` swaps the token set; `light` (or unset) is the default look. Reflects. Any other value is refused (`input-rejected`). |
 | `anchor`    | CSS selector                                    | —            | For `view-mode="inline"` only: the page element the floating card tracks. |
 | `labels`    | JSON object                                     | English      | UI strings — see [Labels](#labels). Also a property (object). |
+| `custom-styles` | CSS string                                  | —            | CSS injected into the shadow root (`customStyles`), after the page-wide layer — see [Theming](#theming). Raw CSS: never untrusted input. |
 
 Property-only inputs:
 
@@ -97,8 +101,9 @@ Property-only inputs:
 | ---------------------- | ---- | ----------- |
 | `getValueFormatCallback` | `(ctx) => string` | Formats the value written into the hidden form input (e.g. sanitizing); `ctx` = `{ value, contentFormat }` + `controller` / `element`. Affects only the submitted value — see [Forms](#forms). |
 | `beforeActionCallback` | `(detail) => false \| void \| Promise<…>` | Runs first on every toolbar / selection-toolbar / context-menu activation; `false` cancels (no `onClick`, no `action` event, no command). |
-| `renderLoadingCallback` | `(ctx) => void \| cleanup` | Draws the pending loader (shown while a deferred pipeline's work — e.g. a cloud-image upload — outlives its threshold; not while a dialog waits for the user) instead of the default spinner; `ctx` = `{ component, context: 'pipeline', containerElement, element, label }`. Beats the page-wide `window.components.renderLoaderCallback`. See [Theming](#theming). |
+| `renderLoadingCallback` | `(ctx) => void \| cleanup` | Draws the pending loader (shown while a deferred pipeline's work — e.g. a cloud-image upload — outlives its threshold; not while a dialog waits for the user) instead of the default spinner; `ctx` = `{ component, context: 'pipeline', containerElement, element, label }`. Beats the page-wide `window.components.renderLoadingCallback`. See [Theming](#theming). |
 | `interactionHost`      | `{ request(ctx) }` | The modal bridge interactive pipeline stages call (`ctx` = request + `signal` + `controller` / `element`). Default: `window.confirm`. Survives engine rebuilds. |
+| `getCustomStylesCallback` | `(ctx) => string \| null` | Computes the instance CSS (wins over `customStyles`); `ctx` = `controller` / `element`. See [Theming](#theming). |
 
 **Events** — bubble, not composed. Each has a camelCase twin property (`onChange`,
 `onReady`, `onViewModeChange`, `onLockChange`, `onValueFormatError`, `onAction`) called with the **same detail**
@@ -233,7 +238,28 @@ bleed in. Ship the stylesheet once:
 <link rel="stylesheet" href="@keenmate/web-editor/style.css" />
 ```
 
-Set `theme="…"` to target a theme from your own CSS via `:host([theme="…"])`.
+Set `theme="dark"` for the dark token set (`light` / unset is the default look).
+
+**Custom CSS (shadow root).** Page CSS can't reach inside the shadow root; inject it instead
+(core `createCustomStyles()`). Two layers, each a `<style>` in the shadow root, the instance one
+last so it wins:
+
+```js
+// every <km-editor> on the page (one file, fetched once)
+window.components['km-editor'].customStyles = "@import url('/css/editor-overrides.css');";
+// or computed per instance (wins over the page-wide customStyles)
+window.components['km-editor'].getCustomStylesCallback = ({ element }) =>
+  element.classList.contains('notes') ? '.ProseMirror { font-family: Georgia, serif; }' : null;
+```
+
+```html
+<!-- this editor only: attribute custom-styles / property customStyles, or getCustomStylesCallback(ctx) -->
+<km-editor custom-styles=".ProseMirror { letter-spacing: .02em; }"></km-editor>
+```
+
+An `@import`ed font (`@font-face`) is also linked once in the document `<head>`, since Chromium
+ignores `@font-face` inside a shadow root (`window.components.shouldHoistImports = false` turns
+that off). Custom CSS is raw — never put untrusted input there.
 
 The editor's own classes and custom properties use the `we-` prefix (`--we-bg`,
 `--we-border`, `--we-accent`, …). Disabled commands fade by `--we-disabled-opacity`
@@ -242,7 +268,7 @@ loader shows in the body's top-end corner (`::part(loader)`, `role="status"`, la
 shared KeenMate loader, drawn from `--we-loader-icon` / `--we-loader-rotate` / `--we-loader-duration`
 / `--we-loader-size` (each chained to `--base-loader-*`, so one page-level change restyles every
 component's loader; it slows under reduced motion). For a richer loader set `renderLoadingCallback`
-on the element or `window.components.renderLoaderCallback` for the page. Apart from that spinner
+on the element or `window.components.renderLoadingCallback` for the page. Apart from that spinner
 the editor has no transitions or animations of its own; the right-click menu's motion follows core's `--km-menu-*` / `--base-duration-*`
 (`--base-duration-*: 0s` turns it off page-wide). The right-click menu is the shared KeenMate menu
 from `@keenmate/web-components-core` (`.km-menu*`, `::part(context-menu)`); restyle it
@@ -280,7 +306,7 @@ document.querySelector('km-editor').plugins = [...defaultPlugins(), myPlugin];
 name is a built-in (`'bold'`, `{ action: 'insert-link', text: 'Insert link' }`) — its
 text, icon, tooltip, shortcut and toggled / disabled state come from the command. Custom
 items use `action: 'custom'` + `id` and `onClick(detail)`; dividers are
-`{ divider: true }` (or `menuDivider()`):
+`{ divider: true }` (or `createMenuDivider()`):
 
 ```js
 const myPlugin = definePlugin({

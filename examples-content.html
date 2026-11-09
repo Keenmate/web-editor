@@ -6,17 +6,13 @@
        compact and the effect is easy to see. Layout only — the editor ships
        its own (shadow-DOM) styling. */
     .demo-area km-editor { min-height: 150px; }
-    /* The two-column "editor + live Markdown" layout the cards use. */
-    .rc-split { display: grid; grid-template-columns: 1fr minmax(0, 320px); gap: 16px; align-items: start; }
-    .rc-split .output { margin-top: 0; }
-    @media (max-width: 760px) { .rc-split { grid-template-columns: 1fr; } }
     .controls input[type="url"] { flex: 1 1 220px; min-width: 160px; padding: 6px 9px; border: 1px solid #cbd5e0; border-radius: 7px; font: inherit; }
     .controls select { padding: 5px 8px; border: 1px solid #cbd5e0; border-radius: 7px; background: #fff; font: inherit; }
 </style>
 
 <!-- Page-wide output lens. The editors hold ONE document; this only
      changes which serialization the readout panels show. -->
-<div class="card rc-lens-bar">
+<div class="card">
     <div class="controls">
         <span><b>Output lens</b> — read the same document in any format:</span>
         <label><input type="radio" name="rc-lens" value="markdown" checked> Markdown</label>
@@ -47,7 +43,7 @@
         <button type="button" id="rc01-apply">Apply link to selection</button>
         <span class="muted">or select text and press <kbd>Mod-K</kbd> / click 🔗</span>
     </div>
-    <div class="rc-split">
+    <div class="grid-2">
         <div class="demo-area">
             <km-editor id="rc01" view-mode="edit" content-format="markdown" toolbar="top" data-out="rc01-out" value="# Links
 
@@ -75,7 +71,7 @@ text and use the toolbar 🔗 button."></km-editor>
         <input type="url" id="rc02-url" value="https://picsum.photos/id/1025/320/200" aria-label="Image URL" />
         <button type="button" id="rc02-insert">Insert image at cursor</button>
     </div>
-    <div class="rc-split">
+    <div class="grid-2">
         <div class="demo-area">
             <km-editor id="rc02" view-mode="edit" content-format="markdown" toolbar="top" data-out="rc02-out" value="# Images
 
@@ -104,7 +100,7 @@ prompts for a URL; the button above inserts one directly."></km-editor>
         <button type="button" id="rc03-insert">Insert table</button>
         <span class="muted">right-click a cell for row / column / header commands</span>
     </div>
-    <div class="rc-split">
+    <div class="grid-2">
         <div class="demo-area">
             <km-editor id="rc03" view-mode="edit" content-format="markdown" toolbar="top" data-out="rc03-out" value="# Tables
 
@@ -145,7 +141,7 @@ column operations."></km-editor>
         </label>
         <button type="button" id="rc04-insert">Insert code block</button>
     </div>
-    <div class="rc-split">
+    <div class="grid-2">
         <div class="demo-area">
             <km-editor id="rc04" view-mode="edit" content-format="markdown" toolbar="top" data-out="rc04-out" value="# Code blocks
 

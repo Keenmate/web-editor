@@ -155,6 +155,35 @@ This editor was set up entirely in **HTML** — no script wired it.
     </div>
 </div>
 
+<!-- ============================================================= -->
+<!-- BU06 · Custom CSS (shadow root)                                 -->
+<!-- ============================================================= -->
+<div class="card">
+    <h2>BU06 · Custom CSS</h2>
+    <p>
+        Page CSS can't reach into the shadow root, so CSS is injected (core
+        <code>createCustomStyles()</code>). The page-wide layer
+        <code>window.components['km-editor'].customStyles</code> styles every editor on the page;
+        an instance's own <code>custom-styles</code> attribute (or <code>customStyles</code> /
+        <code>getCustomStylesCallback</code>) comes after it and wins. Both editors below follow the
+        page layer; the right one also has its own CSS.
+    </p>
+
+    <div class="controls">
+        <label><input type="checkbox" id="eb06-page"> page-wide: serif body text</label>
+        <label><input type="checkbox" id="eb06-own"> right editor's own <code>custom-styles</code>: wide letter spacing</label>
+    </div>
+
+    <div class="grid-2">
+        <div class="demo-area">
+            <km-editor id="eb06a" toolbar="none" value="Left — page layer only."></km-editor>
+        </div>
+        <div class="demo-area">
+            <km-editor id="eb06b" toolbar="none" value="Right — page layer + its own CSS."></km-editor>
+        </div>
+    </div>
+</div>
+
 <!-- Page wiring: bind each card's control switches to its editor. -->
 <script type="module">
     import { attachControlsPersistence } from '@keenmate/web-components-devkit/examples';
@@ -190,6 +219,17 @@ This editor was set up entirely in **HTML** — no script wired it.
         // BU04 — theme (empty = remove the attribute)
         const eb04 = document.getElementById('eb04');
         onRadio('eb04-theme', (v) => v ? eb04.setAttribute('theme', v) : eb04.removeAttribute('theme'));
+
+        // BU06 — custom CSS: the page-wide layer (every editor) + one instance's own layer
+        const PAGE_CSS = '.ProseMirror { font-family: Georgia, serif; }';
+        const OWN_CSS = '.ProseMirror { letter-spacing: .12em; }';
+        document.getElementById('eb06-page').addEventListener('change', (e) => {
+            window.components['km-editor'].customStyles = e.target.checked ? PAGE_CSS : null;
+        });
+        document.getElementById('eb06-own').addEventListener('change', (e) => {
+            const el = document.getElementById('eb06b');
+            e.target.checked ? el.setAttribute('custom-styles', OWN_CSS) : el.removeAttribute('custom-styles');
+        });
 
         // Persist the switches across reloads (restores + re-applies via our listeners).
         attachControlsPersistence('basic');

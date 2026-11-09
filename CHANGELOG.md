@@ -11,6 +11,52 @@ Target: **1.0.0-rc01** (first release).
 Pre-1.0, pre-publish. Everything below is the work to date; nothing has been
 released to a registry yet.
 
+### Changed — BREAKING (core 1.0.0-rc20 alignment)
+
+Requires `@keenmate/web-components-core` `^1.0.0-rc20` (was `^1.0.0-rc15`); validated against the
+rc21 pre-release. No compatibility aliases.
+
+- **`menuDivider()` → `createMenuDivider()`** (re-exported from core `/actions`, renamed in core rc18).
+- **The default pending loader is `<span class="we__loader">`** (was `.we-loader`; core rc18 BEM
+  naming). The `--we-loader-*` tokens and the `we-loader-spin` keyframes keep their names.
+- **The page-wide loader hook is `window.components.renderLoadingCallback`** (core rc18; was
+  `renderLoaderCallback`) — the same name as the instance `renderLoadingCallback`.
+- **`theme` is a closed set: `light` | `dark`** (was free text). Any other value is refused — it warns,
+  keeps the previous theme and fires `input-rejected`; `theme="dark"` behaves as before.
+- **Importing the element module alone no longer defines `<km-editor>`.** Only the package entry does,
+  through core `registerComponent()` (the package `exports` already exposed only the entry).
+- **The right-click menu closes on scroll by core's popover rule** (core rc20): only a scroll that
+  moves the editor (the page or a scroller around it) closes it; a wheel that scrolls nothing, or a
+  scroll inside the menu, no longer does.
+
+### Added (core 1.0.0-rc20 alignment)
+
+- **Custom CSS in the shadow root: `custom-styles` / `customStyles` + `getCustomStylesCallback(ctx)`**,
+  plus the page-wide layer `window.components['km-editor'].customStyles` /
+  `.getCustomStylesCallback(ctx)` (core `createCustomStyles()`): the page layer styles every editor,
+  an instance's own CSS comes after it and wins; the callback wins over the string. An `@import`ed
+  font is also linked once in `<head>`. Demo: Basic → BU06.
+- **Every input is a typed property on `KmEditorElement`** (TypeScript: `el.viewMode`,
+  `el.customStyles`, …), through `interface KmEditorElement extends EditorConfig`. `EditorConfig`
+  gains `customStyles` / `getCustomStylesCallback`; `theme` is typed `EditorTheme | null` (new
+  exported type `EditorTheme`).
+
+### Changed (core 1.0.0-rc20 alignment)
+
+- `el.value = …` assigned before the element is defined is applied by core (rc20), which replays it
+  through the `value` setter; the editor's own rescue code is gone (same behaviour).
+- Inline mode: detaching the editor clears only the placement core leaves (`position` / `left` /
+  `top`); core rc19 `anchor().destroy()` restores the sizes it wrote, so a host's own inline `width`
+  is no longer wiped.
+- `@floating-ui/dom` is no longer a direct dependency — positioning goes through core
+  `/positioning` only (the dev playground's floating toolbars now use core `anchor()`).
+- e2e runs in Chromium, Firefox and WebKit (was Chromium only). Firefox skips the paste specs (a
+  script-built `DataTransfer` arrives empty in a synthetic paste event); the CDP listener-count test
+  is Chromium-only.
+- The CEM reads `src/index.ts` again (the tag comes from `registerComponent()`); core rc21's `/cem`
+  writes it deterministically (two builds leave the manifests unchanged).
+- Examples: Rich Content cards on the kit `.grid-2` (page-local `.rc-split` removed).
+
 ### Changed — BREAKING (assigning state is silent)
 
 Suite rule: assigning a value / state property never fires the component's events (like a

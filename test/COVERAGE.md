@@ -13,6 +13,11 @@ row is one user-observable feature. Status legend:
 example pages). Shared harness: `e2e/fixtures.ts` (pageerror guard + native
 dialog stub), `e2e/helpers.ts`.
 
+Browsers: chromium, firefox and webkit (`playwright.config.ts`; on Windows run webkit in its own
+invocation). Platform skips, each with its cause in the spec: `paste.spec.ts` in Firefox (a
+script-built `DataTransfer` arrives empty in a synthetic paste event), the listener-count test in
+`lifecycle.spec.ts` outside Chromium (it reads CDP).
+
 ---
 
 ## 1. Content I/O
@@ -41,7 +46,7 @@ dialog stub), `e2e/helpers.ts`.
 | `plugins` reassignment preserves content (incl. tables) | ✓ | `lifecycle.spec.ts` | `lifecycle.html` |
 | `setValue()` before first connect (ED-3, fixed) | ✓ | `lifecycle.spec.ts` | `lifecycle.html` |
 | `format` change while detached (ED-4, fixed) | ✓ | `lifecycle.spec.ts` | `lifecycle.html` |
-| Pending loader: default `.we-loader` + role=status/aria-label, page hook, instance hook wins, removed when settled; none while an interactive stage waits for the user | ✓ | `loader.spec.ts` | `loader.html` |
+| Pending loader: default `.we__loader` + role=status/aria-label, page hook, instance hook wins, removed when settled; none while an interactive stage waits for the user | ✓ | `loader.spec.ts` | `loader.html` |
 | `ready` fires once per element lifetime | ✓ | `lifecycle.spec.ts`, `content.spec.ts` | `lifecycle.html`, `content.html` |
 | `destroy()` | ✓ | `lifecycle.spec.ts` | `lifecycle.html` |
 | Detached editor: `value` live; document listeners released, restored on reconnect | ✓ | `lifecycle.spec.ts` | `lifecycle.html` |
@@ -90,7 +95,7 @@ dialog stub), `e2e/helpers.ts`.
 | Preview is non-editable | ✓ | `modes.spec.ts` | `modes.html` |
 | Mode switch keeps doc + selection + undo | ✓ | `modes.spec.ts` | `modes.html` |
 | `readonly`: typing ignored, editing toolbar groups hidden (view group stays), native context menu, removal re-enables | ✓ | `readonly.spec.ts` | `readonly.html` |
-| Inline mode `anchor`: placement, scroll tracking, detach releases / reattach re-anchors, unmatched selector, re-target | ✓ | `inline-anchor.spec.ts`, `modes.spec.ts` | `inline-anchor.html`, `modes.html` |
+| Inline mode `anchor`: placement, scroll tracking, detach releases / reattach re-anchors (the host's own inline width kept — core rc19 restores sizes), unmatched selector, re-target | ✓ | `inline-anchor.spec.ts`, `modes.spec.ts` | `inline-anchor.html`, `modes.html` |
 
 ## 6. Chrome
 
@@ -100,7 +105,7 @@ dialog stub), `e2e/helpers.ts`.
 | Toolbar active state follows the caret; click keeps editor focus | ✓ | `toolbar.spec.ts`, `formatting.spec.ts` | `toolbar.html` |
 | `statusbar` Words/Chars live, edges top/bottom/both (split by `bar`), none, read-only | ✓ | `statusbar.spec.ts` | `statusbar.html` |
 | Selection toolbar show/hide rules (collapsed, code block, read-only, preview), items, DOM move | ✓ | `selection-toolbar.spec.ts` | `selection-toolbar.html` |
-| Context menu at pointer, dismiss (Escape / outside / activation), readonly | ✓ | `context-menu.spec.ts` | `context-menu.html` |
+| Context menu at pointer, dismiss (Escape / outside / activation), core rc20 scroll rule (a page scroll that moves the editor closes; a wheel that scrolls nothing doesn't), readonly | ✓ | `context-menu.spec.ts` | `context-menu.html` |
 
 ## 7. Plugins & pipelines
 
@@ -116,9 +121,9 @@ dialog stub), `e2e/helpers.ts`.
 | Feature | Status | Spec | Fixture |
 | --- | :-: | --- | --- |
 | Examples hub + pages open without errors | ✓ | `examples.spec.ts` | (example pages) |
-| `theme="dark"` tokens + `--we-accent` on active buttons + live theme property | ✓ | `theming.spec.ts` | `theming.html` |
+| `theme="dark"` tokens + `--we-accent` on active buttons + live theme property; unknown theme refused (`input-rejected`); custom CSS (page-wide `window.components['km-editor'].customStyles`, instance `custom-styles` override, `getCustomStylesCallback` wins + ctx, clearing) | ✓ | `theming.spec.ts` | `theming.html` |
 | Logging silent by default; global enable / disable (EDITOR:INIT) | ✓ | `logging.spec.ts` | `logging.html` |
-| Global registration: define, `window.components` (version / config / getInstances), re-import | ✓ | `registration.spec.ts` | `registration.html` |
+| Global registration: define, `window.components` (version / config / getInstances), re-import, the element module alone defines nothing (core `registerComponent()` in the entry) | ✓ | `registration.spec.ts` | `registration.html` |
 | Invalid enum attributes → default (silent, ED-11); invalid property rejected + warn; boolean `readonly` | ✓ | `inputs.spec.ts` | `inputs.html` |
 
 ## Not implemented (feature gaps — no tests)
