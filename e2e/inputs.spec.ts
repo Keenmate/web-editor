@@ -6,7 +6,7 @@ import { test, expect, load, editor, pm } from './fixtures';
 // (view-mode="bogus" toolbar="sideways" content-format="xml" statusbar="nope").
 
 test.describe('inputs', () => {
-    test('invalid enum attributes → defaults, each with a warning', async ({ page }) => {
+    test('invalid enum attributes → defaults (written back), each with a warning', async ({ page }) => {
         const warnings: string[] = [];
         page.on('console', (m) => m.type() === 'warning' && warnings.push(m.text()));
         await load(page, 'inputs.html', { flag: 'fixtureReady' });
@@ -17,6 +17,11 @@ test.describe('inputs', () => {
             statusbar: el.statusbar,
         }));
         expect(cfg).toEqual({ viewMode: 'edit', toolbar: 'top', contentFormat: 'markdown', statusbar: 'none' });
+        // All four reflect, so core writes the kept value back over the refused attribute.
+        const attrs = await editor(page).evaluate((el) =>
+            ['view-mode', 'toolbar', 'content-format', 'statusbar'].map((a) => el.getAttribute(a)),
+        );
+        expect(attrs).toEqual(['edit', 'top', 'markdown', 'none']);
         // Core warns once per rejected attribute (NOTES.md ED-11, resolved in core).
         const rejected = warnings.filter((w) => w.includes('rejected invalid value for attribute'));
         expect(rejected.map((w) => w.match(/ ([\w-]+)="/)?.[1]).sort()).toEqual(['content-format', 'statusbar', 'toolbar', 'view-mode']);
