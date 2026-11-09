@@ -88,6 +88,18 @@ test.describe('disabled', () => {
         await expect(page.locator('km-editor#dis .we-toolbar-zone')).toBeHidden();
     });
 
+    // Core SPEC §6.4: disabled blocks the user, not code — calls from code still work.
+    test('calls from code still work while disabled (setValue, controller.runCommand)', async ({ page }) => {
+        const html = await dis(page).evaluate((el: any) => {
+            el.setValue('word');
+            el.controller.runCommand('bullet-list');
+            return el.getHTML();
+        });
+        expect(html).toContain('<ul');
+        expect(html).toContain('word');
+        await expect(disPm(page)).toHaveAttribute('contenteditable', 'false');
+    });
+
     test('attribute → property false → enabled (isDisabled reflects; not stuck by formDisabledCallback)', async ({ page }) => {
         expect(await dis(page).evaluate((el: any) => el.isDisabled)).toBe(true);
         await dis(page).evaluate((el: any) => (el.isDisabled = false));
