@@ -94,7 +94,7 @@ script-built `DataTransfer` arrives empty in a synthetic paste event), the liste
 | Split output is live; output tabs switch format | ✓ | `modes.spec.ts` | `modes.html` |
 | Preview is non-editable | ✓ | `modes.spec.ts` | `modes.html` |
 | Mode switch keeps doc + selection + undo | ✓ | `modes.spec.ts` | `modes.html` |
-| `readonly`: typing ignored, editing toolbar groups hidden (view group stays), native context menu, removal re-enables | ✓ | `readonly.spec.ts` | `readonly.html` |
+| `readonly`: typing ignored, editing toolbar groups hidden (view group stays), native context menu, removal re-enables; surface reachable by Tab, select-all + copy from the keyboard (SPEC §6.4); `disabled`: inert, not focusable, calls from code still work | ✓ | `readonly.spec.ts` | `readonly.html` |
 | Inline mode `anchor`: placement, scroll tracking, detach releases / reattach re-anchors (the host's own inline width kept — core rc19 restores sizes), unmatched selector, re-target | ✓ | `inline-anchor.spec.ts`, `modes.spec.ts` | `inline-anchor.html`, `modes.html` |
 
 ## 6. Chrome
@@ -124,7 +124,7 @@ script-built `DataTransfer` arrives empty in a synthetic paste event), the liste
 | `theme="dark"` tokens + `--we-accent` on active buttons + live theme property; unknown theme refused (`input-rejected`); custom CSS (page-wide `window.components['km-editor'].customStyles`, instance `custom-styles` override, `getCustomStylesCallback` wins + ctx, clearing) | ✓ | `theming.spec.ts` | `theming.html` |
 | Logging silent by default; global enable / disable (EDITOR:INIT) | ✓ | `logging.spec.ts` | `logging.html` |
 | Global registration: define, `window.components` (version / config / getInstances), re-import, the element module alone defines nothing (core `registerComponent()` in the entry) | ✓ | `registration.spec.ts` | `registration.html` |
-| Invalid enum attributes → default (silent, ED-11); invalid property rejected + warn; boolean `readonly` | ✓ | `inputs.spec.ts` | `inputs.html` |
+| Invalid enum attributes → warn, keep the previous value (the default in markup), reflected attribute written back; invalid property rejected + warn; boolean `readonly` | ✓ | `inputs.spec.ts` | `inputs.html` |
 
 ## Not implemented (feature gaps — no tests)
 

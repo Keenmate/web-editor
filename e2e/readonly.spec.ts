@@ -69,6 +69,38 @@ test.describe('readonly', () => {
         await expect(editor(page)).toHaveAttribute('readonly', '');
     });
 
+    // Core SPEC §6.4: readonly stays focusable / navigable / copyable (native semantics).
+    test('the read-only surface is reachable by Tab; select-all + copy work from the keyboard', async ({ page }) => {
+        const isSurfaceFocused = () =>
+            page.evaluate(() => {
+                const el = document.getElementById('subject')!;
+                return document.activeElement === el && el.shadowRoot!.activeElement === el.shadowRoot!.querySelector('.ProseMirror');
+            });
+        let isReached = false;
+        for (let i = 0; i < 10 && !isReached; i++) {
+            await page.keyboard.press('Tab');
+            isReached = await isSurfaceFocused();
+        }
+        expect(isReached).toBe(true);
+        // Select-all selects the document (the shadow-aware DOM selection) …
+        await page.keyboard.press('ControlOrMeta+a');
+        const selected = await page.evaluate(() => {
+            const root = document.getElementById('subject')!.shadowRoot as ShadowRoot & { getSelection?: () => Selection | null };
+            return String((root.getSelection ? root.getSelection() : null) ?? document.getSelection()).replace(/\s+/g, ' ');
+        });
+        expect(selected).toBe('Locked body text');
+        // … and copy goes through: ProseMirror fills the clipboard, or the browser copies the selection natively.
+        await page.evaluate(() => {
+            (window as any).copied = null;
+            document.addEventListener('copy', (e) => {
+                (window as any).copied = e.defaultPrevented ? (e.clipboardData?.getData('text/plain') ?? '') : 'native';
+            });
+        });
+        await page.keyboard.press('ControlOrMeta+c');
+        await expect.poll(() => page.evaluate(() => (window as any).copied)).toMatch(/^(native|Locked\s+body text)$/);
+        expect(await markdown(page)).toBe('# Locked\n\nbody text');
+    });
+
     test('content API still works while read-only (setValue)', async ({ page }) => {
         await editor(page).evaluate((el: any) => el.setValue('# Replaced'));
         await expect(pm(page).locator('h1')).toHaveText('Replaced');
@@ -86,6 +118,13 @@ test.describe('disabled', () => {
         await expect(disPm(page)).toHaveAttribute('contenteditable', 'false');
         await expect(disRoot(page)).toHaveAttribute('inert', '');
         await expect(page.locator('km-editor#dis .we-toolbar-zone')).toBeHidden();
+        // Not focusable (unlike read-only, whose surface is in the tab order).
+        const isFocused = await dis(page).evaluate((el) => {
+            const surface = el.shadowRoot!.querySelector('.ProseMirror') as HTMLElement;
+            surface.focus();
+            return el.shadowRoot!.activeElement === surface;
+        });
+        expect(isFocused).toBe(false);
     });
 
     // Core SPEC §6.4: disabled blocks the user, not code — calls from code still work.

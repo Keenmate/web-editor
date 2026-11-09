@@ -10,7 +10,7 @@
  * Component is a thin shell over this class.
  */
 import { EditorState, type Plugin, type Transaction } from 'prosemirror-state';
-import { EditorView } from 'prosemirror-view';
+import { EditorView, type DirectEditorProps } from 'prosemirror-view';
 import { Node as PMNode, type Schema } from 'prosemirror-model';
 import { history } from 'prosemirror-history';
 import { keymap } from 'prosemirror-keymap';
@@ -58,6 +58,29 @@ import {
   type DocJSON,
   type SerializationFormat,
 } from './serialization';
+
+/**
+ * Read-only (`contenteditable="false"`) must stay focusable — keyboard scroll, select-all,
+ * copy — like a native readonly control (core SPEC §6.4); disabled is unaffected (the host
+ * makes the whole surface `inert`). ProseMirror skips its keymaps while not editable, so
+ * select-all is handled here, as a native DOM selection: the browser's own copy takes it in
+ * every engine (Firefox / WebKit don't target a non-editable shadow surface with the copy
+ * event, so ProseMirror's copy handler never sees it there).
+ */
+const readOnlyKeyboardProps: Pick<DirectEditorProps, 'attributes' | 'handleDOMEvents'> = {
+  attributes: { tabindex: '0' },
+  handleDOMEvents: {
+    keydown: (view, event) => {
+      if (view.editable || !(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return false;
+      if (event.key.toLowerCase() !== 'a') return false;
+      const root = view.root as ShadowRoot & { getSelection?: () => Selection | null };
+      const selection = (root.getSelection ? root.getSelection() : null) ?? document.getSelection();
+      selection?.selectAllChildren(view.dom);
+      event.preventDefault();
+      return true;
+    },
+  },
+};
 
 /**
  * The `<km-editor>` element hosting an engine. With a host, every ctx the engine
@@ -273,6 +296,7 @@ export class EditorEngine {
     this.view = new EditorView(options.mount, {
       state,
       editable: () => this.#isEditable,
+      ...readOnlyKeyboardProps,
       dispatchTransaction: (tr) => {
         const newState = this.view.state.apply(tr);
         this.view.updateState(newState);

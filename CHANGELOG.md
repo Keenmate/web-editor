@@ -57,6 +57,13 @@ rc21 pre-release. No compatibility aliases.
   writes it deterministically (two builds leave the manifests unchanged).
 - Examples: Rich Content cards on the kit `.grid-2` (page-local `.rc-split` removed).
 
+### Fixed (core 1.0.0-rc20 alignment)
+
+- **Read-only is focusable, like a native `readonly` control** (core SPEC §6.4). The read-only
+  surface (`readonly`, `view-mode="preview"`) was out of the tab order (`contenteditable="false"`,
+  no `tabindex`); it is now reachable by Tab, and Ctrl/⌘+A selects the document so it can be copied
+  from the keyboard. Disabled stays unfocusable (`inert`).
+
 ### Changed — BREAKING (assigning state is silent)
 
 Suite rule: assigning a value / state property never fires the component's events (like a

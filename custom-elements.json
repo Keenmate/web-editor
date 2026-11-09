@@ -598,7 +598,7 @@
               "type": {
                 "text": "EditorView"
               },
-              "default": "new EditorView(options.mount, { state, editable: () => this.#isEditable, dispatchTransaction: (tr) => { const newState = this.view.state.apply(tr); this.view.updateState(newState); this.#keepInactive(); this.events.emit('transaction', { tr, engine: this }); if (tr.docChanged) this.events.emit('change', this); if (tr.selectionSet || tr.docChanged) this.events.emit('selection-change', this); }, })"
+              "default": "new EditorView(options.mount, { state, editable: () => this.#isEditable, ...readOnlyKeyboardProps, dispatchTransaction: (tr) => { const newState = this.view.state.apply(tr); this.view.updateState(newState); this.#keepInactive(); this.events.emit('transaction', { tr, engine: this }); if (tr.docChanged) this.events.emit('change', this); if (tr.selectionSet || tr.docChanged) this.events.emit('selection-change', this); }, })"
             },
             {
               "kind": "field",
