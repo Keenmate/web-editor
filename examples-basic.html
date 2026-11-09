@@ -184,6 +184,26 @@ This editor was set up entirely in **HTML** — no script wired it.
     </div>
 </div>
 
+<!-- ============================================================= -->
+<!-- BU07 · Disabled / Readonly States                               -->
+<!-- ============================================================= -->
+<div class="card">
+    <h2>BU07 · Disabled / Readonly States</h2>
+    <div class="grid">
+        <div class="form-group">
+            <label>Disabled Editor</label>
+            <km-editor disabled toolbar="none" value="A **disabled** editor — no typing, no selection, no focus."></km-editor>
+            <small>No interaction, not focusable, not submitted with a form</small>
+        </div>
+
+        <div class="form-group">
+            <label>Readonly Editor</label>
+            <km-editor readonly toolbar="none" value="A **readonly** editor — select and copy this text."></km-editor>
+            <small>The value can't change; still focusable and copyable, submitted with a form</small>
+        </div>
+    </div>
+</div>
+
 <!-- Page wiring: bind each card's control switches to its editor. -->
 <script type="module">
     import { attachControlsPersistence } from '@keenmate/web-components-devkit/examples';
