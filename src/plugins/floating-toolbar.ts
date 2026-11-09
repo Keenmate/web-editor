@@ -1,6 +1,6 @@
 /**
  * Floating toolbars — text-selection, table, and code-block context toolbars
- * positioned with @floating-ui/dom.
+ * positioned with core `anchor()` (`@keenmate/web-components-core/positioning`).
  *
  * PROVISIONAL (Phase 0): this is a behaviour-preserving port of the POC and is
  * tightly coupled to specific DOM ids in the dev playground's index.html. It is
@@ -10,7 +10,12 @@
  */
 import { Plugin, TextSelection } from 'prosemirror-state';
 import { isInTable } from 'prosemirror-tables';
-import { computePosition, flip, shift, offset, arrow } from '@floating-ui/dom';
+import {
+  anchor,
+  type AnchorHandle,
+  type Placement,
+  type VirtualElement,
+} from '@keenmate/web-components-core/positioning';
 import type { Schema } from 'prosemirror-model';
 import type { EditorView } from 'prosemirror-view';
 
@@ -82,86 +87,88 @@ export function createFloatingToolbarPlugin(schema: Schema): Plugin {
     });
   }
 
-  function positionArrow(arrowEl: HTMLElement, middlewareData, placement: string, fallbackLeft = '') {
-    if (!middlewareData.arrow) return;
-    const { x: arrowX } = middlewareData.arrow;
-    const isTop = placement.startsWith('top');
-    Object.assign(arrowEl.style, {
-      left: arrowX != null ? `${arrowX}px` : fallbackLeft,
-      top: isTop ? '' : '-6px',
-      bottom: isTop ? '-6px' : '',
-      transform: `translateX(-50%) ${isTop ? '' : 'rotate(180deg)'}`,
-    });
+  /**
+   * One live core `anchor()` per toolbar (`@keenmate/web-components-core/positioning`,
+   * SPEC §12.2 — no direct floating-ui): created on show, re-positioned on the next
+   * show, destroyed on hide or when the reference node changes. Core places the
+   * arrow; the playground only turns it to face the reference.
+   */
+  const anchors = new Map<HTMLElement, { reference: Element | VirtualElement; handle: AnchorHandle }>();
+
+  function place(
+    panel: HTMLElement,
+    arrowEl: HTMLElement,
+    reference: Element | VirtualElement,
+    placement: Placement,
+    fallbackPlacements: Placement[]
+  ) {
+    const current = anchors.get(panel);
+    if (current && current.reference === reference) {
+      current.handle.update();
+    } else {
+      current?.handle.destroy();
+      const handle = anchor(panel, reference, {
+        placement,
+        strategy: 'absolute',
+        offset: 8,
+        fallbackPlacements,
+        shift: 8,
+        arrow: { element: arrowEl },
+        onPlaced: (side) => {
+          arrowEl.style.transform = side.startsWith('top') ? '' : 'rotate(180deg)';
+        },
+      });
+      anchors.set(panel, { reference, handle });
+    }
+    panel.classList.add('visible');
   }
 
-  async function showFloatingToolbar(view: EditorView) {
-    const virtualEl = getSelectionVirtualElement(view);
-    const { x, y, placement, middlewareData } = await computePosition(virtualEl, floatingToolbar, {
-      placement: 'top',
-      middleware: [
-        offset(8),
-        flip({ fallbackPlacements: ['bottom', 'top'] }),
-        shift({ padding: 8 }),
-        arrow({ element: floatingArrow }),
-      ],
-    });
-    Object.assign(floatingToolbar.style, { left: `${x}px`, top: `${y}px` });
-    positionArrow(floatingArrow, middlewareData, placement);
+  function unplace(panel: HTMLElement) {
+    anchors.get(panel)?.handle.destroy();
+    anchors.delete(panel);
+    panel.classList.remove('visible');
+  }
+
+  // The selection reference is one virtual element whose rect is read live.
+  let selectionView: EditorView | null = null;
+  const selectionReference: VirtualElement = {
+    getBoundingClientRect: () => (selectionView ? getSelectionVirtualElement(selectionView).getBoundingClientRect() : new DOMRect()),
+  };
+
+  function showFloatingToolbar(view: EditorView) {
+    selectionView = view;
+    (selectionReference as { contextElement?: Element }).contextElement = view.dom;
+    place(floatingToolbar, floatingArrow, selectionReference, 'top', ['bottom', 'top']);
     updateToolbarActiveStates(view.state);
-    floatingToolbar.classList.add('visible');
   }
 
   function hideFloatingToolbar() {
-    floatingToolbar.classList.remove('visible');
+    unplace(floatingToolbar);
   }
 
-  async function showTableToolbar(view: EditorView) {
+  function showTableToolbar(view: EditorView) {
     const table = findNodeOfType(view.state, 'table');
     if (!table) return;
     const tableDOM = view.nodeDOM(table.pos) as HTMLElement | null;
     if (!tableDOM) return;
-
-    const { x, y, placement, middlewareData } = await computePosition(tableDOM, tableToolbar, {
-      placement: 'top',
-      middleware: [
-        offset(8),
-        flip({ fallbackPlacements: ['bottom', 'top'] }),
-        shift({ padding: 8 }),
-        arrow({ element: tableToolbarArrow }),
-      ],
-    });
-    Object.assign(tableToolbar.style, { left: `${x}px`, top: `${y}px` });
-    positionArrow(tableToolbarArrow, middlewareData, placement);
-    tableToolbar.classList.add('visible');
+    place(tableToolbar, tableToolbarArrow, tableDOM, 'top', ['bottom', 'top']);
   }
 
   function hideTableToolbar() {
-    tableToolbar.classList.remove('visible');
+    unplace(tableToolbar);
   }
 
-  async function showCodeToolbar(view: EditorView) {
+  function showCodeToolbar(view: EditorView) {
     const codeBlock = findNodeOfType(view.state, 'code_block');
     if (!codeBlock) return;
     codeLanguageLabel.textContent = codeBlock.node.attrs.language || 'text';
     const codeDOM = view.nodeDOM(codeBlock.pos) as HTMLElement | null;
     if (!codeDOM) return;
-
-    const { x, y, placement, middlewareData } = await computePosition(codeDOM, codeToolbar, {
-      placement: 'top-start',
-      middleware: [
-        offset(8),
-        flip({ fallbackPlacements: ['bottom-start', 'top-start'] }),
-        shift({ padding: 8 }),
-        arrow({ element: codeToolbarArrow }),
-      ],
-    });
-    Object.assign(codeToolbar.style, { left: `${x}px`, top: `${y}px` });
-    positionArrow(codeToolbarArrow, middlewareData, placement, '20px');
-    codeToolbar.classList.add('visible');
+    place(codeToolbar, codeToolbarArrow, codeDOM, 'top-start', ['bottom-start', 'top-start']);
   }
 
   function hideCodeToolbar() {
-    codeToolbar.classList.remove('visible');
+    unplace(codeToolbar);
   }
 
   return new Plugin({

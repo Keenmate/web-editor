@@ -98,12 +98,10 @@
   margin: 0 4px;
 }
 
-/* Arrow pointing down to selection */
+/* Arrow pointing to the reference — core anchor() sets left / the edge offset,
+   the floating-toolbar plugin turns it to face the reference. */
 .floating-toolbar-arrow {
   position: absolute;
-  bottom: -6px;
-  left: 50%;
-  transform: translateX(-50%);
   width: 12px;
   height: 6px;
   overflow: hidden;
