@@ -138,7 +138,7 @@ export type EditorActionItem = ActionItem<EditorActionContext, EditorAction>;
 
 /**
  * One entry of a toolbar / menu list: an item, a divider
- * (`{ divider: true }` / `menuDivider()`), or a built-in name as shorthand
+ * (`{ divider: true }` / `createMenuDivider()`), or a built-in name as shorthand
  * (`'bold'` → `{ action: 'bold' }`). Submenus are not supported.
  */
 export type EditorToolbarEntry = EditorActionItem | MenuDivider | EditorAction;

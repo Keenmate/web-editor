@@ -115,7 +115,7 @@
   display: none;
 }
 /* The shared drawing rule (base-css-variables Loader contract, verbatim). */
-.we-loader {
+.we__loader {
   display: inline-block;
   inline-size: var(--we-loader-size);
   block-size: var(--we-loader-size);

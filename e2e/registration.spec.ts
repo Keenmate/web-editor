@@ -1,7 +1,8 @@
 import { test, expect, load } from './fixtures';
 
 // Global registration: the element is defined once, `window.components['km-editor']`
-// publishes version / config / getInstances; importing twice is harmless.
+// publishes version / config / getInstances; importing twice is harmless; only the
+// entry (core registerComponent()) defines the tag.
 // Fixture: test/registration.html.
 
 test.describe('registration', () => {
@@ -50,11 +51,15 @@ test.describe('registration', () => {
         expect(out.after).toEqual(['subject']);
     });
 
-    test('importing the element module again does not redefine (no error)', async ({ page }) => {
+    test('importing the package entry again does not redefine (no error)', async ({ page }) => {
         await page.evaluate(async () => {
-            await import('/src/web-component.ts' as string);
             await import('/src/index.ts' as string);
         });
         expect(await page.evaluate(() => !!customElements.get('km-editor'))).toBe(true);
+    });
+
+    test('the element module alone does not define the tag (core registerComponent() in the entry does)', async ({ page }) => {
+        const src = await page.evaluate(async () => (await fetch('/src/web-component.ts')).text());
+        expect(src).not.toMatch(/customElements\.define\(/);
     });
 });

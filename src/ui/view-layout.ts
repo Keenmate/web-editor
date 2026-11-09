@@ -266,8 +266,9 @@ export class ViewLayout {
   #teardownAnchor(): void {
     this.#anchorHandle?.destroy();
     this.#anchorHandle = undefined;
-    // Clear the inline styles anchor() wrote to the host (see core anchor.js).
-    for (const prop of ['position', 'left', 'top', 'width', 'min-width']) {
+    // Core's destroy() puts back the sizes it wrote (`matchWidth` → width / min-width,
+    // core rc19); the placement it leaves (`position` / `left` / `top`) is cleared here.
+    for (const prop of ['position', 'left', 'top']) {
       this.#host.style.removeProperty(prop);
     }
   }

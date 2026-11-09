@@ -20,6 +20,7 @@ export type {
   EditorFormat,
   EditorToolbar,
   EditorStatusBar,
+  EditorTheme,
   EditorConfig,
   EditorResponsiveMap,
   EditorResponsiveCallback,
@@ -49,7 +50,7 @@ export type {
   LockChangeEventDetail,
   EditorEventMap,
 } from './interaction';
-export { menuDivider } from '@keenmate/web-components-core/actions';
+export { createMenuDivider } from '@keenmate/web-components-core/actions';
 
 // UI strings (`labels`, rulebook D-NC-24): built-in English + the key helpers.
 export { DEFAULT_LABELS, labelKey, formatLabel } from './labels';
@@ -187,7 +188,7 @@ export { syntaxHighlightPlugin } from './plugins/syntax-highlight';
 // ── Registration ────────────────────────────────────────────────────────────
 // Defines the element, publishes build metadata + the flattened logging controls
 // on window.components['km-editor'], and wires getInstances() to the live-instance
-// registry BlissElement maintains. Idempotent with the define in web-component.ts.
+// registry BlissElement maintains. The only place the tag is defined.
 declare const __PACKAGE_NAME__: string;
 declare const __VERSION__: string;
 declare const __AUTHOR__: string;

@@ -214,12 +214,29 @@ test.describe('context menu', () => {
         expect(Math.abs(m.y - (h.y + 5))).toBeLessThan(30);
     });
 
-    test('a scroll outside the menu closes it', async ({ page }) => {
+    // Core rc20 menu scroll rule (shared with createPopover): only a scroll that moves what the
+    // menu belongs to (the page, or a scroller around the editor) closes it; a wheel that
+    // scrolls nothing does not.
+    test('a page scroll that moves the editor closes the menu', async ({ page }) => {
+        await page.evaluate(() => {
+            const spacer = document.createElement('div');
+            spacer.style.height = '3000px';
+            document.body.appendChild(spacer);
+        });
         await pm(page).locator('p').click({ button: 'right' });
         await expect(menu(page)).toBeVisible();
         await page.mouse.move(5, 600);
         await page.mouse.wheel(0, 100);
         await expect(menu(page)).toBeHidden();
+    });
+
+    test('a wheel that scrolls nothing leaves the menu open', async ({ page }) => {
+        await pm(page).locator('p').click({ button: 'right' });
+        await expect(menu(page)).toBeVisible();
+        await page.mouse.move(5, 600);
+        await page.mouse.wheel(0, 100);
+        await page.waitForTimeout(300);
+        await expect(menu(page)).toBeVisible();
     });
 
     test('moving the element closes the open menu', async ({ page }) => {

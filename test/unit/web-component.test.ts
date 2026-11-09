@@ -429,7 +429,7 @@ describe('<km-editor> pending loader (core renderLoader)', () => {
   }
   const tick = (ms = 10) => new Promise((r) => setTimeout(r, ms));
 
-  it('shows the default .we-loader with role=status + labels.loading past the threshold, removes it after', async () => {
+  it('shows the default .we__loader with role=status + labels.loading past the threshold, removes it after', async () => {
     const { el, slot, release } = await mountSlow();
     expect(slot.hidden).toBe(true);
     getEditorEngine(el)!.run('slow:run');
@@ -437,7 +437,7 @@ describe('<km-editor> pending loader (core renderLoader)', () => {
     expect(slot.hidden).toBe(false);
     expect(slot.getAttribute('role')).toBe('status');
     expect(slot.getAttribute('aria-label')).toBe('Loading…');
-    expect(slot.querySelector('.we-loader')).toBeTruthy();
+    expect(slot.querySelector('.we__loader')).toBeTruthy();
     release();
     await tick();
     expect(slot.hidden).toBe(true);
@@ -458,7 +458,7 @@ describe('<km-editor> pending loader (core renderLoader)', () => {
     getEditorEngine(el)!.run('slow:run');
     await tick();
     expect(slot.querySelector('.mine')).toBeTruthy();
-    expect(slot.querySelector('.we-loader')).toBeNull();
+    expect(slot.querySelector('.we__loader')).toBeNull();
     release();
     await tick();
     expect(slot.querySelector('.mine')).toBeNull();

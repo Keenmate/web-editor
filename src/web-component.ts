@@ -35,7 +35,10 @@ import {
   toObject,
   toText,
   adoptStyles,
+  createCustomStyles,
   renderLoader,
+  type CustomStylesCallback,
+  type CustomStylesHandle,
   type EventDef,
   type InputDef,
   type RenderLoaderCallback,
@@ -52,6 +55,7 @@ import type { SerializationFormat } from './engine/serialization';
 import {
   createEditorController,
   type EditorController,
+  type EditorComponentContext,
   type EditorEventMap,
   type EditorActionEventDetail,
   type ChangeEventDetail,
@@ -80,10 +84,14 @@ export type EditorFormat = SerializationFormat; // 'html' | 'markdown' | 'json'
 export type EditorToolbar = 'top' | 'bottom' | 'start' | 'end' | 'none';
 /** Status-bar placement — a dedicated strip docked top, bottom, or both (`'none'` hides it). */
 export type EditorStatusBar = 'none' | 'top' | 'bottom' | 'both';
+/** Forced colour scheme (`theme`); unset → the light default. */
+export type EditorTheme = 'light' | 'dark';
 
 /**
- * The `<km-editor>` input config — one key per input-table row (`configKey`), as
- * `el.config` exposes it. The type the responsive rules (core SPEC §6.7) range over.
+ * The `<km-editor>` input config — exactly one key per input-table row (`configKey`), as
+ * `el.config` exposes it. The type the responsive rules (core SPEC §6.7) range over, and
+ * (merged into {@link KmEditorElement}) the type of every input property (core usage.md →
+ * "Typing the properties", rulebook C-CA-16).
  */
 export interface EditorConfig {
   defaultValue: string | null;
@@ -95,12 +103,14 @@ export interface EditorConfig {
   isDisabled: boolean;
   toolbar: EditorToolbar;
   statusbar: EditorStatusBar;
-  theme: string | null;
+  theme: EditorTheme | null;
   anchor: string | null;
   labels: EditorLabels | null;
   beforeActionCallback: ((detail: EditorActionEventDetail) => unknown) | null;
   renderLoadingCallback: RenderLoaderCallback | null;
   interactionHost: InteractionHost | null;
+  customStyles: string | null;
+  getCustomStylesCallback: CustomStylesCallback<EditorComponentContext> | null;
 }
 
 /**
@@ -119,6 +129,7 @@ const VIEW_MODES = ['edit', 'split', 'preview', 'inline'] as const;
 const FORMATS = ['markdown', 'html', 'json'] as const;
 const TOOLBARS = ['top', 'bottom', 'start', 'end', 'none'] as const;
 const STATUSBARS = ['none', 'top', 'bottom', 'both'] as const;
+const THEMES = ['light', 'dark'] as const;
 
 const isLabels = (v: unknown): v is EditorLabels =>
   typeof v === 'object' && v !== null && !Array.isArray(v) && Object.values(v).every((x) => typeof x === 'string');
@@ -211,10 +222,11 @@ const INPUTS: readonly InputDef[] = [
   {
     configKey: 'theme',
     attribute: 'theme',
-    converter: toText({ isNullable: true }),
+    converter: toEnum(THEMES, { isNullable: true }),
     shouldReflect: true,
     on: 'update',
-    description: 'Theme name, reflected to the host attribute for CSS theming (`:host([theme="…"])`).',
+    description:
+      "Forced colour scheme: 'dark' swaps the token set (`:host([theme='dark'])`); 'light' (or unset) is the default look. Reflected to the host attribute.",
   },
   {
     configKey: 'anchor',
@@ -246,7 +258,7 @@ const INPUTS: readonly InputDef[] = [
     default: null,
     on: 'update',
     description:
-      "Property only. Draws the pending loader (shown while a deferred pipeline's work — e.g. a cloud-image upload — outlives its loader threshold; not while a dialog waits for the user) instead of the default spinner: `({ component, context, containerElement, element, label }) => void | cleanup`, `context` = `'pipeline'`. Fill `containerElement` (it already has `role=\"status\"` + `aria-label` = label `loading`); a returned function runs when the loader is removed. Beats the page-wide `window.components.renderLoaderCallback` (core SPEC §12.14). Read each time the loader shows.",
+      "Property only. Draws the pending loader (shown while a deferred pipeline's work — e.g. a cloud-image upload — outlives its loader threshold; not while a dialog waits for the user) instead of the default spinner: `({ component, context, containerElement, element, label }) => void | cleanup`, `context` = `'pipeline'`. Fill `containerElement` (it already has `role=\"status\"` + `aria-label` = label `loading`); a returned function runs when the loader is removed. Beats the page-wide `window.components.renderLoadingCallback` (core SPEC §12.14). Read each time the loader shows.",
   },
   {
     configKey: 'interactionHost',
@@ -255,6 +267,21 @@ const INPUTS: readonly InputDef[] = [
     on: 'update',
     description:
       'Property only. The modal bridge interactive pipeline stages call: `{ request(ctx) }`, `ctx` = the request (`kind`, `title`, `message`, `payload`) + `signal` + `controller` / `element`. Default: a `window.confirm`-backed host. Survives engine rebuilds (e.g. a `plugins` reassignment).',
+  },
+  {
+    configKey: 'customStyles',
+    attribute: 'custom-styles',
+    converter: toText({ isNullable: true }),
+    on: 'update',
+    description:
+      "CSS injected into the editor's shadow root (a `<style class=\"we-custom-styles\">` after the page-wide `window.components['km-editor'].customStyles` layer, so it overrides it). An `@import`ed font is also linked once in the document `<head>` (core). Raw CSS — never put untrusted input here.",
+  },
+  {
+    configKey: 'getCustomStylesCallback',
+    converter: toFunction(),
+    on: 'update',
+    description:
+      'Property only. `(ctx) => string | null` — computes the instance CSS (wins over `customStyles`); `ctx` = `controller` / `element`. Called on every build and whenever `customStyles` / `getCustomStylesCallback` change.',
   },
 ];
 
@@ -325,30 +352,16 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   declare onLockChange: ((detail: LockChangeEventDetail) => void) | null;
   declare onValueFormatError: ((detail: ValueFormatErrorEventDetail) => void) | null;
   declare onAction: ((detail: EditorActionEventDetail) => void) | null;
-  /** `false` (sync or async) cancels a toolbar / menu activation. */
-  declare beforeActionCallback: ((detail: EditorActionEventDetail) => unknown) | null;
-  /** Draws the pending loader instead of the default spinner (core `renderLoader`, §12.14). */
-  declare renderLoadingCallback: RenderLoaderCallback | null;
-  /** The modal bridge for interactive pipeline stages. */
-  declare interactionHost: InteractionHost | null;
-  /** UI-string overrides (partial; English defaults). */
-  declare labels: EditorLabels | null;
-  /** Initial / default content (attribute `value`); the live content is {@link value}. */
-  declare defaultValue: string | null;
-  /** The format of the one document — the lens for content I/O (attribute `content-format`). */
-  declare contentFormat: EditorFormat;
-  /** Form field name (light-DOM hidden input; attribute `name`). */
-  declare name: string | null;
-  /** Presentation (attribute `view-mode`). Assigning is silent; {@link setViewMode} fires `view-mode-change`. */
-  declare viewMode: EditorViewMode;
-  /** Formats the submitted form value (the hidden input) only — not `el.value`. */
-  declare getValueFormatCallback: ((ctx: ValueFormatContext) => string) | null;
+  // The input properties (`el.viewMode`, `el.labels`, …) are typed by the
+  // `KmEditorElement extends EditorConfig` merge below the class (C-CA-16).
 
   #shadow: ShadowRoot;
   #layout: ViewLayout;
   #engine?: EditorEngine;
   #chrome?: EditorChrome;
   #unsubscribe?: () => void;
+  /** Instance + page-wide custom CSS (core `createCustomStyles`, created on the first build). */
+  #customStyles: CustomStylesHandle | null = null;
   /** Removes the pending loader (core `renderLoader`); set while it shows. */
   #removeLoader?: () => void;
   // The light-DOM hidden form input (only while `name` is set).
@@ -387,15 +400,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
       host: this,
       serialize: (fmt) => (this.#engine ? this.#engine.serialize(fmt) : ''),
     });
-    // `el.value = …` assigned before upgrade is an own data property shadowing the
-    // `value` accessor: lift it off and apply it like a pre-build `setValue()`.
-    if (Object.prototype.hasOwnProperty.call(this, 'value')) {
-      const pre = (this as { value?: unknown }).value;
-      delete (this as { value?: unknown }).value;
-      if (typeof pre === 'string') {
-        this.#pendingSet = { value: pre, format: this.#format(), valueAtSet: this.config.defaultValue };
-      }
-    }
+    // `el.value = …` assigned before upgrade: core lifts it off and replays it through
+    // the `value` setter before the first build (core rc20) — a pre-build `setValue()`.
   }
 
   // ── core lifecycle hooks ──────────────────────────────────────────────────
@@ -413,6 +419,20 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
         ? { content: pending.value, format: pending.format }
         : { content: (this.config.defaultValue as string | null) ?? null, format: this.#format() };
     if (this.isConnected) this.#rebuildEngine();
+    this.#applyCustomStyles();
+  }
+
+  /** Custom CSS, the canonical core adoption (core usage.md → "Style injection", rulebook C-CA-15). */
+  #applyCustomStyles(): void {
+    if (this.#customStyles) return this.#customStyles.refresh();
+    this.#customStyles = createCustomStyles(this, this.#shadow, {
+      cssClass: 'we-custom-styles',
+      getContext: () => this.withContext({}),
+      getInstanceStyles: () => ({
+        css: this.config.customStyles as string | null,
+        callback: this.config.getCustomStylesCallback as CustomStylesCallback | null,
+      }),
+    });
   }
 
   /**
@@ -465,6 +485,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     if ('interactionHost' in partial) {
       this.#engine?.setInteractionHost(this.#interactionHost());
     }
+    if ('customStyles' in partial || 'getCustomStylesCallback' in partial) this.#customStyles?.refresh();
     // A showing pending loader re-renders with the new label / render hook.
     if (('labels' in partial || 'renderLoadingCallback' in partial) && this.#removeLoader) {
       this.#setPendingLoader(false);
@@ -613,8 +634,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
 
   /**
    * Show / hide the pipeline pending loader through core `renderLoader()`:
-   * instance `renderLoadingCallback` → page-wide `renderLoaderCallback` →
-   * the default `.we-loader` spinner; `role="status"` + label `loading`.
+   * instance `renderLoadingCallback` → page-wide `renderLoadingCallback` →
+   * the default `.we__loader` spinner; `role="status"` + label `loading`.
    */
   #setPendingLoader(isPending: boolean): void {
     const slot = this.#layout.pendingMount;
@@ -926,6 +947,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
    * keeps both alive for a DOM move; this releases them for good.
    */
   protected override destroyCallback(): void {
+    this.#customStyles?.destroy();
+    this.#customStyles = null;
     this.#teardownEngine();
     this.#layout.destroy();
     this.#formInput?.remove();
@@ -933,9 +956,11 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   }
 }
 
-// Importing this module registers the element (back-compat contract). The full
-// global-API publish + logger wiring happens in index.ts via registerComponent();
-// both defines are idempotent, so importing either path works.
-if (typeof customElements !== 'undefined' && !customElements.get('km-editor')) {
-  customElements.define('km-editor', KmEditorElement);
-}
+/**
+ * Every input as a typed property (`el.viewMode`, `el.labels`, `el.customStyles`, …):
+ * core installs them at runtime, this merge types them (core usage.md → "Typing the
+ * properties", rulebook C-CA-16).
+ */
+export interface KmEditorElement extends EditorConfig {}
+
+// The tag is defined by core's registerComponent() in index.ts (the package entry) only.

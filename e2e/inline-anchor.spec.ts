@@ -42,6 +42,23 @@ test.describe('inline anchor', () => {
         expect(await markdown(page)).toBe('# Title\n\nplain words here!');
     });
 
+    test("detach keeps the host's own inline width (core anchor().destroy() restores what it wrote)", async ({ page }) => {
+        await expect.poll(() => editor(page).evaluate((el) => el.style.position)).toBe('fixed');
+        await page.evaluate(() => {
+            const el = document.getElementById('subject')!;
+            el.remove();
+            el.style.width = '321px';
+            document.body.appendChild(el);
+        });
+        await expect.poll(() => editor(page).evaluate((el) => el.style.position)).toBe('fixed');
+        const styles = await page.evaluate(() => {
+            const el = document.getElementById('subject')!;
+            el.remove();
+            return [el.style.position, el.style.width];
+        });
+        expect(styles).toEqual(['', '321px']);
+    });
+
     test('an anchor selector that matches nothing renders in normal flow', async ({ page }) => {
         await editor(page).evaluate((el: any) => (el.anchor = '#missing'));
         await expect.poll(() => editor(page).evaluate((el) => el.style.position)).toBe('');
