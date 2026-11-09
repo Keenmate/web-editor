@@ -8,7 +8,7 @@
       "elements": [
         {
           "name": "km-editor",
-          "description": "\n\n---\n\n\n### **Events:**\n - **change** - The document changed by the user (typing, toolbar, paste, …), a plugin, or `setValue()` (not `{ isSilent: true }`). Assigning `value` / `contentFormat` is silent, like a native `input.value`, and so is a form reset (like a native `form.reset()`). `detail`: `{ value, contentFormat }` — the content serialized in the active `contentFormat`. Twin: `onChange(detail)`.\n- **ready** - The editor was built and is live for the first time (once per element lifetime; core `BlissElement`). Fires right after the first build — during upgrade for a normal element, or when the `defer` gate is released (`el.release()` / removing `defer`). The host then has the `ready` attribute and matches `:state(ready)`; `el.whenReady()` resolves. `detail`: `controller` / `element`. Twin: `onReady(detail)`.\n- **view-mode-change** - The view mode was switched by anything but the app's own assignment: a view-mode toolbar item (`source: 'user'`), `setViewMode()` on the element or `controller` (`'api'`, unless `{ isSilent: true }`), or a plugin / pipeline stage through its `setViewMode` port (`'plugin'`). Assigning `viewMode` (attribute `view-mode`) is silent. `detail`: `{ viewMode, oldViewMode, source }`. Twin: `onViewModeChange(detail)`.\n- **lock-change** - A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`.\n- **value-format-error** - A `getValueFormatCallback` threw while formatting the submitted value. The hidden input then carries an empty string and the host is invalid (`customError`, message = label `valueFormatError`), so the form refuses to submit (`<form novalidate>` submits an empty string); the next successful format clears it. `detail`: `{ error, value }` (`value` = the unformatted document in `contentFormat`). Twin: `onValueFormatError(detail)`.\n- **action** - A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick` and the command (a notification after the fact; `state` is the snapshot from activation); `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`.\n\n### **Methods:**\n \n\n- **formResetCallback(): _void_** - The surrounding `<form>` was reset: restore the initial content (`defaultValue`,\nattribute `value`), like a native control — silently: a native `form.reset()`\nfires no `input` / `change`, so neither does this (the hidden input is synced).\n\n\n\n\n- **setValue(value: _string_, format: _EditorFormat_, options: _{ isSilent?: boolean }_): _void_** - Replace the document with `value`, parsed in `format` (defaults to the active\n`contentFormat`) — the controller's write path. Fires `change` unless\n`options.isSilent`; assigning `el.value` is the silent form (like a native\n`input.value`). Either way the hidden form input is synced.\n- **setViewMode(mode: _EditorViewMode_, options: _{ isSilent?: boolean }_): _void_** - Switch the view mode (`edit` | `split` | `preview` | `inline`). Fires\n`view-mode-change` (`source: 'api'`) unless `options.isSilent`; a no-op (no event)\nwhen `mode` is already active, and an invalid mode warns and keeps the current one.\nAssigning `el.viewMode` is the silent form.\n",
+          "description": "\n\n---\n\n\n### **Events:**\n - **change** - The document changed by the user (typing, toolbar, paste, …), a plugin, or `setValue()` (not `{ isSilent: true }`). Assigning `value` / `contentFormat` is silent, like a native `input.value`, and so is a form reset (like a native `form.reset()`). `detail`: `{ value, contentFormat }` — the content serialized in the active `contentFormat`. Twin: `onChange(detail)`.\n- **ready** - The editor was built and is live for the first time (once per element lifetime; core `BlissElement`). Fires right after the first build — during upgrade for a normal element, or when the `defer` gate is released (`el.release()` / removing `defer`). The host then has the `ready` attribute and matches `:state(ready)`; `el.whenReady()` resolves. `detail`: `controller` / `element`. Twin: `onReady(detail)`.\n- **view-mode-change** - The view mode was switched by anything but the app's own assignment: a view-mode toolbar item (`source: 'user'`), `setViewMode()` on the element or `controller` (`'api'`, unless `{ isSilent: true }`), or a plugin / pipeline stage through its `setViewMode` port (`'plugin'`). Assigning `viewMode` (attribute `view-mode`) is silent. `detail`: `{ viewMode, oldViewMode, source }`. Twin: `onViewModeChange(detail)`.\n- **lock-change** - A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`.\n- **value-format-error** - A `getValueFormatCallback` threw while formatting the submitted value. The hidden input then carries an empty string and the host is invalid (`customError`, message = label `valueFormatError`), so the form refuses to submit (`<form novalidate>` submits an empty string); the next successful format clears it. `detail`: `{ error, value }` (`value` = the unformatted document in `contentFormat`). Twin: `onValueFormatError(detail)`.\n- **action** - A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick` and the command (a notification after the fact; `state` is the snapshot from activation); `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`.\n- **input-rejected** - Fired when a written value is refused (core, SPEC §6): an invalid attribute or property value, or an unknown `setAttributes()` key. The element warns and keeps its previous value. Detail `{ configKey, attribute?, value, reason?, kept, source }`. Twin callback `onInputRejected`.\n\n### **Methods:**\n \n\n- **formResetCallback(): _void_** - The surrounding `<form>` was reset: restore the initial content (`defaultValue`,\nattribute `value`), like a native control — silently: a native `form.reset()`\nfires no `input` / `change`, so neither does this (the hidden input is synced).\n\n\n\n\n- **setValue(value: _string_, format: _EditorFormat_, options: _{ isSilent?: boolean }_): _void_** - Replace the document with `value`, parsed in `format` (defaults to the active\n`contentFormat`) — the controller's write path. Fires `change` unless\n`options.isSilent`; assigning `el.value` is the silent form (like a native\n`input.value`). Either way the hidden form input is synced.\n- **setViewMode(mode: _EditorViewMode_, options: _{ isSilent?: boolean }_): _void_** - Switch the view mode (`edit` | `split` | `preview` | `inline`). Fires\n`view-mode-change` (`source: 'api'`) unless `options.isSilent`; a no-op (no event)\nwhen `mode` is already active, and an invalid mode warns and keeps the current one.\nAssigning `el.viewMode` is the silent form.\n\n- **whenReady(): _Promise<void>_** - Resolves once the first build is live (also settles when the element is destroyed first). Never rejects.\n- **release(): _void_** - Build an element held by `defer` (SPEC §6.3), with everything assigned meanwhile.\n- **setAttributes(values: _Record<string, unknown>_): _InputRejection[]_** - Apply many inputs (by configKey or attribute name) as ONE rebuild / update. Returns the values it refused (each also fires `input-rejected`).\n- **batch(fn: _() => void_): _void_** - Run `fn` and coalesce every input change it makes into one rebuild / update.\n- **flush(): _void_** - Apply pending input writes synchronously, now (SPEC §12.7).\n- **whenSettled(): _Promise<void>_** - Resolves once every staged input change has been applied (SPEC §12.7).\n- **destroy(): _void_** - Final teardown (SPEC §6.5): the element is inert afterwards; idempotent.\n- **enableLogging(level: _LogLevelDesc_): _void_** - Set this element's own log level (default `debug`): it logs that level and above, whatever its component type or the page is set to.\n- **disableLogging(): _void_** - Silence this element (its own level = `silent`).\n- **resetLogging(): _void_** - Clear this element's own log level: it follows its component type / the page again.\n- **checkValidity(): _boolean_** - Form validity check (SPEC §6.6).\n- **reportValidity(): _boolean_** - Form validity check that reports to the user (SPEC §6.6).",
           "doc-url": "",
           "attributes": [
             {
@@ -40,12 +40,12 @@
             {
               "name": "readonly",
               "description": "Read-only: the content can’t change (no typing, toolbar hidden), but it stays focusable, selectable and copyable. `view-mode=\"preview\"` also forces this on. Reflects to `readonly`.",
-              "value": { "type": "boolean" }
+              "value": { "type": "boolean", "default": "false" }
             },
             {
               "name": "disabled",
               "description": "Disabled: no interaction at all — not editable, not focusable or selectable (the surface is `inert`), toolbar hidden. An ancestor `<fieldset disabled>` disables it too (core). Reflects to `disabled`, like a native control.",
-              "value": { "type": "boolean" }
+              "value": { "type": "boolean", "default": "false" }
             },
             {
               "name": "toolbar",
@@ -65,8 +65,8 @@
             },
             {
               "name": "theme",
-              "description": "Theme name, reflected to the host attribute for CSS theming (`:host([theme=\"…\"])`).",
-              "value": { "type": "string | null" }
+              "description": "Forced colour scheme: 'dark' swaps the token set (`:host([theme='dark'])`); 'light' (or unset) is the default look. Reflected to the host attribute.",
+              "value": { "type": "'light' | 'dark' | null" }
             },
             {
               "name": "anchor",
@@ -77,6 +77,34 @@
               "name": "labels",
               "description": "Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders; an empty string = deliberately empty. `placeholder` (default empty = off) is shown while the document is empty. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`. Property (object) or JSON attribute (`labels='{\"bold\":\"Tučně\"}'`). Applies live (no rebuild).",
               "value": { "type": "object" }
+            },
+            {
+              "name": "custom-styles",
+              "description": "CSS injected into the editor's shadow root (a `<style class=\"we-custom-styles\">` after the page-wide `window.components['km-editor'].customStyles` layer, so it overrides it). An `@import`ed font is also linked once in the document `<head>` (core). Raw CSS — never put untrusted input here.",
+              "value": { "type": "string | null" }
+            },
+            {
+              "name": "defer",
+              "description": "Hold the first build (core, SPEC §6.3): while set when the element first connects, nothing is built and every input, callback and listener assigned meanwhile accumulates; `release()` (or removing the attribute) then builds once. Latched after the first build.",
+              "value": { "type": "boolean", "default": "false" }
+            },
+            {
+              "name": "theme-source",
+              "description": "Where this element reads its theme from instead of the page (core, SPEC §12.10): a CSS selector (nearest matching ancestor, else the first match), `'closest'` (the nearest ancestor carrying a theme signal), or (property only) an `Element`. Unset = the page.",
+              "value": { "type": "string" }
+            },
+            {
+              "name": "motion",
+              "description": "Motion level (core, SPEC §12.16): `auto` (default — inherit: the nearest `data-motion` ancestor (a section), else the page level `window.components.motion` / `<html data-motion>`; closest wins), `none` (no transitions, instant scrolling), `snappy` (short) or `smooth` (longer). Sets the shared `--base-duration-*` / `--base-scroll-behavior` tokens on the element through `data-motion`; the OS reduced-motion setting always wins.",
+              "value": {
+                "type": "'auto' | 'none' | 'snappy' | 'smooth'",
+                "default": "'auto'"
+              }
+            },
+            {
+              "name": "responsive",
+              "description": "Instance responsive rules (core, SPEC §6.7): partial configs on two axes — `device` (keyed by device class `mobile` / `tablet` / `desktop`; a mouse device is `desktop` at any width) and `breakpoint` (keyed by the window-width bucket); the breakpoint entry applies first, the device entry over it (device wins). An object or a JSON attribute, e.g. `{\"device\":{\"tablet\":{\"presentation\":\"modal\"}},\"breakpoint\":{\"mobile\":{…}}}`. Beats page rules (`window.components.responsive*`) and values set on the element; never reflects. An entry of `null` ignores the page rules while it matches.",
+              "value": { "type": "ResponsiveMap | null" }
             }
           ],
           "events": [
@@ -103,6 +131,10 @@
             {
               "name": "action",
               "description": "A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick` and the command (a notification after the fact; `state` is the snapshot from activation); `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`."
+            },
+            {
+              "name": "input-rejected",
+              "description": "Fired when a written value is refused (core, SPEC §6): an invalid attribute or property value, or an unknown `setAttributes()` key. The element warns and keeps its previous value. Detail `{ configKey, attribute?, value, reason?, kept, source }`. Twin callback `onInputRejected`."
             }
           ],
           "js": {
@@ -132,24 +164,14 @@
                 "type": "((detail: EditorActionEventDetail) => void) | null"
               },
               {
-                "name": "beforeActionCallback",
-                "description": "Property only. `(detail) => false | void` (may be async) — runs first on every toolbar / selection-toolbar / context-menu activation, with the `action` event detail. Return `false` to cancel: no `onClick`, no `action` event, no command. Keyboard shortcuts do not pass through it.",
-                "type": "Function"
+                "name": "value",
+                "description": "The live content, serialized in the active `contentFormat` (`''` before the first\nbuild). Assigning replaces the document, parsed in `contentFormat` — like\n`setValue(value, undefined, { isSilent: true })`: silent (no `change`, like a\nnative `input.value`); the hidden form input is synced. The `value` ATTRIBUTE is the initial content\n(defaultValue) and is never written.",
+                "type": "string"
               },
               {
-                "name": "renderLoadingCallback",
-                "description": "Property only. Draws the pending loader (shown while a deferred pipeline's work — e.g. a cloud-image upload — outlives its loader threshold; not while a dialog waits for the user) instead of the default spinner: `({ component, context, containerElement, element, label }) => void | cleanup`, `context` = `'pipeline'`. Fill `containerElement` (it already has `role=\"status\"` + `aria-label` = label `loading`); a returned function runs when the loader is removed. Beats the page-wide `window.components.renderLoaderCallback` (core SPEC §12.14). Read each time the loader shows.",
-                "type": "Function"
-              },
-              {
-                "name": "interactionHost",
-                "description": "Property only. The modal bridge interactive pipeline stages call: `{ request(ctx) }`, `ctx` = the request (`kind`, `title`, `message`, `payload`) + `signal` + `controller` / `element`. Default: a `window.confirm`-backed host. Survives engine rebuilds (e.g. a `plugins` reassignment).",
-                "type": "unknown"
-              },
-              {
-                "name": "labels",
-                "description": "Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders; an empty string = deliberately empty. `placeholder` (default empty = off) is shown while the document is empty. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`. Property (object) or JSON attribute (`labels='{\"bold\":\"Tučně\"}'`). Applies live (no rebuild).",
-                "type": "object"
+                "name": "plugins",
+                "description": "The editor plugin set. Assign to customise — compose with `defaultPlugins()`\nto keep the built-ins, and order the array to control conflict precedence\n(later plugins override earlier by id). Reassigning rebuilds the engine on the\nnew set, preserving the live content. Reading returns the active set.\n\n```js\nimport { defaultPlugins } from '@keenmate/web-editor';\nel.plugins = [...defaultPlugins(), myPlugin];\n```",
+                "type": "EditorPlugin[]"
               },
               {
                 "name": "defaultValue",
@@ -167,24 +189,14 @@
                 "type": "string | null"
               },
               {
+                "name": "getValueFormatCallback",
+                "description": "Property only. `(ctx) => string` — formats the value written into the hidden form input (`name`), e.g. to sanitize HTML. `ctx`: `{ value, contentFormat }` (the document in the active `contentFormat`) + `controller` / `element`. Affects ONLY the submitted form value: `el.value` and the `change` detail stay the document in `contentFormat`. Called on every sync of the form input (each change). A throw is logged (error), the hidden input gets an empty string, the host turns invalid (label `valueFormatError`) and `value-format-error` fires; the next successful format clears it.",
+                "type": "Function | null"
+              },
+              {
                 "name": "viewMode",
                 "description": "Presentation: 'edit' (default), 'split' (editor + live output), 'preview' (read-only render), or 'inline' (overlay chrome on a live-page element). `preview` forces read-only. Full layouts arrive in Phase 3; for now the view mode is stored and reflected. Assigning it (property or attribute) is silent — no `view-mode-change`; `setViewMode()` and the view-mode toolbar items fire it.",
                 "type": "'edit' | 'split' | 'preview' | 'inline'"
-              },
-              {
-                "name": "getValueFormatCallback",
-                "description": "Property only. `(ctx) => string` — formats the value written into the hidden form input (`name`), e.g. to sanitize HTML. `ctx`: `{ value, contentFormat }` (the document in the active `contentFormat`) + `controller` / `element`. Affects ONLY the submitted form value: `el.value` and the `change` detail stay the document in `contentFormat`. Called on every sync of the form input (each change). A throw is logged (error), the hidden input gets an empty string, the host turns invalid (label `valueFormatError`) and `value-format-error` fires; the next successful format clears it.",
-                "type": "Function"
-              },
-              {
-                "name": "value",
-                "description": "The live content, serialized in the active `contentFormat` (`''` before the first\nbuild). Assigning replaces the document, parsed in `contentFormat` — like\n`setValue(value, undefined, { isSilent: true })`: silent (no `change`, like a\nnative `input.value`); the hidden form input is synced. The `value` ATTRIBUTE is the initial content\n(defaultValue) and is never written.",
-                "type": "string"
-              },
-              {
-                "name": "plugins",
-                "description": "The editor plugin set. Assign to customise — compose with `defaultPlugins()`\nto keep the built-ins, and order the array to control conflict precedence\n(later plugins override earlier by id). Reassigning rebuilds the engine on the\nnew set, preserving the live content. Reading returns the active set.\n\n```js\nimport { defaultPlugins } from '@keenmate/web-editor';\nel.plugins = [...defaultPlugins(), myPlugin];\n```",
-                "type": "EditorPlugin[]"
               },
               {
                 "name": "isReadonly",
@@ -208,13 +220,98 @@
               },
               {
                 "name": "theme",
-                "description": "Theme name, reflected to the host attribute for CSS theming (`:host([theme=\"…\"])`).",
-                "type": "string | null"
+                "description": "Forced colour scheme: 'dark' swaps the token set (`:host([theme='dark'])`); 'light' (or unset) is the default look. Reflected to the host attribute.",
+                "type": "'light' | 'dark' | null"
               },
               {
                 "name": "anchor",
                 "description": "For `view-mode=\"inline\"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow.",
                 "type": "string | null"
+              },
+              {
+                "name": "labels",
+                "description": "Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders; an empty string = deliberately empty. `placeholder` (default empty = off) is shown while the document is empty. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`. Property (object) or JSON attribute (`labels='{\"bold\":\"Tučně\"}'`). Applies live (no rebuild).",
+                "type": "object"
+              },
+              {
+                "name": "beforeActionCallback",
+                "description": "Property only. `(detail) => false | void` (may be async) — runs first on every toolbar / selection-toolbar / context-menu activation, with the `action` event detail. Return `false` to cancel: no `onClick`, no `action` event, no command. Keyboard shortcuts do not pass through it.",
+                "type": "Function | null"
+              },
+              {
+                "name": "renderLoadingCallback",
+                "description": "Property only. Draws the pending loader (shown while a deferred pipeline's work — e.g. a cloud-image upload — outlives its loader threshold; not while a dialog waits for the user) instead of the default spinner: `({ component, context, containerElement, element, label }) => void | cleanup`, `context` = `'pipeline'`. Fill `containerElement` (it already has `role=\"status\"` + `aria-label` = label `loading`); a returned function runs when the loader is removed. Beats the page-wide `window.components.renderLoadingCallback` (core SPEC §12.14). Read each time the loader shows.",
+                "type": "Function | null"
+              },
+              {
+                "name": "interactionHost",
+                "description": "Property only. The modal bridge interactive pipeline stages call: `{ request(ctx) }`, `ctx` = the request (`kind`, `title`, `message`, `payload`) + `signal` + `controller` / `element`. Default: a `window.confirm`-backed host. Survives engine rebuilds (e.g. a `plugins` reassignment).",
+                "type": "unknown"
+              },
+              {
+                "name": "customStyles",
+                "description": "CSS injected into the editor's shadow root (a `<style class=\"we-custom-styles\">` after the page-wide `window.components['km-editor'].customStyles` layer, so it overrides it). An `@import`ed font is also linked once in the document `<head>` (core). Raw CSS — never put untrusted input here.",
+                "type": "string | null"
+              },
+              {
+                "name": "getCustomStylesCallback",
+                "description": "Property only. `(ctx) => string | null` — computes the instance CSS (wins over `customStyles`); `ctx` = `controller` / `element`. Called on every build and whenever `customStyles` / `getCustomStylesCallback` change.",
+                "type": "Function | null"
+              },
+              {
+                "name": "shouldDefer",
+                "description": "Hold the first build (core, SPEC §6.3): while set when the element first connects, nothing is built and every input, callback and listener assigned meanwhile accumulates; `release()` (or removing the attribute) then builds once. Latched after the first build.",
+                "type": "boolean"
+              },
+              {
+                "name": "themeSource",
+                "description": "Where this element reads its theme from instead of the page (core, SPEC §12.10): a CSS selector (nearest matching ancestor, else the first match), `'closest'` (the nearest ancestor carrying a theme signal), or (property only) an `Element`. Unset = the page.",
+                "type": "string | Element | null"
+              },
+              {
+                "name": "motion",
+                "description": "Motion level (core, SPEC §12.16): `auto` (default — inherit: the nearest `data-motion` ancestor (a section), else the page level `window.components.motion` / `<html data-motion>`; closest wins), `none` (no transitions, instant scrolling), `snappy` (short) or `smooth` (longer). Sets the shared `--base-duration-*` / `--base-scroll-behavior` tokens on the element through `data-motion`; the OS reduced-motion setting always wins.",
+                "type": "'auto' | 'none' | 'snappy' | 'smooth'"
+              },
+              {
+                "name": "responsive",
+                "description": "Instance responsive rules (core, SPEC §6.7): partial configs on two axes — `device` (keyed by device class `mobile` / `tablet` / `desktop`; a mouse device is `desktop` at any width) and `breakpoint` (keyed by the window-width bucket); the breakpoint entry applies first, the device entry over it (device wins). An object or a JSON attribute, e.g. `{\"device\":{\"tablet\":{\"presentation\":\"modal\"}},\"breakpoint\":{\"mobile\":{…}}}`. Beats page rules (`window.components.responsive*`) and values set on the element; never reflects. An entry of `null` ignores the page rules while it matches.",
+                "type": "ResponsiveMap | null"
+              },
+              {
+                "name": "responsiveCallback",
+                "description": "Instance computed responsive rule (core, SPEC §6.7): `(ctx) => partial config | null | undefined`, ctx `{ env, deviceClass, breakpoint, element, component, config }` (`config` = base). Runs after `responsive` (wins key by key); re-runs on environment flips, throttled viewport-width changes, rule and config changes. `null` ignores every page rule.",
+                "type": "ResponsiveCallback | null"
+              },
+              {
+                "name": "isReady",
+                "description": "The first build is live (core, SPEC §6.3) — the `ready` event has fired.",
+                "type": "boolean"
+              },
+              {
+                "name": "isDestroyed",
+                "description": "`destroy()` ran.",
+                "type": "boolean"
+              },
+              {
+                "name": "form",
+                "description": "The owning form (form-associated components).",
+                "type": "HTMLFormElement | null"
+              },
+              {
+                "name": "validity",
+                "description": "Form validity (SPEC §6.6).",
+                "type": "ValidityState"
+              },
+              {
+                "name": "validationMessage",
+                "description": "Form validation message (SPEC §6.6).",
+                "type": "string"
+              },
+              {
+                "name": "willValidate",
+                "description": "Whether the element takes part in form validation.",
+                "type": "boolean"
               }
             ],
             "events": [
@@ -241,6 +338,10 @@
               {
                 "name": "action",
                 "description": "A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick` and the command (a notification after the fact; `state` is the snapshot from activation); `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`."
+              },
+              {
+                "name": "input-rejected",
+                "description": "Fired when a written value is refused (core, SPEC §6): an invalid attribute or property value, or an unknown `setAttributes()` key. The element warns and keeps its previous value. Detail `{ configKey, attribute?, value, reason?, kept, source }`. Twin callback `onInputRejected`."
               }
             ]
           }
