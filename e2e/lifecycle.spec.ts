@@ -164,7 +164,8 @@ test.describe('lifecycle', () => {
         expect(await logLines(page, 'lifecycle')).toEqual([]);
     });
 
-    test('a detached editor releases its document listeners; reconnect restores them', async ({ page }) => {
+    test('a detached editor releases its document listeners; reconnect restores them', async ({ page, browserName }) => {
+        test.skip(browserName !== 'chromium', 'counts listeners through CDP (DOMDebugger.getEventListeners): Chromium only');
         const cdp = await page.context().newCDPSession(page);
         const count = async () => {
             const { result } = await cdp.send('Runtime.evaluate', { expression: 'document' });

@@ -12,6 +12,9 @@ const paste = (page: Page, data: Record<string, string>) =>
     }, data);
 
 test.describe('paste', () => {
+    // Firefox hands a page-built DataTransfer to a synthetic ClipboardEvent EMPTY
+    // (`getData()` → '' — probed 2026-11-09), so no payload ever reaches the editor.
+    test.skip(({ browserName }) => browserName === 'firefox', 'Firefox: a script-built DataTransfer arrives empty in a synthetic paste event');
     test.beforeEach(async ({ page }) => {
         await load(page, 'paste.html', { flag: 'fixtureReady' });
         await caretAfter(page, 'start');
