@@ -43,6 +43,7 @@
     "dist",
     "docs",
     "component-variables.manifest.json",
+    "release-notes",
     "custom-elements.json",
     "web-types.json",
     "vscode.html-custom-data.json",
