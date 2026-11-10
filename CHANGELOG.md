@@ -13,8 +13,7 @@ released to a registry yet.
 
 ### Changed — BREAKING (core 1.0.0-rc20 alignment)
 
-Requires `@keenmate/web-components-core` `^1.0.0-rc20` (was `^1.0.0-rc15`); validated against the
-rc21 pre-release. No compatibility aliases.
+Requires `@keenmate/web-components-core` `^1.0.0-rc21` (was `^1.0.0-rc15`). No compatibility aliases.
 
 - **`menuDivider()` → `createMenuDivider()`** (re-exported from core `/actions`, renamed in core rc18).
 - **The default pending loader is `<span class="we__loader">`** (was `.we-loader`; core rc18 BEM
