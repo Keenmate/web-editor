@@ -28,7 +28,7 @@ export interface CreateEditorStateOptions {
 /** A short welcome document — demo content (the editor itself starts empty). */
 export function createDefaultDoc(docSchema: typeof schema = schema): PMNode {
   return docSchema.node('doc', null, [
-    docSchema.node('paragraph', null, [docSchema.text('Welcome to the KeenMate Web Editor.')]),
+    docSchema.node('paragraph', null, [docSchema.text('Welcome to the Keenmate Web Editor.')]),
     docSchema.node('paragraph', null, [
       docSchema.text(
         'Select text to see the floating toolbar, or use the toolbar above. The output panel shows the live HTML / Markdown / JSON serialization.'

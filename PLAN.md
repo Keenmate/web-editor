@@ -1,9 +1,9 @@
-# KeenMate Web Editor — Build Plan
+# Keenmate Web Editor — Build Plan
 
 A framework-agnostic WYSIWYG / Markdown editor, delivered as a Web Component
 (`<km-editor>`) built on **ProseMirror** and the shared
 **`@keenmate/web-components-core`** (`BlissElement`), consistent with the rest of
-the KeenMate component line (web-multiselect, web-grid, web-treeview, …).
+the Keenmate component line (web-multiselect, web-grid, web-treeview, …).
 
 ## Background & decisions
 
@@ -35,14 +35,14 @@ web-editor/
   examples/            examples-*.html showcase (parity with web-multiselect)
 ```
 
-Toolchain per package mirrors the KeenMate line: Vite library build, TypeScript,
+Toolchain per package mirrors the Keenmate line: Vite library build, TypeScript,
 Vitest (+ happy-dom) for unit, Playwright for e2e, `cem analyze` →
 web-types/vscode custom data, CSS-variable theming.
 
 ## Phases (infrastructure first)
 
 ### Phase 0 — Repo & tooling  ✅ (this commit)
-Scaffold the monorepo on the KeenMate toolchain and port the POC `main.js` into
+Scaffold the monorepo on the Keenmate toolchain and port the POC `main.js` into
 TypeScript modules with **behaviour unchanged**. No new features.
 - `packages/editor` with Vite lib build, tsconfig (extends root base), Vitest.
 - POC split into: `schema.ts`, `commands.ts`, `editor.ts`,
@@ -209,7 +209,7 @@ and toolbar/selection/menu item lists are all merged.
 > directly (used only by the provisional playground harness).
 
 #### Phase 5.1 — Interaction model (web-components-core rc15)  ✅
-The editor joined the shared KeenMate interaction model (core `/actions`; see
+The editor joined the shared Keenmate interaction model (core `/actions`; see
 `CHANGELOG.md` for the old → new tables). This supersedes the item / event / API
 names in Phases 2 and 4 above:
 - Toolbar / selection-toolbar / context-menu entries are core **action items**
@@ -231,6 +231,6 @@ release bar.
 ## Notes / open items
 
 - `@keenmate/web-components-core` is **not yet wired** (added in Phase 2 with the
-  element). Requires access to the registry that serves the KeenMate scope.
+  element). Requires access to the registry that serves the Keenmate scope.
 - Decide ProseMirror externalization vs bundling before first publish (Phase 0
   bundles everything, like web-multiselect bundles floating-ui).

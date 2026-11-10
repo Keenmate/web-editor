@@ -11,7 +11,7 @@
 editable document with **Markdown, HTML, and JSON as import/export formats at the
 edges**. It's built on [ProseMirror](https://prosemirror.net/) and the shared
 `@keenmate/web-components-core` runtime (shadow DOM, adopted styles) — the same
-model as the rest of the KeenMate component line. Works in React, Vue, Svelte,
+model as the rest of the Keenmate component line. Works in React, Vue, Svelte,
 Blazor, or plain HTML.
 
 **Headline features:**
@@ -250,7 +250,7 @@ host is in:
 
 The selection toolbar is a dark pill in both modes (the shared tooltip tokens), and code blocks
 stay dark in both (the syntax highlighting is Prism's dark theme). Re-theme with `--base-*` on
-`:root` (every KeenMate component follows), or `--we-*` on the element:
+`:root` (every Keenmate component follows), or `--we-*` on the element:
 
 ```css
 km-editor { --we-accent: #7c3aed; --we-min-height: 320px; }
@@ -284,12 +284,12 @@ The editor's own classes and custom properties use the `we-` prefix (`--we-bg`,
 `--we-border`, `--we-accent`, …). Disabled commands fade by `--we-disabled-opacity`
 (default `var(--base-disabled-opacity, 0.65)`). While a deferred pipeline outlives its threshold a
 loader shows in the body's top-end corner (`::part(loader)`, `role="status"`, label `loading`): the
-shared KeenMate loader, drawn from `--we-loader-icon` / `--we-loader-rotate` / `--we-loader-duration`
+shared Keenmate loader, drawn from `--we-loader-icon` / `--we-loader-rotate` / `--we-loader-duration`
 / `--we-loader-size` (each chained to `--base-loader-*`, so one page-level change restyles every
 component's loader; it slows under reduced motion). For a richer loader set `renderLoadingCallback`
 on the element or `window.components.renderLoadingCallback` for the page. Apart from that spinner
 the editor has no transitions or animations of its own; the right-click menu's motion follows core's `--km-menu-*` / `--base-duration-*`
-(`--base-duration-*: 0s` turns it off page-wide). The right-click menu is the shared KeenMate menu
+(`--base-duration-*: 0s` turns it off page-wide). The right-click menu is the shared Keenmate menu
 from `@keenmate/web-components-core` (`.km-menu*`, `::part(context-menu)`); restyle it
 with the `--we-context-menu-*` properties on the element — `bg`, `text-color`,
 `border`, `border-radius`, `shadow`, `min-width`, `padding`, `font-size`,
@@ -297,7 +297,7 @@ with the `--we-context-menu-*` properties on the element — `bg`, `text-color`,
 `danger-color`, `divider-color`, `disabled-opacity`, `z-index`.
 
 Each menu value resolves, highest precedence first: **`--we-context-menu-*`** (this
-editor) → **`--km-menu-*`** (every KeenMate menu on the page) → **`--base-*`** (theme)
+editor) → **`--km-menu-*`** (every Keenmate menu on the page) → **`--base-*`** (theme)
 → core's default. The `--we-context-menu-*` properties are unset by default, so a
 page-wide `--km-menu-*` reaches the editor's menu:
 

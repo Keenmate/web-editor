@@ -6712,7 +6712,7 @@
                   "text": "void"
                 }
               },
-              "description": "Form convention (KeenMate suite, like web-multiselect): a light-DOM hidden\ninput named by `name` carries the live content in `contentFormat` — the host\nnever calls `setFormValue`. No `name` → no input. Disabled (not submitted)\nwhile the editor is effectively disabled."
+              "description": "Form convention (Keenmate suite, like web-multiselect): a light-DOM hidden\ninput named by `name` carries the live content in `contentFormat` — the host\nnever calls `setFormValue`. No `name` → no input. Disabled (not submitted)\nwhile the editor is effectively disabled."
             },
             {
               "kind": "method",

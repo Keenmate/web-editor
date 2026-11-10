@@ -647,7 +647,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   }
 
   /**
-   * Form convention (KeenMate suite, like web-multiselect): a light-DOM hidden
+   * Form convention (Keenmate suite, like web-multiselect): a light-DOM hidden
    * input named by `name` carries the live content in `contentFormat` — the host
    * never calls `setFormValue`. No `name` → no input. Disabled (not submitted)
    * while the editor is effectively disabled.

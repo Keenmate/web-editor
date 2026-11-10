@@ -113,4 +113,4 @@ renderOutput();
 (window as any).editor = engine;
 
 // eslint-disable-next-line no-console
-console.log('KeenMate Web Editor — Phase 1 playground. Try: editor.getMarkdown()');
+console.log('Keenmate Web Editor — Phase 1 playground. Try: editor.getMarkdown()');

@@ -1,7 +1,7 @@
 /**
  * Categorized loggers for @keenmate/web-editor — a thin shim over the core
  * logging module (`@keenmate/web-components-core`), mirroring the rest of the
- * KeenMate component line (see web-multiselect's logger.ts).
+ * Keenmate component line (see web-multiselect's logger.ts).
  *
  * Categories (`EDITOR:*`):
  * - INIT        — element/engine construction and configuration
