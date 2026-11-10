@@ -120,8 +120,8 @@ test.describe('context menu', () => {
         await expect(menu(page)).toHaveCSS('background-color', 'rgb(4, 5, 6)');
     });
 
-    test('theme="dark" gets a dark menu (color-scheme: dark → core light-dark() defaults)', async ({ page }) => {
-        await editor(page).evaluate((el) => el.setAttribute('theme', 'dark'));
+    test('data-theme="dark" gets a dark menu (color-scheme: dark → core light-dark() defaults)', async ({ page }) => {
+        await editor(page).evaluate((el) => el.setAttribute('data-theme', 'dark'));
         await openMenu(page);
         await expect(menu(page)).toHaveCSS('background-color', 'rgb(43, 43, 43)');
     });

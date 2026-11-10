@@ -64,11 +64,6 @@
               }
             },
             {
-              "name": "theme",
-              "description": "Forced colour scheme: 'dark' swaps the token set (`:host([theme='dark'])`); 'light' (or unset) is the default look. Reflected to the host attribute.",
-              "value": { "type": "'light' | 'dark' | null" }
-            },
-            {
               "name": "anchor",
               "description": "For `view-mode=\"inline\"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow.",
               "value": { "type": "string | null" }
@@ -217,11 +212,6 @@
                 "name": "statusbar",
                 "description": "Status bar edge: 'none' (default), 'top', 'bottom', or 'both'. A dedicated strip of live indicators (word/char count, plus any plugin status items), hugging the editor body — separate from the toolbar zones and shown in read-only too. With 'both', items split across the two strips by their `bar` ('top'/'bottom', default 'bottom').",
                 "type": "'none' | 'top' | 'bottom' | 'both'"
-              },
-              {
-                "name": "theme",
-                "description": "Forced colour scheme: 'dark' swaps the token set (`:host([theme='dark'])`); 'light' (or unset) is the default look. Reflected to the host attribute.",
-                "type": "'light' | 'dark' | null"
               },
               {
                 "name": "anchor",

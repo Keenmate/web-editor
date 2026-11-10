@@ -121,7 +121,7 @@ script-built `DataTransfer` arrives empty in a synthetic paste event), the liste
 | Feature | Status | Spec | Fixture |
 | --- | :-: | --- | --- |
 | Examples hub + pages open without errors | ✓ | `examples.spec.ts` | (example pages) |
-| `theme="dark"` tokens + `--we-accent` on active buttons + live theme property; unknown theme refused (`input-rejected`); custom CSS (page-wide `window.components['km-editor'].customStyles`, instance `custom-styles` override, `getCustomStylesCallback` wins + ctx, clearing) | ✓ | `theming.spec.ts` | `theming.html` |
+| per-instance `data-theme="dark"` tokens + `--we-accent` on active buttons + live `data-theme`; the retired `theme` attribute does nothing; custom CSS (page-wide `window.components['km-editor'].customStyles`, instance `custom-styles` override, `getCustomStylesCallback` wins + ctx, clearing) | ✓ | `theming.spec.ts` | `theming.html` |
 | Logging silent by default; global enable / disable (EDITOR:INIT) | ✓ | `logging.spec.ts` | `logging.html` |
 | Global registration: define, `window.components` (version / config / getInstances), re-import, the element module alone defines nothing (core `registerComponent()` in the entry) | ✓ | `registration.spec.ts` | `registration.html` |
 | Invalid enum attributes → warn, keep the previous value (the default in markup), reflected attribute written back; invalid property rejected + warn; boolean `readonly` | ✓ | `inputs.spec.ts` | `inputs.html` |

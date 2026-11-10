@@ -114,6 +114,8 @@ modes; the element delegates to it and re-renders on `mode`/`anchor` change.
   live document + selection survive (covered by a test).
 - Component-scoped CSS (`:host` / `.we-*`, theme vars, `theme="dark"`) added to
   `editor.css` (inert in the playground's light DOM). New `anchor` input.
+  *(Later: `editor.css` split into `src/css/*.css`; `theme` replaced by core's page
+  detection + per-instance `data-theme` — see CHANGELOG.)*
 - Playground now dogfoods the shipped `<km-editor>` (mode / format / readonly /
   theme controls + status line) above the raw-engine harness. 29 unit tests.
 

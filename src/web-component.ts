@@ -6,7 +6,7 @@
  *
  * Reactivity (per input `on:`):
  *   - `reinit` — content source changed (`defaultValue`, attribute `value`) → rebuild the engine.
- *   - `update` — `viewMode` / `isReadonly` / `isDisabled` (via `disabledChanged()`) / `theme` / `contentFormat` / `interactionHost`
+ *   - `update` — `viewMode` / `isReadonly` / `isDisabled` (via `disabledChanged()`) / `contentFormat` / `interactionHost`
  *                → patch in place (toggle editable, reflect the attribute,
  *                re-report content, swap the modal bridge).
  *
@@ -84,9 +84,6 @@ export type EditorFormat = SerializationFormat; // 'html' | 'markdown' | 'json'
 export type EditorToolbar = 'top' | 'bottom' | 'start' | 'end' | 'none';
 /** Status-bar placement — a dedicated strip docked top, bottom, or both (`'none'` hides it). */
 export type EditorStatusBar = 'none' | 'top' | 'bottom' | 'both';
-/** Forced colour scheme (`theme`); unset → the light default. */
-export type EditorTheme = 'light' | 'dark';
-
 /**
  * The `<km-editor>` input config — exactly one key per input-table row (`configKey`), as
  * `el.config` exposes it. The type the responsive rules (core SPEC §6.7) range over, and
@@ -103,7 +100,6 @@ export interface EditorConfig {
   isDisabled: boolean;
   toolbar: EditorToolbar;
   statusbar: EditorStatusBar;
-  theme: EditorTheme | null;
   anchor: string | null;
   labels: EditorLabels | null;
   beforeActionCallback: ((detail: EditorActionEventDetail) => unknown) | null;
@@ -129,7 +125,6 @@ const VIEW_MODES = ['edit', 'split', 'preview', 'inline'] as const;
 const FORMATS = ['markdown', 'html', 'json'] as const;
 const TOOLBARS = ['top', 'bottom', 'start', 'end', 'none'] as const;
 const STATUSBARS = ['none', 'top', 'bottom', 'both'] as const;
-const THEMES = ['light', 'dark'] as const;
 
 const isLabels = (v: unknown): v is EditorLabels =>
   typeof v === 'object' && v !== null && !Array.isArray(v) && Object.values(v).every((x) => typeof x === 'string');
@@ -218,15 +213,6 @@ const INPUTS: readonly InputDef[] = [
     on: 'update',
     description:
       "Status bar edge: 'none' (default), 'top', 'bottom', or 'both'. A dedicated strip of live indicators (word/char count, plus any plugin status items), hugging the editor body — separate from the toolbar zones and shown in read-only too. With 'both', items split across the two strips by their `bar` ('top'/'bottom', default 'bottom').",
-  },
-  {
-    configKey: 'theme',
-    attribute: 'theme',
-    converter: toEnum(THEMES, { isNullable: true }),
-    shouldReflect: true,
-    on: 'update',
-    description:
-      "Forced colour scheme: 'dark' swaps the token set (`:host([theme='dark'])`); 'light' (or unset) is the default look. Reflected to the host attribute.",
   },
   {
     configKey: 'anchor',
@@ -491,7 +477,6 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
       this.#setPendingLoader(false);
       this.#setPendingLoader(true);
     }
-    // `theme` reflects via the input table; nothing imperative to do here yet.
   }
 
   /**

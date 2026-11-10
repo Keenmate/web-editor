@@ -20,7 +20,6 @@ export type {
   EditorFormat,
   EditorToolbar,
   EditorStatusBar,
-  EditorTheme,
   EditorConfig,
   EditorResponsiveMap,
   EditorResponsiveCallback,

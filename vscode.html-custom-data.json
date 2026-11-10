@@ -67,11 +67,6 @@
           ]
         },
         {
-          "name": "theme",
-          "description": "Forced colour scheme: 'dark' swaps the token set (`:host([theme='dark'])`); 'light' (or unset) is the default look. Reflected to the host attribute.",
-          "values": [{ "name": "light" }, { "name": "dark" }]
-        },
-        {
           "name": "anchor",
           "description": "For `view-mode=\"inline\"` only: a CSS selector for the live-page element the floating editor card anchors to (tracked via the core positioning primitive). Absent → the inline card renders in normal flow.",
           "values": []

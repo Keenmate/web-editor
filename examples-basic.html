@@ -111,21 +111,24 @@ Turn on the **status bar** to see the live Words / Chars counters."></km-editor>
 <div class="card">
     <h2>BU04 · Theme</h2>
     <p>
-        <code>theme</code> reflects to the host attribute (<code>:host([theme="…"])</code>),
-        the hook consumers style against. Flip it to see the element restyle in place — the
-        document is untouched.
+        The editor follows the page: core detects <code>data-theme</code> / <code>data-bs-theme</code> /
+        <code>.dark</code> on <code>&lt;html&gt;</code> (try the page's theme switch) and mirrors it onto the
+        host as <code>data-context-theme</code>. <code>data-theme="dark|light"</code> on the element itself
+        overrides the page for that one editor. Every color is a <code>light-dark()</code> pair, so only
+        <code>color-scheme</code> flips — the document is untouched.
     </p>
 
     <div class="controls">
-        <span><code>theme</code>:</span>
-        <label><input type="radio" name="eb04-theme" value="" checked> default</label>
+        <span><code>data-theme</code>:</span>
+        <label><input type="radio" name="eb04-theme" value="" checked> auto (follow the page)</label>
+        <label><input type="radio" name="eb04-theme" value="light"> light</label>
         <label><input type="radio" name="eb04-theme" value="dark"> dark</label>
     </div>
 
     <div class="demo-area">
         <km-editor id="eb04" view-mode="edit" content-format="markdown" toolbar="top" statusbar="bottom" value="#### Theming
 
-The `theme` attribute is reflected to the host for CSS theming. Switch it above."></km-editor>
+Switch `data-theme` above, or the page theme — with `inline code` and a [link](https://keenmate.com)."></km-editor>
     </div>
 </div>
 
@@ -236,9 +239,9 @@ This editor was set up entirely in **HTML** — no script wired it.
         onRadio('eb03-toolbar', (v) => eb03.setAttribute('toolbar', v));
         onRadio('eb03-status', (v) => eb03.setAttribute('statusbar', v));
 
-        // BU04 — theme (empty = remove the attribute)
+        // BU04 — per-instance data-theme (auto = remove it, so the page decides)
         const eb04 = document.getElementById('eb04');
-        onRadio('eb04-theme', (v) => v ? eb04.setAttribute('theme', v) : eb04.removeAttribute('theme'));
+        onRadio('eb04-theme', (v) => v ? eb04.setAttribute('data-theme', v) : eb04.removeAttribute('data-theme'));
 
         // BU06 — custom CSS: the page-wide layer (every editor) + one instance's own layer
         const PAGE_CSS = '.ProseMirror { font-family: Georgia, serif; }';

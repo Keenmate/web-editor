@@ -1,9 +1,9 @@
 import { test, expect, load, editor, pm, toolbarButton, selectText, type Page } from './fixtures';
 
-// Theming: `theme="dark"` flips color-scheme so every light-dark() token resolves
-// dark; `--we-accent` drives the active button colour; the theme attribute is
-// reflected / settable.
-// Fixture: test/theming.html (#light, #dark theme="dark", #accent with --we-accent).
+// Theming: per-instance `data-theme` flips color-scheme so every light-dark() token
+// resolves dark; `--we-accent` drives the active button colour; the retired `theme`
+// attribute does nothing. (Page detection / every signal: dark-mode.spec.ts.)
+// Fixture: test/theming.html (#light, #dark data-theme="dark", #accent with --we-accent).
 
 const hostStyle = (page: Page, id: string, prop: string) =>
     editor(page, id).evaluate((el, p) => getComputedStyle(el).getPropertyValue(p).trim(), prop);
@@ -27,7 +27,7 @@ test.describe('theming', () => {
         await expect(surface(page, 'light')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
     });
 
-    test('theme="dark" resolves the dark tokens and the text colour', async ({ page }) => {
+    test('data-theme="dark" resolves the dark tokens and the text colour', async ({ page }) => {
         expect(await hostStyle(page, 'dark', 'color-scheme')).toBe('dark');
         await expect(surface(page, 'dark')).toHaveCSS('background-color', 'rgb(30, 41, 59)');
         expect(await hostStyle(page, 'dark', 'color')).toBe('rgb(241, 245, 249)');
@@ -40,29 +40,20 @@ test.describe('theming', () => {
         expect(await pressedBg(page, 'accent')).toBe('rgb(255, 0, 0)');
     });
 
-    test('theme property reflects to the attribute and restyles live', async ({ page }) => {
-        await editor(page, 'light').evaluate((el: any) => (el.theme = 'dark'));
-        await expect(editor(page, 'light')).toHaveAttribute('theme', 'dark');
+    test('data-theme restyles live; removing it returns to the page scheme', async ({ page }) => {
+        await editor(page, 'light').evaluate((el) => el.setAttribute('data-theme', 'dark'));
         await expect(surface(page, 'light')).toHaveCSS('background-color', 'rgb(30, 41, 59)');
-        await editor(page, 'light').evaluate((el: any) => (el.theme = null));
-        await expect(editor(page, 'light')).not.toHaveAttribute('theme');
+        await editor(page, 'light').evaluate((el) => el.removeAttribute('data-theme'));
         await expect(surface(page, 'light')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
     });
-});
 
-test.describe('theme input (closed set)', () => {
-    test.beforeEach(async ({ page }) => load(page, 'theming.html', { flag: 'fixtureReady' }));
-
-    test('an unknown theme is refused (input-rejected), the previous one kept', async ({ page }) => {
-        const out = await editor(page, 'dark').evaluate((el: any) => {
-            const seen: any[] = [];
-            el.addEventListener('input-rejected', (e: any) => seen.push([e.detail.configKey, e.detail.value]));
-            el.setAttribute('theme', 'corporate');
-            el.theme = 'neon';
-            return { seen, theme: el.theme };
+    test('the retired theme attribute / property does nothing (no input, no reflection)', async ({ page }) => {
+        const out = await editor(page, 'light').evaluate((el: any) => {
+            el.setAttribute('theme', 'dark');
+            return { scheme: getComputedStyle(el).colorScheme, isInput: 'theme' in el.config };
         });
-        expect(out).toEqual({ seen: [['theme', 'corporate'], ['theme', 'neon']], theme: 'dark' });
-        await expect(editor(page, 'dark')).toHaveAttribute('theme', 'dark');
+        expect(out).toEqual({ scheme: 'normal', isInput: false });
+        await expect(surface(page, 'light')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
     });
 });
 

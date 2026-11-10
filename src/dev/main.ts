@@ -53,8 +53,8 @@ if (km) {
     km.setAttribute('statusbar', (e.target as HTMLSelectElement).value);
   });
   document.querySelector('#we-theme')?.addEventListener('change', (e) => {
-    if ((e.target as HTMLInputElement).checked) km.setAttribute('theme', 'dark');
-    else km.removeAttribute('theme');
+    if ((e.target as HTMLInputElement).checked) km.setAttribute('data-theme', 'dark');
+    else km.removeAttribute('data-theme');
   });
 
   // Expose for console experimentation.

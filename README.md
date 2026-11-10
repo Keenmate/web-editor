@@ -90,7 +90,6 @@ removing the attribute) resets an input to its default.
 | `disabled`  | boolean                                         | `false`      | Disabled (`isDisabled`): no interaction — not editable, focusable or selectable (the surface is `inert`). An ancestor `<fieldset disabled>` disables it too. Reflects, like a native control. |
 | `toolbar`   | `top` \| `bottom` \| `start` \| `end` \| `none` | `top`        | Which edge the command toolbar docks to (`none` hides it). Its last group, at the far end, is the view-mode radio group — `view-edit` / `view-split` / `view-preview` (`Edit` / `Split` / `Preview`; toggled = the active mode; not shown in `inline`). While read-only / `preview` only that group shows; disabled hides the toolbar. The selection toolbar and context menu are always available while editing. |
 | `statusbar` | `none` \| `top` \| `bottom` \| `both`           | `none`       | A dedicated strip of live indicators (word/char count, plugin items). `both` splits items across two strips. |
-| `theme`     | `light` \| `dark`                               | —            | Forced colour scheme: `dark` swaps the token set; `light` (or unset) is the default look. Reflects. Any other value is refused (`input-rejected`). |
 | `anchor`    | CSS selector                                    | —            | For `view-mode="inline"` only: the page element the floating card tracks. |
 | `labels`    | JSON object                                     | English      | UI strings — see [Labels](#labels). Also a property (object). |
 | `custom-styles` | CSS string                                  | —            | CSS injected into the shadow root (`customStyles`), after the page-wide layer — see [Theming](#theming). Raw CSS: never untrusted input. |
@@ -238,7 +237,27 @@ bleed in. Ship the stylesheet once:
 <link rel="stylesheet" href="@keenmate/web-editor/style.css" />
 ```
 
-Set `theme="dark"` for the dark token set (`light` / unset is the default look).
+**Dark mode follows the page.** Every color is a `--we-*` variable chained to the shared
+`--base-*` contract with `light-dark()` fallbacks, so the editor resolves whichever scheme its
+host is in:
+
+- **No signal** — the editor inherits the page's `color-scheme` (`html { color-scheme: light dark }`
+  follows the OS).
+- **Page signal** — `data-theme` / `data-bs-theme` / `.dark` / `.light` on `<html>` or `<body>`, a
+  `theme-source` section, or core `setThemeMode()`: core mirrors it onto the host as
+  `data-context-theme`.
+- **Per instance** — `<km-editor data-theme="dark">` (or `"light"`) wins over the page.
+
+The selection toolbar is a dark pill in both modes (the shared tooltip tokens), and code blocks
+stay dark in both (the syntax highlighting is Prism's dark theme). Re-theme with `--base-*` on
+`:root` (every KeenMate component follows), or `--we-*` on the element:
+
+```css
+km-editor { --we-accent: #7c3aed; --we-min-height: 320px; }
+```
+
+All variables are listed in `component-variables.manifest.json`
+(`import manifest from '@keenmate/web-editor/manifest'`).
 
 **Custom CSS (shadow root).** Page CSS can't reach inside the shadow root; inject it instead
 (core `createCustomStyles()`). Two layers, each a `<style>` in the shadow root, the instance one

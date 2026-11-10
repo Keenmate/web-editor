@@ -11,6 +11,16 @@ Target: **1.0.0-rc01** (first release).
 Pre-1.0, pre-publish. Everything below is the work to date; nothing has been
 released to a registry yet.
 
+### Changed — BREAKING (theming)
+
+- **The `theme` input is removed** (attribute, property, `EditorConfig.theme` and the exported
+  `EditorTheme` type). The editor now follows the page like every KeenMate component: core detects
+  `data-theme` / `data-bs-theme` / `.dark` / `.light` on `<html>` / `<body>`, a `theme-source`
+  section or `setThemeMode()`, and mirrors it onto the host as `data-context-theme`; with no signal
+  the host inherits the page's `color-scheme`. Force one editor with
+  **`<km-editor data-theme="dark">`** (or `"light"`) — replace `theme="dark"` with
+  `data-theme="dark"`. No alias: a leftover `theme` attribute does nothing.
+
 ### Changed (theming)
 
 - **The stylesheet is split into the standard files** under `src/css/` — `main.css` (layer order +
@@ -27,6 +37,11 @@ released to a registry yet.
 
 ### Added (theming)
 
+- **Dark mode the KeenMate way** — `dark-mode.css` carries the four canonical rules
+  (`:host([data-context-theme])`, then `:host([data-theme])`, each only `color-scheme`); every
+  color resolves through its `light-dark()` pair, so a page's `--base-*` theme keeps flowing in
+  both modes. The selection toolbar and the context menu (both in the shadow root) follow the
+  host. Before, the editor ignored the page: white on a dark page. Demo: Basic → BU04.
 - **New `--we-*` variables:** `--we-text-color`, `--we-text-on-accent`, `--we-hover-bg`,
   `--we-shadow-color`, `--we-font-family`, `--we-selection-toolbar-bg` / `-color` (the pill stays
   dark in both modes — the shared tooltip tokens), `--we-link-color` / `-hover`,
@@ -45,6 +60,7 @@ Requires `@keenmate/web-components-core` `^1.0.0-rc21` (was `^1.0.0-rc15`). No c
   `renderLoaderCallback`) — the same name as the instance `renderLoadingCallback`.
 - **`theme` is a closed set: `light` | `dark`** (was free text). Any other value is refused — it warns,
   keeps the previous theme and fires `input-rejected`; `theme="dark"` behaves as before.
+  *(Superseded: `theme` is removed — see "Changed — BREAKING (theming)".)*
 - **Importing the element module alone no longer defines `<km-editor>`.** Only the package entry does,
   through core `registerComponent()` (the package `exports` already exposed only the entry).
 - **The right-click menu closes on scroll by core's popover rule** (core rc20): only a scroll that
@@ -61,7 +77,7 @@ Requires `@keenmate/web-components-core` `^1.0.0-rc21` (was `^1.0.0-rc15`). No c
 - **Every input is a typed property on `KmEditorElement`** (TypeScript: `el.viewMode`,
   `el.customStyles`, …), through `interface KmEditorElement extends EditorConfig`. `EditorConfig`
   gains `customStyles` / `getCustomStylesCallback`; `theme` is typed `EditorTheme | null` (new
-  exported type `EditorTheme`).
+  exported type `EditorTheme`; both removed again with `theme`, see "Changed — BREAKING (theming)").
 
 ### Changed (core 1.0.0-rc20 alignment)
 

@@ -1,4 +1,44 @@
-/* ── dark theme (opt-in via theme="dark") — every color is a light-dark() pair ── */
-:host([theme='dark']) {
+/* ==============================================================================
+   DARK MODE — page signal + per-instance override (same as web-multiselect)
+   ==============================================================================
+   Every `--we-*` color fallback in variables.css is a `light-dark(<light>, <dark>)`
+   pair (or derived from one), so this file only flips `color-scheme` on the host
+   and the right branch resolves. It never redeclares `--we-*` / `--base-*`
+   values — that would shadow the page's own `--base-*` theme inside the shadow root.
+
+   Signals, lowest → highest:
+     - No signal: the host inherits the page's `color-scheme` (no rule here).
+       There is deliberately NO `prefers-color-scheme` rule, so the editor
+       always matches the page. A page that wants to follow the OS declares
+       `html { color-scheme: light dark }` once; every component follows it, live.
+     - Page / theme-source signal: `data-theme`, `data-bs-theme`, `.dark` /
+       `.light` on <html> then <body>, the element named by `theme-source`, or
+       `setThemeMode()`. Detected once per page by @keenmate/web-components-core
+       (re-detected when those attributes / classes change) and mirrored onto
+       the host as `data-context-theme`. Replaces `:host-context()`, which
+       Firefox doesn't support and Safari only partly.
+     - Per-instance attribute on the host: `<km-editor data-theme="dark|light">`.
+       Declared last, so it wins.
+
+   The overlays (selection toolbar, context menu) mount inside the shadow root,
+   so they follow the host's scheme. Code blocks stay dark in both modes (Prism's
+   dark theme); the selection toolbar is a dark pill in both (tooltip tokens).
+   ============================================================================== */
+
+/* Page / theme-source signal */
+:host([data-context-theme="dark"]) {
   color-scheme: dark;
+}
+
+:host([data-context-theme="light"]) {
+  color-scheme: light;
+}
+
+/* Per-instance attribute — declared last, wins */
+:host([data-theme="dark"]) {
+  color-scheme: dark;
+}
+
+:host([data-theme="light"]) {
+  color-scheme: light;
 }
