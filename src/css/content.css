@@ -48,12 +48,12 @@
 }
 
 .ProseMirror a {
-  color: #0066cc;
+  color: var(--we-link-color);
   text-decoration: underline;
 }
 
 .ProseMirror a:hover {
-  color: #004499;
+  color: var(--we-link-color-hover);
 }
 
 /* Images */
@@ -64,17 +64,17 @@
 }
 
 .ProseMirror img.ProseMirror-selectednode {
-  outline: 3px solid #0066cc;
+  outline: 3px solid var(--we-selected-outline-color);
 }
 
 .ProseMirror img:hover {
-  outline: 2px solid #ccc;
+  outline: 2px solid var(--we-border);
 }
 
 /* ── code blocks ── */
 .ProseMirror pre {
-  background: #2d2d2d;
-  color: #ccc;
+  background: var(--we-code-block-bg);
+  color: var(--we-code-block-color);
   border-radius: 6px;
   padding: 16px 20px;
   margin: 1em 0;
@@ -98,25 +98,25 @@
   top: 8px;
   right: 12px;
   font-size: 11px;
-  color: #666;
+  color: var(--we-code-block-label-color);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 /* Inline code */
 .ProseMirror code {
-  background: #f0f0f0;
+  background: var(--we-inline-code-bg);
   padding: 2px 6px;
   border-radius: 3px;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
   font-size: 0.9em;
-  color: #c7254e;
+  color: var(--we-inline-code-color);
 }
 
 /* Code toolbar */
 .code-toolbar .toolbar-label {
   font-size: 12px;
-  color: #9cdcfe;
+  color: var(--we-code-toolbar-label-color);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -125,7 +125,7 @@
 
 /* Selection highlight (when editor loses focus) */
 .ProseMirror-selectednode {
-  outline: 2px solid #8cf;
+  outline: 2px solid var(--we-selected-outline-color);
 }
 
 /* ── tables ── */
@@ -140,7 +140,7 @@
 .ProseMirror td,
 .ProseMirror th {
   min-width: 1em;
-  border: 1px solid #ddd;
+  border: 1px solid var(--we-border);
   padding: 8px 12px;
   vertical-align: top;
   box-sizing: border-box;
@@ -148,7 +148,7 @@
 }
 
 .ProseMirror th {
-  background: #f5f5f5;
+  background: var(--we-muted-bg);
   font-weight: 600;
   text-align: left;
 }
@@ -160,7 +160,7 @@
   top: 0;
   bottom: 0;
   width: 4px;
-  background: #0066cc;
+  background: var(--we-selected-outline-color);
   pointer-events: none;
 }
 
@@ -170,14 +170,14 @@
 
 /* Cell selection */
 .ProseMirror .selectedCell {
-  background: rgba(0, 102, 204, 0.15);
+  background: var(--we-selected-cell-bg);
 }
 
 .ProseMirror .selectedCell::after {
   content: '';
   position: absolute;
   inset: 0;
-  border: 2px solid #0066cc;
+  border: 2px solid var(--we-selected-outline-color);
   pointer-events: none;
 }
 

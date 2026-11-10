@@ -12,33 +12,28 @@
 .we-floating {
   z-index: 1100;
   border-radius: var(--we-radius);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 6px 24px var(--we-shadow-color);
   overflow: hidden; /* clip the inner bar to the rounded corners */
 }
 
-/* Selection toolbar — a dark pill over the selection. */
+/* Selection toolbar — a dark pill over the selection (in both modes, like a tooltip). */
 .we-selection-toolbar .we-command-bar {
   padding: 4px 6px;
-  background: #1e1e1e;
-  color: #eee;
-}
-
-.we-selection-toolbar .we-cmd {
-  color: #ddd;
+  background: var(--we-selection-toolbar-bg);
+  color: var(--we-selection-toolbar-color);
 }
 
 .we-selection-toolbar .we-cmd:hover:not(:disabled) {
-  background: #3a3a3a;
-  color: #fff;
+  background: color-mix(in srgb, var(--we-selection-toolbar-color) 18%, transparent);
 }
 
 .we-selection-toolbar .we-cmd.toggled {
   background: var(--we-accent);
-  color: #fff;
+  color: var(--we-text-on-accent);
 }
 
 .we-selection-toolbar .we-sep {
-  background: #444;
+  background: color-mix(in srgb, var(--we-selection-toolbar-color) 25%, transparent);
 }
 
 /* Context menu — core `openMenu()` renders it (`.km-menu*`, core's shared

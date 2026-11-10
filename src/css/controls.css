@@ -88,12 +88,12 @@
   line-height: 1.2;
 }
 .we-cmd:hover:not(:disabled) {
-  background: rgba(128, 128, 128, 0.18);
+  background: var(--we-hover-bg);
 }
 .we-cmd.toggled {
   background: var(--we-accent);
   border-color: var(--we-accent);
-  color: #fff;
+  color: var(--we-text-on-accent);
 }
 
 /* Selection toolbar's inner flat bar. */

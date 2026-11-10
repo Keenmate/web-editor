@@ -8,8 +8,8 @@
 
 :host {
   display: block;
-  color: #333;
-  font-family: system-ui, -apple-system, sans-serif;
+  color: var(--we-text-color);
+  font-family: var(--we-font-family);
 }
 
 :host([hidden]) {
@@ -97,7 +97,7 @@
 }
 
 .we-root.we-inline {
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 8px 28px var(--we-shadow-color);
   border-radius: var(--we-radius);
   background: var(--we-bg);
   /* When no anchor selector is set, keep the card readable in normal flow. */

@@ -18,6 +18,21 @@ released to a registry yet.
   `content` / `output` / `animations.css` (`component` layer), `dark-mode.css` (`overrides` layer).
   `src/css/editor.css` is gone; `dist/style.css` is still the one bundled file. Being layered, any
   unlayered consumer rule now beats the editor's own rules.
+- **Every color is a `--we-*` variable chained to the shared `--base-*` contract** (with the
+  contract's defaults as `light-dark()` fallbacks), so a `:root` theme reaches the editor. The look
+  moves to the KeenMate defaults: **`--we-accent` defaults to the contract primary `#3b82f6`** (was
+  `#0066cc`), `--we-danger` to `--base-danger-text-color` (was `#c62828`), body text to
+  `--base-text-color-1` (was `#333`), shadows to `--base-shadow-color`, the font to
+  `--base-font-family`. The focused-node outline is the accent (was `#8cf`).
+
+### Added (theming)
+
+- **New `--we-*` variables:** `--we-text-color`, `--we-text-on-accent`, `--we-hover-bg`,
+  `--we-shadow-color`, `--we-font-family`, `--we-selection-toolbar-bg` / `-color` (the pill stays
+  dark in both modes — the shared tooltip tokens), `--we-link-color` / `-hover`,
+  `--we-selected-outline-color`, `--we-selected-cell-bg`, `--we-inline-code-bg` / `-color`, and
+  `--we-code-block-bg` / `-color` / `-label-color` + `--we-code-toolbar-label-color` (code blocks
+  stay dark in both modes on purpose — the highlighting is Prism's dark "tomorrow" theme).
 
 ### Changed — BREAKING (core 1.0.0-rc20 alignment)
 

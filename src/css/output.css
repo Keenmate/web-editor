@@ -24,6 +24,7 @@
   padding: 4px 12px;
   border: 1px solid transparent;
   background: transparent;
+  color: inherit;
   border-radius: 3px;
   cursor: pointer;
   font: inherit;
@@ -31,7 +32,7 @@
 }
 
 .we-output-tabs button:hover {
-  background: #e8e8e8;
+  background: var(--we-hover-bg);
 }
 
 .we-output-tabs button.active {

@@ -1,11 +1,14 @@
 import { test, expect, load, editor, pm, toolbarButton, selectText, type Page } from './fixtures';
 
-// Theming: `theme="dark"` swaps the token set; `--we-accent` drives the active
-// button colour; the theme attribute is reflected / settable.
+// Theming: `theme="dark"` flips color-scheme so every light-dark() token resolves
+// dark; `--we-accent` drives the active button colour; the theme attribute is
+// reflected / settable.
 // Fixture: test/theming.html (#light, #dark theme="dark", #accent with --we-accent).
 
 const hostStyle = (page: Page, id: string, prop: string) =>
     editor(page, id).evaluate((el, p) => getComputedStyle(el).getPropertyValue(p).trim(), prop);
+
+const surface = (page: Page, id: string) => editor(page, id).locator('.we-surface');
 
 const pressedBg = async (page: Page, id: string) => {
     await selectText(page, id, id);
@@ -19,30 +22,31 @@ test.describe('theming', () => {
     test.beforeEach(async ({ page }) => load(page, 'theming.html', { flag: 'fixtureReady' }));
 
     test('light (default) tokens', async ({ page }) => {
-        expect(await hostStyle(page, 'light', '--we-accent')).toBe('#0066cc');
-        expect(await hostStyle(page, 'light', 'color')).toBe('rgb(51, 51, 51)');
+        expect(await hostStyle(page, 'light', '--we-accent')).toBe('#3b82f6');
+        expect(await hostStyle(page, 'light', 'color')).toBe('rgb(51, 65, 85)');
+        await expect(surface(page, 'light')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
     });
 
-    test('theme="dark" swaps the tokens and the text colour', async ({ page }) => {
-        expect(await hostStyle(page, 'dark', '--we-accent')).toBe('#4ea1ff');
-        expect(await hostStyle(page, 'dark', '--we-bg')).toBe('#1e1e1e');
-        expect(await hostStyle(page, 'dark', 'color')).toBe('rgb(212, 212, 212)');
-        await expect(pm(page, 'dark')).toHaveCSS('color', 'rgb(212, 212, 212)');
+    test('theme="dark" resolves the dark tokens and the text colour', async ({ page }) => {
+        expect(await hostStyle(page, 'dark', 'color-scheme')).toBe('dark');
+        await expect(surface(page, 'dark')).toHaveCSS('background-color', 'rgb(30, 41, 59)');
+        expect(await hostStyle(page, 'dark', 'color')).toBe('rgb(241, 245, 249)');
+        await expect(pm(page, 'dark')).toHaveCSS('color', 'rgb(241, 245, 249)');
     });
 
     test('an active toolbar button uses --we-accent (default, dark, overridden)', async ({ page }) => {
-        expect(await pressedBg(page, 'light')).toBe('rgb(0, 102, 204)');
-        expect(await pressedBg(page, 'dark')).toBe('rgb(78, 161, 255)');
+        expect(await pressedBg(page, 'light')).toBe('rgb(59, 130, 246)');
+        expect(await pressedBg(page, 'dark')).toBe('rgb(59, 130, 246)');
         expect(await pressedBg(page, 'accent')).toBe('rgb(255, 0, 0)');
     });
 
     test('theme property reflects to the attribute and restyles live', async ({ page }) => {
         await editor(page, 'light').evaluate((el: any) => (el.theme = 'dark'));
         await expect(editor(page, 'light')).toHaveAttribute('theme', 'dark');
-        expect(await hostStyle(page, 'light', '--we-accent')).toBe('#4ea1ff');
+        await expect(surface(page, 'light')).toHaveCSS('background-color', 'rgb(30, 41, 59)');
         await editor(page, 'light').evaluate((el: any) => (el.theme = null));
         await expect(editor(page, 'light')).not.toHaveAttribute('theme');
-        expect(await hostStyle(page, 'light', '--we-accent')).toBe('#0066cc');
+        await expect(surface(page, 'light')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
     });
 });
 

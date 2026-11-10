@@ -1,20 +1,84 @@
 /* ==============================================================================
    CSS CUSTOM PROPERTIES (:host level)
+   ==============================================================================
+   Every --we-* knob is declared here, on :host, and reads the shared --base-*
+   contract (@keenmate/base-css-variables 2.0) with an inline fallback, so:
+   - a theme on :root (pure-admin, or base-variables.css) reaches the editor
+     through the --base-* variables, which pierce the shadow root;
+   - a --we-* override goes on the element itself (or a rule that matches it):
+       km-editor { --we-accent: #7c3aed; --we-min-height: 320px; }
+   - without any theme, the fallbacks give the Corporate look in light and dark.
+
+   `color-scheme` is inherited, never declared here: every color fallback is a
+   `light-dark()` pair (or derived from one) that follows the page (see
+   dark-mode.css for the page / per-instance signals). This is the only file
+   that reads --base-*.
    ============================================================================== */
 
 :host {
-  /* Theme seam — override per instance or via :host([theme="…"]). */
-  --we-border: #ddd;
-  --we-bg: #fff;
-  --we-muted-bg: #f5f5f5;
-  --we-muted-fg: #666;
+  /* ==========================================================================
+     LAYOUT
+     ========================================================================== */
   --we-radius: 6px;
   --we-gap: 16px;
   --we-min-height: 160px;
-  --we-accent: #0066cc;
-  --we-danger: #c62828;
+  --we-font-family: var(--base-font-family, system-ui, -apple-system, sans-serif);
+
+  /* ==========================================================================
+     COLORS
+     ========================================================================== */
+
+  /* Accent (the primary role): toggled commands, the pending loader, selection outlines */
+  --we-accent: var(--base-primary-color, #3b82f6);
+  /* Text on the accent fill: black or white, whichever reads better (APCA) — the contract formula. */
+  --we-text-on-accent: var(--base-on-primary-text-color, color(from color(from var(--we-accent) srgb calc(0.21 * r * r * (0.4 + r * (0.82 - 0.22 * r)) + 0.72 * g * g * (0.4 + g * (0.82 - 0.22 * g)) + 0.07 * b * b * (0.4 + b * (0.82 - 0.22 * b))) 0 0) srgb clamp(0, (0.34 - r) * 1e9, 1) clamp(0, (0.34 - r) * 1e9, 1) clamp(0, (0.34 - r) * 1e9, 1)));
+
+  /* Text: body, and muted (status bar, placeholder) */
+  --we-text-color: var(--base-text-color-1, light-dark(#334155, #f1f5f9));
+  --we-muted-fg: var(--base-text-color-3, color-mix(in srgb, var(--we-text-color) 55%, var(--we-bg)));
+
+  /* Surfaces: the editing area, the raised strips (toolbar, status bar, output tabs,
+     table headers, preview) and the hover overlay — the contract's formulas on --we-bg. */
+  --we-bg: var(--base-main-bg, light-dark(#ffffff, #1e293b));
+  --we-muted-bg: var(--base-elevated-bg, light-dark(oklch(from var(--we-bg) calc(l - 0.03) c h), oklch(from var(--we-bg) calc(l + 0.06) c h)));
+  --we-hover-bg: var(--base-hover-bg, light-dark(color-mix(in oklch, oklch(from var(--we-bg) calc(l - 0.45) c h) 14%, transparent), color-mix(in oklch, oklch(from var(--we-bg) calc(l + 0.45) c h) 28%, transparent)));
+
+  /* Frame, dividers, table cells */
+  --we-border: var(--base-border-color, light-dark(oklch(from var(--we-bg) calc(l - 0.096) c h), oklch(from var(--we-bg) calc(l + 0.192) c h)));
+
+  /* Destructive commands */
+  --we-danger: var(--base-danger-text-color, light-dark(#721c24, #f87171));
+
+  /* Shadow tone of the inline card and the floating panels */
+  --we-shadow-color: var(--base-shadow-color, light-dark(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.4)));
+
+  /* Selection toolbar — always a dark pill: near-text in light mode, a lifted
+     surface in dark (the shared tooltip tokens). */
+  --we-selection-toolbar-bg: var(--base-tooltip-bg, light-dark(color-mix(in srgb, var(--we-text-color) 85%, var(--we-bg)), oklch(from var(--we-bg) calc(l + 0.15) c h)));
+  --we-selection-toolbar-color: var(--base-tooltip-text-color, light-dark(var(--we-bg), var(--we-text-color)));
+
+  /* Links in the document */
+  --we-link-color: var(--base-primary-text-color, light-dark(color-mix(in srgb, black 45%, var(--we-accent)), color-mix(in srgb, white 25%, var(--we-accent))));
+  --we-link-color-hover: light-dark(color-mix(in srgb, black 25%, var(--we-link-color)), color-mix(in srgb, white 25%, var(--we-link-color)));
+
+  /* Selected node (image, horizontal rule, …), selected table cells, column-resize handle */
+  --we-selected-outline-color: var(--we-accent);
+  --we-selected-cell-bg: var(--base-selected-bg, light-dark(color-mix(in srgb, var(--we-accent) 10%, transparent), color-mix(in srgb, var(--we-accent) 20%, transparent)));
+
+  /* Inline code */
+  --we-inline-code-bg: color-mix(in srgb, var(--we-text-color) 8%, transparent);
+  --we-inline-code-color: light-dark(#c7254e, #f58ba6);
+
+  /* Code blocks — intentionally the SAME in both modes: the syntax highlighting is
+     Prism's dark "tomorrow" theme, so the block stays dark on a light page too. */
+  --we-code-block-bg: #2d2d2d;
+  --we-code-block-color: #ccc;
+  --we-code-block-label-color: #666;
+  --we-code-toolbar-label-color: #9cdcfe;
+
   /* Disabled toolbar / selection-toolbar commands: the contract's one fade. */
   --we-disabled-opacity: var(--base-disabled-opacity, 0.65);
+
   /* Pending loader (a deferred pipeline outlived its threshold): the shared
      loader contract (core SPEC §12.14) → --base-loader-* → the contract's arc. */
   --we-loader-icon: var(--base-loader-icon, url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M21 12a9 9 0 1 1-6.219-8.56%22/%3E%3C/svg%3E"));
@@ -22,10 +86,14 @@
   --we-loader-duration: var(--base-loader-duration, 0.8s);
   --we-loader-size: var(--base-loader-size, 1.25em);
 
-  /* Context menu = core `openMenu()` (.km-menu*). Each public --we-context-menu-*
-     maps onto core's PRIVATE --_km-menu-* layer with NO fallback: unset → the
-     page-wide --km-menu-* → --base-* → core default. Never set --km-menu-* here
-     (it would shadow a page-level :root value). */
+  /* ==========================================================================
+     CONTEXT MENU
+     ==========================================================================
+     Context menu = core `openMenu()` (.km-menu*). Each public --we-context-menu-*
+     is an INPUT: it maps onto core's PRIVATE --_km-menu-* layer with NO fallback
+     and is never declared here: unset → the page-wide --km-menu-* →
+     --base-dropdown-* → core default. Never set --km-menu-* here (it would
+     shadow a page-level :root value). */
   --_km-menu-z-index: var(--we-context-menu-z-index);
   --_km-menu-bg: var(--we-context-menu-bg);
   --_km-menu-text-color: var(--we-context-menu-text-color);
