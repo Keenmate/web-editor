@@ -32,11 +32,15 @@ released to a registry yet.
   contract's defaults as `light-dark()` fallbacks), so a `:root` theme reaches the editor. The look
   moves to the KeenMate defaults: **`--we-accent` defaults to the contract primary `#3b82f6`** (was
   `#0066cc`), `--we-danger` to `--base-danger-text-color` (was `#c62828`), body text to
-  `--base-text-color-1` (was `#333`), shadows to `--base-shadow-color`, the font to
+  `--base-text-color-1` (was `#333`), muted text (status bar, placeholder) to `--base-text-color-2`, shadows to `--base-shadow-color`, the font to
   `--base-font-family`. The focused-node outline is the accent (was `#8cf`).
 
 ### Added (theming)
 
+- **Dark-mode e2e suite** (`e2e/dark-mode.spec.ts`, fixture `test/dark-mode.html`): every signal of
+  the rulebook's testing table, non-switches, WCAG contrast of text / chrome / content in both
+  schemes, and the floating layers in a dark editor on a light page. `npm run check:vars` added
+  (the devkit's manifest check).
 - **`component-variables.manifest.json`** at the package root (exported as
   `@keenmate/web-editor/manifest` and `/component-variables.manifest.json`, shipped in `files`):
   every `--base-*` the editor reads (plus the `--base-*` core's context menu reads, marked

@@ -94,7 +94,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
-    "test:e2e:install": "playwright install chromium firefox webkit"
+    "test:e2e:install": "playwright install chromium firefox webkit",
+    "check:vars": "kmwc check-vars"
   },
   "dependencies": {
     "@keenmate/web-components-core": "^1.0.0-rc21",

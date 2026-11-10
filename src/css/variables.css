@@ -35,7 +35,7 @@
 
   /* Text: body, and muted (status bar, placeholder) */
   --we-text-color: var(--base-text-color-1, light-dark(#334155, #f1f5f9));
-  --we-muted-fg: var(--base-text-color-3, color-mix(in srgb, var(--we-text-color) 55%, var(--we-bg)));
+  --we-muted-fg: var(--base-text-color-2, color-mix(in srgb, var(--we-text-color) 75%, var(--we-bg)));
 
   /* Surfaces: the editing area, the raised strips (toolbar, status bar, output tabs,
      table headers, preview) and the hover overlay — the contract's formulas on --we-bg. */

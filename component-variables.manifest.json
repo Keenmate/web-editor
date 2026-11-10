@@ -126,9 +126,15 @@
       "usage": "Body text (--we-text-color); also core's context menu"
     },
     {
+      "name": "base-text-color-2",
+      "required": false,
+      "usage": "Muted text: status bar, placeholder (--we-muted-fg)"
+    },
+    {
       "name": "base-text-color-3",
       "required": false,
-      "usage": "Muted text: status bar, placeholder (--we-muted-fg); also core's context menu shortcuts"
+      "readBy": "@keenmate/web-components-core",
+      "usage": "Context menu shortcut hints"
     },
     {
       "name": "base-tooltip-bg",

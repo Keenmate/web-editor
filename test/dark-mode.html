@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>km-editor — dark mode</title>
+</head>
+<body>
+    <!-- Targeted by e2e/dark-mode.spec.ts. The page starts with NO theme signal; each
+         test sets one (on <html>, <body>, the section, the host, or setThemeMode()). -->
+    <km-editor id="subject" content-format="html" statusbar="bottom"
+        value='<h2>Title</h2><p>plain words with a <a href="https://keenmate.com">link</a> and <code>inline code</code></p><table><tbody><tr><th><p>Head</p></th><th><p>Col</p></th></tr><tr><td><p>cell</p></td><td><p>two</p></td></tr></tbody></table><pre><code>let answer = 42;</code></pre>'></km-editor>
+
+    <section id="section">
+        <km-editor id="sectioned" theme-source="closest" value="inside a section"></km-editor>
+    </section>
+
+    <script type="module">
+        import '/src/index.ts';
+        import { setThemeMode } from '@keenmate/web-components-core';
+        window.setThemeMode = setThemeMode;
+        window.fixtureReady = true;
+    </script>
+</body>
+</html>
