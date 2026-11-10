@@ -37,6 +37,11 @@ released to a registry yet.
 
 ### Added (theming)
 
+- **`component-variables.manifest.json`** at the package root (exported as
+  `@keenmate/web-editor/manifest` and `/component-variables.manifest.json`, shipped in `files`):
+  every `--base-*` the editor reads (plus the `--base-*` core's context menu reads, marked
+  `readBy`), every `--we-*` it declares, and the 17 `--we-context-menu-*` pass-through inputs
+  (`"input": true` — unset by design, so the page-wide `--km-menu-*` and the theme flow through).
 - **Dark mode the KeenMate way** — `dark-mode.css` carries the four canonical rules
   (`:host([data-context-theme])`, then `:host([data-theme])`, each only `color-scheme`); every
   color resolves through its `light-dark()` pair, so a page's `--base-*` theme keeps flowing in

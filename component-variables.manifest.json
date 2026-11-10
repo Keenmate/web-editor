@@ -1,0 +1,372 @@
+{
+  "$schema": "https://schemas.keenmate.dev/component-variables/v1.schema.json",
+  "component": "@keenmate/web-editor",
+  "prefix": "we",
+  "note": "Every --we-* knob is declared on :host (src/css/variables.css) and reads the shared --base-* contract (@keenmate/base-css-variables 2.0) with a light-dark() fallback, so a :root theme reaches it in both schemes; set --we-* on the element itself. The --we-context-menu-* inputs are never declared: they pass through to core's menu (--_km-menu-*).",
+  "baseVariables": [
+    {
+      "name": "base-border-color",
+      "required": false,
+      "usage": "Frame, dividers, table cell borders, image hover outline (--we-border)"
+    },
+    {
+      "name": "base-danger-bg-subtle",
+      "required": false,
+      "readBy": "@keenmate/web-components-core",
+      "usage": "Context menu: danger item hover background"
+    },
+    {
+      "name": "base-danger-color",
+      "required": false,
+      "readBy": "@keenmate/web-components-core",
+      "usage": "Context menu: danger item text"
+    },
+    {
+      "name": "base-danger-text-color",
+      "required": false,
+      "usage": "Destructive commands (--we-danger)"
+    },
+    {
+      "name": "base-disabled-opacity",
+      "required": false,
+      "usage": "Fade of disabled toolbar / selection-toolbar commands (--we-disabled-opacity); also core's context menu"
+    },
+    {
+      "name": "base-dropdown-bg",
+      "required": false,
+      "readBy": "@keenmate/web-components-core",
+      "usage": "Context menu background"
+    },
+    {
+      "name": "base-dropdown-border",
+      "required": false,
+      "readBy": "@keenmate/web-components-core",
+      "usage": "Context menu border"
+    },
+    {
+      "name": "base-dropdown-box-shadow",
+      "required": false,
+      "readBy": "@keenmate/web-components-core",
+      "usage": "Context menu shadow"
+    },
+    {
+      "name": "base-elevated-bg",
+      "required": false,
+      "usage": "Raised strips: zone toolbar, status bar, output tabs, table headers, preview surface (--we-muted-bg); also core's context menu"
+    },
+    {
+      "name": "base-font-family",
+      "required": false,
+      "usage": "Editor font (--we-font-family); also core's context menu"
+    },
+    {
+      "name": "base-hover-bg",
+      "required": false,
+      "usage": "Hover overlay of toolbar commands and output tabs (--we-hover-bg); also core's context menu"
+    },
+    {
+      "name": "base-line-height-normal",
+      "required": false,
+      "readBy": "@keenmate/web-components-core",
+      "usage": "Context menu line height"
+    },
+    {
+      "name": "base-loader-duration",
+      "required": false,
+      "usage": "Pending loader spin duration (--we-loader-duration)"
+    },
+    {
+      "name": "base-loader-icon",
+      "required": false,
+      "usage": "Pending loader glyph (--we-loader-icon)"
+    },
+    {
+      "name": "base-loader-rotate",
+      "required": false,
+      "usage": "Pending loader rotation per cycle (--we-loader-rotate)"
+    },
+    {
+      "name": "base-loader-size",
+      "required": false,
+      "usage": "Pending loader size (--we-loader-size)"
+    },
+    {
+      "name": "base-main-bg",
+      "required": false,
+      "usage": "Editing surface and output panel background (--we-bg); the base of the derived surfaces"
+    },
+    {
+      "name": "base-on-primary-text-color",
+      "required": false,
+      "usage": "Text on the accent fill — toggled commands (--we-text-on-accent)"
+    },
+    {
+      "name": "base-primary-color",
+      "required": false,
+      "usage": "Accent: toggled commands, pending loader, selection outlines, column-resize handle (--we-accent); also core's context menu"
+    },
+    {
+      "name": "base-primary-text-color",
+      "required": false,
+      "usage": "Links in the document (--we-link-color)"
+    },
+    {
+      "name": "base-selected-bg",
+      "required": false,
+      "usage": "Selected table cells (--we-selected-cell-bg)"
+    },
+    {
+      "name": "base-shadow-color",
+      "required": false,
+      "usage": "Shadow of the inline card and the floating panels (--we-shadow-color)"
+    },
+    {
+      "name": "base-text-color-1",
+      "required": false,
+      "usage": "Body text (--we-text-color); also core's context menu"
+    },
+    {
+      "name": "base-text-color-3",
+      "required": false,
+      "usage": "Muted text: status bar, placeholder (--we-muted-fg); also core's context menu shortcuts"
+    },
+    {
+      "name": "base-tooltip-bg",
+      "required": false,
+      "usage": "Selection-toolbar pill background — dark in both modes (--we-selection-toolbar-bg)"
+    },
+    {
+      "name": "base-tooltip-text-color",
+      "required": false,
+      "usage": "Selection-toolbar pill text (--we-selection-toolbar-color)"
+    }
+  ],
+  "componentVariables": [
+    {
+      "name": "we-radius",
+      "usage": "Corner radius of the frame, output panel, inline card and floating panels"
+    },
+    {
+      "name": "we-gap",
+      "usage": "Gap between the editor and the live output in split view"
+    },
+    {
+      "name": "we-min-height",
+      "usage": "Minimum height of the editor frame and body"
+    },
+    {
+      "name": "we-font-family",
+      "usage": "Editor font"
+    },
+    {
+      "name": "we-accent",
+      "usage": "Accent: toggled commands (both toolbars), pending loader; --we-selected-outline-color follows it"
+    },
+    {
+      "name": "we-text-on-accent",
+      "usage": "Text on the accent fill (toggled commands) — black or white, whichever reads better"
+    },
+    {
+      "name": "we-text-color",
+      "usage": "Body text"
+    },
+    {
+      "name": "we-muted-fg",
+      "usage": "Muted text: status bar, empty-document placeholder"
+    },
+    {
+      "name": "we-bg",
+      "usage": "Editing surface and output panel background; the derived surfaces follow it"
+    },
+    {
+      "name": "we-muted-bg",
+      "usage": "Raised strips: zone toolbar, status bar, output tabs, table headers, preview surface"
+    },
+    {
+      "name": "we-hover-bg",
+      "usage": "Hover overlay of toolbar commands and output tabs"
+    },
+    {
+      "name": "we-border",
+      "usage": "Frame, dividers, group separators, table cell borders, image hover outline"
+    },
+    {
+      "name": "we-danger",
+      "usage": "Destructive commands"
+    },
+    {
+      "name": "we-shadow-color",
+      "usage": "Shadow tone of the inline card and the floating panels"
+    },
+    {
+      "name": "we-selection-toolbar-bg",
+      "usage": "Selection-toolbar pill background — a dark pill in both modes (tooltip tokens)"
+    },
+    {
+      "name": "we-selection-toolbar-color",
+      "usage": "Selection-toolbar pill text; its hover and separator are mixes of it"
+    },
+    {
+      "name": "we-link-color",
+      "usage": "Links in the document"
+    },
+    {
+      "name": "we-link-color-hover",
+      "usage": "Hovered links"
+    },
+    {
+      "name": "we-selected-outline-color",
+      "usage": "Outline of a selected node (image, …), selected-cell border, column-resize handle"
+    },
+    {
+      "name": "we-selected-cell-bg",
+      "usage": "Selected table cells"
+    },
+    {
+      "name": "we-inline-code-bg",
+      "usage": "Inline code background"
+    },
+    {
+      "name": "we-inline-code-color",
+      "usage": "Inline code text"
+    },
+    {
+      "name": "we-code-block-bg",
+      "usage": "Code block background — the same in both modes on purpose (Prism's dark \"tomorrow\" highlighting)"
+    },
+    {
+      "name": "we-code-block-color",
+      "usage": "Code block text — the same in both modes on purpose"
+    },
+    {
+      "name": "we-code-block-label-color",
+      "usage": "Code block language label — the same in both modes on purpose"
+    },
+    {
+      "name": "we-code-toolbar-label-color",
+      "usage": "Code toolbar label — the same in both modes on purpose"
+    },
+    {
+      "name": "we-disabled-opacity",
+      "usage": "Fade of disabled toolbar / selection-toolbar commands"
+    },
+    {
+      "name": "we-loader-icon",
+      "usage": "Pending loader glyph (a mask tinted by the accent)"
+    },
+    {
+      "name": "we-loader-rotate",
+      "usage": "Pending loader rotation per cycle (0 for a self-animating SVG)"
+    },
+    {
+      "name": "we-loader-duration",
+      "usage": "Pending loader spin duration"
+    },
+    {
+      "name": "we-loader-size",
+      "usage": "Pending loader size"
+    },
+    {
+      "name": "we-context-menu-z-index",
+      "category": "context-menu",
+      "input": true,
+      "usage": "Context menu: stacking (unset: --km-menu-z-index, then the --base-* theme, then core's default)"
+    },
+    {
+      "name": "we-context-menu-bg",
+      "category": "context-menu",
+      "input": true,
+      "usage": "Context menu: background (unset: --km-menu-bg, then the --base-* theme, then core's default)"
+    },
+    {
+      "name": "we-context-menu-text-color",
+      "category": "context-menu",
+      "input": true,
+      "usage": "Context menu: item text (unset: --km-menu-text-color, then the --base-* theme, then core's default)"
+    },
+    {
+      "name": "we-context-menu-border",
+      "category": "context-menu",
+      "input": true,
+      "usage": "Context menu: border (unset: --km-menu-border, then the --base-* theme, then core's default)"
+    },
+    {
+      "name": "we-context-menu-border-radius",
+      "category": "context-menu",
+      "input": true,
+      "usage": "Context menu: corner radius (unset: --km-menu-border-radius, then the --base-* theme, then core's default)"
+    },
+    {
+      "name": "we-context-menu-shadow",
+      "category": "context-menu",
+      "input": true,
+      "usage": "Context menu: shadow (unset: --km-menu-shadow, then the --base-* theme, then core's default)"
+    },
+    {
+      "name": "we-context-menu-min-width",
+      "category": "context-menu",
+      "input": true,
+      "usage": "Context menu: minimum width (unset: --km-menu-min-width, then the --base-* theme, then core's default)"
+    },
+    {
+      "name": "we-context-menu-padding",
+      "category": "context-menu",
+      "input": true,
+      "usage": "Context menu: padding (unset: --km-menu-padding, then the --base-* theme, then core's default)"
+    },
+    {
+      "name": "we-context-menu-font-size",
+      "category": "context-menu",
+      "input": true,
+      "usage": "Context menu: font size (unset: --km-menu-font-size, then the --base-* theme, then core's default)"
+    },
+    {
+      "name": "we-context-menu-item-padding",
+      "category": "context-menu",
+      "input": true,
+      "usage": "Context menu: item padding (unset: --km-menu-item-padding, then the --base-* theme, then core's default)"
+    },
+    {
+      "name": "we-context-menu-hover-bg",
+      "category": "context-menu",
+      "input": true,
+      "usage": "Context menu: hovered item background (unset: --km-menu-hover-bg, then the --base-* theme, then core's default)"
+    },
+    {
+      "name": "we-context-menu-hover-color",
+      "category": "context-menu",
+      "input": true,
+      "usage": "Context menu: hovered item text (unset: --km-menu-hover-color, then the --base-* theme, then core's default)"
+    },
+    {
+      "name": "we-context-menu-toggled-color",
+      "category": "context-menu",
+      "input": true,
+      "usage": "Context menu: toggled item check / text (unset: --km-menu-toggled-color, then the --base-* theme, then core's default)"
+    },
+    {
+      "name": "we-context-menu-shortcut-color",
+      "category": "context-menu",
+      "input": true,
+      "usage": "Context menu: shortcut hint text (unset: --km-menu-shortcut-color, then the --base-* theme, then core's default)"
+    },
+    {
+      "name": "we-context-menu-danger-color",
+      "category": "context-menu",
+      "input": true,
+      "usage": "Context menu: destructive item text (unset: --km-menu-danger-color, then the --base-* theme, then core's default)"
+    },
+    {
+      "name": "we-context-menu-divider-color",
+      "category": "context-menu",
+      "input": true,
+      "usage": "Context menu: divider (unset: --km-menu-divider-color, then the --base-* theme, then core's default)"
+    },
+    {
+      "name": "we-context-menu-disabled-opacity",
+      "category": "context-menu",
+      "input": true,
+      "usage": "Context menu: disabled item fade (unset: --km-menu-disabled-opacity, then the --base-* theme, then core's default)"
+    }
+  ]
+}
