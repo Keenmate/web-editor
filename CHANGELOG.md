@@ -11,6 +11,14 @@ Target: **1.0.0-rc01** (first release).
 Pre-1.0, pre-publish. Everything below is the work to date; nothing has been
 released to a registry yet.
 
+### Changed (theming)
+
+- **The stylesheet is split into the standard files** under `src/css/` — `main.css` (layer order +
+  imports only) → `variables.css` (`variables` layer), `base` / `controls` / `floating` / `states` /
+  `content` / `output` / `animations.css` (`component` layer), `dark-mode.css` (`overrides` layer).
+  `src/css/editor.css` is gone; `dist/style.css` is still the one bundled file. Being layered, any
+  unlayered consumer rule now beats the editor's own rules.
+
 ### Changed — BREAKING (core 1.0.0-rc20 alignment)
 
 Requires `@keenmate/web-components-core` `^1.0.0-rc21` (was `^1.0.0-rc15`). No compatibility aliases.

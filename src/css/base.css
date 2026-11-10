@@ -1,0 +1,109 @@
+/* ==============================================================================
+   BASE — the container, the editor frame, layouts (split / preview / inline)
+   ============================================================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+:host {
+  display: block;
+  color: #333;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+:host([hidden]) {
+  display: none !important;
+}
+
+.we-root {
+  display: block;
+  min-height: 0;
+}
+
+/* Editor frame — one bordered box owning the border/radius. `we-tb-<side>` docks
+   the toolbar to that edge via flex direction (toolbar is always first in the
+   DOM); the body group (status bar + editor) is the other flex child. So
+   toolbar + status + editor read as one widget, not detached cards. */
+.we-surface {
+  display: flex;
+  min-width: 0;
+  min-height: var(--we-min-height);
+  background: var(--we-bg);
+  border: 1px solid var(--we-border);
+  border-radius: var(--we-radius);
+  overflow: hidden;
+}
+
+.we-surface.we-tb-top,
+.we-surface.we-tb-none {
+  flex-direction: column;
+}
+.we-surface.we-tb-bottom {
+  flex-direction: column-reverse;
+}
+.we-surface.we-tb-start {
+  flex-direction: row;
+}
+.we-surface.we-tb-end {
+  flex-direction: row-reverse;
+}
+
+/* Body group — the editor plus its hugging status bar; fills the surface
+   alongside the toolbar. */
+.we-body {
+  position: relative; /* anchors the pending loader */
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: var(--we-min-height);
+}
+
+/* Editor mount — flush inside the frame (the frame owns the border/radius). */
+.km-editor {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: var(--we-min-height);
+  background: transparent;
+}
+
+.km-editor .ProseMirror {
+  min-height: var(--we-min-height);
+}
+
+/* ── split: editor frame + live output side by side ── */
+.we-root.we-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--we-gap);
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .we-root.we-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── preview: read-only render ── */
+.we-root.we-preview .we-surface {
+  background: var(--we-muted-bg);
+}
+
+/* ── inline: floating overlay card over a live page ── */
+:host([view-mode='inline']) {
+  z-index: 1000;
+}
+
+.we-root.we-inline {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+  border-radius: var(--we-radius);
+  background: var(--we-bg);
+  /* When no anchor selector is set, keep the card readable in normal flow. */
+  max-width: 640px;
+}
+
+.we-root.we-inline .km-editor {
+  box-shadow: none;
+}

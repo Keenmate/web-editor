@@ -1,0 +1,53 @@
+/* ==============================================================================
+   OUTPUT — the split view's live output panel (Markdown / HTML / JSON tabs)
+   ============================================================================== */
+
+.we-output {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--we-border);
+  border-radius: var(--we-radius);
+  overflow: hidden;
+  background: var(--we-bg);
+  min-height: var(--we-min-height);
+}
+
+.we-output-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 6px;
+  background: var(--we-muted-bg);
+  border-bottom: 1px solid var(--we-border);
+}
+
+.we-output-tabs button {
+  padding: 4px 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 3px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+}
+
+.we-output-tabs button:hover {
+  background: #e8e8e8;
+}
+
+.we-output-tabs button.active {
+  background: var(--we-bg);
+  border-color: var(--we-border);
+  font-weight: 600;
+}
+
+.we-output-pre {
+  flex: 1;
+  margin: 0;
+  padding: 16px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow: auto;
+}

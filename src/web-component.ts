@@ -69,7 +69,7 @@ import {
 import { createActionHost } from './ui/actions';
 import { ViewLayout } from './ui/view-layout';
 import { EditorChrome } from './ui/chrome';
-import styles from './css/editor.css?inline';
+import styles from './css/main.css?inline';
 import { initLogger, contentLogger } from './logger';
 import { createLabelResolver, type EditorLabels } from './labels';
 

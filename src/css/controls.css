@@ -1,0 +1,139 @@
+/* ==============================================================================
+   CONTROLS — zone toolbar (tool groups), command buttons, status bar
+   ============================================================================== */
+
+/* Toolbar + status slots — layout-transparent; their presenter is the real flex
+   item, so it orders/flushes directly against the editor / shell. */
+.we-toolbar,
+.we-status {
+  display: contents;
+}
+
+/* The zone toolbar — a wrapping row (top/bottom) or column (start/end) of tool
+   groups, flush against the editor with a divider on the toolbar's edge. */
+.we-toolbar-zone {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 6px;
+  background: var(--we-muted-bg);
+}
+
+.we-surface.we-tb-top .we-toolbar-zone {
+  border-bottom: 1px solid var(--we-border);
+}
+.we-surface.we-tb-bottom .we-toolbar-zone {
+  border-top: 1px solid var(--we-border);
+}
+.we-surface.we-tb-start .we-toolbar-zone,
+.we-surface.we-tb-end .we-toolbar-zone {
+  flex-direction: column;
+  align-items: stretch;
+}
+.we-surface.we-tb-start .we-toolbar-zone {
+  border-right: 1px solid var(--we-border);
+}
+.we-surface.we-tb-end .we-toolbar-zone {
+  border-left: 1px solid var(--we-border);
+}
+
+/* A tool group — one contiguous button cluster (the drag-and-drop unit). */
+.we-group {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 2px;
+}
+.we-surface.we-tb-start .we-group,
+.we-surface.we-tb-end .we-group {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* The view-mode group (Edit / Split / Preview) sits at the far end of the zone. */
+.we-group-view {
+  margin-inline-start: auto;
+}
+.we-surface.we-tb-start .we-group-view,
+.we-surface.we-tb-end .we-group-view {
+  margin-inline-start: 0;
+  margin-block-start: auto;
+}
+
+/* Divider between groups (vertical in a row zone, horizontal in a column zone). */
+.we-group-sep {
+  align-self: stretch;
+  width: 1px;
+  margin: 2px;
+  background: var(--we-border);
+}
+.we-surface.we-tb-start .we-group-sep,
+.we-surface.we-tb-end .we-group-sep {
+  width: auto;
+  height: 1px;
+}
+
+/* Command buttons — shared by the zone groups + the selection toolbar. */
+.we-cmd {
+  padding: 5px 9px;
+  min-width: 30px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  border-radius: 4px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.2;
+}
+.we-cmd:hover:not(:disabled) {
+  background: rgba(128, 128, 128, 0.18);
+}
+.we-cmd.toggled {
+  background: var(--we-accent);
+  border-color: var(--we-accent);
+  color: #fff;
+}
+
+/* Selection toolbar's inner flat bar. */
+.we-command-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+}
+.we-command-bar .we-sep {
+  align-self: stretch;
+  width: 1px;
+  margin: 2px 4px;
+  background: var(--we-border);
+}
+
+/* Status bar — a dedicated strip, divider toward the editor. */
+.we-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 3px 10px;
+  background: var(--we-muted-bg);
+  font-size: 12px;
+  color: var(--we-muted-fg);
+}
+.we-body > .we-status:first-child .we-statusbar {
+  border-bottom: 1px solid var(--we-border);
+}
+.we-body > .we-status:last-child .we-statusbar {
+  border-top: 1px solid var(--we-border);
+}
+.we-status-start,
+.we-status-end {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.we-status-item {
+  white-space: nowrap;
+}

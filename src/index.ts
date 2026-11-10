@@ -7,7 +7,7 @@
  */
 // Produces the shipped dist/style.css via Vite, and feeds the inlined stylesheet
 // the element adopts into its shadow root.
-import './css/editor.css';
+import './css/main.css';
 
 import { registerComponent } from '@keenmate/web-components-core';
 import { KmEditorElement } from './web-component';

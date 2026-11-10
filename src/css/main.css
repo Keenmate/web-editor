@@ -1,0 +1,30 @@
+/* ==============================================================================
+   WEB EDITOR — MAIN ENTRY POINT
+   ==============================================================================
+   Cascade layer order (later = higher priority):
+     variables  — :host { --we-* } declarations (each reads a --base-* token)
+     component  — base + feature rules
+     overrides  — dark mode / per-instance signals
+
+   Consumer override contract:
+   - Any unlayered consumer rule beats every rule in these layers.
+   - A :root --base-* declaration reaches every --we-* token.
+   - A --we-* override goes on the element: km-editor { --we-… }
+
+   One stylesheet, two hosts: adopted into the <km-editor> shadow root (the :host /
+   .we-* rules), and linked by the raw-engine dev pages, where only the
+   .ProseMirror rules apply (the :host variables don't exist there).
+*/
+
+@layer variables, component, overrides;
+
+@import url('./variables.css')   layer(variables);
+@import url('./base.css')        layer(component);
+@import url('./controls.css')    layer(component);
+@import url('./floating.css')    layer(component);
+@import url('./states.css')      layer(component);
+@import url('./content.css')     layer(component);
+@import url('./output.css')      layer(component);
+@import url('./animations.css')  layer(component);
+
+@import url('./dark-mode.css')   layer(overrides);

@@ -1,0 +1,46 @@
+/* ==============================================================================
+   FLOATING — overlay layer, selection toolbar, context menu
+   ============================================================================== */
+
+/* Floating panels (portaled into the shadow overlay layer). */
+.we-overlays {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.we-floating {
+  z-index: 1100;
+  border-radius: var(--we-radius);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.22);
+  overflow: hidden; /* clip the inner bar to the rounded corners */
+}
+
+/* Selection toolbar — a dark pill over the selection. */
+.we-selection-toolbar .we-command-bar {
+  padding: 4px 6px;
+  background: #1e1e1e;
+  color: #eee;
+}
+
+.we-selection-toolbar .we-cmd {
+  color: #ddd;
+}
+
+.we-selection-toolbar .we-cmd:hover:not(:disabled) {
+  background: #3a3a3a;
+  color: #fff;
+}
+
+.we-selection-toolbar .we-cmd.toggled {
+  background: var(--we-accent);
+  color: #fff;
+}
+
+.we-selection-toolbar .we-sep {
+  background: #444;
+}
+
+/* Context menu — core `openMenu()` renders it (`.km-menu*`, core's shared
+   stylesheet, root also gets `.we-context-menu` + part="context-menu"). Its look
+   comes from the --_km-menu-* mapping on :host (the --we-context-menu-* seam). */

@@ -3,7 +3,7 @@
  * route through `engine.commands`, and the output panel renders the live
  * serialization (`engine.serialize`). NOT part of the shipped library.
  *
- * NOTE: editor.css is linked render-blocking from index.html (not imported here)
+ * NOTE: the stylesheet (css/main.css) is linked render-blocking from the page (not imported here)
  * to avoid a first-paint FOUC on reload. The library path (src/index.ts) still
  * imports it, so packaged consumers get the CSS bundled as before.
  */

@@ -1,0 +1,49 @@
+/* ==============================================================================
+   STATES — hidden toggles, disabled / danger commands, the pending loader
+   ============================================================================== */
+
+.we-toolbar-zone[hidden],
+.we-command-bar[hidden],
+.we-statusbar[hidden] {
+  display: none;
+}
+
+/* Hidden groups (editing off keeps only the view-mode group) + their dividers. */
+.we-group[hidden],
+.we-group-sep[hidden] {
+  display: none;
+}
+
+.we-cmd:disabled {
+  opacity: var(--we-disabled-opacity);
+  cursor: default;
+}
+
+/* After the selection-toolbar rules (same specificity) — a destructive command
+   keeps its color in the pill too. */
+.we-cmd.we-danger {
+  color: var(--we-danger);
+}
+
+/* Pending loader slot (core renderLoader → role="status"); top-end corner of the body. */
+.we-pending {
+  position: absolute;
+  top: 6px;
+  inset-inline-end: 6px;
+  z-index: 2;
+  display: flex;
+  color: var(--we-accent);
+  pointer-events: none;
+}
+.we-pending[hidden] {
+  display: none;
+}
+/* The shared drawing rule (base-css-variables Loader contract, verbatim). */
+.we__loader {
+  display: inline-block;
+  inline-size: var(--we-loader-size);
+  block-size: var(--we-loader-size);
+  mask: var(--we-loader-icon) center / contain no-repeat;
+  background: currentColor;
+  animation: we-loader-spin var(--we-loader-duration) linear infinite;
+}

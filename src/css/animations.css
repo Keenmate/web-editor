@@ -1,0 +1,10 @@
+/* ==============================================================================
+   ANIMATIONS
+   ============================================================================== */
+
+/* The pending loader's spin (drawn by .we__loader in states.css). */
+@keyframes we-loader-spin {
+  to {
+    transform: rotate(var(--we-loader-rotate));
+  }
+}
