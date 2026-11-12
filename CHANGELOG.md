@@ -11,6 +11,9 @@ Target: **1.0.0-rc01** (first release).
 Pre-1.0, pre-publish. Everything below is the work to date; nothing has been
 released to a registry yet.
 
+### Internal — core 1.0.0-rc22 (2026-11-13)
+- **Requires `@keenmate/web-components-core` `^1.0.0-rc22`** (was `^1.0.0-rc21`).
+
 ### Changed — BREAKING (theming)
 
 - **The `theme` input is removed** (attribute, property, `EditorConfig.theme` and the exported
