@@ -7190,6 +7190,28 @@
             },
             {
               "kind": "field",
+              "name": "menuPresentation",
+              "privacy": "public",
+              "type": {
+                "text": "'auto' | 'floating' | 'sheet' | 'drawer'"
+              },
+              "default": "'auto'",
+              "attribute": "menu-presentation",
+              "description": "How the component's context / dropdown menus open: 'auto' (default — a bottom sheet on a phone, the floating menu elsewhere), 'floating', 'sheet' (bottom sheet) or 'drawer' (full-height side panel on `menu-side`). Per device / width through the responsive rules."
+            },
+            {
+              "kind": "field",
+              "name": "menuSide",
+              "privacy": "public",
+              "type": {
+                "text": "'start' | 'end'"
+              },
+              "default": "'start'",
+              "attribute": "menu-side",
+              "description": "The edge a 'drawer' menu slides in from: 'start' (default — left in LTR, right in RTL) or 'end'."
+            },
+            {
+              "kind": "field",
               "name": "shouldDefer",
               "privacy": "public",
               "type": {
@@ -7561,6 +7583,24 @@
                 "text": "string | null"
               },
               "description": "CSS injected into the editor's shadow root (a `<style class=\"we-custom-styles\">` after the page-wide `window.components['km-editor'].customStyles` layer, so it overrides it). An `@import`ed font is also linked once in the document `<head>` (core). Raw CSS — never put untrusted input here."
+            },
+            {
+              "name": "menu-presentation",
+              "fieldName": "menuPresentation",
+              "type": {
+                "text": "'auto' | 'floating' | 'sheet' | 'drawer'"
+              },
+              "default": "'auto'",
+              "description": "How the component's context / dropdown menus open: 'auto' (default — a bottom sheet on a phone, the floating menu elsewhere), 'floating', 'sheet' (bottom sheet) or 'drawer' (full-height side panel on `menu-side`). Per device / width through the responsive rules."
+            },
+            {
+              "name": "menu-side",
+              "fieldName": "menuSide",
+              "type": {
+                "text": "'start' | 'end'"
+              },
+              "default": "'start'",
+              "description": "The edge a 'drawer' menu slides in from: 'start' (default — left in LTR, right in RTL) or 'end'."
             },
             {
               "name": "defer",
