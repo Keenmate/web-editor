@@ -11,6 +11,14 @@ Target: **1.0.0-rc01** (first release).
 Pre-1.0, pre-publish. Everything below is the work to date; nothing has been
 released to a registry yet.
 
+### Added — context menu presentation (core rc24)
+
+- **`menu-presentation`** (`auto` | `floating` | `sheet` | `drawer`, property `menuPresentation`) and
+  **`menu-side`** (`start` | `end`, property `menuSide`) — core's standard menu-host inputs
+  (`menuPresentationInputs()`), read at every right-click menu open (effective config, so responsive
+  rules apply). The sheet / drawer back and close buttons take the new labels **`back`** (`Back`)
+  and **`close`** (`Close`).
+
 ### Internal — core 1.0.0-rc22 (2026-11-13)
 - **Requires `@keenmate/web-components-core` `^1.0.0-rc22`** (was `^1.0.0-rc21`).
 

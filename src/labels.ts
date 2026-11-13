@@ -51,6 +51,9 @@ export const DEFAULT_LABELS = {
   valueFormatError: 'The value could not be formatted.',
   /** Accessible label (`aria-label`) of the pending loader shown while a deferred pipeline runs. */
   loading: 'Loading…',
+  /** Context menu as a sheet / drawer (`menu-presentation`): the submenu back button + the close button. */
+  back: 'Back',
+  close: 'Close',
 } as const;
 
 /** A built-in non-command label key. */

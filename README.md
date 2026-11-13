@@ -92,6 +92,8 @@ removing the attribute) resets an input to its default.
 | `statusbar` | `none` \| `top` \| `bottom` \| `both`           | `none`       | A dedicated strip of live indicators (word/char count, plugin items). `both` splits items across two strips. |
 | `anchor`    | CSS selector                                    | —            | For `view-mode="inline"` only: the page element the floating card tracks. |
 | `labels`    | JSON object                                     | English      | UI strings — see [Labels](#labels). Also a property (object). |
+| `menu-presentation` | `auto` \| `floating` \| `sheet` \| `drawer` | `auto`       | How the right-click menu opens (core `/menu`): `auto` = a bottom sheet on a phone, floating otherwise; `drawer` slides in from `menu-side`. Read at every open; responsive rules can set it (`menuPresentation`). |
+| `menu-side` | `start` \| `end`                               | `end`        | The edge a `drawer` menu slides in from. |
 | `custom-styles` | CSS string                                  | —            | CSS injected into the shadow root (`customStyles`), after the page-wide layer — see [Theming](#theming). Raw CSS: never untrusted input. |
 
 Property-only inputs:
@@ -159,6 +161,7 @@ nothing); a missing key falls back to English. Every editor label is inserted as
 | `imageUrlPrompt` / `imageAltPrompt` | `Enter image URL:` / `Enter alt text (optional):` |
 | `codeLanguagePrompt` / `codeLanguageChangePrompt` | `Enter language ({languages}):` / `Change language ({languages}):` |
 | `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage` | cloud-image plugin texts |
+| `back` / `close` | `Back` / `Close` — the context menu's submenu back button and close button when it opens as a sheet / drawer (`menu-presentation`) |
 | `loading` | `aria-label` of the pending loader ("Loading…") |
 | `valueFormatError` | validation message while `getValueFormatCallback` throws ("The value could not be formatted.") |
 

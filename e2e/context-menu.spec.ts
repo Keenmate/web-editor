@@ -245,5 +245,34 @@ test.describe('context menu', () => {
         await editor(page).evaluate((el) => document.body.appendChild(el));
         await expect(menu(page)).toBeHidden();
     });
-});
 
+    test('menu-presentation="sheet" opens it as a sheet; the close button takes labels.close', async ({ page }) => {
+        await page.evaluate(() => {
+            const el = document.getElementById('subject')!;
+            el.setAttribute('menu-presentation', 'sheet');
+            el.setAttribute('labels', JSON.stringify({ close: 'Zavřít', back: 'Zpět' }));
+        });
+        await pm(page).locator('p').click({ button: 'right' });
+        const sheet = page.locator('km-editor#subject .km-menu-sheet');
+        await expect(sheet).toBeVisible();
+        await expect(sheet).not.toHaveClass(/km-menu-sheet--drawer/);
+        await expect(sheet.locator('.we-context-menu [data-action="bold"]')).toBeVisible();
+        const close = sheet.locator('.km-sheet-close');
+        await expect(close).toHaveAttribute('aria-label', 'Zavřít');
+        await close.click();
+        await expect(sheet).toBeHidden();
+    });
+
+    test('menu-presentation="drawer" + menu-side="start" opens a start-edge drawer', async ({ page }) => {
+        await page.evaluate(() => {
+            const el = document.getElementById('subject') as HTMLElement & { menuPresentation: string; menuSide: string };
+            el.menuPresentation = 'drawer';
+            el.menuSide = 'start';
+        });
+        await pm(page).locator('p').click({ button: 'right' });
+        const sheet = page.locator('km-editor#subject .km-menu-sheet');
+        await expect(sheet).toHaveClass(/km-menu-sheet--drawer/);
+        await expect(sheet).toHaveClass(/km-menu-sheet--left/);
+        await expect(sheet.locator('.km-sheet-close')).toHaveAttribute('aria-label', 'Close');
+    });
+});

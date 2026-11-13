@@ -19,7 +19,7 @@ import type { ViewLayout } from './view-layout';
 import { ToolbarZone } from './toolbar-zone';
 import { StatusBar } from './status-bar';
 import { SelectionToolbar } from './selection-toolbar';
-import { ContextMenu } from './context-menu';
+import { ContextMenu, type ContextMenuOptions } from './context-menu';
 import type { ToolGroup, StatusItem } from './items';
 import type { EditorStatusBar } from '../web-component';
 import type { EditorToolbarEntry } from '../interaction';
@@ -34,6 +34,8 @@ export interface EditorChromeOptions {
   selectionItems?: readonly EditorToolbarEntry[];
   contextMenuItems?: readonly EditorToolbarEntry[];
   statusItems?: readonly StatusItem[];
+  /** The context menu's presentation, read per open (see `ContextMenuOptions.getPresentation`). */
+  getMenuPresentation?: ContextMenuOptions['getPresentation'];
 }
 
 export interface ChromeState {
@@ -81,6 +83,7 @@ export class EditorChrome {
       host: actions,
       items: opts.contextMenuItems ?? engine.menuItems,
       container: layout.overlayLayer,
+      getPresentation: opts.getMenuPresentation,
     });
 
     // `selection-change` covers typing + caret moves; `change` also covers a

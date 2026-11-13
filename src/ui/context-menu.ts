@@ -14,7 +14,7 @@
  */
 import type { EditorView } from 'prosemirror-view';
 import { normalizeActionItems } from '@keenmate/web-components-core/actions';
-import { openMenu, type MenuHandle } from '@keenmate/web-components-core/menu';
+import { openMenu, type MenuHandle, type OpenMenuOptions } from '@keenmate/web-components-core/menu';
 import { commandDefaults, type ActionSurfaceHost } from './actions';
 import type { EditorAction, EditorActionContext, EditorActionItem, EditorToolbarEntry } from '../interaction';
 
@@ -25,6 +25,12 @@ export interface ContextMenuOptions {
   items: readonly EditorToolbarEntry[];
   /** Shadow-local layer the menu is appended to (so the host's custom properties reach it). */
   container: HTMLElement;
+  /**
+   * The host's menu presentation, read at every open — inside `<km-editor>`:
+   * core `menuPresentationOptions(this.config)` (`menu-presentation` / `menu-side`,
+   * effective config). Absent → core's default (`auto`).
+   */
+  getPresentation?: () => Partial<Pick<OpenMenuOptions<EditorActionContext, EditorAction>, 'presentation' | 'side'>>;
 }
 
 type Entry = EditorActionItem | { divider: true; text?: string };
@@ -33,6 +39,7 @@ export class ContextMenu {
   #view: EditorView;
   #host: ActionSurfaceHost;
   #container: HTMLElement;
+  #getPresentation: ContextMenuOptions['getPresentation'];
   #entries: Entry[];
   #menu: MenuHandle | null = null;
   #enabled = true;
@@ -42,6 +49,7 @@ export class ContextMenu {
     this.#view = opts.view;
     this.#host = opts.host;
     this.#container = opts.container;
+    this.#getPresentation = opts.getPresentation;
     // Expand the string shorthand ONCE, so each item keeps its identity across
     // opens (core's busy guard keys on it).
     this.#entries = normalizeActionItems(opts.items as (string | EditorActionItem)[]) as Entry[];
@@ -82,6 +90,9 @@ export class ContextMenu {
     const host = this.#host;
     const registry = host.registry;
     const menu = openMenu<EditorActionContext, EditorAction>(this.#entries, host.context(), {
+      ...this.#getPresentation?.(),
+      // The sheet / drawer chrome strings (submenu back button, close button) via `labels`.
+      labels: { back: host.label('back'), close: host.label('close') },
       at: { x, y },
       host: this.#container,
       cssClass: 'we-context-menu',

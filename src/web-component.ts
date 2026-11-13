@@ -72,6 +72,12 @@ import { EditorChrome } from './ui/chrome';
 import styles from './css/main.css?inline';
 import { initLogger, contentLogger } from './logger';
 import { createLabelResolver, type EditorLabels } from './labels';
+import {
+  menuPresentationInputs,
+  menuPresentationOptions,
+  type MenuDrawerSide,
+  type MenuPresentation,
+} from '@keenmate/web-components-core/menu';
 
 // Build-time constant (vite `define`).
 declare const __VERSION__: string;
@@ -107,6 +113,10 @@ export interface EditorConfig {
   interactionHost: InteractionHost | null;
   customStyles: string | null;
   getCustomStylesCallback: CustomStylesCallback<EditorComponentContext> | null;
+  /** How the context menu opens (core `/menu`): `auto` (default) | `floating` | `sheet` | `drawer`. */
+  menuPresentation: MenuPresentation;
+  /** The edge a `drawer` context menu slides in from: `start` | `end` (default). */
+  menuSide: MenuDrawerSide;
 }
 
 /**
@@ -228,7 +238,7 @@ const INPUTS: readonly InputDef[] = [
     converter: toObject<EditorLabels>({ validate: isLabels }),
     on: 'update',
     description:
-      'Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders; an empty string = deliberately empty. `placeholder` (default empty = off) is shown while the document is empty. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`. Property (object) or JSON attribute (`labels=\'{"bold":"Tučně"}\'`). Applies live (no rebuild).',
+      'Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders; an empty string = deliberately empty. `placeholder` (default empty = off) is shown while the document is empty. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`; context menu as a sheet / drawer `back`, `close`. Property (object) or JSON attribute (`labels=\'{"bold":"Tučně"}\'`). Applies live (no rebuild).',
   },
   {
     configKey: 'beforeActionCallback',
@@ -269,6 +279,9 @@ const INPUTS: readonly InputDef[] = [
     description:
       'Property only. `(ctx) => string | null` — computes the instance CSS (wins over `customStyles`); `ctx` = `controller` / `element`. Called on every build and whenever `customStyles` / `getCustomStylesCallback` change.',
   },
+  // `menu-presentation` / `menu-side` — the context menu's presentation (core `/menu`
+  // standard rows, SPEC §12.13), read at every open.
+  ...menuPresentationInputs(),
 ];
 
 /**
@@ -602,6 +615,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
           this.config.beforeActionCallback as ((detail: EditorActionEventDetail) => unknown) | null,
         emitAction: (detail) => this.emit('action', detail),
       }),
+      // `menu-presentation` / `menu-side` (effective config), read at every open.
+      getMenuPresentation: () => menuPresentationOptions(this.config),
     });
     this.#applyChromeState();
 
