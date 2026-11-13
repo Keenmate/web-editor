@@ -43,14 +43,14 @@ output, or *preview* for the read-only render.
 <div class="card">
     <h2>BU02 · I/O Format Lens</h2>
     <p>
-        <code>format</code> is only the serialization lens for content I/O — switching it
+        <code>content-format</code> is only the serialization lens for content I/O — switching it
         re-reports the SAME document as <code>markdown</code>, <code>html</code>, or
         <code>json</code>; it never rebuilds the document. The readout below is the live
         <code>change</code> event's <code>detail.value</code> in the chosen format.
     </p>
 
     <div class="controls">
-        <span><code>format</code>:</span>
+        <span><code>content-format</code>:</span>
         <label><input type="radio" name="eb02-format" value="markdown" checked> markdown</label>
         <label><input type="radio" name="eb02-format" value="html"> html</label>
         <label><input type="radio" name="eb02-format" value="json"> json</label>
@@ -139,7 +139,7 @@ Switch `data-theme` above, or the page theme — with `inline code` and a [link]
     <h2>BU05 · Declarative Setup</h2>
     <p>
         No JavaScript — just the element with attributes. Everything below is configured in
-        markup: the initial <code>value</code>, the <code>format</code>, the
+        markup: the initial <code>value</code>, the <code>content-format</code>, the
         <code>toolbar</code> edge, and <code>statusbar="both"</code>.
     </p>
 

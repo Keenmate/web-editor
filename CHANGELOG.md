@@ -22,6 +22,11 @@ released to a registry yet.
 ### Internal — core 1.0.0-rc22 (2026-11-13)
 - **Requires `@keenmate/web-components-core` `^1.0.0-rc22`** (was `^1.0.0-rc21`).
 
+### Internal — devkit 1.0.0-rc14 (2026-11-13)
+- **`@keenmate/web-components-devkit` `^1.0.0-rc14`** (was `^1.0.0-rc01`): synced Makefile / CLAUDE.md, new
+  `check:pages` script. Example pages: prose named the retired `format` attribute — now `content-format`;
+  every section `<h2>` carries its code (pipelines PV01–PV03, playground PG01; the pipelines column titles are `<h3>`).
+
 ### Changed — BREAKING (theming)
 
 - **The `theme` input is removed** (attribute, property, `EditorConfig.theme` and the exported

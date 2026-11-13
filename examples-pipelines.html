@@ -8,7 +8,7 @@
      The two-column layout, the per-stage lane chips (green/gray/amber/red),
      the lock badge, the modal. Page chrome comes from the devkit examples kit. */
   .pv-page { display: grid; grid-template-columns: 1fr 460px; gap: 20px; align-items: start; }
-  .pv-col h2 { font-size: 18px; margin: 0 0 4px; display: block; }
+  .pv-col h3 { font-size: 18px; margin: 0 0 4px; display: block; }
   .pv-col .sub { color: #64748b; font-size: 12px; margin: 0 0 16px; }
   km-editor { display: block; transition: opacity .15s; }
 
@@ -121,12 +121,12 @@
 <!-- Visualizer                                                   -->
 <!-- ========================================================== -->
 <div class="lab-section">
-  <h2>Run Visualizer</h2>
+  <h2>PV01 · Run Visualizer</h2>
   <p class="subtitle">An editor beside one lane per pipeline — each stage chip blinks green → gray → amber → red by state.</p>
 </div>
 <div class="pv-page">
   <div class="pv-col" id="pv-editor-col">
-    <h2>Editor <span class="pv-lock-badge">⏳ locked — pipeline running</span></h2>
+    <h3>Editor <span class="pv-lock-badge">⏳ locked — pipeline running</span></h3>
     <p class="sub">Type here — the derive pipelines run off the <code>change</code> event (debounced). A gating async paste locks the editor until it finishes.</p>
     <km-editor id="km" view-mode="edit" content-format="markdown" toolbar="top"
       value="# Pipeline visualizer
@@ -139,7 +139,7 @@ Try typing the word secret to halt the policy step, or forbidden to error it."><
   </div>
 
   <div class="pv-col">
-    <h2>Pipelines</h2>
+    <h3>Pipelines</h3>
     <p class="sub">One lane per pipeline. Stages: <b>green</b>=running → fades gray=ok, <b>amber</b>=halt, <b>red</b>=error, dashed=skip, struck=aborted.</p>
     <div class="pv-controls">
       <label>stage delay: <span id="pv-delay-label">900</span>ms
@@ -174,7 +174,7 @@ Try typing the word secret to halt the policy step, or forbidden to error it."><
 <!-- Phases & config cell (design-stage prototype)                -->
 <!-- ========================================================== -->
 <div class="lab-section">
-  <h2>Phases &amp; Config Cell <span class="badge new">design-stage</span></h2>
+  <h2>PV02 · Phases &amp; Config Cell <span class="badge new">design-stage</span></h2>
   <p class="subtitle">A prototype of the phase-based assembly + config-cell model (see <code>PIPELINES.md</code>). Independent plugins declare a <code>phase</code>; the pipeline owns the ordered vocabulary; the app owner disposes via <code>order</code> / <code>assign</code>; config resolves per <code>(stage × pipeline)</code> cell and reaches each stage as <code>rt.config</code>. Not in the shipped engine.</p>
 </div>
 <div id="ph-root"></div>
@@ -183,7 +183,7 @@ Try typing the word secret to halt the policy step, or forbidden to error it."><
 <!-- Image pipeline use cases (on the phases prototype)           -->
 <!-- ========================================================== -->
 <div class="lab-section">
-  <h2>Image Pipeline Use Cases <span class="badge new">design-stage</span></h2>
+  <h2>PV03 · Image Pipeline Use Cases <span class="badge new">design-stage</span></h2>
   <p class="subtitle">The cloud-image use cases from <code>PIPELINES.md</code>, running end to end with real <code>Blob</code>s: (A) an interactive crop editor stage, (B1) a planner driving the same crop stage headless, and the plugin-API wrapper + batch + adapter flow building a gallery. Built on the phases prototype; the shipped engine is untouched.</p>
 </div>
 <div id="im-root"></div>
