@@ -24,12 +24,32 @@ locally — every local fork is how they drifted apart.
 - **Example page styles:** shared rules are in `@layer kmwc` and read
   `--base-*` tokens (pages support light / dark / auto via the theme switch), so
   any unlayered rule wins. Put component-only rules in `examples-local.css`.
-  Re-theme with `kmwc.theme.accentColor`, never by copying CSS. If a second
-  component needs a pattern, it belongs in the devkit.
+  Re-theme with `kmwc.theme.accentColor`, never by copying CSS. Native form
+  controls (inputs, selects, checkboxes, radios, `role="switch"`, buttons) and
+  tables are already styled by the kit (`.reference-table`, `.table-striped`,
+  `.table-compact`, …; on a phone a `.reference-table` stacks into cards,
+  `.table-scroll` keeps it a grid) — don't restyle them per page; `kmwc-native` opts an
+  element out. Log lines take the kit tones (`.log-line--ok|info|warn|err|muted`,
+  `--action`, timeline cells `.log-line__time` …) — don't colour them per page;
+  write event-log lines with `appendLogLine(panel, { name, detail, variant })`
+  from `@keenmate/web-components-devkit/examples`, never an `innerHTML` template.
+  `<kbd>`, `<mark>`, field widths (`.w-xs` … `.w-lg`) and `.push-end` are kit
+  too — no inline styles for them. Page colours come from the kit's `--kmwc-*`
+  tokens or `light-dark()` — a literal doesn't follow dark mode (doctor warns);
+  a demo that shows fixed colours on purpose goes in `<style data-kmwc-fixed-colors>`
+  (one rule: a `/* kmwc-fixed-colors: why */` comment before it; an element's own
+  `style="…"`: the attribute on the element).
+  If a second component needs a pattern, it belongs in the devkit.
 - **Example pages are fragments:** no `<html>`/`<head>`/`<header>` — start with
   `<meta name="kmwc:title" content="…">`, the devkit layout adds the rest. Shared text
   goes in `partials/` via `<kmwc-include>`; show code with `<kmwc-demo>` (the live
-  markup IS the snippet) — never hand-copy a demo into a `.code-block`.
+  markup IS the snippet) — never hand-copy a demo into a `.code-block`. Its code
+  is highlighted at build time; a hand-written `.code-block` gets the same with
+  `data-language="svelte"` (html, js, ts, css, json, sh) — no highlighter on the page.
+- **Every example has a permanent code:** each `<h2>` starts `TH07 · Title`
+  (page prefix + number; a plain `Summary` is exempt). New examples take the
+  next free number; never renumber or reuse one — the rules are the rulebook's
+  `example-pages.md`.
 - **Controls persistence:**
   `import { attachControlsPersistence } from '@keenmate/web-components-devkit/examples'`.
   **Landing page:** `renderExamplesIndex({ pages })` from the same module.
@@ -40,7 +60,12 @@ locally — every local fork is how they drifted apart.
   otherwise published with it).
 - Before finishing: `npx kmwc doctor` must pass — it runs the devkit checks,
   checks the `npm pack` file list for dev-only files, and runs the rulebook's
-  `*.checks.sh` suites.
+  `*.checks.sh` suites. A rulebook failure that is a real architectural decision
+  goes into `VALIDATION-NOTES.md` under a `## C-XX-N — …` heading (deferrals
+  don't count). After changing a page, `npx kmwc check-pages` loads every page at
+  desktop and phone widths and reports errors, horizontal overflow and page CSS
+  that only matches inside a shadow root (markup a render callback draws there is
+  out of page CSS's reach — style it through the component's styles hook).
 <!-- kmwc:devkit:end -->
 
 

@@ -96,7 +96,8 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:install": "playwright install chromium firefox webkit",
-    "check:vars": "kmwc check-vars"
+    "check:vars": "kmwc check-vars",
+    "check:pages": "kmwc check-pages"
   },
   "dependencies": {
     "@keenmate/web-components-core": "^1.0.0-rc22",
@@ -115,7 +116,7 @@
   },
   "devDependencies": {
     "@custom-elements-manifest/analyzer": "^0.11.0",
-    "@keenmate/web-components-devkit": "^1.0.0-rc01",
+    "@keenmate/web-components-devkit": "^1.0.0-rc14",
     "@playwright/test": "^1.60.0",
     "custom-element-jet-brains-integration": "^1.7.0",
     "custom-element-vs-code-integration": "^1.5.0",
