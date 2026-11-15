@@ -19,6 +19,9 @@ released to a registry yet.
   rules apply). The sheet / drawer back and close buttons take the new labels **`back`** (`Back`)
   and **`close`** (`Close`).
 
+### Internal — core 1.0.0-rc24 (2026-11-15)
+- core `^1.0.0-rc24` (was `^1.0.0-rc22`) — needs `@keenmate/web-components-core` `^1.0.0-rc24` (the context menu presentation above).
+
 ### Internal — core 1.0.0-rc22 (2026-11-13)
 - **Requires `@keenmate/web-components-core` `^1.0.0-rc22`** (was `^1.0.0-rc21`).
 
