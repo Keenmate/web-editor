@@ -28,6 +28,11 @@ released to a registry yet.
   sheet on a phone, inert page + Tab trap, focus back in the editor. A prompting command answers `true` at
   once and applies its edit after the answer. New labels **`ok`** / **`cancel`** (the ✕ takes `close`); the
   prompt texts lost their trailing colon (they are the dialog title now: `Enter link URL`, …).
+- **Labels resolve through core `/locale`** (SPEC §12.24): per key the element's `labels` → the page-wide
+  `window.components.locale.labels['km-editor']` → English, then the page's `formatLabelCallback` (ICU /
+  i18next) if set. Assigning `window.components.locale` re-renders every live editor (`localeChanged()`).
+  New keys **`markdownTab`** / **`htmlTab`** / **`jsonTab`** — the split view's output tabs were hard-coded
+  English. `formatLabel` is core's.
 
 ### Internal — core 1.0.0-rc25
 - Needs `@keenmate/web-components-core` `^1.0.0-rc25` (unpublished at the time of writing; bump the

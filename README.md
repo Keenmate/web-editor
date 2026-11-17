@@ -150,6 +150,14 @@ nothing); a missing key falls back to English. Every editor label is inserted as
 <km-editor labels='{"bold":"Tučně","insertLink":"Vložit odkaz","linkUrlPrompt":"Adresa odkazu:","words":"Slova: {count}"}'></km-editor>
 ```
 
+Page-wide, for every editor on the page (core `/locale`): per key the element's `labels` win, then
+`window.components.locale.labels['km-editor']`, then English. A page-wide `formatLabelCallback` (ICU,
+i18next) formats every label; assigning `window.components.locale` re-renders live editors:
+
+```js
+window.components.locale = { labels: { 'km-editor': { bold: 'Tučně', words: 'Slova: {count}' } } };
+```
+
 | Key | English default |
 | --- | --------------- |
 | `<commandKey>` — the command id camel-cased (`bold`, `insertLink`, `insertTable`, `bulletList`, `undo`, a plugin's `imageBrowserPick`, …) | the command's own text (`Bold`, `Insert link`, …) — item text, menu label, button `aria-label` |
@@ -162,6 +170,7 @@ nothing); a missing key falls back to English. Every editor label is inserted as
 | `imageUrlPrompt` / `imageAltPrompt` | `Enter image URL` / `Enter alt text (optional)` |
 | `codeLanguagePrompt` / `codeLanguageChangePrompt` | `Enter language ({languages})` / `Change language ({languages})` |
 | `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage` | cloud-image plugin texts |
+| `markdownTab` / `htmlTab` / `jsonTab` | `Markdown` / `HTML` / `JSON` — the split view's output tabs |
 | `back` / `close` | `Back` / `Close` — the context menu's submenu back button and close button when it opens as a sheet / drawer (`menu-presentation`) |
 | `loading` | `aria-label` of the pending loader ("Loading…") |
 | `valueFormatError` | validation message while `getValueFormatCallback` throws ("The value could not be formatted.") |

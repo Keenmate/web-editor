@@ -239,7 +239,7 @@ const INPUTS: readonly InputDef[] = [
     converter: toObject<EditorLabels>({ validate: isLabels }),
     on: 'update',
     description:
-      'Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders; an empty string = deliberately empty. `placeholder` (default empty = off) is shown while the document is empty. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`; context menu as a sheet / drawer `back`, `close`. Property (object) or JSON attribute (`labels=\'{"bold":"Tučně"}\'`). Applies live (no rebuild).',
+      'Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders; an empty string = deliberately empty. `placeholder` (default empty = off) is shown while the document is empty. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`; context menu as a sheet / drawer `back`, `close`; dialog buttons `ok`, `cancel`; split output tabs `markdownTab`, `htmlTab`, `jsonTab`. Per key: these → the page-wide `window.components.locale.labels[\'km-editor\']` → English. Property (object) or JSON attribute (`labels=\'{"bold":"Tučně"}\'`). Applies live (no rebuild).',
   },
   {
     configKey: 'beforeActionCallback',
@@ -365,6 +365,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   /** Removes the pending loader (core `renderLoader`); set while it shows. */
   #removeLoader?: () => void;
   // The light-DOM hidden form input (only while `name` is set).
+  /** UI strings (core `/locale`: instance `labels` → page-wide labels → English). */
+  #label = createLabelResolver(() => this.config.labels as EditorLabels | null | undefined, this);
   /** The light-DOM hidden input (core `createFormInputs`, SPEC §12.21). */
   #formInputs = createFormInputs(this);
   /** Whether the host is currently invalid because of a throwing `getValueFormatCallback`. */
@@ -400,6 +402,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
       shadow: this.#shadow,
       host: this,
       serialize: (fmt) => (this.#engine ? this.#engine.serialize(fmt) : ''),
+      label: (key, params, fallback) => this.#label(key, params, fallback),
     });
     // `el.value = …` assigned before upgrade: core lifts it off and replays it through
     // the `value` setter before the first build (core rc20) — a pre-build `setValue()`.
@@ -478,10 +481,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     // native `input.value`, state assignment never fires events (suite rule).
     // UI strings are resolved on render: re-render the chrome (and the empty-document
     // placeholder) with the new labels.
-    if ('labels' in partial) {
-      this.#chrome?.refresh();
-      this.#engine?.refreshView();
-    }
+    if ('labels' in partial) this.#relabel();
     if ('name' in partial || 'contentFormat' in partial || 'getValueFormatCallback' in partial) this.#syncFormInput();
     if ('interactionHost' in partial) {
       this.#engine?.setInteractionHost(this.#interactionHost());
@@ -642,7 +642,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   #setPendingLoader(isPending: boolean): void {
     const slot = this.#layout.pendingMount;
     if (isPending && !this.#removeLoader) {
-      const label = createLabelResolver(() => this.config.labels as EditorLabels | null | undefined)('loading');
+      const label = this.#label('loading');
       slot.hidden = false;
       this.#removeLoader = renderLoader(this, slot, 'pipeline', { prefix: 'we', label });
     } else if (!isPending && this.#removeLoader) {
@@ -661,6 +661,22 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     this.#engine?.destroy();
     this.#engine = undefined;
     engines.delete(this);
+  }
+
+  /** Re-render every UI string: the chrome, the empty-document placeholder, the output tabs. */
+  #relabel(): void {
+    this.#chrome?.refresh();
+    this.#engine?.refreshView();
+    this.#layout.relabel();
+  }
+
+  /** A page-wide `window.components.locale` change (core `/locale`): the strings re-resolve. */
+  protected override localeChanged(): void {
+    this.#relabel();
+    if (this.#removeLoader) {
+      this.#setPendingLoader(false);
+      this.#setPendingLoader(true);
+    }
   }
 
   /**

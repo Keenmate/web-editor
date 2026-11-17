@@ -15,13 +15,15 @@
  */
 import { anchor, type AnchorHandle } from '@keenmate/web-components-core/positioning';
 import type { SerializationFormat } from '../engine/serialization';
+import type { LabelResolver } from '../labels';
 import type { EditorViewMode, EditorToolbar, EditorStatusBar } from '../web-component';
 
 const OUTPUT_FORMATS: readonly SerializationFormat[] = ['markdown', 'html', 'json'];
-const OUTPUT_LABELS: Record<SerializationFormat, string> = {
-  markdown: 'Markdown',
-  html: 'HTML',
-  json: 'JSON',
+/** The `labels` key of each output tab. */
+const OUTPUT_LABEL_KEYS: Record<SerializationFormat, string> = {
+  markdown: 'markdownTab',
+  html: 'htmlTab',
+  json: 'jsonTab',
 };
 
 export interface ViewLayoutOptions {
@@ -30,6 +32,8 @@ export interface ViewLayoutOptions {
   host: HTMLElement;
   /** Serialize the current document to a format — feeds the split output panel. */
   serialize: (format: SerializationFormat) => string;
+  /** The element's UI strings (the output tab texts). */
+  label: LabelResolver;
 }
 
 export class ViewLayout {
@@ -48,6 +52,7 @@ export class ViewLayout {
   #shadow: ShadowRoot;
   #host: HTMLElement;
   #serialize: (format: SerializationFormat) => string;
+  #label: LabelResolver;
 
   #root?: HTMLDivElement;
   #outputTabs?: HTMLDivElement;
@@ -63,6 +68,7 @@ export class ViewLayout {
     this.#shadow = opts.shadow;
     this.#host = opts.host;
     this.#serialize = opts.serialize;
+    this.#label = opts.label;
 
     this.mount = document.createElement('div');
     this.mount.className = 'km-editor';
@@ -202,6 +208,13 @@ export class ViewLayout {
     this.#root = undefined;
   }
 
+  /** Re-read the UI strings (a `labels` / page-wide locale change). */
+  relabel(): void {
+    for (const btn of this.#outputTabs?.querySelectorAll<HTMLButtonElement>('button[data-format]') ?? []) {
+      btn.textContent = this.#label(OUTPUT_LABEL_KEYS[btn.dataset.format as SerializationFormat]);
+    }
+  }
+
   // ── split output panel ──────────────────────────────────────────────────
 
   #buildOutputPanel(): HTMLDivElement {
@@ -214,7 +227,7 @@ export class ViewLayout {
     for (const fmt of OUTPUT_FORMATS) {
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.textContent = OUTPUT_LABELS[fmt];
+      btn.textContent = this.#label(OUTPUT_LABEL_KEYS[fmt]);
       btn.dataset.format = fmt;
       if (fmt === this.#outputFormat) btn.classList.add('active');
       btn.addEventListener('click', () => this.#selectOutput(fmt));

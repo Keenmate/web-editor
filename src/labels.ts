@@ -1,8 +1,13 @@
+import { createLabels, resolveLabel, formatLabel as formatCoreLabel } from '@keenmate/web-components-core/locale';
+
 /**
- * UI strings (rulebook D-NC-24): one `labels` object per element — a PARTIAL
- * map of keys to strings with `{name}` placeholders — over built-in English
- * defaults. Resolution per key: the element's `labels` → (core `/locale`
- * page-wide labels, once core ships it) → the built-in English default.
+ * UI strings (rulebook D-NC-24, core `/locale` SPEC §12.24): one `labels` object
+ * per element — a PARTIAL map of keys to strings with `{name}` placeholders —
+ * over built-in English defaults. Resolution per key (core `createLabels`): the
+ * element's `labels` → the page-wide `window.components.locale.labels['km-editor']`
+ * → the built-in English default; then the page's `formatLabelCallback` (ICU /
+ * i18next) or the `{name}` replacement. Labels are TEXT (`textContent` /
+ * attributes) — never HTML.
  *
  * Keys:
  * - **Command items** derive their key from the command id, camel-cased
@@ -54,6 +59,10 @@ export const DEFAULT_LABELS = {
   valueFormatError: 'The value could not be formatted.',
   /** Accessible label (`aria-label`) of the pending loader shown while a deferred pipeline runs. */
   loading: 'Loading…',
+  /** Split view: the output tabs. */
+  markdownTab: 'Markdown',
+  htmlTab: 'HTML',
+  jsonTab: 'JSON',
   /** Context menu as a sheet / drawer (`menu-presentation`): the submenu back button + the close button
    * (also the ✕ of the prompt / confirmation dialogs). */
   back: 'Back',
@@ -83,21 +92,26 @@ export function labelKey(id: string): string {
   return id.replace(/[-:_\s]+([a-zA-Z0-9])/g, (_m, c: string) => c.toUpperCase());
 }
 
-/** Fill `{name}` placeholders; an unknown placeholder is left as written. */
+/** Fill `{name}` placeholders; an unknown placeholder is left as written (core `/locale` `formatLabel`). */
 export function formatLabel(template: string, params?: LabelParams): string {
-  if (!params) return template;
-  return template.replace(/\{(\w+)\}/g, (m, name: string) => (name in params ? String(params[name]) : m));
+  return formatCoreLabel(template, params);
 }
 
+/** The tag page-wide labels are keyed by (`window.components.locale.labels['km-editor']`). */
+const TAG = 'km-editor';
+
 /**
- * Build the one label-resolving function (the seam core `/locale` will plug
- * into): instance `labels` → built-in English → `fallback` → the key itself.
+ * Build the one label-resolving function over core `/locale`: instance `labels` → page-wide labels → built-in
+ * English → `fallback` (the English text of a command / group key) → the key itself. With `host` (the element)
+ * the page's `formatLabelCallback` and `locale` apply too; a standalone engine resolves without them.
  */
-export function createLabelResolver(getLabels: () => EditorLabels | null | undefined): LabelResolver {
+export function createLabelResolver(getLabels: () => EditorLabels | null | undefined, host?: Element | null): LabelResolver {
+  // Derived keys (commands, groups) have no built-in default: the caller's fallback becomes theirs.
+  const defaults: Record<string, string> = { ...DEFAULT_LABELS };
+  const labels = host ? createLabels<Record<string, string>>(host, defaults, () => getLabels() as Record<string, string> | null, { tag: TAG }) : null;
   return (key, params, fallback) => {
-    const own = getLabels()?.[key];
-    const template =
-      typeof own === 'string' ? own : ((DEFAULT_LABELS as Record<string, string>)[key] ?? fallback ?? key);
-    return formatLabel(template, params);
+    if (!Object.prototype.hasOwnProperty.call(DEFAULT_LABELS, key)) defaults[key] = fallback ?? key;
+    if (labels) return labels.text(key, params);
+    return formatCoreLabel(resolveLabel(TAG, defaults, getLabels() as Record<string, string> | null, key), params);
   };
 }

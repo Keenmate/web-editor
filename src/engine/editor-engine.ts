@@ -176,7 +176,7 @@ export class EditorEngine {
   constructor(options: EditorEngineOptions) {
     const host = options.host;
     const getLabels = options.getLabels;
-    const label = createLabelResolver(() => getLabels?.());
+    const label = createLabelResolver(() => getLabels?.(), host?.element);
     this.label = label;
     this.#ctxProto = Object.create(Object.prototype, {
       label: { value: label, enumerable: false },

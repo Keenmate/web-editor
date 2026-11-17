@@ -37,7 +37,7 @@ describe('label helpers', () => {
     expect(formatLabel('{a} {b}', { a: 'x' })).toBe('x {b}');
   });
 
-  it('resolver: instance labels → English default → fallback → key', () => {
+  it('resolver: instance labels → English default → fallback → key (standalone: no host)', () => {
     const label = createLabelResolver(() => ({ words: 'Slova: {count}' }));
     expect(label('words', { count: 2 })).toBe('Slova: 2');
     expect(label('chars', { count: 5 })).toBe('Chars: 5');
@@ -101,6 +101,31 @@ describe('<km-editor> labels', () => {
     (panel!.querySelector('[data-value="cancel"]') as HTMLButtonElement).click();
     expect(document.querySelector('.km-dialog-layer')).toBeNull();
     spy.mockRestore();
+  });
+
+  it('page-wide labels (window.components.locale) sit between the instance labels and English; a change re-renders live', async () => {
+    const el = await mount({ value: 'one two', statusbar: 'bottom', labels: JSON.stringify({ italic: 'Kurzíva' }) });
+    const reg = (window as any).components;
+    try {
+      reg.locale = { labels: { 'km-editor': { bold: 'Tučně', italic: 'page loses', words: 'Slova: {count}' } } };
+      expect(cmd(el, 'bold').getAttribute('aria-label')).toBe('Tučně');
+      expect(cmd(el, 'italic').getAttribute('aria-label')).toBe('Kurzíva');
+      expect(status(el, 'words').textContent).toBe('Slova: 2');
+      reg.locale = { formatLabelCallback: ({ key, template }: { key: string; template: string }) => (key === 'bold' ? `[${template}]` : undefined) };
+      expect(cmd(el, 'bold').getAttribute('aria-label')).toBe('[Bold]');
+    } finally {
+      reg.locale = null;
+    }
+    expect(cmd(el, 'bold').getAttribute('aria-label')).toBe('Bold');
+  });
+
+  it('the split view output tabs take labels (markdownTab / htmlTab / jsonTab), live', async () => {
+    const el = await mount({ value: 'x', 'view-mode': 'split' });
+    const tabs = () => [...el.shadowRoot!.querySelectorAll('.we-output-tabs button')].map((b) => b.textContent);
+    expect(tabs()).toEqual(['Markdown', 'HTML', 'JSON']);
+    el.labels = { markdownTab: 'MD' };
+    await el.whenSettled();
+    expect(tabs()).toEqual(['MD', 'HTML', 'JSON']);
   });
 
   it('rejects a non-string value (warns, keeps the previous labels)', async () => {
