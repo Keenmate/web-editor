@@ -32,10 +32,10 @@
   align-items: stretch;
 }
 .we-surface.we-tb-start .we-toolbar-zone {
-  border-right: 1px solid var(--we-border);
+  border-inline-end: 1px solid var(--we-border);
 }
 .we-surface.we-tb-end .we-toolbar-zone {
-  border-left: 1px solid var(--we-border);
+  border-inline-start: 1px solid var(--we-border);
 }
 
 /* A tool group — one contiguous button cluster (the drag-and-drop unit). */

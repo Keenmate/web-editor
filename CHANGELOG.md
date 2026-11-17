@@ -42,6 +42,9 @@ released to a registry yet.
   longer native `title`: themed (`--we-tooltip-bg` / `--we-tooltip-color` → the shared `--base-tooltip-*`
   tokens, `--base-z-tooltip`), shown on keyboard focus too, `aria-describedby` while shown, Escape hides it.
   The button's `title` attribute is gone — its text is `data-tooltip`.
+- **Right-to-left:** list indent, the code-block language label, table header alignment, the empty-document
+  placeholder and the start / end toolbar border use logical CSS (`padding-inline-start`, `inset-inline-end`,
+  `text-align: start`, …) instead of left / right — they mirror under `dir="rtl"`.
 
 ### Internal — core 1.0.0-rc25
 - Deferred pipelines debounce / supersede / drop stale runs through core `createAsyncRunner` (SPEC §12.22);

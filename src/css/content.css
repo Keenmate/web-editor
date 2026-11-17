@@ -19,7 +19,7 @@
 /* `labels.placeholder` while the document is empty (text, from the attribute). */
 .ProseMirror .we-placeholder::before {
   content: attr(data-placeholder);
-  float: left;
+  float: inline-start;
   height: 0;
   color: var(--we-muted-fg);
   pointer-events: none;
@@ -39,7 +39,7 @@
 
 .ProseMirror ul,
 .ProseMirror ol {
-  padding-left: 2em;
+  padding-inline-start: 2em;
   margin: 0.5em 0;
 }
 
@@ -96,7 +96,7 @@
   content: attr(data-language);
   position: absolute;
   top: 8px;
-  right: 12px;
+  inset-inline-end: 12px;
   font-size: 11px;
   color: var(--we-code-block-label-color);
   text-transform: uppercase;
@@ -120,7 +120,7 @@
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-right: 8px;
+  margin-inline-end: 8px;
 }
 
 /* Selection highlight (when editor loses focus) */
@@ -150,7 +150,7 @@
 .ProseMirror th {
   background: var(--we-muted-bg);
   font-weight: 600;
-  text-align: left;
+  text-align: start;
 }
 
 /* Column resize handle */
