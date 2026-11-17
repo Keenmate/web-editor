@@ -48,6 +48,8 @@ released to a registry yet.
 - **Split view stacks by the editor's own width**, not the viewport: below 720 px of EDITOR width the output
   goes under the editor (a CSS container query on the host in split mode; was `@media (max-width: 720px)`),
   so a narrow editor in a wide sidebar stacks and a wide one on a tablet doesn't.
+- Examples: BU08 (page-wide labels through `window.components.locale`, live); BU03 describes the toolbar keyboard
+  and tooltips.
 
 ### Internal — core 1.0.0-rc25
 - Deferred pipelines debounce / supersede / drop stale runs through core `createAsyncRunner` (SPEC §12.22);

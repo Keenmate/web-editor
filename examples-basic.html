@@ -80,6 +80,11 @@ document. Add a [link](https://keenmate.com) or some `code`."></km-editor>
         indicators (word / char count) that hugs the editor body — <code>both</code> splits
         items across two strips.
     </p>
+    <p>
+        Keyboard: the toolbar is <strong>one</strong> Tab stop; the arrows along its edge (Left / Right on
+        top / bottom, Up / Down on start / end) and Home / End move between the buttons. Hover or focus a button
+        for its tooltip (the shortcut included).
+    </p>
 
     <div class="controls">
         <span><code>toolbar</code>:</span>
@@ -207,6 +212,28 @@ This editor was set up entirely in **HTML** — no script wired it.
     </div>
 </div>
 
+<!-- ============================================================= -->
+<!-- BU08 · Labels & page-wide locale                                -->
+<!-- ============================================================= -->
+<div class="card">
+    <h2>BU08 · Labels &amp; Page-wide Locale</h2>
+    <p>
+        Every UI string resolves per key: the editor's own <code>labels</code> → the page-wide
+        <code>window.components.locale.labels['km-editor']</code> → English. Switch the page to Czech: both editors
+        follow at once (button names, tooltips, the status counters, the link / image prompts); the second one
+        keeps its own <code>bold</code> label.
+    </p>
+    <div class="controls">
+        <span>page labels:</span>
+        <label><input type="radio" name="eb08-locale" value="" checked> English (unset)</label>
+        <label><input type="radio" name="eb08-locale" value="cs"> Czech</label>
+    </div>
+    <div class="demo-area">
+        <km-editor id="eb08a" statusbar="bottom" value="Select a word and press **Ctrl+K**."></km-editor>
+        <km-editor id="eb08b" statusbar="bottom" labels='{"bold":"Fett"}' value="This one has its own **bold** label."></km-editor>
+    </div>
+</div>
+
 <!-- Page wiring: bind each card's control switches to its editor. -->
 <script type="module">
     import { attachControlsPersistence } from '@keenmate/web-components-devkit/examples';
@@ -252,6 +279,16 @@ This editor was set up entirely in **HTML** — no script wired it.
         document.getElementById('eb06-own').addEventListener('change', (e) => {
             const el = document.getElementById('eb06b');
             e.target.checked ? el.setAttribute('custom-styles', OWN_CSS) : el.removeAttribute('custom-styles');
+        });
+
+        // BU08 — page-wide labels for every <km-editor> (core /locale)
+        const CS = {
+            bold: 'Tučně', italic: 'Kurzíva', insertLink: 'Vložit odkaz', insertImage: 'Vložit obrázek',
+            words: 'Slova: {count}', chars: 'Znaky: {count}', linkUrlPrompt: 'Adresa odkazu',
+            imageUrlPrompt: 'Adresa obrázku', imageAltPrompt: 'Popis obrázku (nepovinný)', ok: 'OK', cancel: 'Zrušit', close: 'Zavřít',
+        };
+        onRadio('eb08-locale', (v) => {
+            window.components.locale = v ? { labels: { 'km-editor': CS } } : null;
         });
 
         // Persist the switches across reloads (restores + re-applies via our listeners).
