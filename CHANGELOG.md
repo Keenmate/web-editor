@@ -33,6 +33,11 @@ released to a registry yet.
   i18next) if set. Assigning `window.components.locale` re-renders every live editor (`localeChanged()`).
   New keys **`markdownTab`** / **`htmlTab`** / **`jsonTab`** — the split view's output tabs were hard-coded
   English. `formatLabel` is core's.
+- **Toolbar keyboard (WAI-ARIA toolbar, core `createRovingFocus`):** the static toolbar is ONE tab stop
+  (was: every button); the arrows along the docked edge (Left / Right on `top` / `bottom`, Up / Down on
+  `start` / `end`, `aria-orientation`) and Home / End move focus across every group; disabled buttons are
+  skipped. The groups are `role="group"` (were nested `role="toolbar"`). The selection toolbar is one tab
+  stop with Left / Right too.
 
 ### Internal — core 1.0.0-rc25
 - Needs `@keenmate/web-components-core` `^1.0.0-rc25` (unpublished at the time of writing; bump the

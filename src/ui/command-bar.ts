@@ -18,6 +18,7 @@ import {
   resolveMenuEntries,
   type ResolvedActionItem,
 } from '@keenmate/web-components-core/actions';
+import { createRovingFocus, type RovingFocus } from '@keenmate/web-components-core/a11y';
 import type { EditorAction, EditorActionItem, EditorActionSource, EditorToolbarEntry } from '../interaction';
 import { commandDefaults, type ActionSurfaceHost } from './actions';
 
@@ -26,6 +27,11 @@ export interface CommandBarOptions {
   className?: string;
   /** The `source` reported on the `action` event. Default `'toolbar'`. */
   source?: EditorActionSource;
+  /**
+   * `'toolbar'` (default): a standalone bar — ONE tab stop, Left / Right move focus (core `createRovingFocus`).
+   * `'group'`: a cluster inside a toolbar that does the keyboard itself ({@link ToolbarZone}).
+   */
+  role?: 'toolbar' | 'group';
 }
 
 type Entry = EditorActionItem | { divider: true; text?: string };
@@ -41,6 +47,7 @@ export class CommandBar {
   #buttons = new Map<EditorActionItem, HTMLButtonElement>();
   /** The visible layout last rendered (item indexes + `|` for dividers). */
   #layout = '';
+  #roving: RovingFocus | null = null;
 
   constructor(
     parent: HTMLElement,
@@ -56,7 +63,10 @@ export class CommandBar {
 
     this.el = document.createElement('div');
     this.el.className = opts.className ?? 'we-command-bar';
-    this.el.setAttribute('role', 'toolbar');
+    this.el.setAttribute('role', opts.role ?? 'toolbar');
+    if ((opts.role ?? 'toolbar') === 'toolbar') {
+      this.#roving = createRovingFocus(this.el, { getItems: () => this.focusableButtons(), orientation: 'horizontal' });
+    }
 
     parent.appendChild(this.el);
     this.refresh();
@@ -81,6 +91,12 @@ export class CommandBar {
     for (const r of resolved) {
       if (r.kind === 'item') this.#apply(this.#button(r.item), r.resolved);
     }
+    this.#roving?.refresh();
+  }
+
+  /** The buttons the keyboard moves between: rendered and enabled (a disabled button can't take focus). */
+  focusableButtons(): HTMLButtonElement[] {
+    return this.el.hidden ? [] : [...this.el.querySelectorAll<HTMLButtonElement>(':scope > button:not(:disabled)')];
   }
 
   setVisible(visible: boolean): void {
@@ -88,6 +104,7 @@ export class CommandBar {
   }
 
   destroy(): void {
+    this.#roving?.destroy();
     this.el.remove();
     this.#buttons.clear();
   }

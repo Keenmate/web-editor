@@ -4,11 +4,16 @@
  * {@link CommandBar} (class `we-group`), so a group is one contiguous cluster and
  * the unit future drag-and-drop will move. Groups wrap into multiple rows (top /
  * bottom zones) or columns (start / end zones) via CSS.
+ *
+ * Keyboard (WAI-ARIA toolbar, core `createRovingFocus`): the zone is ONE tab stop; the arrows along the
+ * docked edge (Left / Right on top / bottom, Up / Down on start / end) and Home / End move focus across every
+ * group. The groups are `role="group"` (named by `<groupId>Group`).
  */
 import { VIEW_MODE_GROUP_ID, type ToolGroup } from './items';
 import type { ActionSurfaceHost } from './actions';
 import { CommandBar } from './command-bar';
 import { labelKey } from '../labels';
+import { createRovingFocus, type RovingFocus } from '@keenmate/web-components-core/a11y';
 
 export class ToolbarZone {
   readonly el: HTMLDivElement;
@@ -21,6 +26,8 @@ export class ToolbarZone {
   #isWanted = true;
   /** Editing on: every group; off (read-only / preview): only the view-mode group. */
   #isEditable = true;
+  #roving: RovingFocus | null = null;
+  #orientation: 'horizontal' | 'vertical' | null = null;
 
   constructor(parent: HTMLElement, groups: readonly ToolGroup[], host: ActionSurfaceHost) {
     this.el = document.createElement('div');
@@ -41,6 +48,7 @@ export class ToolbarZone {
       const bar = new CommandBar(this.el, group.items, host, {
         className: 'we-group',
         source: 'toolbar',
+        role: 'group',
       });
       bar.el.dataset.group = group.id;
       if (group.id === VIEW_MODE_GROUP_ID) bar.el.classList.add('we-group-view');
@@ -60,6 +68,24 @@ export class ToolbarZone {
       bar.refresh();
     });
     this.#applyVisibility();
+    this.#syncKeyboard();
+  }
+
+  /** Roving focus along the docked edge; re-created when the zone moves between a row and a column. */
+  #syncKeyboard(): void {
+    const surface = this.el.closest('.we-surface');
+    const orientation = surface?.classList.contains('we-tb-start') || surface?.classList.contains('we-tb-end') ? 'vertical' : 'horizontal';
+    if (orientation === this.#orientation && this.#roving) {
+      this.#roving.refresh();
+      return;
+    }
+    this.#roving?.destroy();
+    this.#orientation = orientation;
+    this.el.setAttribute('aria-orientation', orientation);
+    this.#roving = createRovingFocus(this.el, {
+      getItems: () => this.#groups.flatMap((bar) => bar.focusableButtons()),
+      orientation,
+    });
   }
 
   /**
@@ -89,6 +115,8 @@ export class ToolbarZone {
   }
 
   destroy(): void {
+    this.#roving?.destroy();
+    this.#roving = null;
     for (const bar of this.#groups) bar.destroy();
     this.#groups = [];
     this.el.remove();

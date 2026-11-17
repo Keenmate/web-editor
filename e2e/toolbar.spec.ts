@@ -54,6 +54,32 @@ test.describe('toolbar', () => {
         await expect(toolbarButton(page, 'heading')).not.toHaveAttribute('aria-pressed', 'true');
     });
 
+    test('keyboard: the toolbar is one tab stop; the arrows move across groups along the docked edge', async ({ page }) => {
+        const focusedAction = () =>
+            page.evaluate(() => (document.getElementById('subject')!.shadowRoot!.activeElement as HTMLElement | null)?.dataset.action ?? null);
+        const tabStops = await page.locator('km-editor#subject .we-toolbar-zone button[tabindex="0"]').count();
+        expect(tabStops).toBe(1);
+        await expect(zone(page)).toHaveAttribute('role', 'toolbar');
+        await expect(zone(page)).toHaveAttribute('aria-orientation', 'horizontal');
+        await expect(page.locator('km-editor#subject .we-toolbar-zone .we-group').first()).toHaveAttribute('role', 'group');
+        await toolbarButton(page, 'bold').focus();
+        await page.keyboard.press('ArrowRight');
+        expect(await focusedAction()).toBe('italic');
+        await page.keyboard.press('End');
+        const last = await focusedAction();
+        expect(last).not.toBe('italic');
+        await page.keyboard.press('Home');
+        expect(await focusedAction()).toBe('bold');
+        await page.keyboard.press('ArrowLeft'); // no wrap
+        expect(await focusedAction()).toBe('bold');
+        // docked on a side edge: Up / Down
+        await setToolbar(page, 'start');
+        await expect(zone(page)).toHaveAttribute('aria-orientation', 'vertical');
+        await toolbarButton(page, 'bold').focus();
+        await page.keyboard.press('ArrowDown');
+        expect(await focusedAction()).toBe('italic');
+    });
+
     test('clicking a toolbar button keeps focus in the editor', async ({ page }) => {
         await caretAfter(page, 'plain');
         await toolbarButton(page, 'heading').click();
