@@ -15,7 +15,8 @@ test.describe('plugins', () => {
     test('custom plugin: toolbar button applies the mark; md / html / json serialize it', async ({ page }) => {
         await selectText(page, 'plain', 'custom');
         const btn = toolbarButton(page, 'highlight', 'custom');
-        await expect(btn).toHaveText(/HL/);
+        await expect(btn).toHaveText('🖍'); // an emoji icon is text (core renderIcon)
+        await expect(btn).toHaveAttribute('aria-label', 'Highlight');
         await btn.click();
         await expect(pm(page, 'custom').locator('mark')).toHaveText('plain');
         await expect(btn).toHaveAttribute('aria-pressed', 'true');

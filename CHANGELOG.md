@@ -11,6 +11,17 @@ Target: **1.0.0-rc01** (first release).
 Pre-1.0, pre-publish. Everything below is the work to date; nothing has been
 released to a registry yet.
 
+### Changed — BREAKING (icons, rulebook C-CA-33)
+
+- **Item icons go through core `renderIcon`** (SPEC §12.33): an `icon` string starting with `<` is inserted as
+  markup (was: shown as text), an ASCII name (`'gear'`, `'HL'`, `'N'`) is now a glyph masked from
+  `--base-icon-<name>` in `currentColor` — **it no longer shows the letters** (nothing is drawn while the token
+  is unset); anything else (an emoji, `'¶'`, `'✎'`) is text as before. Upgrade: a text "icon" made of ASCII
+  letters → an SVG, a `--base-icon-*` token name, or a non-ASCII glyph. `ICON_CSS` is adopted in the shadow root.
+- **The built-in toolbar icons are inline SVGs** (1em, `currentColor`, `aria-hidden`; were the text glyphs
+  `B` / `I` / `U` / `H1` / `P` / `• List` / `1. List` / `</>` / `↶` / `↷` and the emoji `🔗` / `🖼` / `☁` / `⊞`),
+  exported as **`EDITOR_ICONS`**. The button is named by its `aria-label` (the item text), as before.
+
 ### Changed — core 1.0.0-rc25 adoption
 
 - **Shortcut display is core's `formatShortcut`** (`/actions`, also the exported `formatShortcut`): on

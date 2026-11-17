@@ -357,6 +357,12 @@ const myPlugin = definePlugin({
 editor.beforeActionCallback = ({ action }) => (action === 'insert-image' ? false : undefined); // false cancels
 ```
 
+**Icons** (`icon` on an item or a command) follow core `renderIcon`, like every Keenmate component: markup
+(starts with `<` — an `<svg>`, an `<img>`) is inserted as-is; an ASCII name (`'gear'`, `'save'`) is a glyph
+masked from the `--base-icon-<name>` token in `currentColor` (nothing drawn while the token is unset); anything
+else (an emoji, `'¶'`) is text. The built-in buttons use inline SVGs — `EDITOR_ICONS` (exported) has them for
+your own items. The button's accessible name is always the item `text` (`aria-label`).
+
 Writing plugins (schema nodes/marks, commands, keybindings, toolbar/menu items,
 the Markdown-serializer contract) and the content-pipeline layer are covered in
 [`docs/`](./docs/) — see the **[Pipelines guide](./docs/pipelines/README.md)** (with

@@ -26,7 +26,7 @@
                 id: 'ix-noop',
                 run: () => true,
                 text: 'Noop',
-                icon: 'N',
+                icon: '✱',
                 getIsEnabledCallback: (ctx) => { window.ix.ctx.command = ctx; return true; },
             }],
             toolbarGroups: [{
@@ -39,7 +39,7 @@
                         action: 'custom',
                         id: 'save',
                         text: 'Save',
-                        icon: 'S',
+                        icon: '★',
                         getIsVisibleCallback: (ctx) => { window.ix.ctx.item = ctx; return true; },
                         onClick: (detail) => { log.push({ kind: 'onClick', id: detail.id, hasController: detail.controller === el.controller }); },
                     },

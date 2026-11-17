@@ -35,6 +35,7 @@ import {
   toObject,
   toText,
   adoptStyles,
+  ICON_CSS,
   createCustomStyles,
   renderLoader,
   createFormInputs,
@@ -396,7 +397,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     // §12.8: adopt the shared editor stylesheet into the shadow root (one cached
     // CSSStyleSheet per string). Linked render-blocking in the playground; here it
     // rides the component so consumers need no separate <link>.
-    adoptStyles(this.#shadow, styles);
+    adoptStyles(this.#shadow, styles, ICON_CSS);
     // Owns the shadow structure + the persistent editor mount across view modes.
     this.#layout = new ViewLayout({
       shadow: this.#shadow,

@@ -87,6 +87,13 @@
   font-size: 13px;
   line-height: 1.2;
 }
+/* An item icon (core renderIcon: inline SVG or a .km-icon mask) — a touch larger than the 13px label text. */
+.we-cmd > svg,
+.we-cmd > .km-icon {
+  inline-size: 1.25em;
+  block-size: 1.25em;
+  vertical-align: middle;
+}
 .we-cmd:hover:not(:disabled) {
   background: var(--we-hover-bg);
 }

@@ -15,6 +15,7 @@
  */
 import { definePlugin, type EditorPlugin } from '../engine/plugin';
 import type { Pipeline } from '../engine/pipeline/types';
+import { EDITOR_ICONS } from '../icons';
 
 /** A picked cloud asset (what the host picker returns as the interaction value). */
 export interface CloudAsset {
@@ -98,7 +99,7 @@ export function imageBrowserPlugin(opts: ImageBrowserOptions = {}): EditorPlugin
         items: [
           {
             action: 'image:browser:pick',
-            icon: '☁',
+            icon: EDITOR_ICONS.cloud,
             // Pipeline-only action (no CommandSpec): texts come from `labels`.
             getTextCallback: (ctx) => ctx.label('cloudImage'),
             getTooltipCallback: (ctx) => ctx.label('cloudImageTooltip'),

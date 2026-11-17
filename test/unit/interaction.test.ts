@@ -113,7 +113,8 @@ describe('toolbar items are core action items', () => {
   it('built-in defaults come from the command registry (text, tooltip with shortcut)', async () => {
     const el = await mount({ value: 'x' });
     const bold = toolbarButton(el, 'bold');
-    expect(bold.textContent).toBe('B');
+    expect(bold.querySelector('svg')).not.toBeNull(); // the built-in SVG icon (core renderIcon)
+    expect(bold.getAttribute('aria-label')).toBe('Bold');
     expect(bold.getAttribute('aria-label')).toBe('Bold');
     expect(bold.dataset.tooltip).toBe('Bold (Ctrl+B)');
   });

@@ -98,6 +98,15 @@ test.describe('toolbar', () => {
         await expect(page.locator('km-editor#subject .we-tooltip--visible')).toHaveCount(0);
     });
 
+    test('built-in icons are inline SVG (currentColor, hidden from AT); the button is named by aria-label', async ({ page }) => {
+        const icon = toolbarButton(page, 'bold').locator('svg');
+        await expect(icon).toHaveAttribute('aria-hidden', 'true');
+        const box = await icon.boundingBox();
+        expect(box!.width).toBeGreaterThan(10);
+        await expect(toolbarButton(page, 'bold')).toHaveAccessibleName('Bold');
+        await expect(toolbarButton(page, 'undo').locator('svg')).toHaveCount(1);
+    });
+
     test('clicking a toolbar button keeps focus in the editor', async ({ page }) => {
         await caretAfter(page, 'plain');
         await toolbarButton(page, 'heading').click();

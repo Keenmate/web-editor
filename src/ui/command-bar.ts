@@ -21,6 +21,7 @@ import {
 import { createRovingFocus, type RovingFocus } from '@keenmate/web-components-core/a11y';
 import type { EditorAction, EditorActionItem, EditorActionSource, EditorToolbarEntry } from '../interaction';
 import { commandDefaults, type ActionSurfaceHost } from './actions';
+import { renderIcon } from '@keenmate/web-components-core';
 
 export interface CommandBarOptions {
   /** Override the wrapper class (e.g. `'we-group'` when used as a tool group). */
@@ -142,7 +143,10 @@ export class CommandBar {
     btn.className = ['we-cmd', r.cssClass, r.isToggled && 'toggled', r.isDanger && 'we-danger']
       .filter(Boolean)
       .join(' ');
-    btn.textContent = r.icon ?? r.text;
+    // An icon string follows core `renderIcon` (markup raw / ASCII name = `--base-icon-<name>` mask / else
+    // text); the button's name is its `aria-label`. No icon → the text.
+    if (r.icon) btn.innerHTML = renderIcon(r.icon, { prefix: 'we' });
+    else btn.textContent = r.text;
     if (r.isToggled) btn.setAttribute('aria-pressed', 'true');
     else btn.removeAttribute('aria-pressed');
     // Shown by the chrome's core tooltip (createTooltip, delegated) — not a native `title`.

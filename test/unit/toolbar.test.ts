@@ -192,6 +192,34 @@ describe('<km-editor> status bar', () => {
     expect(node?.textContent).toBe('CUSTOM');
   });
 
+  it('item icons follow core renderIcon: markup raw, an ASCII name a --base-icon mask, else text; no icon → the text', async () => {
+    const el = await mount({ value: 'x' });
+    const p = definePlugin({
+      name: 'icons',
+      toolbarGroups: [
+        {
+          id: 'icons',
+          text: 'Icons',
+          items: [
+            { action: 'i:emoji', text: 'Rocket', icon: '🚀' },
+            { action: 'i:name', text: 'Gear', icon: 'gear' },
+            { action: 'i:svg', text: 'Dot', icon: '<svg viewBox="0 0 2 2"><circle cx="1" cy="1" r="1"/></svg>' },
+            { action: 'i:none', text: 'Plain' },
+            { action: 'i:html', text: 'Esc', icon: '<b>x</b>' },
+          ],
+        },
+      ],
+    });
+    el.plugins = [...defaultPlugins(), p];
+    await el.whenSettled();
+    expect(cmd(el, 'i:emoji').textContent).toBe('🚀');
+    expect(cmd(el, 'i:name').querySelector('.km-icon')?.getAttribute('style')).toContain('--base-icon-gear');
+    expect(cmd(el, 'i:svg').querySelector('svg circle')).not.toBeNull();
+    expect(cmd(el, 'i:none').textContent).toBe('Plain');
+    expect(cmd(el, 'i:html').querySelector('b')).not.toBeNull(); // markup is the page's: raw
+    expect(cmd(el, 'i:name').getAttribute('aria-label')).toBe('Gear');
+  });
+
   it('preview (read-only) keeps only the view-mode group', async () => {
     const el = await mount({ value: 'x', 'view-mode': 'preview' });
     expect(bar(el).hidden).toBe(false);

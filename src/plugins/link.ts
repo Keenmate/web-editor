@@ -13,6 +13,7 @@ import type { CommandSpec } from '../engine/command-registry';
 import { linkMarkSpec } from '../schema';
 import { markActive } from '../predicates';
 import { markdownDestination, markdownTitle } from '../engine/serialization/markdown';
+import { EDITOR_ICONS } from '../icons';
 
 /** Toggle or set a link on the selection (removes an existing one). */
 function toggleLink(schema: Schema, href?: string, title: string | null = null): Command {
@@ -78,7 +79,7 @@ export const linkPlugin = definePlugin({
       run: promptForLink(schema, label),
       keys: ['Mod-k'],
       text: 'Insert link',
-      icon: '🔗',
+      icon: EDITOR_ICONS.link,
       getIsToggledCallback: ({ state }) => markActive(state, schema.marks.link),
       // Non-empty selection only.
       getIsEnabledCallback: ({ state }) => !state.selection.empty,
