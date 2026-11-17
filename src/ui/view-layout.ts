@@ -273,16 +273,13 @@ export class ViewLayout {
       strategy: 'fixed',
       offset: 6,
       matchWidth: 'min',
+      // destroy() puts back the host's own position / left / top (and the matchWidth sizes).
+      shouldRestorePlacement: true,
     });
   }
 
   #teardownAnchor(): void {
     this.#anchorHandle?.destroy();
     this.#anchorHandle = undefined;
-    // Core's destroy() puts back the sizes it wrote (`matchWidth` → width / min-width,
-    // core rc19); the placement it leaves (`position` / `left` / `top`) is cleared here.
-    for (const prop of ['position', 'left', 'top']) {
-      this.#host.style.removeProperty(prop);
-    }
   }
 }

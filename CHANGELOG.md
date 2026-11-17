@@ -52,6 +52,8 @@ released to a registry yet.
 ### Internal — core 1.0.0-rc25
 - Deferred pipelines debounce / supersede / drop stale runs through core `createAsyncRunner` (SPEC §12.22);
   the loader threshold that pauses while a dialog waits (`PendingGate`) stays the editor's.
+- Inline mode: core `anchor({ shouldRestorePlacement: true })` puts the host's position / left / top back on
+  teardown (was cleared by hand).
 - `el.controller` is built by core `createControllerFacade` (SPEC §12.34) — same frozen method list + live `value`.
 - Needs `@keenmate/web-components-core` `^1.0.0-rc25` (unpublished at the time of writing; bump the
   dependency when it ships).
