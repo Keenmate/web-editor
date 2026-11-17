@@ -145,6 +145,11 @@
       "name": "base-tooltip-text-color",
       "required": false,
       "usage": "Selection-toolbar pill text (--we-selection-toolbar-color)"
+    },
+    {
+      "name": "base-z-popover",
+      "required": false,
+      "usage": "Stacking of the inline-mode card over the page and of the selection toolbar (core Z_INDEX popover tier, default 7600)"
     }
   ],
   "componentVariables": [

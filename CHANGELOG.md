@@ -11,6 +11,19 @@ Target: **1.0.0-rc01** (first release).
 Pre-1.0, pre-publish. Everything below is the work to date; nothing has been
 released to a registry yet.
 
+### Changed — core 1.0.0-rc25 adoption
+
+- **Shortcut display is core's `formatShortcut`** (`/actions`, also the exported `formatShortcut`): on
+  Apple platforms a shortcut now reads `⇧⌘Z` (was `Cmd+Shift+Z`), like every Keenmate component; elsewhere
+  unchanged (`Ctrl+Shift+Z`). `Mod` resolves through core's `getEnvironment().isApple` (no own
+  `navigator.platform` sniffing).
+- **Stacking uses core's z-index tiers:** the inline-mode card and the selection toolbar sit on
+  `var(--base-z-popover, 7600)` (were the literals `1000` / `1100`).
+
+### Internal — core 1.0.0-rc25
+- Needs `@keenmate/web-components-core` `^1.0.0-rc25` (unpublished at the time of writing; bump the
+  dependency when it ships).
+
 ### Added — context menu presentation (core rc24)
 
 - **`menu-presentation`** (`auto` | `floating` | `sheet` | `drawer`, property `menuPresentation`) and

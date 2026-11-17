@@ -10,7 +10,7 @@
 }
 
 .we-floating {
-  z-index: 1100;
+  z-index: var(--base-z-popover, 7600); /* core Z_INDEX tier */
   border-radius: var(--we-radius);
   box-shadow: 0 6px 24px var(--we-shadow-color);
   overflow: hidden; /* clip the inner bar to the rounded corners */

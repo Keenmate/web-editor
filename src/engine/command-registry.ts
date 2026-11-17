@@ -14,6 +14,7 @@
 import { keymap } from 'prosemirror-keymap';
 import type { Command, EditorState, Plugin } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
+import { formatShortcut as formatCoreShortcut } from '@keenmate/web-components-core/actions';
 import type { CommandContext } from '../interaction';
 
 export interface CommandSpec {
@@ -39,20 +40,11 @@ export type CommandContextFactory = (fields: { state: EditorState }) => CommandC
 
 const plainContext: CommandContextFactory = (fields) => fields as CommandContext;
 
-const isApple = (): boolean =>
-  typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform ?? '');
-
-/** `'Mod-Shift-z'` → `'Ctrl+Shift+Z'` (`'Cmd+Shift+Z'` on Apple platforms). */
-export function formatShortcut(key: string): string {
-  return key
-    .split('-')
-    .map((part) => {
-      if (part === 'Mod') return isApple() ? 'Cmd' : 'Ctrl';
-      if (part.length === 1) return part.toUpperCase();
-      return part;
-    })
-    .join('+');
-}
+/**
+ * `'Mod-Shift-z'` → `'Ctrl+Shift+Z'` (Apple: `'⇧⌘Z'`) — core `/actions` `formatShortcut`, the one shortcut syntax and
+ * display every Keenmate component shares (`Mod` resolves through core's `getEnvironment().isApple`).
+ */
+export const formatShortcut = (key: string): string => formatCoreShortcut(key);
 
 export class CommandRegistry {
   private map = new Map<string, CommandSpec>();

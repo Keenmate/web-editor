@@ -93,7 +93,7 @@
 
 /* ── inline: floating overlay card over a live page ── */
 :host([view-mode='inline']) {
-  z-index: 1000;
+  z-index: var(--base-z-popover, 7600); /* core Z_INDEX tier: a card over the page */
 }
 
 .we-root.we-inline {
