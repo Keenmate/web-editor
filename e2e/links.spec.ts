@@ -13,9 +13,25 @@ test.describe('links', () => {
         await toolbarButton(page, 'insert-link').click();
         await expect(pm(page).locator('a')).toHaveText('link');
         await expect(pm(page).locator('a')).toHaveAttribute('href', 'https://example.com/');
-        expect(dialogs.seen).toEqual([{ type: 'prompt', message: 'Enter link URL:', defaultValue: 'https://' }]);
+        expect(dialogs.seen).toEqual([{ type: 'prompt', message: 'Enter link URL', defaultValue: 'https://' }]);
         expect(await markdown(page)).toBe('some [link](https://example.com/) text');
         await expect(toolbarButton(page, 'insert-link')).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    test('the prompt is a core /dialog modal (no window.prompt): Escape cancels, focus returns to the editor', async ({ page }) => {
+        await selectText(page, 'link');
+        await page.evaluate(() => {
+            // take this dialog away from the auto-answer stub
+            (window as any).__kmDialogOpened = () => new Promise(() => {});
+        });
+        await toolbarButton(page, 'insert-link').click();
+        const field = page.locator('.km-dialog-layer .km-dialog__input');
+        await expect(field).toBeFocused();
+        await expect(field).toHaveValue('https://');
+        await page.keyboard.press('Escape');
+        await expect(page.locator('.km-dialog-layer')).toHaveCount(0);
+        await expect(pm(page).locator('a')).toHaveCount(0);
+        await expect(pm(page)).toBeFocused();
     });
 
     test('labels translate the prompt and the item (set live, no rebuild)', async ({ page, dialogs }) => {

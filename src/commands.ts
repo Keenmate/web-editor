@@ -7,7 +7,9 @@
  * Each helper is a ProseMirror `Command`: `(state, dispatch?, view?) => boolean`.
  */
 import type { Command } from 'prosemirror-state';
+import type { EditorState } from 'prosemirror-state';
 import { createLabelResolver, type LabelResolver } from './labels';
+import { promptText, whenPrompted } from './dialogs';
 
 /** English-only resolver for standalone use (no element `labels`). */
 const englishLabels: LabelResolver = createLabelResolver(() => null);
@@ -34,32 +36,41 @@ export function insertCodeBlock(language = 'javascript'): Command {
   };
 }
 
-/** Prompt for a code-block language (label `codeLanguagePrompt`), then insert. */
+/** Prompt for a code-block language (label `codeLanguagePrompt`, core `/dialog`), then insert. */
 export function promptForCodeBlock(label: LabelResolver = englishLabels): Command {
-  return (state, dispatch) => {
-    const language = prompt(label('codeLanguagePrompt', { languages: LANGUAGES.join(', ') }), 'javascript');
-    if (!language) return false;
-    return insertCodeBlock(language.toLowerCase())(state, dispatch);
-  };
+  return whenPrompted(
+    (view) => promptText(view, label, { title: label('codeLanguagePrompt', { languages: LANGUAGES.join(', ') }), value: 'javascript' }),
+    (language, state) => {
+      const node = state.schema.nodes.code_block.create({ language: language.toLowerCase() });
+      return language ? state.tr.replaceSelectionWith(node).scrollIntoView() : null;
+    },
+  );
 }
 
-/** Change the language of the code block the cursor is in (label `codeLanguageChangePrompt`). */
+/** The code block around the selection: its position and node, or `null`. */
+function codeBlockAt(state: EditorState): { pos: number; language: string } | null {
+  const { $from } = state.selection;
+  for (let d = $from.depth; d > 0; d--) {
+    const node = $from.node(d);
+    if (node.type.name === 'code_block') return { pos: $from.before(d), language: node.attrs.language };
+  }
+  return null;
+}
+
+/** Change the language of the code block the cursor is in (label `codeLanguageChangePrompt`, core `/dialog`). */
 export function changeCodeBlockLanguage(label: LabelResolver = englishLabels): Command {
-  return (state, dispatch) => {
-    const { $from } = state.selection;
-    for (let d = $from.depth; d > 0; d--) {
-      const node = $from.node(d);
-      if (node.type.name === 'code_block') {
-        const pos = $from.before(d);
-        const languages = LANGUAGES.join(', ');
-        const language = prompt(label('codeLanguageChangePrompt', { languages }), node.attrs.language);
-        if (!language) return false;
-        if (dispatch) {
-          dispatch(state.tr.setNodeMarkup(pos, undefined, { language: language.toLowerCase() }));
-        }
-        return true;
-      }
-    }
-    return false;
-  };
+  const prompted = whenPrompted(
+    (view) => {
+      const block = codeBlockAt(view.state);
+      return promptText(view, label, {
+        title: label('codeLanguageChangePrompt', { languages: LANGUAGES.join(', ') }),
+        value: block?.language ?? '',
+      });
+    },
+    (language, state) => {
+      const block = codeBlockAt(state);
+      return language && block ? state.tr.setNodeMarkup(block.pos, undefined, { language: language.toLowerCase() }) : null;
+    },
+  );
+  return (state, dispatch, view) => (codeBlockAt(state) ? prompted(state, dispatch, view) : false);
 }

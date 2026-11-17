@@ -103,7 +103,7 @@ Property-only inputs:
 | `getValueFormatCallback` | `(ctx) => string` | Formats the value written into the hidden form input (e.g. sanitizing); `ctx` = `{ value, contentFormat }` + `controller` / `element`. Affects only the submitted value — see [Forms](#forms). |
 | `beforeActionCallback` | `(detail) => false \| void \| Promise<…>` | Runs first on every toolbar / selection-toolbar / context-menu activation; `false` cancels (no `onClick`, no `action` event, no command). |
 | `renderLoadingCallback` | `(ctx) => void \| cleanup` | Draws the pending loader (shown while a deferred pipeline's work — e.g. a cloud-image upload — outlives its threshold; not while a dialog waits for the user) instead of the default spinner; `ctx` = `{ component, context: 'pipeline', containerElement, element, label }`. Beats the page-wide `window.components.renderLoadingCallback`. See [Theming](#theming). |
-| `interactionHost`      | `{ request(ctx) }` | The modal bridge interactive pipeline stages call (`ctx` = request + `signal` + `controller` / `element`). Default: `window.confirm`. Survives engine rebuilds. |
+| `interactionHost`      | `{ request(ctx) }` | The modal bridge interactive pipeline stages call (`ctx` = request + `signal` + `controller` / `element`). Default: a core `/dialog` confirmation (OK / Cancel, closed when the run is superseded). Survives engine rebuilds. |
 | `getCustomStylesCallback` | `(ctx) => string \| null` | Computes the instance CSS (wins over `customStyles`); `ctx` = `controller` / `element`. See [Theming](#theming). |
 
 **Events** — bubble, not composed. Each has a camelCase twin property (`onChange`,
@@ -157,9 +157,10 @@ nothing); a missing key falls back to English. Every editor label is inserted as
 | `<groupId>Group` — `formatGroup`, `blockGroup`, `listGroup`, `insertGroup`, `historyGroup`, `viewGroup`, `linkGroup`, `imageGroup`, `tableGroup`, `imageBrowserGroup` | toolbar group accessible names (`Format`, `Block`, `Lists`, …) |
 | `placeholder` | `''` (off) — shown (as text) while the document is empty |
 | `words` / `chars` | `Words: {count}` / `Chars: {count}` (status bar) |
-| `linkUrlPrompt` | `Enter link URL:` |
-| `imageUrlPrompt` / `imageAltPrompt` | `Enter image URL:` / `Enter alt text (optional):` |
-| `codeLanguagePrompt` / `codeLanguageChangePrompt` | `Enter language ({languages}):` / `Change language ({languages}):` |
+| `ok` / `cancel` | `OK` / `Cancel` (prompt and confirmation dialog buttons; the ✕ takes `close`) |
+| `linkUrlPrompt` | `Enter link URL` |
+| `imageUrlPrompt` / `imageAltPrompt` | `Enter image URL` / `Enter alt text (optional)` |
+| `codeLanguagePrompt` / `codeLanguageChangePrompt` | `Enter language ({languages})` / `Change language ({languages})` |
 | `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage` | cloud-image plugin texts |
 | `back` / `close` | `Back` / `Close` — the context menu's submenu back button and close button when it opens as a sheet / drawer (`menu-presentation`) |
 | `loading` | `aria-label` of the pending loader ("Loading…") |

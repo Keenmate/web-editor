@@ -33,14 +33,17 @@ export const DEFAULT_LABELS = {
   imageGroup: 'Image',
   tableGroup: 'Table',
   imageBrowserGroup: 'Cloud image',
+  /** Prompt / confirmation dialogs (core `/dialog`): the buttons. The ✕ takes `close`. */
+  ok: 'OK',
+  cancel: 'Cancel',
   /** `insert-link` prompt. */
-  linkUrlPrompt: 'Enter link URL:',
+  linkUrlPrompt: 'Enter link URL',
   /** `insert-image` prompts. */
-  imageUrlPrompt: 'Enter image URL:',
-  imageAltPrompt: 'Enter alt text (optional):',
+  imageUrlPrompt: 'Enter image URL',
+  imageAltPrompt: 'Enter alt text (optional)',
   /** `insert-code-block` / `change-code-language` prompts (`{languages}` = the list). */
-  codeLanguagePrompt: 'Enter language ({languages}):',
-  codeLanguageChangePrompt: 'Change language ({languages}):',
+  codeLanguagePrompt: 'Enter language ({languages})',
+  codeLanguageChangePrompt: 'Change language ({languages})',
   /** Cloud-image plugin (`image:browser:pick`): toolbar button, its tooltip, the menu item, the picker request. */
   cloudImage: 'Cloud image',
   cloudImageTooltip: 'Insert image from the cloud',
@@ -51,7 +54,8 @@ export const DEFAULT_LABELS = {
   valueFormatError: 'The value could not be formatted.',
   /** Accessible label (`aria-label`) of the pending loader shown while a deferred pipeline runs. */
   loading: 'Loading…',
-  /** Context menu as a sheet / drawer (`menu-presentation`): the submenu back button + the close button. */
+  /** Context menu as a sheet / drawer (`menu-presentation`): the submenu back button + the close button
+   * (also the ✕ of the prompt / confirmation dialogs). */
   back: 'Back',
   close: 'Close',
 } as const;

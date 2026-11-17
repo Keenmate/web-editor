@@ -15,7 +15,7 @@ test.describe('images', () => {
         await caretAfter(page, 'Intro para');
         dialogs.answer(PX, 'A pixel');
         await toolbarButton(page, 'insert-image').click();
-        expect(dialogs.seen.map((d) => d.message)).toEqual(['Enter image URL:', 'Enter alt text (optional):']);
+        expect(dialogs.seen.map((d) => d.message)).toEqual(['Enter image URL', 'Enter alt text (optional)']);
         const img = pm(page).locator(IMG);
         await expect(img).toHaveAttribute('src', PX);
         await expect(img).toHaveAttribute('alt', 'A pixel');

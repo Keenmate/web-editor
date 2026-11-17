@@ -44,7 +44,7 @@ export interface PluginContext {
   schema: Schema;
   /**
    * Resolve a UI string through the element's `labels` — call it when the string
-   * is shown (e.g. inside a command, for a `prompt()`), not at assembly, so a
+   * is shown (e.g. inside a command, for a prompt dialog), not at assembly, so a
    * `labels` change applies live. `(key, params?, fallback?)`; see `src/labels.ts`.
    */
   label: LabelResolver;

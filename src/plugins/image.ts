@@ -5,28 +5,23 @@
 import type { Command } from 'prosemirror-state';
 import type { Schema } from 'prosemirror-model';
 import { definePlugin } from '../engine/plugin';
+import { promptText, whenPrompted } from '../dialogs';
 import type { LabelResolver } from '../labels';
 import type { CommandSpec } from '../engine/command-registry';
 import { imageNodeSpec } from '../schema';
 import { markdownDestination, markdownTitle } from '../engine/serialization/markdown';
 
-/** Insert an image at the current position. */
-function insertImage(schema: Schema, src: string, alt = '', title: string | null = null): Command {
-  return (state, dispatch) => {
-    const node = schema.nodes.image.create({ src, alt, title });
-    if (dispatch) dispatch(state.tr.replaceSelectionWith(node).scrollIntoView());
-    return true;
-  };
-}
-
-/** Prompt for an image URL (and alt text), then insert. */
+/** Prompt for an image URL, then its alt text (core `/dialog`), then insert. Cancelling the alt text keeps `''`. */
 function promptForImage(schema: Schema, label: LabelResolver): Command {
-  return (state, dispatch) => {
-    const src = prompt(label('imageUrlPrompt'), 'https://picsum.photos/300/200');
-    if (!src) return false;
-    const alt = prompt(label('imageAltPrompt'), '') || '';
-    return insertImage(schema, src, alt)(state, dispatch);
-  };
+  return whenPrompted(
+    async (view) => {
+      const src = await promptText(view, label, { title: label('imageUrlPrompt'), value: 'https://picsum.photos/300/200', inputType: 'url' });
+      if (!src) return null;
+      const alt = (await promptText(view, label, { title: label('imageAltPrompt') })) || '';
+      return { src, alt };
+    },
+    ({ src, alt }, state) => state.tr.replaceSelectionWith(schema.nodes.image.create({ src, alt, title: null })).scrollIntoView(),
+  );
 }
 
 export const imagePlugin = definePlugin({

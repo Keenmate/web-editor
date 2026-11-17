@@ -10,17 +10,19 @@
  *    Opt out for a deliberate throw: read `pageErrors`, assert, then clear it
  *    (`pageErrors.length = 0`).
  *
- * 2. **dialog stub** — the link / image / code-block commands use `prompt()`
- *    (and the default interaction host uses `confirm()`), which would otherwise
- *    block the page. Every native dialog is answered from a per-test queue:
+ * 2. **dialog stub** — the link / image / code-block commands and the default
+ *    interaction host open core `/dialog` prompts / confirmations (a `.km-dialog-layer`
+ *    in `<body>`). Every one is answered from a per-test queue, in the page:
  *
- *        dialogs.answer('https://example.com');  // next prompt() returns this
- *        dialogs.answer(null);                   // next prompt()/confirm() is cancelled
- *        dialogs.answer(true);                   // next confirm() is accepted
+ *        dialogs.answer('https://example.com');  // next prompt: type this, press OK
+ *        dialogs.answer(null);                   // next prompt / confirmation: Cancel
+ *        dialogs.answer(true);                   // next one: OK as it is
  *
- *    With an empty queue: `prompt()` / `confirm()` are dismissed (cancel), `alert()`
- *    is accepted. Every dialog is recorded in `dialogs.seen` (`{ type, message,
- *    defaultValue }`) so specs can assert which dialogs appeared.
+ *    With an empty queue a dialog is cancelled. Every dialog is recorded in
+ *    `dialogs.seen` (`{ type: 'prompt' | 'confirm', message: <its title>,
+ *    defaultValue: <the field's starting value> }`) so specs can assert which
+ *    dialogs appeared. A native `alert` / `prompt` / `confirm` would fail the test
+ *    (`nativeDialogs`) — the editor never opens one.
  */
 import { test as base, expect } from '@playwright/test';
 
@@ -53,26 +55,47 @@ export const test = base.extend<{ pageErrors: string[]; dialogs: DialogStub }>({
         { auto: true }
     ],
     dialogs: [
-        async ({ page }, use) => {
+        async ({ page }, use, testInfo) => {
             const queue: DialogAnswer[] = [];
             const stub: DialogStub = {
                 answer: (...answers) => void queue.push(...answers),
                 seen: []
             };
+            const native: string[] = [];
             page.on('dialog', async (dialog) => {
-                const type = dialog.type();
-                stub.seen.push({ type, message: dialog.message(), defaultValue: dialog.defaultValue() });
-                const next = queue.length ? queue.shift() : undefined;
-                try {
-                    if (type === 'alert') await dialog.accept();
-                    else if (next === undefined || next === null || next === false) await dialog.dismiss();
-                    else if (type === 'prompt') await dialog.accept(next === true ? dialog.defaultValue() : String(next));
-                    else await dialog.accept();
-                } catch {
-                    // Page closed while the dialog was open — nothing to answer.
-                }
+                native.push(`${dialog.type()}: ${dialog.message()}`);
+                await dialog.dismiss().catch(() => {});
+            });
+            await page.exposeFunction('__kmDialogOpened', (seen: DialogStub['seen'][number]) => {
+                stub.seen.push(seen);
+                return queue.length ? queue.shift() : null;
+            });
+            await page.addInitScript(() => {
+                const answer = async (layer: Element): Promise<void> => {
+                    const panel = layer.shadowRoot?.querySelector('.km-dialog');
+                    if (!panel) return;
+                    const input = panel.querySelector<HTMLInputElement>('.km-dialog__input');
+                    const reply = await (window as any).__kmDialogOpened({
+                        type: input ? 'prompt' : 'confirm',
+                        message: panel.querySelector('.km-sheet-title')?.textContent ?? '',
+                        defaultValue: input?.value ?? ''
+                    });
+                    const click = (value: string): void =>
+                        panel.querySelector<HTMLButtonElement>(`.km-dialog__action[data-value="${value}"]`)?.click();
+                    if (reply === null || reply === undefined || reply === false) return click('cancel');
+                    if (input && typeof reply === 'string') input.value = reply;
+                    click('ok');
+                };
+                new MutationObserver((records) => {
+                    for (const r of records) for (const n of r.addedNodes) {
+                        if (n instanceof Element && n.classList.contains('km-dialog-layer')) void answer(n);
+                    }
+                }).observe(document, { childList: true, subtree: true });
             });
             await use(stub);
+            if (native.length && testInfo.status === testInfo.expectedStatus) {
+                expect(native, 'native browser dialog(s) opened').toEqual([]);
+            }
         },
         { auto: true }
     ]

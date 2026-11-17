@@ -119,7 +119,7 @@ export interface EditorEngineOptions {
   /** Start read-only (no editing). Defaults to editable. */
   isEditable?: boolean;
   /** Host modal bridge for interactive pipeline stages. Defaults to a
-   * `window.confirm`-backed host; inject a richer picker via this or
+   * core `/dialog` confirmation host; inject a richer picker via this or
    * `setInteractionHost`. */
   interactionHost?: InteractionHost;
   /** The element hosting this engine (set by `<km-editor>`; omit standalone). */

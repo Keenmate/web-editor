@@ -16,6 +16,8 @@
  * progress UI). The engine stays headless — the host provides the modal UI and
  * the lock implementation through the injected deps.
  */
+import { confirmText, dialogLabels } from '../../dialogs';
+import type { LabelResolver } from '../../labels';
 import { PendingGate, runStages, runStagesSync, type RunResult } from './runner';
 import type {
   InteractionHost,
@@ -41,17 +43,23 @@ export interface PipelineRegistryDeps {
   setViewMode?: StageServices['setViewMode'];
 }
 
-/** A sensible headless default: route an interactive request through
- * `window.confirm` (resolve on OK, cancel otherwise). A host that needs a richer
- * picker injects its own via `engine.setInteractionHost`. */
+/** The default host: an interactive request becomes a core `/dialog` confirmation (resolve on OK, cancel
+ * otherwise; a superseded run closes it). Button texts come from the editor's `labels` (`ok` / `cancel` /
+ * `close`) when the ctx carries its `label` resolver. A host that needs a richer picker injects its own via
+ * `engine.setInteractionHost` / the element's `interactionHost`. */
 export function defaultInteractionHost(): InteractionHost {
   return {
     async request(req) {
-      if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
-        const ok = window.confirm([req.title, req.message].filter(Boolean).join('\n\n'));
-        return { isCancelled: !ok };
-      }
-      return { isCancelled: true };
+      if (typeof document === 'undefined') return { isCancelled: true };
+      const label = (req as { label?: LabelResolver }).label;
+      const isOk = await confirmText({
+        title: req.title,
+        message: req.message,
+        labels: label ? dialogLabels(label) : undefined,
+        trigger: req.element ?? null,
+        signal: req.signal,
+      });
+      return { isCancelled: !isOk };
     },
   };
 }

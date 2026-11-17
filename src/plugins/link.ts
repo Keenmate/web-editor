@@ -4,9 +4,10 @@
  * menu items. HTML + JSON come from the mark spec; Markdown is wired here, so the
  * plugin satisfies the serializer contract for every target.
  */
-import type { Command } from 'prosemirror-state';
+import type { Command, Transaction } from 'prosemirror-state';
 import type { Schema } from 'prosemirror-model';
 import { definePlugin } from '../engine/plugin';
+import { promptText, whenPrompted } from '../dialogs';
 import type { LabelResolver } from '../labels';
 import type { CommandSpec } from '../engine/command-registry';
 import { linkMarkSpec } from '../schema';
@@ -29,9 +30,17 @@ function toggleLink(schema: Schema, href?: string, title: string | null = null):
   };
 }
 
-/** Prompt for a URL (or remove an existing link on the selection). */
+/** Prompt for a URL (core `/dialog`; or remove an existing link on the selection). */
 function promptForLink(schema: Schema, label: LabelResolver): Command {
-  return (state, dispatch) => {
+  const prompted = whenPrompted(
+    (view) => promptText(view, label, { title: label('linkUrlPrompt'), value: 'https://', inputType: 'url' }),
+    (href, state) => {
+      let tr: Transaction | null = null;
+      if (href) toggleLink(schema, href)(state, (t) => (tr = t));
+      return tr;
+    },
+  );
+  return (state, dispatch, view) => {
     const { from, to, empty } = state.selection;
     // Nothing to link: a silent no-op (the toolbar / menu entry is disabled here;
     // Mod-k runs the command directly, so it must not pop a blocking alert — ED-5).
@@ -39,9 +48,7 @@ function promptForLink(schema: Schema, label: LabelResolver): Command {
     if (state.doc.rangeHasMark(from, to, schema.marks.link)) {
       return toggleLink(schema)(state, dispatch);
     }
-    const href = prompt(label('linkUrlPrompt'), 'https://');
-    if (!href) return false;
-    return toggleLink(schema, href)(state, dispatch);
+    return prompted(state, dispatch, view);
   };
 }
 

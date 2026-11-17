@@ -7,7 +7,7 @@
  * metadata the toolbar/menu presenters consume: keybindings, display defaults
  * (`text` / `icon` / `tooltip`), `getIsToggledCallback`, and (for prompt-driven
  * commands) an explicit `getIsEnabledCallback` so a toolbar refresh never
- * dry-runs them into a `prompt()`.
+ * dry-runs them into a prompt dialog.
  */
 import { toggleMark, setBlockType } from 'prosemirror-commands';
 import { wrapInList } from 'prosemirror-schema-list';

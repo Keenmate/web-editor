@@ -263,7 +263,7 @@ const INPUTS: readonly InputDef[] = [
     default: null,
     on: 'update',
     description:
-      'Property only. The modal bridge interactive pipeline stages call: `{ request(ctx) }`, `ctx` = the request (`kind`, `title`, `message`, `payload`) + `signal` + `controller` / `element`. Default: a `window.confirm`-backed host. Survives engine rebuilds (e.g. a `plugins` reassignment).',
+      'Property only. The modal bridge interactive pipeline stages call: `{ request(ctx) }`, `ctx` = the request (`kind`, `title`, `message`, `payload`) + `signal` + `controller` / `element`. Default: a core `/dialog` confirmation (OK / Cancel, closed when the run is superseded). Survives engine rebuilds (e.g. a `plugins` reassignment).',
   },
   {
     configKey: 'customStyles',

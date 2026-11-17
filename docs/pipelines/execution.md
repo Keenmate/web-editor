@@ -160,7 +160,7 @@ interface InteractionHost {
 
 A stage passes the run's signal along: `rt.ui.request({ kind, title, signal: rt.signal })`.
 
-The default host routes through `window.confirm`. Provide a richer one (a cloud
+The default host is a core `/dialog` confirmation (OK / Cancel, the ✕ / Escape cancel; a superseded run closes it). Provide a richer one (a cloud
 picker, an image editor) with `engine.setInteractionHost(host)` — or, on the
 element, `el.interactionHost = host` (survives engine rebuilds). The host **must**
 honor `ctx.signal` — a superseded run closes its open dialog. The awaited promise

@@ -22,6 +22,12 @@ released to a registry yet.
 - **The hidden form input is core's `createFormInputs`** (SPEC §12.21) — same `<input type="hidden" name>`
   child, same value / disabled sync; the editor keeps its own serialization (`contentFormat` +
   `getValueFormatCallback`).
+- **Prompts and confirmations are core `/dialog` modals** (SPEC §12.19), no longer `window.prompt` /
+  `window.confirm`: the link URL, image URL + alt text and code-block language prompts, and the default
+  `interactionHost` (a pipeline stage's confirmation, closed when the run is superseded). Styled, a bottom
+  sheet on a phone, inert page + Tab trap, focus back in the editor. A prompting command answers `true` at
+  once and applies its edit after the answer. New labels **`ok`** / **`cancel`** (the ✕ takes `close`); the
+  prompt texts lost their trailing colon (they are the dialog title now: `Enter link URL`, …).
 
 ### Internal — core 1.0.0-rc25
 - Needs `@keenmate/web-components-core` `^1.0.0-rc25` (unpublished at the time of writing; bump the

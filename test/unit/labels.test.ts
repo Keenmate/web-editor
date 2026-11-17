@@ -88,12 +88,18 @@ describe('<km-editor> labels', () => {
     expect(status(el, 'chars').textContent).toBe('Znaky: 3');
   });
 
-  it('prompts go through labels', async () => {
-    const el = await mount({ value: 'x', labels: JSON.stringify({ imageUrlPrompt: 'URL obrázku:' }) });
-    const spy = vi.spyOn(window, 'prompt').mockReturnValue(null);
+  it('prompts go through labels (a core /dialog, not window.prompt)', async () => {
+    const el = await mount({ value: 'x', labels: JSON.stringify({ imageUrlPrompt: 'URL obrázku', cancel: 'Zrušit' }) });
+    const spy = vi.spyOn(window, 'prompt');
     const engine = getEditorEngine(el)!;
-    engine.commands.get('insert-image')!.run(engine.view.state, undefined);
-    expect(spy).toHaveBeenCalledWith('URL obrázku:', expect.any(String));
+    const { view } = engine;
+    engine.commands.get('insert-image')!.run(view.state, view.dispatch, view);
+    const panel = document.querySelector('.km-dialog-layer')?.shadowRoot?.querySelector('.km-dialog');
+    expect(panel?.querySelector('.km-sheet-title')?.textContent).toBe('URL obrázku');
+    expect([...panel!.querySelectorAll('.km-dialog__action')].map((b) => b.textContent)).toEqual(['Zrušit', 'OK']);
+    expect(spy).not.toHaveBeenCalled();
+    (panel!.querySelector('[data-value="cancel"]') as HTMLButtonElement).click();
+    expect(document.querySelector('.km-dialog-layer')).toBeNull();
     spy.mockRestore();
   });
 
