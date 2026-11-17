@@ -147,6 +147,18 @@
       "usage": "Selection-toolbar pill text (--we-selection-toolbar-color)"
     },
     {
+      "name": "base-z-modal",
+      "required": false,
+      "readBy": "@keenmate/web-components-core",
+      "usage": "Prompt / confirmation dialogs (core /dialog, default 7000)"
+    },
+    {
+      "name": "base-z-modal-backdrop",
+      "required": false,
+      "readBy": "@keenmate/web-components-core",
+      "usage": "Backdrop of the prompt / confirmation dialogs (default 6000)"
+    },
+    {
       "name": "base-z-popover",
       "required": false,
       "usage": "Stacking of the inline-mode card over the page and of the selection toolbar (core Z_INDEX popover tier, default 7600)"
