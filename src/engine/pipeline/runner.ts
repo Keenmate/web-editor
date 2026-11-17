@@ -8,6 +8,7 @@
  * `PendingGate` — paused while a dialog waits for the user), and an `AbortSignal`
  * that supersedes in-flight work.
  */
+import { createAsyncRunner, type AsyncRunner } from '@keenmate/web-components-core';
 import type {
   InteractionHost,
   InteractionResult,
@@ -190,35 +191,50 @@ export interface DeferredRunnerDeps {
 
 /**
  * Debounced, cancellable runner for a single deferred pipeline. Call `schedule()`
- * on each change; it coalesces, runs once idle, drops stale results, and only
- * surfaces `pending` if the run's work outlasts the threshold (`PendingGate`).
+ * on each change; it coalesces, runs once idle, drops stale results (core
+ * `createAsyncRunner`: debounce, abort of the superseded run, latest-wins), and
+ * only surfaces `pending` if the run's work outlasts the threshold (`PendingGate`
+ * — the clock pauses while a dialog waits for the user, which core's loader delay
+ * doesn't model).
  */
 export class DeferredRunner {
-  private debounceTimer: ReturnType<typeof setTimeout> | undefined;
   private gate: PendingGate | undefined;
   private generation = 0;
-  private current: AbortController | undefined;
+  private readonly runner: AsyncRunner;
 
   constructor(
     private readonly pipeline: Pipeline,
     private readonly deps: DeferredRunnerDeps
-  ) {}
-
-  /** Debounce a run. Later calls within the window reset the timer. */
-  schedule(): void {
-    clearTimeout(this.debounceTimer);
-    const wait = this.pipeline.policy?.debounceMs ?? 1000;
-    this.debounceTimer = setTimeout(() => void this.fire(), wait);
+  ) {
+    this.runner = createAsyncRunner({
+      debounceMs: () => this.pipeline.policy?.debounceMs ?? 1000,
+      // A superseded run never gets here (core drops it); an abort is never an error.
+      onError: (error) => {
+        this.gate?.stop();
+        this.deps.onStatus({ phase: 'error', error });
+      },
+    });
   }
 
-  private async fire(): Promise<void> {
-    // Supersede any in-flight run (aborts its fetches / closes its dialog).
-    this.current?.abort();
-    this.gate?.stop();
+  /** Debounce a run. Later calls within the window reset the timer; a newer run supersedes a running one. */
+  schedule(): void {
+    this.runner.run(
+      (signal) => this.fire(signal),
+      (result) => {
+        if (result.halted) {
+          this.deps.onStatus({ phase: 'halted', reason: result.reason });
+          return;
+        }
+        this.deps.onResult(result.context);
+        this.deps.onStatus({ phase: 'ready' });
+      }
+    );
+  }
 
+  private async fire(signal: AbortSignal): Promise<RunResult> {
+    // The previous run was aborted by the runner (its fetches / dialog close); retire its gate.
+    this.gate?.stop();
     const generation = ++this.generation;
-    const controller = new AbortController();
-    this.current = controller;
     this.deps.onStart?.(generation);
 
     // Defer the pending indicator: only show it if the run is still the latest
@@ -226,36 +242,25 @@ export class DeferredRunner {
     const gate = new PendingGate(
       this.pipeline.policy?.thresholdMs ?? 200,
       (status) => this.deps.onStatus(status),
-      () => generation === this.generation
+      () => generation === this.generation && !signal.aborted
     );
     this.gate = gate;
     gate.start();
-
     try {
-      const result = await runStages(
+      return await runStages(
         this.pipeline,
         this.deps.getContext(),
-        { signal: controller.signal, ui: gate.wrap(this.deps.ui), generation },
+        { signal, ui: gate.wrap(this.deps.ui), generation },
         this.deps.onStage
       );
+    } finally {
       gate.stop();
-      if (generation !== this.generation) return; // superseded — drop silently
-      if (result.halted) {
-        this.deps.onStatus({ phase: 'halted', reason: result.reason });
-        return;
-      }
-      this.deps.onResult(result.context);
-      this.deps.onStatus({ phase: 'ready' });
-    } catch (err) {
-      gate.stop();
-      // A superseded run that threw on abort is not an error the user cares about.
-      if (generation === this.generation) this.deps.onStatus({ phase: 'error', error: err });
     }
   }
 
   dispose(): void {
-    clearTimeout(this.debounceTimer);
+    this.runner.cancel();
     this.gate?.stop();
-    this.current?.abort();
   }
 }
+
