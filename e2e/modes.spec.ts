@@ -145,4 +145,13 @@ test.describe('modes', () => {
         await page.evaluate(() => (document.getElementById('subject') as any).controller.runCommand('undo'));
         expect(await markdown(page)).toBe('# Title\n\nplain words here');
     });
+
+    test('split stacks the output under the editor when the EDITOR is narrow (its own width, not the viewport)', async ({ page }) => {
+        await setMode(page, 'split');
+        const columns = () => root(page).evaluate((r) => getComputedStyle(r).gridTemplateColumns.split(' ').length);
+        await editor(page).evaluate((el: HTMLElement) => (el.style.width = '1000px'));
+        expect(await columns()).toBe(2);
+        await editor(page).evaluate((el: HTMLElement) => (el.style.width = '600px')); // the viewport stays wide
+        expect(await columns()).toBe(1);
+    });
 });

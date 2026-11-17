@@ -80,7 +80,13 @@
   align-items: start;
 }
 
-@media (max-width: 720px) {
+/* Narrow EDITOR (its own width, not the viewport): the output stacks under the editor. The host is the
+   query container only in split mode (never the floating inline card, whose width follows its content). */
+:host([view-mode='split']) {
+  container-type: inline-size;
+}
+
+@container (max-width: 720px) {
   .we-root.we-split {
     grid-template-columns: 1fr;
   }

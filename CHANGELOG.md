@@ -45,6 +45,9 @@ released to a registry yet.
 - **Right-to-left:** list indent, the code-block language label, table header alignment, the empty-document
   placeholder and the start / end toolbar border use logical CSS (`padding-inline-start`, `inset-inline-end`,
   `text-align: start`, …) instead of left / right — they mirror under `dir="rtl"`.
+- **Split view stacks by the editor's own width**, not the viewport: below 720 px of EDITOR width the output
+  goes under the editor (a CSS container query on the host in split mode; was `@media (max-width: 720px)`),
+  so a narrow editor in a wide sidebar stacks and a wide one on a tablet doesn't.
 
 ### Internal — core 1.0.0-rc25
 - Deferred pipelines debounce / supersede / drop stale runs through core `createAsyncRunner` (SPEC §12.22);
