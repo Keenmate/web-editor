@@ -18,7 +18,8 @@ released to a registry yet.
   unchanged (`Ctrl+Shift+Z`). `Mod` resolves through core's `getEnvironment().isApple` (no own
   `navigator.platform` sniffing).
 - **Stacking uses core's z-index tiers:** the inline-mode card and the selection toolbar sit on
-  `var(--base-z-popover, 7600)` (were the literals `1000` / `1100`).
+  `--we-popover-z-index` → `var(--base-z-popover, 7600)` (were the literals `1000` / `1100`); tooltips on
+  `--we-tooltip-z-index` → `--base-z-tooltip`.
 - **The hidden form input is core's `createFormInputs`** (SPEC §12.21) — same `<input type="hidden" name>`
   child, same value / disabled sync; the editor keeps its own serialization (`contentFormat` +
   `getValueFormatCallback`).
