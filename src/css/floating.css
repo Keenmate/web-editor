@@ -10,7 +10,7 @@
 }
 
 .we-floating {
-  z-index: var(--base-z-popover, 7600); /* core Z_INDEX tier */
+  z-index: var(--we-popover-z-index);
   border-radius: var(--we-radius);
   box-shadow: 0 6px 24px var(--we-shadow-color);
   overflow: hidden; /* clip the inner bar to the rounded corners */
@@ -19,7 +19,7 @@
 /* Tooltip — core createTooltip (delegated over the toolbar buttons / status items, `data-tooltip`).
    Hidden until core adds the visible class; never takes the pointer. */
 .we-tooltip {
-  z-index: var(--base-z-tooltip, 9000); /* core Z_INDEX tier */
+  z-index: var(--we-tooltip-z-index);
   max-inline-size: 240px;
   padding: 4px 8px;
   border-radius: var(--we-radius);
@@ -29,7 +29,7 @@
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
-  transition: opacity var(--base-duration-fast, 120ms) ease;
+  transition: opacity var(--we-tooltip-duration) ease;
 }
 
 .we-tooltip--visible {
