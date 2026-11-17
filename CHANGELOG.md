@@ -40,6 +40,7 @@ released to a registry yet.
   stop with Left / Right too.
 
 ### Internal — core 1.0.0-rc25
+- `el.controller` is built by core `createControllerFacade` (SPEC §12.34) — same frozen method list + live `value`.
 - Needs `@keenmate/web-components-core` `^1.0.0-rc25` (unpublished at the time of writing; bump the
   dependency when it ships).
 

@@ -8,7 +8,7 @@
  * only the data. Contexts built by a standalone {@link EditorEngine} (no
  * `<km-editor>` around it) have no `controller` / `element`.
  */
-import type { ComponentContext } from '@keenmate/web-components-core';
+import { createControllerFacade, type ComponentContext } from '@keenmate/web-components-core';
 import type {
   ActionEventDetail,
   ActionItem,
@@ -73,15 +73,12 @@ const CONTROLLER_METHODS = [
 
 type ControllerTarget = Pick<EditorController, (typeof CONTROLLER_METHODS)[number] | 'value'>;
 
-/** Build the facade from a method-name list; `getTarget()` is resolved per call. */
+/**
+ * Build the facade (core `createControllerFacade`, SPEC §12.34): the listed methods forward to `getTarget()`,
+ * resolved per call, and `value` reads live; frozen — the engine is never reachable through it.
+ */
 export function createEditorController(getTarget: () => ControllerTarget): EditorController {
-  const controller = {} as Record<string, unknown>;
-  for (const name of CONTROLLER_METHODS) {
-    controller[name] = (...args: unknown[]) =>
-      (getTarget()[name] as (...a: unknown[]) => unknown)(...args);
-  }
-  Object.defineProperty(controller, 'value', { get: () => getTarget().value, enumerable: true });
-  return Object.freeze(controller) as unknown as EditorController;
+  return createControllerFacade<EditorController>(getTarget, { methods: CONTROLLER_METHODS, state: { value: '' } });
 }
 
 // ============================================================================
