@@ -145,7 +145,8 @@ export class CommandBar {
     btn.textContent = r.icon ?? r.text;
     if (r.isToggled) btn.setAttribute('aria-pressed', 'true');
     else btn.removeAttribute('aria-pressed');
-    btn.title = r.tooltip ?? r.text;
+    // Shown by the chrome's core tooltip (createTooltip, delegated) — not a native `title`.
+    btn.dataset.tooltip = r.tooltip ?? r.text;
     btn.setAttribute('aria-label', r.text);
     btn.disabled = r.isDisabled;
     btn.setAttribute('aria-disabled', String(r.isDisabled));

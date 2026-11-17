@@ -57,6 +57,10 @@
   --we-selection-toolbar-bg: var(--base-tooltip-bg, light-dark(color-mix(in srgb, var(--we-text-color) 85%, var(--we-bg)), oklch(from var(--we-bg) calc(l + 0.15) c h)));
   --we-selection-toolbar-color: var(--base-tooltip-text-color, light-dark(var(--we-bg), var(--we-text-color)));
 
+  /* Tooltips of the toolbar buttons / status items (core createTooltip) — the shared tooltip tokens */
+  --we-tooltip-bg: var(--base-tooltip-bg, light-dark(color-mix(in srgb, var(--we-text-color) 85%, var(--we-bg)), oklch(from var(--we-bg) calc(l + 0.15) c h)));
+  --we-tooltip-color: var(--base-tooltip-text-color, light-dark(var(--we-bg), var(--we-text-color)));
+
   /* Links in the document */
   --we-link-color: var(--base-primary-text-color, light-dark(color-mix(in srgb, black 45%, var(--we-accent)), color-mix(in srgb, white 25%, var(--we-accent))));
   --we-link-color-hover: light-dark(color-mix(in srgb, black 25%, var(--we-link-color)), color-mix(in srgb, white 25%, var(--we-link-color)));

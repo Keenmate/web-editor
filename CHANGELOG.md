@@ -38,6 +38,10 @@ released to a registry yet.
   `start` / `end`, `aria-orientation`) and Home / End move focus across every group; disabled buttons are
   skipped. The groups are `role="group"` (were nested `role="toolbar"`). The selection toolbar is one tab
   stop with Left / Right too.
+- **Toolbar / status tooltips are core `createTooltip`** (one delegated tooltip over `[data-tooltip]`), no
+  longer native `title`: themed (`--we-tooltip-bg` / `--we-tooltip-color` → the shared `--base-tooltip-*`
+  tokens, `--base-z-tooltip`), shown on keyboard focus too, `aria-describedby` while shown, Escape hides it.
+  The button's `title` attribute is gone — its text is `data-tooltip`.
 
 ### Internal — core 1.0.0-rc25
 - Deferred pipelines debounce / supersede / drop stale runs through core `createAsyncRunner` (SPEC §12.22);

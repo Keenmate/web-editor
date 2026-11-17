@@ -50,6 +50,11 @@
       "usage": "Context menu shadow"
     },
     {
+      "name": "base-duration-fast",
+      "required": false,
+      "usage": "Tooltip fade-in (the motion level / reduced motion reach it through core MOTION_CSS)"
+    },
+    {
       "name": "base-elevated-bg",
       "required": false,
       "usage": "Raised strips: zone toolbar, status bar, output tabs, table headers, preview surface (--we-muted-bg); also core's context menu"
@@ -162,6 +167,11 @@
       "name": "base-z-popover",
       "required": false,
       "usage": "Stacking of the inline-mode card over the page and of the selection toolbar (core Z_INDEX popover tier, default 7600)"
+    },
+    {
+      "name": "base-z-tooltip",
+      "required": false,
+      "usage": "Stacking of the toolbar / status tooltips (core Z_INDEX tooltip tier, default 9000)"
     }
   ],
   "componentVariables": [
@@ -228,6 +238,14 @@
     {
       "name": "we-selection-toolbar-color",
       "usage": "Selection-toolbar pill text; its hover and separator are mixes of it"
+    },
+    {
+      "name": "we-tooltip-bg",
+      "usage": "Toolbar button / status item tooltip background (core createTooltip; the shared tooltip tokens)"
+    },
+    {
+      "name": "we-tooltip-color",
+      "usage": "Toolbar button / status item tooltip text"
     },
     {
       "name": "we-link-color",

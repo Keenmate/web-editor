@@ -32,7 +32,7 @@ export class StatusBar {
       const node = document.createElement('span');
       node.className = 'we-status-item';
       node.dataset.status = item.id;
-      if (item.tooltip) node.title = item.tooltip;
+      if (item.tooltip) node.dataset.tooltip = item.tooltip; // the chrome's core tooltip
       (item.align === 'end' ? end : start).appendChild(node);
       this.#items.push({ item, node });
     }

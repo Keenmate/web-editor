@@ -115,7 +115,7 @@ describe('toolbar items are core action items', () => {
     const bold = toolbarButton(el, 'bold');
     expect(bold.textContent).toBe('B');
     expect(bold.getAttribute('aria-label')).toBe('Bold');
-    expect(bold.title).toBe('Bold (Ctrl+B)');
+    expect(bold.dataset.tooltip).toBe('Bold (Ctrl+B)');
   });
 
   it('a click runs the command, then fires `action` (+ onAction) with the context (after the fact)', async () => {

@@ -18,8 +18,8 @@ test.describe('toolbar', () => {
         expect(z!.y + z!.height).toBeLessThanOrEqual(b!.y + 1);
         const groups = await page.locator('km-editor#subject .we-toolbar-zone .we-group').evaluateAll((gs) => gs.map((g) => (g as HTMLElement).dataset.group));
         expect(groups).toEqual(['format', 'block', 'list', 'insert', 'link', 'image', 'table', 'history', 'view']);
-        await expect(toolbarButton(page, 'bold')).toHaveAttribute('title', 'Bold (Ctrl+B)');
-        await expect(toolbarButton(page, 'redo')).toHaveAttribute('title', /Redo/);
+        await expect(toolbarButton(page, 'bold')).toHaveAttribute('data-tooltip', 'Bold (Ctrl+B)');
+        await expect(toolbarButton(page, 'redo')).toHaveAttribute('data-tooltip', /Redo/);
     });
 
     const EDGES: Array<[string, (z: any, b: any) => boolean]> = [
@@ -78,6 +78,24 @@ test.describe('toolbar', () => {
         await toolbarButton(page, 'bold').focus();
         await page.keyboard.press('ArrowDown');
         expect(await focusedAction()).toBe('italic');
+    });
+
+    test('tooltips are core createTooltip (no native title): hover and keyboard focus show it, described-by while shown', async ({ page }) => {
+        const tip = page.locator('km-editor#subject .we-tooltip');
+        await expect(toolbarButton(page, 'bold')).not.toHaveAttribute('title');
+        await toolbarButton(page, 'bold').hover();
+        await expect(tip).toHaveClass(/we-tooltip--visible/);
+        await expect(tip).toHaveText('Bold (Ctrl+B)');
+        await expect(tip).toHaveAttribute('role', 'tooltip');
+        const tipId = await tip.getAttribute('id');
+        await expect(toolbarButton(page, 'bold')).toHaveAttribute('aria-describedby', new RegExp(tipId!));
+        await page.mouse.move(0, 0);
+        await expect(page.locator('km-editor#subject .we-tooltip--visible')).toHaveCount(0);
+        await toolbarButton(page, 'italic').focus();
+        await expect(tip).toHaveClass(/we-tooltip--visible/);
+        await expect(tip).toHaveText(/Italic/);
+        await page.keyboard.press('Escape');
+        await expect(page.locator('km-editor#subject .we-tooltip--visible')).toHaveCount(0);
     });
 
     test('clicking a toolbar button keeps focus in the editor', async ({ page }) => {

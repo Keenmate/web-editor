@@ -58,7 +58,7 @@ describe('<km-editor> labels', () => {
     const el = await mount({ value: 'one two', statusbar: 'bottom' });
     expect(cmd(el, 'bold').getAttribute('aria-label')).toBe('Bold');
     expect(cmd(el, 'insert-link').getAttribute('aria-label')).toBe('Insert link');
-    expect(cmd(el, 'insert-link').title).toBe('Insert link (Ctrl+K)');
+    expect(cmd(el, 'insert-link').dataset.tooltip).toBe('Insert link (Ctrl+K)');
     const group = el.shadowRoot!.querySelector('[data-group="format"]')!;
     expect(group.getAttribute('aria-label')).toBe('Format');
     expect(status(el, 'words').textContent).toBe('Words: 2');
@@ -71,7 +71,7 @@ describe('<km-editor> labels', () => {
       labels: JSON.stringify({ bold: 'Tučně', boldTooltip: 'Tučné písmo', formatGroup: 'Formát', words: 'Slova: {count}' }),
     });
     expect(cmd(el, 'bold').getAttribute('aria-label')).toBe('Tučně');
-    expect(cmd(el, 'bold').title).toBe('Tučné písmo');
+    expect(cmd(el, 'bold').dataset.tooltip).toBe('Tučné písmo');
     expect(cmd(el, 'italic').getAttribute('aria-label')).toBe('Italic');
     expect(el.shadowRoot!.querySelector('[data-group="format"]')!.getAttribute('aria-label')).toBe('Formát');
     expect(status(el, 'words').textContent).toBe('Slova: 2');
@@ -84,7 +84,7 @@ describe('<km-editor> labels', () => {
     await el.whenSettled();
     expect(getEditorEngine(el)).toBe(engine);
     expect(cmd(el, 'insert-link').getAttribute('aria-label')).toBe('Vložit odkaz');
-    expect(cmd(el, 'insert-link').title).toBe('Vložit odkaz (Ctrl+K)');
+    expect(cmd(el, 'insert-link').dataset.tooltip).toBe('Vložit odkaz (Ctrl+K)');
     expect(status(el, 'chars').textContent).toBe('Znaky: 3');
   });
 

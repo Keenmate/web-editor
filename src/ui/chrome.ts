@@ -16,6 +16,7 @@
  */
 import type { EditorEngine } from '../engine/editor-engine';
 import type { ViewLayout } from './view-layout';
+import { createTooltip, type TooltipHandle } from '@keenmate/web-components-core/positioning';
 import { ToolbarZone } from './toolbar-zone';
 import { StatusBar } from './status-bar';
 import { SelectionToolbar } from './selection-toolbar';
@@ -56,6 +57,7 @@ export class EditorChrome {
   #selection: SelectionToolbar;
   #menu: ContextMenu;
   #unsubscribe: Array<() => void> = [];
+  #tooltip: TooltipHandle;
 
   constructor(opts: EditorChromeOptions) {
     const { engine, layout } = opts;
@@ -88,6 +90,19 @@ export class EditorChrome {
 
     // `selection-change` covers typing + caret moves; `change` also covers a
     // whole-document replacement (setValue), which emits only `change`.
+    // One delegated core tooltip for every toolbar button / status item (`data-tooltip`): themed, shown on
+    // hover AND keyboard focus, `aria-describedby` while shown, Escape hides it (a native `title` does none).
+    this.#tooltip = createTooltip({
+      trigger: layout.overlayLayer.getRootNode() as ShadowRoot,
+      selector: '[data-tooltip]',
+      content: (target) => target.dataset.tooltip || null,
+      container: layout.overlayLayer,
+      placement: 'bottom',
+      delay: { show: 400 },
+      cssClass: 'we-tooltip',
+      visibleClass: 'we-tooltip--visible',
+    });
+
     this.#unsubscribe.push(engine.events.on('selection-change', () => this.refresh()));
     this.#unsubscribe.push(engine.events.on('change', () => this.refresh()));
 
@@ -136,6 +151,7 @@ export class EditorChrome {
    * re-evaluates the selection toolbar.
    */
   deactivate(): void {
+    this.#tooltip.hide();
     this.#selection.hide();
     this.#menu.close();
   }
@@ -143,6 +159,7 @@ export class EditorChrome {
   destroy(): void {
     this.#unsubscribe.forEach((off) => off());
     this.#unsubscribe = [];
+    this.#tooltip.destroy();
     this.#toolbar.destroy();
     this.#statusTop.destroy();
     this.#statusBottom.destroy();

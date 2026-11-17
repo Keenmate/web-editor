@@ -261,7 +261,8 @@ host is in:
   `data-context-theme`.
 - **Per instance** — `<km-editor data-theme="dark">` (or `"light"`) wins over the page.
 
-The selection toolbar is a dark pill in both modes (the shared tooltip tokens), and code blocks
+The selection toolbar and the toolbar / status tooltips (core `createTooltip`: hover and keyboard focus,
+`--we-tooltip-bg` / `--we-tooltip-color`) are dark in both modes (the shared tooltip tokens), and code blocks
 stay dark in both (the syntax highlighting is Prism's dark theme). Re-theme with `--base-*` on
 `:root` (every Keenmate component follows), or `--we-*` on the element:
 

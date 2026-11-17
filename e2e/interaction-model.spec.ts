@@ -75,7 +75,7 @@ test.describe('interaction model', () => {
     await selectPlain(page);
     await clearLog(page);
     const bold = page.locator('#subject .we-toolbar-zone [data-action="bold"]');
-    await expect(bold).toHaveAttribute('title', 'Bold (Ctrl+B)');
+    await expect(bold).toHaveAttribute('data-tooltip', 'Bold (Ctrl+B)');
     await bold.click();
     await expect(page.locator('#subject .ProseMirror p strong')).toHaveText('plain');
     expect(await log(page)).toEqual([
