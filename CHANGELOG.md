@@ -19,6 +19,9 @@ released to a registry yet.
   `navigator.platform` sniffing).
 - **Stacking uses core's z-index tiers:** the inline-mode card and the selection toolbar sit on
   `var(--base-z-popover, 7600)` (were the literals `1000` / `1100`).
+- **The hidden form input is core's `createFormInputs`** (SPEC §12.21) — same `<input type="hidden" name>`
+  child, same value / disabled sync; the editor keeps its own serialization (`contentFormat` +
+  `getValueFormatCallback`).
 
 ### Internal — core 1.0.0-rc25
 - Needs `@keenmate/web-components-core` `^1.0.0-rc25` (unpublished at the time of writing; bump the

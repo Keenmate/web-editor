@@ -37,6 +37,7 @@ import {
   adoptStyles,
   createCustomStyles,
   renderLoader,
+  createFormInputs,
   type CustomStylesCallback,
   type CustomStylesHandle,
   type EventDef,
@@ -364,7 +365,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   /** Removes the pending loader (core `renderLoader`); set while it shows. */
   #removeLoader?: () => void;
   // The light-DOM hidden form input (only while `name` is set).
-  #formInput?: HTMLInputElement;
+  /** The light-DOM hidden input (core `createFormInputs`, SPEC §12.21). */
+  #formInputs = createFormInputs(this);
   /** Whether the host is currently invalid because of a throwing `getValueFormatCallback`. */
   #hasFormatError = false;
   // Custom editor plugin set. `undefined` → the engine's defaultPlugins(). Not an
@@ -662,29 +664,15 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   }
 
   /**
-   * Form convention (Keenmate suite, like web-multiselect): a light-DOM hidden
+   * Form convention (Keenmate suite, core `createFormInputs`): a light-DOM hidden
    * input named by `name` carries the live content in `contentFormat` — the host
    * never calls `setFormValue`. No `name` → no input. Disabled (not submitted)
    * while the editor is effectively disabled.
    */
   #syncFormInput(): void {
     const name = this.config.name as string | null;
-    if (!name) {
-      this.#formInput?.remove();
-      this.#formInput = undefined;
-      this.#clearFormatError();
-      return;
-    }
-    let input = this.#formInput;
-    if (!input) {
-      input = this.ownerDocument.createElement('input');
-      input.type = 'hidden';
-      this.#formInput = input;
-    }
-    if (input.parentNode !== this) this.appendChild(input);
-    input.name = name;
-    input.value = this.#engine ? this.#formValue() : '';
-    input.disabled = this.isEffectivelyDisabled;
+    if (!name) this.#clearFormatError();
+    this.#formInputs.write(name, name && this.#engine ? this.#formValue() : '', { isDisabled: this.isEffectivelyDisabled });
   }
 
   /**
@@ -951,8 +939,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     this.#customStyles = null;
     this.#teardownEngine();
     this.#layout.destroy();
-    this.#formInput?.remove();
-    this.#formInput = undefined;
+    this.#formInputs.clear();
   }
 }
 
