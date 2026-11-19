@@ -77,7 +77,7 @@ export class CommandBar {
   refresh(): void {
     const registry = this.#host.registry;
     const resolved = resolveMenuEntries<any, EditorAction>(this.#entries, this.#host.context(), (item) =>
-      commandDefaults(registry, item, this.#host.label)
+      commandDefaults(registry, item, this.#host.label, 'toolbar')
     );
 
     const layout = resolved

@@ -21,9 +21,9 @@ import type { EditorViewMode, EditorToolbar, EditorStatusBar } from '../web-comp
 const OUTPUT_FORMATS: readonly SerializationFormat[] = ['markdown', 'html', 'json'];
 /** The `labels` key of each output tab. */
 const OUTPUT_LABEL_KEYS: Record<SerializationFormat, string> = {
-  markdown: 'markdownTab',
-  html: 'htmlTab',
-  json: 'jsonTab',
+  markdown: 'buttons.markdownTab',
+  html: 'buttons.htmlTab',
+  json: 'buttons.jsonTab',
 };
 
 export interface ViewLayoutOptions {

@@ -144,36 +144,41 @@ standalone (headless) use.
 Every UI string goes through one `labels` object — partial (unset keys stay English),
 `{name}` placeholders, applied live (no rebuild). `''` means deliberately empty (renders
 nothing); a missing key falls back to English. Every editor label is inserted as **text**
-(none is HTML), so there are no HTML-injection labels:
+(none is HTML), so there are no HTML-injection labels. Keys are flat `<elementType>.<name>`
+(rulebook D-NC-24) — the element type says where the text is shown (`buttons`, `tooltips`,
+`ariaLabels`, `placeholders`, `headers`, `labels`, `messages`, `errors`, `menuItems`):
 
 ```html
-<km-editor labels='{"bold":"Tučně","insertLink":"Vložit odkaz","linkUrlPrompt":"Adresa odkazu:","words":"Slova: {count}"}'></km-editor>
+<km-editor labels='{"ariaLabels.bold":"Tučně","ariaLabels.insertLink":"Vložit odkaz","headers.linkUrl":"Adresa odkazu:","labels.words":"Slova: {count}"}'></km-editor>
 ```
 
-Page-wide, for every editor on the page (core `/locale`): per key the element's `labels` win, then
-`window.components.locale.labels['km-editor']`, then English. A page-wide `formatLabelCallback` (ICU,
-i18next) formats every label; assigning `window.components.locale` re-renders live editors:
+Page-wide, for every editor on the page (core `/locale`): per key the element's `labels` win
+(short `tooltips.bold` or full `km-editor.tooltips.bold` keys), then the ONE flat page dictionary
+`window.components.locale.labels['km-editor.<key>']`, then English. A page-wide `translateCallback`
+(ICU, i18next — gets the full key, the template and the params) translates every key the element
+didn't set; assigning `window.components.locale` re-renders live editors:
 
 ```js
-window.components.locale = { labels: { 'km-editor': { bold: 'Tučně', words: 'Slova: {count}' } } };
+window.components.locale = { labels: { 'km-editor.ariaLabels.bold': 'Tučně', 'km-editor.labels.words': 'Slova: {count}' } };
 ```
 
 | Key | English default |
 | --- | --------------- |
-| `<commandKey>` — the command id camel-cased (`bold`, `insertLink`, `insertTable`, `bulletList`, `undo`, a plugin's `imageBrowserPick`, …) | the command's own text (`Bold`, `Insert link`, …) — item text, menu label, button `aria-label` |
-| `<commandKey>Tooltip` | the command's tooltip, else `<text> (<shortcut>)` |
-| `<groupId>Group` — `formatGroup`, `blockGroup`, `listGroup`, `insertGroup`, `historyGroup`, `viewGroup`, `linkGroup`, `imageGroup`, `tableGroup`, `imageBrowserGroup` | toolbar group accessible names (`Format`, `Block`, `Lists`, …) |
-| `placeholder` | `''` (off) — shown (as text) while the document is empty |
-| `words` / `chars` | `Words: {count}` / `Chars: {count}` (status bar) |
-| `ok` / `cancel` | `OK` / `Cancel` (prompt and confirmation dialog buttons; the ✕ takes `close`) |
-| `linkUrlPrompt` | `Enter link URL` |
-| `imageUrlPrompt` / `imageAltPrompt` | `Enter image URL` / `Enter alt text (optional)` |
-| `codeLanguagePrompt` / `codeLanguageChangePrompt` | `Enter language ({languages})` / `Change language ({languages})` |
-| `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage` | cloud-image plugin texts |
-| `markdownTab` / `htmlTab` / `jsonTab` | `Markdown` / `HTML` / `JSON` — the split view's output tabs |
-| `back` / `close` | `Back` / `Close` — the context menu's submenu back button and close button when it opens as a sheet / drawer (`menu-presentation`) |
-| `loading` | `aria-label` of the pending loader ("Loading…") |
-| `valueFormatError` | validation message while `getValueFormatCallback` throws ("The value could not be formatted.") |
+| `<name>` = the command id camel-cased (`bold`, `insertLink`, `insertTable`, `bulletList`, `undo`, `viewEdit`, a plugin's `imageBrowserPick`, …): `ariaLabels.<name>` (an icon toolbar button's accessible name), `buttons.<name>` (a toolbar button showing its text — `viewEdit` / `viewSplit` / `viewPreview`), `menuItems.<name>` (the context-menu entry) | the command's own text (`Bold`, `Insert link`, …) |
+| `tooltips.<name>` | the command's tooltip, else `<text> (<shortcut>)` |
+| `ariaLabels.<groupId>Group` — `ariaLabels.formatGroup`, `blockGroup`, `listGroup`, `insertGroup`, `historyGroup`, `viewGroup`, `linkGroup`, `imageGroup`, `tableGroup`, `imageBrowserGroup` | toolbar group accessible names (`Format`, `Block`, `Lists`, …) |
+| `placeholders.document` | `''` (off) — shown (as text) while the document is empty |
+| `labels.words` / `labels.chars` | `Words: {count}` / `Chars: {count}` (status bar) |
+| `buttons.ok` / `buttons.cancel` | `OK` / `Cancel` (prompt and confirmation dialog buttons; the ✕ takes `ariaLabels.close`) |
+| `headers.linkUrl` | `Enter link URL` (prompt title) |
+| `headers.imageUrl` / `headers.imageAlt` | `Enter image URL` / `Enter alt text (optional)` |
+| `headers.codeLanguage` / `headers.codeLanguageChange` | `Enter language ({languages})` / `Change language ({languages})` |
+| `ariaLabels.cloudImage` / `tooltips.cloudImage` / `menuItems.cloudImage` | `Cloud image` / `Insert image from the cloud` / `Insert cloud image…` — the cloud-image plugin's toolbar button, its tooltip, its menu entry |
+| `headers.cloudImagePicker` / `messages.cloudImagePicker` | `Choose a cloud image` / `Pick an image to insert.` — the default picker confirmation |
+| `buttons.markdownTab` / `buttons.htmlTab` / `buttons.jsonTab` | `Markdown` / `HTML` / `JSON` — the split view's output tabs |
+| `buttons.back` / `ariaLabels.close` | `Back` / `Close` — the context menu's submenu back button and ✕ close button when it opens as a sheet / drawer (`menu-presentation`); `ariaLabels.close` is also the dialogs' ✕ |
+| `ariaLabels.loading` | `aria-label` of the pending loader ("Loading…") |
+| `errors.valueFormat` | validation message while `getValueFormatCallback` throws ("The value could not be formatted.") |
 
 Plugin code resolves strings with `label(key, params?, fallback?)` — on the plugin
 builder ctx (`commands: ({ schema, label }) => …`), on every callback ctx (`ctx.label`)
@@ -191,7 +196,7 @@ components it uses a **light-DOM hidden input** (a child of the host) — not
 
 ```html
 <form>
-  <km-editor name="body" content-format="html" labels='{"placeholder":"Write your post…"}'></km-editor>
+  <km-editor name="body" content-format="html" labels='{"placeholders.document":"Write your post…"}'></km-editor>
 </form>
 ```
 

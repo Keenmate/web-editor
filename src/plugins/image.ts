@@ -16,9 +16,9 @@ import { EDITOR_ICONS } from '../icons';
 function promptForImage(schema: Schema, label: LabelResolver): Command {
   return whenPrompted(
     async (view) => {
-      const src = await promptText(view, label, { title: label('imageUrlPrompt'), value: 'https://picsum.photos/300/200', inputType: 'url' });
+      const src = await promptText(view, label, { title: label('headers.imageUrl'), value: 'https://picsum.photos/300/200', inputType: 'url' });
       if (!src) return null;
-      const alt = (await promptText(view, label, { title: label('imageAltPrompt') })) || '';
+      const alt = (await promptText(view, label, { title: label('headers.imageAlt') })) || '';
       return { src, alt };
     },
     ({ src, alt }, state) => state.tr.replaceSelectionWith(schema.nodes.image.create({ src, alt, title: null })).scrollIntoView(),

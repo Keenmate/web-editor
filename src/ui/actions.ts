@@ -81,24 +81,31 @@ export function createActionHost(opts: ActionHostOptions): ActionSurfaceHost {
 /**
  * The built-in defaults of an item naming a registered command: text / icon /
  * tooltip / shortcut from the `CommandSpec` — text and tooltip through `labels`
- * (key = camel-cased command id, `<key>Tooltip`; the spec's text is the English default) — `isDisabled` from its predicates and
+ * (`<name>` = camel-cased command id; the text key by `surface`: `menuItems.<name>` in a menu, in a toolbar
+ * `ariaLabels.<name>` for an icon button / `buttons.<name>` for a text one; `tooltips.<name>`; the spec's
+ * text / tooltip is the English default) — `isDisabled` from its predicates and
  * — only for a toggle command (one with `getIsToggledCallback`) — `isToggled`. An unknown command (its plugin isn't loaded) is disabled. A
  * custom item has no defaults.
  */
 export function commandDefaults(
   registry: CommandRegistry,
   item: EditorActionItem,
-  label: LabelResolver
+  label: LabelResolver,
+  surface: 'toolbar' | 'menu'
 ): Partial<ResolvedActionItem<EditorAction>> | undefined {
   const name = item.action;
   if (!name || name === 'custom') return undefined;
   const spec = registry.get(name);
   const key = labelKey(name);
-  if (!spec) return { text: label(key, undefined, name), isDisabled: true };
+  // Where the text is shown picks its element type: a menu entry, an icon button's accessible name, or a
+  // text button's caption.
+  const icon = item.icon !== undefined ? item.icon : spec?.icon;
+  const textKey = surface === 'menu' ? `menuItems.${key}` : icon ? `ariaLabels.${key}` : `buttons.${key}`;
+  if (!spec) return { text: label(textKey, undefined, name), isDisabled: true };
   const shortcut = registry.shortcut(name);
-  const text = label(key, undefined, spec.text ?? name);
+  const text = label(textKey, undefined, spec.text ?? name);
   const shown = item.text ?? text;
-  const tooltip = label(`${key}Tooltip`, undefined, spec.tooltip ?? '');
+  const tooltip = label(`tooltips.${key}`, undefined, spec.tooltip ?? '');
   return {
     text,
     icon: spec.icon,

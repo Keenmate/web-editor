@@ -288,7 +288,7 @@ export class EditorEngine {
         }),
         keymap(baseKeymap),
         // `labels.placeholder` while the document is empty ('' = off).
-        placeholderPlugin(() => this.label('placeholder')),
+        placeholderPlugin(() => this.label('placeholders.document')),
         ...(options.plugins ?? []),
       ],
     });

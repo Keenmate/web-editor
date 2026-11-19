@@ -22,7 +22,7 @@ import { EDITOR_ICONS } from '../icons';
 
 /**
  * `text` / `tooltip` are the English defaults; an element's `labels` override them
- * per command (key = camel-cased id, `<key>Tooltip`). `label` resolves the prompts.
+ * per command (`<name>` = camel-cased id: `buttons.<name>` / `ariaLabels.<name>` / `menuItems.<name>`, `tooltips.<name>`). `label` resolves the prompts.
  */
 export function registerCoreCommands(registry: CommandRegistry, schema: Schema, label?: LabelResolver): void {
   registry.register({
@@ -118,7 +118,7 @@ export interface ViewModePort {
   setViewMode(mode: EditorViewMode): void;
 }
 
-/** The view-mode commands: id → mode + English text. Labels: `viewEdit` / `viewSplit` / `viewPreview`. */
+/** The view-mode commands: id → mode + English text. Labels: `buttons.viewEdit` / `buttons.viewSplit` / `buttons.viewPreview` (`menuItems.*` in a menu). */
 export const VIEW_MODE_COMMANDS = [
   { id: 'view-edit', mode: 'edit', text: 'Edit' },
   { id: 'view-split', mode: 'split', text: 'Split' },

@@ -92,7 +92,7 @@ export type EditorComponentContext = ComponentContext<EditorController, HTMLElem
 export interface EditorLabelContext extends EditorComponentContext {
   /**
    * Resolve a UI string through the element's `labels` (non-enumerable):
-   * `ctx.label('words', { count: 3 })`. See `src/labels.ts` for the keys.
+   * `ctx.label('labels.words', { count: 3 })`. See `src/labels.ts` for the keys.
    */
   readonly label: LabelResolver;
 }

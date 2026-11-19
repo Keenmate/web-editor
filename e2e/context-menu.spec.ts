@@ -246,11 +246,11 @@ test.describe('context menu', () => {
         await expect(menu(page)).toBeHidden();
     });
 
-    test('menu-presentation="sheet" opens it as a sheet; the close button takes labels.close', async ({ page }) => {
+    test('menu-presentation="sheet" opens it as a sheet; the close button takes labels ariaLabels.close', async ({ page }) => {
         await page.evaluate(() => {
             const el = document.getElementById('subject')!;
             el.setAttribute('menu-presentation', 'sheet');
-            el.setAttribute('labels', JSON.stringify({ close: 'Zavřít', back: 'Zpět' }));
+            el.setAttribute('labels', JSON.stringify({ 'ariaLabels.close': 'Zavřít', 'buttons.back': 'Zpět' }));
         });
         await pm(page).locator('p').click({ button: 'right' });
         const sheet = page.locator('km-editor#subject .km-menu-sheet');

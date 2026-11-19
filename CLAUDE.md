@@ -136,7 +136,8 @@ small framework-free chrome layer in `ui/`. Things the code won't tell you:
   the editor's cleanup is `destroyCallback()`; a destroyed element never rebuilds.
 - **UI strings go through `labels`** (`src/labels.ts`): never hard-code English in
   chrome / prompts — use `engine.label` / `ctx.label` / the plugin builder's `label`
-  / `rt.label`; command texts are keyed by the camel-cased command id.
+  / `rt.label`; keys are flat `<elementType>.<name>` (`tooltips.bold`, `headers.linkUrl`); command texts are
+  keyed by the camel-cased command id per surface (`ariaLabels.` / `buttons.` / `menuItems.` / `tooltips.<name>`).
 
 ### Interaction model (web-components-core `/actions`)
 

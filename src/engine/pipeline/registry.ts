@@ -44,8 +44,8 @@ export interface PipelineRegistryDeps {
 }
 
 /** The default host: an interactive request becomes a core `/dialog` confirmation (resolve on OK, cancel
- * otherwise; a superseded run closes it). Button texts come from the editor's `labels` (`ok` / `cancel` /
- * `close`) when the ctx carries its `label` resolver. A host that needs a richer picker injects its own via
+ * otherwise; a superseded run closes it). Button texts come from the editor's `labels` (`buttons.ok` / `buttons.cancel` /
+ * `ariaLabels.close`) when the ctx carries its `label` resolver. A host that needs a richer picker injects its own via
  * `engine.setInteractionHost` / the element's `interactionHost`. */
 export function defaultInteractionHost(): InteractionHost {
   return {

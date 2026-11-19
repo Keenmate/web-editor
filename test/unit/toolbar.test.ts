@@ -77,8 +77,8 @@ describe('<km-editor> view-mode toolbar items', () => {
     el.remove(); // the click focused the view: detach it (happy-dom shadow-selection quirk)
   });
 
-  it('labels viewEdit / viewSplit / viewPreview / viewGroup override the texts', async () => {
-    const el = await mount({ value: 'x', labels: JSON.stringify({ viewEdit: 'Upravit', viewGroup: 'Zobrazení' }) });
+  it('labels buttons.viewEdit / … / ariaLabels.viewGroup override the texts', async () => {
+    const el = await mount({ value: 'x', labels: JSON.stringify({ 'buttons.viewEdit': 'Upravit', 'ariaLabels.viewGroup': 'Zobrazení' }) });
     expect(cmd(el, 'view-edit').textContent).toBe('Upravit');
     expect(bar(el).querySelector('[data-group="view"]')!.getAttribute('aria-label')).toBe('Zobrazení');
   });

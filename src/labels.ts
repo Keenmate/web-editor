@@ -3,70 +3,74 @@ import { createLabels, resolveLabel, formatLabel as formatCoreLabel } from '@kee
 /**
  * UI strings (rulebook D-NC-24, core `/locale` SPEC §12.24): one `labels` object
  * per element — a PARTIAL map of keys to strings with `{name}` placeholders —
- * over built-in English defaults. Resolution per key (core `createLabels`): the
- * element's `labels` → the page-wide `window.components.locale.labels['km-editor']`
- * → the built-in English default; then the page's `formatLabelCallback` (ICU /
+ * over built-in English defaults. Keys are flat `<elementType>.<name>`
+ * (`buttons.ok`, `tooltips.bold`); the full key is `km-editor.<key>`. Resolution
+ * per key (core `createLabels`): the element's `labels` (short or full key) → the
+ * page-wide flat dictionary `window.components.locale.labels['km-editor.<key>']`
+ * → the built-in English default; then the page's `translateCallback` (ICU /
  * i18next) or the `{name}` replacement. Labels are TEXT (`textContent` /
  * attributes) — never HTML.
  *
  * Keys:
- * - **Command items** derive their key from the command id, camel-cased
- *   (`insert-link` → `insertLink`, `image:browser:pick` → `imageBrowserPick`):
- *   `<key>` is the item text (menu label / button `aria-label`), `<key>Tooltip`
- *   its tooltip. The English default is the command's own `text` / `tooltip`,
- *   so a plugin command is translatable without registering anything.
- * - **Toolbar groups**: `<camelCase group id>Group` — the group's accessible name.
+ * - **Command items** derive `<name>` from the command id, camel-cased
+ *   (`insert-link` → `insertLink`, `image:browser:pick` → `imageBrowserPick`), and
+ *   the element type from where the text is shown: `buttons.<name>` (a toolbar
+ *   button showing its text — no icon), `ariaLabels.<name>` (an icon toolbar
+ *   button's accessible name), `menuItems.<name>` (the context-menu entry),
+ *   `tooltips.<name>` (its tooltip). The English default is the command's own
+ *   `text` / `tooltip`, so a plugin command is translatable without registering anything.
+ * - **Toolbar groups**: `ariaLabels.<camelCase group id>Group` — the group's accessible name.
  * - The named keys in {@link DEFAULT_LABELS} (status items, prompts, picker texts).
  */
 
 /** Built-in English strings for the non-command keys. */
 export const DEFAULT_LABELS = {
   /** Shown (as text) while the document is empty, like a native `placeholder`. `''` = none. */
-  placeholder: '',
+  'placeholders.document': '',
   /** Status bar: word count. */
-  words: 'Words: {count}',
+  'labels.words': 'Words: {count}',
   /** Status bar: character count. */
-  chars: 'Chars: {count}',
-  /** Toolbar group accessible names (`<groupId>Group`). */
-  formatGroup: 'Format',
-  blockGroup: 'Block',
-  listGroup: 'Lists',
-  insertGroup: 'Insert',
-  historyGroup: 'History',
-  viewGroup: 'View',
-  linkGroup: 'Link',
-  imageGroup: 'Image',
-  tableGroup: 'Table',
-  imageBrowserGroup: 'Cloud image',
-  /** Prompt / confirmation dialogs (core `/dialog`): the buttons. The ✕ takes `close`. */
-  ok: 'OK',
-  cancel: 'Cancel',
-  /** `insert-link` prompt. */
-  linkUrlPrompt: 'Enter link URL',
-  /** `insert-image` prompts. */
-  imageUrlPrompt: 'Enter image URL',
-  imageAltPrompt: 'Enter alt text (optional)',
-  /** `insert-code-block` / `change-code-language` prompts (`{languages}` = the list). */
-  codeLanguagePrompt: 'Enter language ({languages})',
-  codeLanguageChangePrompt: 'Change language ({languages})',
-  /** Cloud-image plugin (`image:browser:pick`): toolbar button, its tooltip, the menu item, the picker request. */
-  cloudImage: 'Cloud image',
-  cloudImageTooltip: 'Insert image from the cloud',
-  insertCloudImage: 'Insert cloud image…',
-  cloudImagePickerTitle: 'Choose a cloud image',
-  cloudImagePickerMessage: 'Pick an image to insert.',
+  'labels.chars': 'Chars: {count}',
+  /** Toolbar group accessible names (`ariaLabels.<groupId>Group`). */
+  'ariaLabels.formatGroup': 'Format',
+  'ariaLabels.blockGroup': 'Block',
+  'ariaLabels.listGroup': 'Lists',
+  'ariaLabels.insertGroup': 'Insert',
+  'ariaLabels.historyGroup': 'History',
+  'ariaLabels.viewGroup': 'View',
+  'ariaLabels.linkGroup': 'Link',
+  'ariaLabels.imageGroup': 'Image',
+  'ariaLabels.tableGroup': 'Table',
+  'ariaLabels.imageBrowserGroup': 'Cloud image',
+  /** Prompt / confirmation dialogs (core `/dialog`): the buttons. The ✕ takes `ariaLabels.close`. */
+  'buttons.ok': 'OK',
+  'buttons.cancel': 'Cancel',
+  /** `insert-link` prompt (the dialog title). */
+  'headers.linkUrl': 'Enter link URL',
+  /** `insert-image` prompts (the dialog titles). */
+  'headers.imageUrl': 'Enter image URL',
+  'headers.imageAlt': 'Enter alt text (optional)',
+  /** `insert-code-block` / `change-code-language` prompts (the dialog titles; `{languages}` = the list). */
+  'headers.codeLanguage': 'Enter language ({languages})',
+  'headers.codeLanguageChange': 'Change language ({languages})',
+  /** Cloud-image plugin (`image:browser:pick`): the icon toolbar button's name, its tooltip, the menu item, the picker request. */
+  'ariaLabels.cloudImage': 'Cloud image',
+  'tooltips.cloudImage': 'Insert image from the cloud',
+  'menuItems.cloudImage': 'Insert cloud image…',
+  'headers.cloudImagePicker': 'Choose a cloud image',
+  'messages.cloudImagePicker': 'Pick an image to insert.',
   /** Validation message while a throwing `getValueFormatCallback` keeps the field invalid. */
-  valueFormatError: 'The value could not be formatted.',
+  'errors.valueFormat': 'The value could not be formatted.',
   /** Accessible label (`aria-label`) of the pending loader shown while a deferred pipeline runs. */
-  loading: 'Loading…',
+  'ariaLabels.loading': 'Loading…',
   /** Split view: the output tabs. */
-  markdownTab: 'Markdown',
-  htmlTab: 'HTML',
-  jsonTab: 'JSON',
-  /** Context menu as a sheet / drawer (`menu-presentation`): the submenu back button + the close button
+  'buttons.markdownTab': 'Markdown',
+  'buttons.htmlTab': 'HTML',
+  'buttons.jsonTab': 'JSON',
+  /** Context menu as a sheet / drawer (`menu-presentation`): the submenu back button + the ✕ close button
    * (also the ✕ of the prompt / confirmation dialogs). */
-  back: 'Back',
-  close: 'Close',
+  'buttons.back': 'Back',
+  'ariaLabels.close': 'Close',
 } as const;
 
 /** A built-in non-command label key. */
@@ -74,7 +78,8 @@ export type EditorLabelKey = keyof typeof DEFAULT_LABELS;
 
 /**
  * The element's `labels`: any subset of the built-in keys, plus derived command
- * (`insertLink`, `insertLinkTooltip`, …) and group (`formatGroup`, …) keys.
+ * (`buttons.viewEdit`, `ariaLabels.bold`, `menuItems.bold`, `tooltips.bold`, …) and group
+ * (`ariaLabels.formatGroup`, …) keys — short, or full (`km-editor.tooltips.bold`).
  */
 export type EditorLabels = Partial<Record<EditorLabelKey, string>> & Record<string, string | undefined>;
 
@@ -97,13 +102,13 @@ export function formatLabel(template: string, params?: LabelParams): string {
   return formatCoreLabel(template, params);
 }
 
-/** The tag page-wide labels are keyed by (`window.components.locale.labels['km-editor']`). */
+/** The component name — the prefix of the full keys (`km-editor.buttons.ok`) in `window.components.locale.labels`. */
 const TAG = 'km-editor';
 
 /**
  * Build the one label-resolving function over core `/locale`: instance `labels` → page-wide labels → built-in
  * English → `fallback` (the English text of a command / group key) → the key itself. With `host` (the element)
- * the page's `formatLabelCallback` and `locale` apply too; a standalone engine resolves without them.
+ * the page's `translateCallback` and `locale` apply too; a standalone engine resolves without them.
  */
 export function createLabelResolver(getLabels: () => EditorLabels | null | undefined, host?: Element | null): LabelResolver {
   // Derived keys (commands, groups) have no built-in default: the caller's fallback becomes theirs.

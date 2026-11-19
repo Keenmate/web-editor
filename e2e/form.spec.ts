@@ -102,7 +102,7 @@ test.describe('form', () => {
         expect(await page.evaluate(() => (window as any).submits)).toBe(1);
     });
 
-    test('no value → empty document; labels.placeholder shows while empty', async ({ page }) => {
+    test('no value → empty document; labels placeholders.document shows while empty', async ({ page }) => {
         const ph = pm(page, 'empty').locator('.we-placeholder');
         await expect(ph).toHaveAttribute('data-placeholder', 'Start writing…');
         await pm(page, 'empty').click();

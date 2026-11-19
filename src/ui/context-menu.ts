@@ -92,13 +92,13 @@ export class ContextMenu {
     const menu = openMenu<EditorActionContext, EditorAction>(this.#entries, host.context(), {
       ...this.#getPresentation?.(),
       // The sheet / drawer chrome strings (submenu back button, close button) via `labels`.
-      labels: { back: host.label('back'), close: host.label('close') },
+      labels: { back: host.label('buttons.back'), close: host.label('ariaLabels.close') },
       at: { x, y },
       host: this.#container,
       cssClass: 'we-context-menu',
       returnFocusTo: this.#view.dom as HTMLElement,
       inheritThemeFrom: this.#view.dom as HTMLElement,
-      defaults: (item) => commandDefaults(registry, item, host.label),
+      defaults: (item) => commandDefaults(registry, item, host.label, 'menu'),
       runAction: (item, { triggerElement, sourceEvent }) =>
         host.activate(item, 'context-menu', sourceEvent, triggerElement),
       onClose: () => {

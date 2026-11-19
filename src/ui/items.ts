@@ -135,8 +135,8 @@ function wordCount({ state }: StatusContext): number {
  * on each; single-edge status bars (`top`/`bottom`) show every item regardless.
  */
 export const coreStatusItems: readonly StatusItem[] = [
-  { id: 'words', align: 'end', bar: 'bottom', render: (ctx) => ctx.label('words', { count: wordCount(ctx) }) },
-  { id: 'chars', align: 'end', bar: 'top', render: (ctx) => ctx.label('chars', { count: ctx.state.doc.textContent.length }) },
+  { id: 'words', align: 'end', bar: 'bottom', render: (ctx) => ctx.label('labels.words', { count: wordCount(ctx) }) },
+  { id: 'chars', align: 'end', bar: 'top', render: (ctx) => ctx.label('labels.chars', { count: ctx.state.doc.textContent.length }) },
 ];
 
 /** The default static toolbar — the full editing command set. */

@@ -240,7 +240,7 @@ const INPUTS: readonly InputDef[] = [
     converter: toObject<EditorLabels>({ validate: isLabels }),
     on: 'update',
     description:
-      'Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders; an empty string = deliberately empty. `placeholder` (default empty = off) is shown while the document is empty. Command items: the camel-cased command id is the item text (`insertLink`, `bold`, `imageBrowserPick`), `<key>Tooltip` its tooltip; toolbar groups `<groupId>Group` (`formatGroup`, …); status `words` / `chars` (`{count}`); prompts `linkUrlPrompt`, `imageUrlPrompt`, `imageAltPrompt`, `codeLanguagePrompt` / `codeLanguageChangePrompt` (`{languages}`); cloud image `cloudImage`, `cloudImageTooltip`, `insertCloudImage`, `cloudImagePickerTitle`, `cloudImagePickerMessage`; context menu as a sheet / drawer `back`, `close`; dialog buttons `ok`, `cancel`; split output tabs `markdownTab`, `htmlTab`, `jsonTab`. Per key: these → the page-wide `window.components.locale.labels[\'km-editor\']` → English. Property (object) or JSON attribute (`labels=\'{"bold":"Tučně"}\'`). Applies live (no rebuild).',
+      'Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders; an empty string = deliberately empty. Keys are flat `<elementType>.<name>`, short (`tooltips.bold`) or full (`km-editor.tooltips.bold`). `placeholders.document` (default empty = off) is shown while the document is empty. Command items (`<name>` = the camel-cased command id: `bold`, `insertLink`, `viewEdit`): `buttons.<name>` (a toolbar button with text), `ariaLabels.<name>` (an icon toolbar button), `menuItems.<name>` (the context menu), `tooltips.<name>`; toolbar groups `ariaLabels.<groupId>Group` (`ariaLabels.formatGroup`, …); status `labels.words` / `labels.chars` (`{count}`); prompt titles `headers.linkUrl`, `headers.imageUrl`, `headers.imageAlt`, `headers.codeLanguage` / `headers.codeLanguageChange` (`{languages}`); cloud image `ariaLabels.cloudImage`, `tooltips.cloudImage`, `menuItems.cloudImage`, `headers.cloudImagePicker`, `messages.cloudImagePicker`; context menu as a sheet / drawer `buttons.back`, `ariaLabels.close` (also the dialogs\' ✕); dialog buttons `buttons.ok`, `buttons.cancel`; split output tabs `buttons.markdownTab`, `buttons.htmlTab`, `buttons.jsonTab`; `errors.valueFormat`; the loader\'s `ariaLabels.loading`. Per key: these → the page-wide flat `window.components.locale.labels[\'km-editor.<key>\']` → English; `window.components.locale.translateCallback` translates the rest. Property (object) or JSON attribute (`labels=\'{"ariaLabels.bold":"Tučně"}\'`). Applies live (no rebuild).',
   },
   {
     configKey: 'beforeActionCallback',
@@ -643,7 +643,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   #setPendingLoader(isPending: boolean): void {
     const slot = this.#layout.pendingMount;
     if (isPending && !this.#removeLoader) {
-      const label = this.#label('loading');
+      const label = this.#label('ariaLabels.loading');
       slot.hidden = false;
       this.#removeLoader = renderLoader(this, slot, 'pipeline', { prefix: 'we', label });
     } else if (!isPending && this.#removeLoader) {
@@ -713,7 +713,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     } catch (error) {
       contentLogger.error('<km-editor> getValueFormatCallback threw; submitting an empty value and marking the field invalid', error);
       this.#hasFormatError = true;
-      this.setFormatError(error, engine.label('valueFormatError'), engine.view.dom as HTMLElement);
+      this.setFormatError(error, engine.label('errors.valueFormat'), engine.view.dom as HTMLElement);
       this.emit('value-format-error', { error, value });
       return '';
     }

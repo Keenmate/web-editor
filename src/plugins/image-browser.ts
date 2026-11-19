@@ -55,8 +55,8 @@ export function imageBrowserPlugin(opts: ImageBrowserOptions = {}): EditorPlugin
         run: async (_c, rt) => {
           const res = await rt.ui.request({
             kind: 'cloud-picker',
-            title: rt.label?.('cloudImagePickerTitle') ?? 'Choose a cloud image',
-            message: rt.label?.('cloudImagePickerMessage') ?? 'Pick an image to insert.',
+            title: rt.label?.('headers.cloudImagePicker') ?? 'Choose a cloud image',
+            message: rt.label?.('messages.cloudImagePicker') ?? 'Pick an image to insert.',
             signal: rt.signal,
           });
           if (res.isCancelled || !res.value) return { action: 'halt', reason: 'no image chosen' };
@@ -101,12 +101,12 @@ export function imageBrowserPlugin(opts: ImageBrowserOptions = {}): EditorPlugin
             action: 'image:browser:pick',
             icon: EDITOR_ICONS.cloud,
             // Pipeline-only action (no CommandSpec): texts come from `labels`.
-            getTextCallback: (ctx) => ctx.label('cloudImage'),
-            getTooltipCallback: (ctx) => ctx.label('cloudImageTooltip'),
+            getTextCallback: (ctx) => ctx.label('ariaLabels.cloudImage'),
+            getTooltipCallback: (ctx) => ctx.label('tooltips.cloudImage'),
           },
         ],
       },
     ],
-    menuItems: [{ action: 'image:browser:pick', getTextCallback: (ctx) => ctx.label('insertCloudImage') }],
+    menuItems: [{ action: 'image:browser:pick', getTextCallback: (ctx) => ctx.label('menuItems.cloudImage') }],
   });
 }

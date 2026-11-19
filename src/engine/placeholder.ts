@@ -1,5 +1,5 @@
 /**
- * Placeholder — the `labels.placeholder` text shown while the document is empty
+ * Placeholder — the `labels` `placeholders.document` text shown while the document is empty
  * (one empty paragraph), like a native `<textarea placeholder>`. The text is
  * rendered by CSS from a `data-placeholder` attribute (never as HTML) and also
  * set as `aria-placeholder` on the editable surface. `''` (the default) = off.

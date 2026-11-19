@@ -276,13 +276,13 @@ describe('<km-editor> empty document + placeholder', () => {
     expect(el.value).toBe('');
     const pm = el.shadowRoot!.querySelector('.ProseMirror')!;
     expect(pm.textContent).toBe('');
-    // labels.placeholder defaults to '' — no placeholder decoration.
+    // labels placeholders.document defaults to '' — no placeholder decoration.
     expect(pm.querySelector('.we-placeholder')).toBeNull();
   });
 
-  it('labels.placeholder shows while empty, hides with content, applies live', async () => {
+  it('labels placeholders.document shows while empty, hides with content, applies live', async () => {
     const el = await mount();
-    el.labels = { placeholder: 'Write something…' };
+    el.labels = { 'placeholders.document': 'Write something…' };
     await el.whenSettled();
     const pm = el.shadowRoot!.querySelector('.ProseMirror')!;
     expect(pm.querySelector('.we-placeholder')?.getAttribute('data-placeholder')).toBe('Write something…');
@@ -370,7 +370,7 @@ describe('<km-editor> form', () => {
     expect(calls).toEqual([[boom, 'The value could not be formatted.']]);
     expect(events).toEqual([{ error: boom, value: 'x' }]);
     expect(twin[0]).toBe(events[0]);
-    el.labels = { valueFormatError: 'Nelze formátovat.' };
+    el.labels = { 'errors.valueFormat': 'Nelze formátovat.' };
     el.value = 'y';
     expect(calls.at(-1)).toEqual([boom, 'Nelze formátovat.']);
     expect(events.at(-1)).toEqual({ error: boom, value: 'y' });
@@ -429,7 +429,7 @@ describe('<km-editor> pending loader (core renderLoader)', () => {
   }
   const tick = (ms = 10) => new Promise((r) => setTimeout(r, ms));
 
-  it('shows the default .we__loader with role=status + labels.loading past the threshold, removes it after', async () => {
+  it('shows the default .we__loader with role=status + labels ariaLabels.loading past the threshold, removes it after', async () => {
     const { el, slot, release } = await mountSlow();
     expect(slot.hidden).toBe(true);
     getEditorEngine(el)!.run('slow:run');
@@ -448,7 +448,7 @@ describe('<km-editor> pending loader (core renderLoader)', () => {
   it('renderLoadingCallback draws instead of the default (context "pipeline"), cleanup runs on remove', async () => {
     const { el, slot, release } = await mountSlow();
     const seen: string[] = [];
-    el.labels = { loading: 'Nahrávám…' };
+    el.labels = { 'ariaLabels.loading': 'Nahrávám…' };
     el.renderLoadingCallback = ({ context, containerElement, label, component }) => {
       seen.push(`${component}:${context}:${label}`);
       containerElement.append(Object.assign(document.createElement('b'), { className: 'mine' }));

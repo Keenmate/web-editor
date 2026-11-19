@@ -34,7 +34,7 @@ function toggleLink(schema: Schema, href?: string, title: string | null = null):
 /** Prompt for a URL (core `/dialog`; or remove an existing link on the selection). */
 function promptForLink(schema: Schema, label: LabelResolver): Command {
   const prompted = whenPrompted(
-    (view) => promptText(view, label, { title: label('linkUrlPrompt'), value: 'https://', inputType: 'url' }),
+    (view) => promptText(view, label, { title: label('headers.linkUrl'), value: 'https://', inputType: 'url' }),
     (href, state) => {
       let tr: Transaction | null = null;
       if (href) toggleLink(schema, href)(state, (t) => (tr = t));

@@ -38,20 +38,20 @@ describe('label helpers', () => {
   });
 
   it('resolver: instance labels → English default → fallback → key (standalone: no host)', () => {
-    const label = createLabelResolver(() => ({ words: 'Slova: {count}' }));
-    expect(label('words', { count: 2 })).toBe('Slova: 2');
-    expect(label('chars', { count: 5 })).toBe('Chars: 5');
-    expect(label('insertLink', undefined, 'Insert link')).toBe('Insert link');
+    const label = createLabelResolver(() => ({ 'labels.words': 'Slova: {count}' }));
+    expect(label('labels.words', { count: 2 })).toBe('Slova: 2');
+    expect(label('labels.chars', { count: 5 })).toBe('Chars: 5');
+    expect(label('ariaLabels.insertLink', undefined, 'Insert link')).toBe('Insert link');
     expect(label('nope')).toBe('nope');
   });
 });
 
 describe('<km-editor> labels', () => {
   it("resolver: '' is deliberately empty, undefined falls back to English", () => {
-    const label = createLabelResolver(() => ({ words: '', bold: undefined }));
-    expect(label('words', { count: 3 })).toBe('');
-    expect(label('bold', undefined, 'Bold')).toBe('Bold');
-    expect(label('placeholder')).toBe('');
+    const label = createLabelResolver(() => ({ 'labels.words': '', 'ariaLabels.bold': undefined }));
+    expect(label('labels.words', { count: 3 })).toBe('');
+    expect(label('ariaLabels.bold', undefined, 'Bold')).toBe('Bold');
+    expect(label('placeholders.document')).toBe('');
   });
 
   it('English defaults: command text / tooltip, group name, status items', async () => {
@@ -68,7 +68,7 @@ describe('<km-editor> labels', () => {
     const el = await mount({
       value: 'one two',
       statusbar: 'bottom',
-      labels: JSON.stringify({ bold: 'Tučně', boldTooltip: 'Tučné písmo', formatGroup: 'Formát', words: 'Slova: {count}' }),
+      labels: JSON.stringify({ 'ariaLabels.bold': 'Tučně', 'tooltips.bold': 'Tučné písmo', 'ariaLabels.formatGroup': 'Formát', 'labels.words': 'Slova: {count}' }),
     });
     expect(cmd(el, 'bold').getAttribute('aria-label')).toBe('Tučně');
     expect(cmd(el, 'bold').dataset.tooltip).toBe('Tučné písmo');
@@ -77,10 +77,17 @@ describe('<km-editor> labels', () => {
     expect(status(el, 'words').textContent).toBe('Slova: 2');
   });
 
+  it('full keys (km-editor.<key>) work on the instance too; a text toolbar button takes buttons.<name>', async () => {
+    const el = await mount({ value: 'x', labels: JSON.stringify({ 'km-editor.ariaLabels.bold': 'Tučně', 'buttons.viewEdit': 'Upravit' }) });
+    expect(cmd(el, 'bold').getAttribute('aria-label')).toBe('Tučně');
+    expect(cmd(el, 'view-edit').textContent).toBe('Upravit');
+    expect(cmd(el, 'view-edit').getAttribute('aria-label')).toBe('Upravit');
+  });
+
   it('a property change applies live, without rebuilding the engine', async () => {
     const el = await mount({ value: 'one', statusbar: 'bottom' });
     const engine = getEditorEngine(el);
-    el.labels = { insertLink: 'Vložit odkaz', chars: 'Znaky: {count}' };
+    el.labels = { 'ariaLabels.insertLink': 'Vložit odkaz', 'labels.chars': 'Znaky: {count}' };
     await el.whenSettled();
     expect(getEditorEngine(el)).toBe(engine);
     expect(cmd(el, 'insert-link').getAttribute('aria-label')).toBe('Vložit odkaz');
@@ -89,7 +96,7 @@ describe('<km-editor> labels', () => {
   });
 
   it('prompts go through labels (a core /dialog, not window.prompt)', async () => {
-    const el = await mount({ value: 'x', labels: JSON.stringify({ imageUrlPrompt: 'URL obrázku', cancel: 'Zrušit' }) });
+    const el = await mount({ value: 'x', labels: JSON.stringify({ 'headers.imageUrl': 'URL obrázku', 'buttons.cancel': 'Zrušit' }) });
     const spy = vi.spyOn(window, 'prompt');
     const engine = getEditorEngine(el)!;
     const { view } = engine;
@@ -104,14 +111,15 @@ describe('<km-editor> labels', () => {
   });
 
   it('page-wide labels (window.components.locale) sit between the instance labels and English; a change re-renders live', async () => {
-    const el = await mount({ value: 'one two', statusbar: 'bottom', labels: JSON.stringify({ italic: 'Kurzíva' }) });
+    const el = await mount({ value: 'one two', statusbar: 'bottom', labels: JSON.stringify({ 'ariaLabels.italic': 'Kurzíva' }) });
     const reg = (window as any).components;
     try {
-      reg.locale = { labels: { 'km-editor': { bold: 'Tučně', italic: 'page loses', words: 'Slova: {count}' } } };
+      reg.locale = { labels: { 'km-editor.ariaLabels.bold': 'Tučně', 'km-editor.ariaLabels.italic': 'page loses', 'km-editor.labels.words': 'Slova: {count}', 'web-editor.ariaLabels.underline': 'not ours' } };
       expect(cmd(el, 'bold').getAttribute('aria-label')).toBe('Tučně');
       expect(cmd(el, 'italic').getAttribute('aria-label')).toBe('Kurzíva');
+      expect(cmd(el, 'underline').getAttribute('aria-label')).toBe('Underline');
       expect(status(el, 'words').textContent).toBe('Slova: 2');
-      reg.locale = { formatLabelCallback: ({ key, template }: { key: string; template: string }) => (key === 'bold' ? `[${template}]` : undefined) };
+      reg.locale = { translateCallback: ({ key, template }: { key: string; template: string }) => (key === 'km-editor.ariaLabels.bold' ? `[${template}]` : undefined) };
       expect(cmd(el, 'bold').getAttribute('aria-label')).toBe('[Bold]');
     } finally {
       reg.locale = null;
@@ -119,19 +127,19 @@ describe('<km-editor> labels', () => {
     expect(cmd(el, 'bold').getAttribute('aria-label')).toBe('Bold');
   });
 
-  it('the split view output tabs take labels (markdownTab / htmlTab / jsonTab), live', async () => {
+  it('the split view output tabs take labels (buttons.markdownTab / htmlTab / jsonTab), live', async () => {
     const el = await mount({ value: 'x', 'view-mode': 'split' });
     const tabs = () => [...el.shadowRoot!.querySelectorAll('.we-output-tabs button')].map((b) => b.textContent);
     expect(tabs()).toEqual(['Markdown', 'HTML', 'JSON']);
-    el.labels = { markdownTab: 'MD' };
+    el.labels = { 'buttons.markdownTab': 'MD' };
     await el.whenSettled();
     expect(tabs()).toEqual(['MD', 'HTML', 'JSON']);
   });
 
   it('rejects a non-string value (warns, keeps the previous labels)', async () => {
     const el = await mount({ value: 'x' });
-    el.labels = { bold: 'B!' };
-    el.labels = { bold: 3 } as never;
-    expect(el.labels).toEqual({ bold: 'B!' });
+    el.labels = { 'ariaLabels.bold': 'B!' };
+    el.labels = { 'ariaLabels.bold': 3 } as never;
+    expect(el.labels).toEqual({ 'ariaLabels.bold': 'B!' });
   });
 });

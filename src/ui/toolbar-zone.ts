@@ -7,7 +7,7 @@
  *
  * Keyboard (WAI-ARIA toolbar, core `createRovingFocus`): the zone is ONE tab stop; the arrows along the
  * docked edge (Left / Right on top / bottom, Up / Down on start / end) and Home / End move focus across every
- * group. The groups are `role="group"` (named by `<groupId>Group`).
+ * group. The groups are `role="group"` (named by `ariaLabels.<groupId>Group`).
  */
 import { VIEW_MODE_GROUP_ID, type ToolGroup } from './items';
 import type { ActionSurfaceHost } from './actions';
@@ -60,9 +60,9 @@ export class ToolbarZone {
 
   refresh(): void {
     this.#groups.forEach((bar, i) => {
-      // Accessible group name through `labels` (`<groupId>Group`, English: the group's `text`).
+      // Accessible group name through `labels` (`ariaLabels.<groupId>Group`, English: the group's `text`).
       const group = this.#groupDefs[i];
-      const name = this.#host.label(`${labelKey(group.id)}Group`, undefined, group.text ?? '');
+      const name = this.#host.label(`ariaLabels.${labelKey(group.id)}Group`, undefined, group.text ?? '');
       if (name) bar.el.setAttribute('aria-label', name);
       else bar.el.removeAttribute('aria-label');
       bar.refresh();

@@ -36,7 +36,7 @@ test.describe('links', () => {
 
     test('labels translate the prompt and the item (set live, no rebuild)', async ({ page, dialogs }) => {
         await page.evaluate(() => {
-            (document.getElementById('subject') as any).labels = { linkUrlPrompt: 'Adresa odkazu:', insertLink: 'Vložit odkaz' };
+            (document.getElementById('subject') as any).labels = { 'headers.linkUrl': 'Adresa odkazu:', 'ariaLabels.insertLink': 'Vložit odkaz' };
         });
         await expect(toolbarButton(page, 'insert-link')).toHaveAttribute('aria-label', 'Vložit odkaz');
         await selectText(page, 'link');

@@ -35,7 +35,7 @@ script-built `DataTransfer` arrives empty in a synthetic paste event), the liste
 | Form: `name` → light-DOM hidden input (live value in `contentFormat`, one entry) | ✓ | `form.spec.ts` | `form.html` |
 | Form reset → `defaultValue` (silent: no `change`); `<fieldset disabled>` excludes it | ✓ | `form.spec.ts` | `form.html` |
 | Form: `getValueFormatCallback` formats the submitted value only (`el.value` unchanged); a throw submits `''`, marks the host invalid (submit blocked, `invalid` fires; `novalidate` submits `''`), fires `value-format-error`; a working callback recovers | ✓ | `form.spec.ts`, unit `web-component.test.ts` | `form.html` |
-| Empty document by default; `labels.placeholder` while empty | ✓ | `form.spec.ts` | `form.html` |
+| Empty document by default; `labels` `placeholders.document` while empty | ✓ | `form.spec.ts` | `form.html` |
 
 ## 2. Lifecycle
 

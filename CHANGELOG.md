@@ -11,6 +11,33 @@ Target: **1.0.0-rc01** (first release).
 Pre-1.0, pre-publish. Everything below is the work to date; nothing has been
 released to a registry yet.
 
+### Changed — BREAKING (label keys, rulebook D-NC-24 / core 1.0.0-rc25 `/locale`)
+
+- **`labels` keys are flat `<elementType>.<name>`** — the element type says where the text is shown. The
+  page-wide dictionary is ONE flat object of full keys: `window.components.locale.labels['km-editor.tooltips.bold']`
+  (was the nested `labels: { 'km-editor': { boldTooltip } }`); the instance `labels` takes short
+  (`tooltips.bold`) or full keys. `window.components.locale.formatLabelCallback` is gone — use
+  **`translateCallback({ component, key: '<full key>', template, params, locale })`**. English defaults unchanged.
+  The ONE command text is now split per surface:
+
+  | Old key | New key |
+  | --- | --- |
+  | `<command>` (e.g. `bold`, `insertLink`) | `ariaLabels.<command>` (icon toolbar button), `buttons.<command>` (text toolbar button: `buttons.viewEdit` / `viewSplit` / `viewPreview`), `menuItems.<command>` (context menu) |
+  | `<command>Tooltip` | `tooltips.<command>` |
+  | `<groupId>Group` (`formatGroup`, …) | `ariaLabels.<groupId>Group` |
+  | `placeholder` | `placeholders.document` |
+  | `words` / `chars` | `labels.words` / `labels.chars` |
+  | `ok` / `cancel` | `buttons.ok` / `buttons.cancel` |
+  | `linkUrlPrompt` | `headers.linkUrl` |
+  | `imageUrlPrompt` / `imageAltPrompt` | `headers.imageUrl` / `headers.imageAlt` |
+  | `codeLanguagePrompt` / `codeLanguageChangePrompt` | `headers.codeLanguage` / `headers.codeLanguageChange` |
+  | `cloudImage` / `cloudImageTooltip` / `insertCloudImage` | `ariaLabels.cloudImage` / `tooltips.cloudImage` / `menuItems.cloudImage` |
+  | `cloudImagePickerTitle` / `cloudImagePickerMessage` | `headers.cloudImagePicker` / `messages.cloudImagePicker` |
+  | `markdownTab` / `htmlTab` / `jsonTab` | `buttons.markdownTab` / `buttons.htmlTab` / `buttons.jsonTab` |
+  | `back` / `close` | `buttons.back` / `ariaLabels.close` |
+  | `loading` | `ariaLabels.loading` |
+  | `valueFormatError` | `errors.valueFormat` |
+
 ### Changed — BREAKING (icons, rulebook C-CA-33)
 
 - **Item icons go through core `renderIcon`** (SPEC §12.33): an `icon` string starting with `<` is inserted as

@@ -1,8 +1,8 @@
 /**
  * The editor's prompts and confirmations go through core `/dialog` (SPEC §12.19) — never `window.prompt` /
  * `confirm`: a styled, translatable modal (a bottom sheet on a phone) with an inert page, a Tab trap and focus
- * back in the editor on close. The button / close texts come from the element's `labels` (`ok`, `cancel`,
- * `close`).
+ * back in the editor on close. The button / close texts come from the element's `labels` (`buttons.ok`, `buttons.cancel`,
+ * `ariaLabels.close`).
  *
  * A ProseMirror command is synchronous, so a prompting command answers `true` at once (it handled the key /
  * click), opens the dialog and applies its edit to the view's state AFTER the answer (`whenPrompted`).
@@ -14,7 +14,7 @@ import type { LabelResolver } from './labels';
 
 /** The dialog button / close texts from the editor's labels. */
 export function dialogLabels(label: LabelResolver): DialogLabels {
-  return { ok: label('ok'), cancel: label('cancel'), close: label('close') };
+  return { ok: label('buttons.ok'), cancel: label('buttons.cancel'), close: label('ariaLabels.close') };
 }
 
 export interface EditorPromptOptions {
