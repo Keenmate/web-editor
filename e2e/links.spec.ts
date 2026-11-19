@@ -28,6 +28,8 @@ test.describe('links', () => {
         const field = page.locator('.km-dialog-layer .km-dialog__input');
         await expect(field).toBeFocused();
         await expect(field).toHaveValue('https://');
+        // Named by its visible title (aria-labelledby), not an ariaLabels.* copy.
+        await expect(page.locator('.km-dialog-layer [role="dialog"]')).toHaveAccessibleName('Enter link URL');
         await page.keyboard.press('Escape');
         await expect(page.locator('.km-dialog-layer')).toHaveCount(0);
         await expect(pm(page).locator('a')).toHaveCount(0);

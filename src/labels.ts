@@ -15,7 +15,7 @@ import { createLabels, resolveLabel, formatLabel as formatCoreLabel } from '@kee
  * - **Command items** derive `<name>` from the command id, camel-cased
  *   (`insert-link` → `insertLink`, `image:browser:pick` → `imageBrowserPick`), and
  *   the element type from where the text is shown: `buttons.<name>` (a toolbar
- *   button showing its text — no icon), `ariaLabels.<name>` (an icon toolbar
+ *   button showing its text — no icon; that text names it, no `aria-label`), `ariaLabels.<name>` (an icon toolbar
  *   button's accessible name), `menuItems.<name>` (the context-menu entry),
  *   `tooltips.<name>` (its tooltip). The English default is the command's own
  *   `text` / `tooltip`, so a plugin command is translatable without registering anything.
@@ -87,10 +87,13 @@ export type EditorLabels = Partial<Record<EditorLabelKey, string>> & Record<stri
 export type LabelParams = Record<string, string | number>;
 
 /**
- * Resolve a label: `(key, params?, fallback?) => string`. The `fallback` is the
- * English default for keys outside {@link DEFAULT_LABELS} (command / group texts).
+ * Resolve a label: `(key, params?, fallback?, twins?) => string`. The `fallback` is the
+ * English default for keys outside {@link DEFAULT_LABELS} (command / group texts). `twins` = the English
+ * defaults of the same element's other derived keys (`{ 'tooltips.bold': '' }`): an `ariaLabels.x` /
+ * `tooltips.x` nobody set takes a customized twin with the same `<name>` (core `/locale`), and a derived key
+ * counts as a twin only for the call that names it.
  */
-export type LabelResolver = (key: string, params?: LabelParams, fallback?: string) => string;
+export type LabelResolver = (key: string, params?: LabelParams, fallback?: string, twins?: Record<string, string>) => string;
 
 /** `'insert-link'` → `'insertLink'`, `'image:browser:pick'` → `'imageBrowserPick'`. */
 export function labelKey(id: string): string {
@@ -111,12 +114,20 @@ const TAG = 'km-editor';
  * the page's `translateCallback` and `locale` apply too; a standalone engine resolves without them.
  */
 export function createLabelResolver(getLabels: () => EditorLabels | null | undefined, host?: Element | null): LabelResolver {
-  // Derived keys (commands, groups) have no built-in default: the caller's fallback becomes theirs.
+  // Derived keys (commands, groups) have no built-in default: the caller's fallback is theirs (per call).
   const defaults: Record<string, string> = { ...DEFAULT_LABELS };
   const labels = host ? createLabels<Record<string, string>>(host, defaults, () => getLabels() as Record<string, string> | null, { tag: TAG }) : null;
-  return (key, params, fallback) => {
-    if (!Object.prototype.hasOwnProperty.call(DEFAULT_LABELS, key)) defaults[key] = fallback ?? key;
-    if (labels) return labels.text(key, params);
-    return formatCoreLabel(resolveLabel(TAG, defaults, getLabels() as Record<string, string> | null, key), params);
+  const isBuiltIn = (key: string): boolean => Object.prototype.hasOwnProperty.call(DEFAULT_LABELS, key);
+  return (key, params, fallback, twins) => {
+    // Derived keys are registered only for this call: whether a twin exists must not depend on what
+    // rendered before.
+    const derived = [key, ...Object.keys(twins ?? {})].filter((k) => !isBuiltIn(k));
+    for (const k of derived) defaults[k] = k === key ? (fallback ?? key) : twins![k];
+    try {
+      if (labels) return labels.text(key, params);
+      return formatCoreLabel(resolveLabel(TAG, defaults, getLabels() as Record<string, string> | null, key), params);
+    } finally {
+      for (const k of derived) delete defaults[k];
+    }
   };
 }

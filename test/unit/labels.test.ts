@@ -81,7 +81,15 @@ describe('<km-editor> labels', () => {
     const el = await mount({ value: 'x', labels: JSON.stringify({ 'km-editor.ariaLabels.bold': 'Tučně', 'buttons.viewEdit': 'Upravit' }) });
     expect(cmd(el, 'bold').getAttribute('aria-label')).toBe('Tučně');
     expect(cmd(el, 'view-edit').textContent).toBe('Upravit');
-    expect(cmd(el, 'view-edit').getAttribute('aria-label')).toBe('Upravit');
+    expect(cmd(el, 'view-edit').hasAttribute('aria-label')).toBe(false); // a text button is named by its text (D-NC-24)
+  });
+
+  it("an icon button's twins share <name>: an unset one follows the customized one (core fallback)", async () => {
+    const el = await mount({ value: 'x', labels: JSON.stringify({ 'tooltips.bold': 'Tučné písmo', 'ariaLabels.italic': 'Kurzíva' }) });
+    expect(cmd(el, 'bold').getAttribute('aria-label')).toBe('Tučné písmo');
+    expect(cmd(el, 'bold').dataset.tooltip).toBe('Tučné písmo');
+    expect(cmd(el, 'italic').getAttribute('aria-label')).toBe('Kurzíva');
+    expect(cmd(el, 'italic').dataset.tooltip).toBe('Kurzíva (Ctrl+I)'); // the text + shortcut, as in English
   });
 
   it('a property change applies live, without rebuilding the engine', async () => {

@@ -103,9 +103,13 @@ export function commandDefaults(
   const textKey = surface === 'menu' ? `menuItems.${key}` : icon ? `ariaLabels.${key}` : `buttons.${key}`;
   if (!spec) return { text: label(textKey, undefined, name), isDisabled: true };
   const shortcut = registry.shortcut(name);
-  const text = label(textKey, undefined, spec.text ?? name);
+  const tooltipKey = `tooltips.${key}`;
+  // The text twins with the tooltip (same `<name>`): an unset `ariaLabels.x` takes a customized `tooltips.x`
+  // (core `/locale`). The tooltip resolves on its own — without one, it is the text (already translated) +
+  // the shortcut.
+  const text = label(textKey, undefined, spec.text ?? name, { [tooltipKey]: spec.tooltip ?? '' });
   const shown = item.text ?? text;
-  const tooltip = label(`tooltips.${key}`, undefined, spec.tooltip ?? '');
+  const tooltip = label(tooltipKey, undefined, spec.tooltip ?? '');
   return {
     text,
     icon: spec.icon,

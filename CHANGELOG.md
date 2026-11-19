@@ -38,6 +38,15 @@ released to a registry yet.
   | `loading` | `ariaLabels.loading` |
   | `valueFormatError` | `errors.valueFormat` |
 
+- **One text, one key**: a TEXT toolbar button (`buttons.<command>`, e.g. the view-mode buttons) is named by its
+  visible text and no longer carries an `aria-label` copy of it (same accessible name). `ariaLabels.*` stays only
+  where nothing visible names the element: icon toolbar buttons, toolbar groups, the dialogs' / sheet's ✕, the
+  loader. Twins share `<name>` (`ariaLabels.bold` + `tooltips.bold`, `ariaLabels.cloudImage` + `tooltips.cloudImage`
+  + `menuItems.cloudImage`), so an `ariaLabels.x` / `tooltips.x` you didn't set follows a customized twin (core
+  `/locale`): translate only `tooltips.bold` and the icon button's name follows. A command tooltip you didn't set is
+  still its (translated) text + the shortcut. The prompt dialogs are named by their visible title (`headers.*`,
+  `aria-labelledby`). No key was removed.
+
 ### Changed — BREAKING (icons, rulebook C-CA-33)
 
 - **Item icons go through core `renderIcon`** (SPEC §12.33): an `icon` string starting with `<` is inserted as

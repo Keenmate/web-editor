@@ -164,8 +164,8 @@ window.components.locale = { labels: { 'km-editor.ariaLabels.bold': 'Tučně', '
 
 | Key | English default |
 | --- | --------------- |
-| `<name>` = the command id camel-cased (`bold`, `insertLink`, `insertTable`, `bulletList`, `undo`, `viewEdit`, a plugin's `imageBrowserPick`, …): `ariaLabels.<name>` (an icon toolbar button's accessible name), `buttons.<name>` (a toolbar button showing its text — `viewEdit` / `viewSplit` / `viewPreview`), `menuItems.<name>` (the context-menu entry) | the command's own text (`Bold`, `Insert link`, …) |
-| `tooltips.<name>` | the command's tooltip, else `<text> (<shortcut>)` |
+| `<name>` = the command id camel-cased (`bold`, `insertLink`, `insertTable`, `bulletList`, `undo`, `viewEdit`, a plugin's `imageBrowserPick`, …): `ariaLabels.<name>` (an icon toolbar button's accessible name), `buttons.<name>` (a toolbar button showing its text — `viewEdit` / `viewSplit` / `viewPreview`; named by that text, no `aria-label`), `menuItems.<name>` (the context-menu entry). Twins share `<name>`: an `ariaLabels.<name>` you didn't set follows a customized `tooltips.<name>` | the command's own text (`Bold`, `Insert link`, …) |
+| `tooltips.<name>` | the command's tooltip, else `<text> (<shortcut>)` (the text as translated) |
 | `ariaLabels.<groupId>Group` — `ariaLabels.formatGroup`, `blockGroup`, `listGroup`, `insertGroup`, `historyGroup`, `viewGroup`, `linkGroup`, `imageGroup`, `tableGroup`, `imageBrowserGroup` | toolbar group accessible names (`Format`, `Block`, `Lists`, …) |
 | `placeholders.document` | `''` (off) — shown (as text) while the document is empty |
 | `labels.words` / `labels.chars` | `Words: {count}` / `Chars: {count}` (status bar) |
@@ -366,7 +366,7 @@ editor.beforeActionCallback = ({ action }) => (action === 'insert-image' ? false
 (starts with `<` — an `<svg>`, an `<img>`) is inserted as-is; an ASCII name (`'gear'`, `'save'`) is a glyph
 masked from the `--base-icon-<name>` token in `currentColor` (nothing drawn while the token is unset); anything
 else (an emoji, `'¶'`) is text. The built-in buttons use inline SVGs — `EDITOR_ICONS` (exported) has them for
-your own items. The button's accessible name is always the item `text` (`aria-label`).
+your own items. The button's accessible name is always the item `text` (an icon button's `aria-label`; a button without an icon shows the text itself).
 
 Writing plugins (schema nodes/marks, commands, keybindings, toolbar/menu items,
 the Markdown-serializer contract) and the content-pipeline layer are covered in

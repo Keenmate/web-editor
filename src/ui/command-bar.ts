@@ -144,14 +144,16 @@ export class CommandBar {
       .filter(Boolean)
       .join(' ');
     // An icon string follows core `renderIcon` (markup raw / ASCII name = `--base-icon-<name>` mask / else
-    // text); the button's name is its `aria-label`. No icon → the text.
+    // text); an icon button's name is its `aria-label`. No icon → the text, which names the button itself
+    // (one text, one key — D-NC-24: no `aria-label` twin on a text button).
     if (r.icon) btn.innerHTML = renderIcon(r.icon, { prefix: 'we' });
     else btn.textContent = r.text;
     if (r.isToggled) btn.setAttribute('aria-pressed', 'true');
     else btn.removeAttribute('aria-pressed');
     // Shown by the chrome's core tooltip (createTooltip, delegated) — not a native `title`.
     btn.dataset.tooltip = r.tooltip ?? r.text;
-    btn.setAttribute('aria-label', r.text);
+    if (r.icon) btn.setAttribute('aria-label', r.text);
+    else btn.removeAttribute('aria-label');
     btn.disabled = r.isDisabled;
     btn.setAttribute('aria-disabled', String(r.isDisabled));
   }

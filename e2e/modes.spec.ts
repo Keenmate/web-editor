@@ -54,6 +54,9 @@ test.describe('modes', () => {
         const btn = (a: string) => zone.locator(`[data-action="${a}"]`);
         await expect(zone.locator('.we-group').last()).toHaveAttribute('data-group', 'view');
         await expect(btn('view-edit')).toHaveText('Edit');
+        // A text button is named by its text — no aria-label twin (D-NC-24).
+        await expect(btn('view-edit')).not.toHaveAttribute('aria-label');
+        await expect(btn('view-edit')).toHaveAccessibleName('Edit');
         await expect(btn('view-edit')).toHaveAttribute('aria-pressed', 'true');
         await clearLog(page, 'modes');
         await btn('view-split').click();
