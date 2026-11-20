@@ -50,6 +50,7 @@ import type { EditorController, EditorLabelContext, EditorToolbarEntry } from '.
 import type { EditorViewMode } from '../web-component';
 import { createLabelResolver, type EditorLabels, type LabelResolver } from '../labels';
 import type { TranslateCallback } from '@keenmate/web-components-core/locale';
+import { ENGINE_DEFAULTS } from '../inputs';
 import {
   docToHTML,
   htmlToDoc,
@@ -117,22 +118,30 @@ export interface EditorEngineOptions {
   editorPlugins?: EditorPlugin[];
   /** Override the document schema (defaults to one assembled from `editorPlugins`). */
   schema?: Schema;
-  /** Start read-only (no editing). Defaults to editable. */
-  isEditable?: boolean;
-  /** Host modal bridge for interactive pipeline stages. Defaults to a
-   * core `/dialog` confirmation host; inject a richer picker via this or
-   * `setInteractionHost`. */
-  interactionHost?: InteractionHost;
+  /**
+   * Start read-only (no editing) — `<km-editor>`'s `isReadonly`, same default (`false`, editable). Toggle later
+   * with `setEditable()`.
+   */
+  isReadonly?: boolean;
+  /** Host modal bridge for interactive pipeline stages (`<km-editor>`'s `interactionHost`). Default (`null`):
+   * a core `/dialog` confirmation host; inject a richer picker via this or `setInteractionHost`. */
+  interactionHost?: InteractionHost | null;
   /** The element hosting this engine (set by `<km-editor>`; omit standalone). */
   host?: EditorEngineHost;
-  /** UI-string overrides, read live on every use (`<km-editor>` passes its `labels`). Default: English. */
+  /**
+   * UI-string overrides — `<km-editor>`'s `labels` (same keys, default `null` = English). Read live: assign
+   * `engine.labels` later to switch (then redraw your UI; `refreshView()` redraws the placeholder).
+   */
+  labels?: EditorLabels | null;
+  /** A live source of `labels`, read on every use — beats `labels` (`<km-editor>` passes its config). */
   getLabels?: () => EditorLabels | null | undefined;
   /**
    * Translate a UI string for a key `getLabels` did not set (core `/locale` `TranslateCallback`:
    * `({ component, key: 'km-editor.<key>', template, params, locale }) => string | null`; `null` = not mine →
    * the next rule). Standalone, the same order as the element: instance labels → page dictionary → this → the
-   * page-wide `window.components.locale.translateCallback` → built-in. With `host`, omit it — core asks the
-   * element's own `translateCallback`, then the page-wide one.
+   * page-wide `window.components.locale.translateCallback` → built-in. `<km-editor>`'s `translateCallback`, same
+   * default (`null`); read live (`engine.translateCallback = …`). With `host`, omit it — core asks the element's
+   * own `translateCallback`, then the page-wide one.
    */
   translateCallback?: TranslateCallback | null;
 }
@@ -166,6 +175,10 @@ export class EditorEngine {
    * Every ctx the engine builds carries it as `ctx.label` (non-enumerable).
    */
   readonly label: LabelResolver;
+  /** The `labels` option, read live by {@link label} (a `getLabels` option beats it). */
+  labels: EditorLabels | null;
+  /** The `translateCallback` option, read live by {@link label} (standalone, or hosted when given). */
+  translateCallback: TranslateCallback | null;
   view: EditorView;
 
   #isEditable: boolean;
@@ -184,9 +197,13 @@ export class EditorEngine {
 
   constructor(options: EditorEngineOptions) {
     const host = options.host;
-    const getLabels = options.getLabels;
-    const translateCallback = options.translateCallback;
-    const label = createLabelResolver(() => getLabels?.(), host?.element, translateCallback ? () => translateCallback : undefined);
+    // Every option `<km-editor>` also has defaults like the element (one source: its input table, C-CA-37).
+    this.labels = options.labels !== undefined ? options.labels : ENGINE_DEFAULTS.labels;
+    this.translateCallback = options.translateCallback !== undefined ? options.translateCallback : ENGINE_DEFAULTS.translateCallback;
+    const getLabels = options.getLabels ?? (() => this.labels);
+    // Hosted without the option: core asks the element's own `translateCallback`.
+    const isOwnTranslate = !host || options.translateCallback !== undefined;
+    const label = createLabelResolver(() => getLabels(), host?.element, isOwnTranslate ? () => this.translateCallback : undefined);
     this.label = label;
     this.#ctxProto = Object.create(Object.prototype, {
       label: { value: label, enumerable: false },
@@ -232,7 +249,7 @@ export class EditorEngine {
     // Pipelines: every command auto-wraps into a one-stage sync pipeline; plugins
     // add/override pipelines and splice stages by anchor. Firing a command id runs
     // its pipeline (hooks apply), so toolbar / keymap / `run()` share one path.
-    this.#interactionHost = options.interactionHost ?? defaultInteractionHost();
+    this.#interactionHost = (options.interactionHost !== undefined ? options.interactionHost : ENGINE_DEFAULTS.interactionHost) ?? defaultInteractionHost();
     const commandSpecs = this.commands.ids().map((id) => this.commands.get(id)!);
     const pipelineMap = assemblePipelines(plugins, commandSpecs);
     // A declared-pipeline-only name (no backing command) still needs a command
@@ -272,7 +289,7 @@ export class EditorEngine {
     this.menuItems = assembleItems(plugins, 'menuItems', coreMenuItems, coreMenuHistoryItems);
     this.statusItems = assembleStatusItems(plugins, coreStatusItems);
 
-    this.#isEditable = options.isEditable ?? true;
+    this.#isEditable = !(options.isReadonly !== undefined ? options.isReadonly : ENGINE_DEFAULTS.isReadonly);
 
     const doc = this.resolveInitialDoc(options, schema);
     const state = EditorState.create({

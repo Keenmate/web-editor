@@ -47,6 +47,18 @@ released to a registry yet.
   still its (translated) text + the shortcut. The prompt dialogs are named by their visible title (`headers.*`,
   `aria-labelledby`). No key was removed.
 
+### Changed — `EditorEngine` takes the element's settings with the element's defaults (rulebook C-CA-37)
+
+- **BREAKING:** the `EditorEngine` option `isEditable` is now **`isReadonly`** — the name of `<km-editor>`'s
+  setting, same default (`false`, editable). No alias: `new EditorEngine({ mount, isEditable: false })` →
+  `new EditorEngine({ mount, isReadonly: true })`. The `isEditable()` / `setEditable()` methods are unchanged.
+- New `EditorEngine` option **`labels`** (the element's `labels`, same keys, default `null` = English), also a
+  live `engine.labels` property; `engine.translateCallback` is now live too (assign it to switch). A `getLabels`
+  option (the element's live source) still beats `labels`.
+- Every option the engine shares with `<km-editor>` (`isReadonly`, `labels`, `translateCallback`,
+  `interactionHost`) defaults from ONE source: the element's input table moved to `src/inputs.ts` and the engine
+  reads `ENGINE_DEFAULTS`, derived from its rows the way the element seeds its config. The element is unchanged.
+
 ### Added — `translateCallback` (rulebook C-CA-33, core 1.0.0-rc25)
 
 - **`translateCallback`** (property only, core `/locale` `TranslateCallback`:
