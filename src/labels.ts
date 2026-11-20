@@ -1,4 +1,11 @@
-import { createLabels, resolveLabel, resolveLocale, formatLabel as formatCoreLabel, type TranslateCallback } from '@keenmate/web-components-core/locale';
+import {
+  createLabels,
+  getPageLocale,
+  resolveLabel,
+  resolveLocale,
+  formatLabel as formatCoreLabel,
+  type TranslateCallback,
+} from '@keenmate/web-components-core/locale';
 import { uiLogger } from './logger';
 
 /**
@@ -114,8 +121,9 @@ const TAG = 'km-editor';
  * Build the one label-resolving function over core `/locale`: instance `labels` → page-wide labels → built-in
  * English → `fallback` (the English text of a command / group key) → the key itself. With `host` (the element)
  * core `createLabels` applies the element's own `translateCallback` (`host.translateCallback`, or
- * `getTranslateCallback` when given), then the page's, and the `locale`. A standalone engine (no host) asks only
- * `getTranslateCallback` (its `translateCallback` option): instance `labels` → that callback → built-in.
+ * `getTranslateCallback` when given), then the page's, and the `locale`. A standalone engine (no host) follows the
+ * same order: instance `labels` → page dictionary → `getTranslateCallback` (its `translateCallback` option) → the
+ * page-wide `window.components.locale.translateCallback` → built-in (`null` = not mine; a throw is logged → next).
  */
 export function createLabelResolver(
   getLabels: () => EditorLabels | null | undefined,
@@ -131,20 +139,28 @@ export function createLabelResolver(
       })
     : null;
   const isBuiltIn = (key: string): boolean => Object.prototype.hasOwnProperty.call(DEFAULT_LABELS, key);
-  /** Standalone: the own `translateCallback` for a key the instance `labels` did not set (string wins). */
+  /**
+   * Standalone: the own `translateCallback`, then the page-wide one (core `getPageLocale()`), for a key the
+   * instance `labels` did not set — the first string wins.
+   */
   const translate = (key: string, template: string, params?: LabelParams): string | null => {
-    const callback = getTranslateCallback?.();
-    if (typeof callback !== 'function') return null;
     const own = getLabels() as Record<string, unknown> | null | undefined;
     const full = `${TAG}.${key}`;
     if (typeof own?.[key] === 'string' || typeof own?.[full] === 'string') return null;
-    try {
-      const out = callback({ component: TAG, key: full, template, params: params ?? {}, locale: resolveLocale() });
-      return typeof out === 'string' ? out : null;
-    } catch (error) {
-      uiLogger.warn(`translateCallback threw for "${full}" — the built-in text is used`, error);
-      return null;
+    const callbacks: Array<[TranslateCallback | null | undefined, string]> = [
+      [getTranslateCallback?.(), 'translateCallback'],
+      [getPageLocale()?.translateCallback, 'window.components.locale.translateCallback'],
+    ];
+    for (const [callback, name] of callbacks) {
+      if (typeof callback !== 'function') continue;
+      try {
+        const out = callback({ component: TAG, key: full, template, params: params ?? {}, locale: resolveLocale() });
+        if (typeof out === 'string') return out;
+      } catch (error) {
+        uiLogger.warn(`${name} threw for "${full}" — the next rule decides`, error);
+      }
     }
+    return null;
   };
   return (key, params, fallback, twins) => {
     // Derived keys are registered only for this call: whether a twin exists must not depend on what

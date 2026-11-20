@@ -165,8 +165,8 @@ window.components.locale = { labels: { 'km-editor.ariaLabels.bold': 'Tučně', '
 One editor needs no page setup: its own **`translateCallback`** (property only, same
 `({ component, key, template, params, locale }) => string | null` shape) is asked first for every key its
 `labels` didn't set, then the page-wide one; `null` / `undefined` = not mine → the next. A standalone
-`EditorEngine` (no element) takes the same function as its `translateCallback` option (its `getLabels` →
-it → English):
+`EditorEngine` (no element) takes the same function as its `translateCallback` option, in the same order
+(its `getLabels` → the page dictionary → it → the page-wide `translateCallback` → English):
 
 ```js
 editor.translateCallback = ({ key, params }) => (i18next.exists(key) ? i18next.t(key, params) : null);

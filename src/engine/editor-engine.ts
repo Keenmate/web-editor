@@ -130,8 +130,9 @@ export interface EditorEngineOptions {
   /**
    * Translate a UI string for a key `getLabels` did not set (core `/locale` `TranslateCallback`:
    * `({ component, key: 'km-editor.<key>', template, params, locale }) => string | null`; `null` = not mine →
-   * the built-in English). Standalone: instance labels → this → built-in. With `host`, omit it — core asks
-   * the element's own `translateCallback`, then the page-wide one.
+   * the next rule). Standalone, the same order as the element: instance labels → page dictionary → this → the
+   * page-wide `window.components.locale.translateCallback` → built-in. With `host`, omit it — core asks the
+   * element's own `translateCallback`, then the page-wide one.
    */
   translateCallback?: TranslateCallback | null;
 }

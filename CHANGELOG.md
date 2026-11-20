@@ -54,8 +54,10 @@ released to a registry yet.
   this element's own translation seam — asked for every label key its `labels` didn't set, BEFORE the page-wide
   `window.components.locale.translateCallback`; `null` / `undefined` = not mine → the page-wide one. Instance
   `labels` still beat both.
-- **`EditorEngine` `translateCallback` option** — a standalone engine (no `<km-editor>` host) asks it too:
-  `getLabels` → `translateCallback` → built-in English (the page-wide hook is not consulted without a host).
+- **`EditorEngine` `translateCallback` option** — a standalone engine (no `<km-editor>` host) asks it too, in
+  the element's order: `getLabels` → page dictionary → `translateCallback` → the page-wide
+  `window.components.locale.translateCallback` → built-in English (`null` = not mine; a throw is logged → the
+  next rule).
 
 ### Added — `renderIconCallback` (rulebook C-CA-33, core 1.0.0-rc25)
 

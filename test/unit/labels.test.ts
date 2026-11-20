@@ -46,19 +46,26 @@ describe('label helpers', () => {
     expect(label('nope')).toBe('nope');
   });
 
-  it('standalone resolver: instance labels → its own translateCallback (null = not mine) → built-in; the page hook is not asked', () => {
+  it('standalone resolver: instance labels → own translateCallback → page-wide one (null = not mine) → built-in', () => {
     const reg = (window as any).components;
-    const page = vi.fn(() => 'PAGE');
+    const page = vi.fn(({ key, template }: { key: string; template: string }) => (key === 'km-editor.ariaLabels.bold' ? 'Tučné' : `P:${template}`));
     const own = vi.fn(({ key, template }: { key: string; template: string }) => (key === 'km-editor.labels.chars' ? `T:${template}` : null));
     try {
       reg.locale = { translateCallback: page };
       const label = createLabelResolver(() => ({ 'labels.words': 'Slova: {count}' }), null, () => own);
-      expect(label('labels.words', { count: 2 })).toBe('Slova: 2'); // instance key: never sent to the callback
-      expect(label('labels.chars', { count: 5 })).toBe('T:Chars: {count}');
-      expect(label('ariaLabels.bold', undefined, 'Bold')).toBe('Bold'); // null → built-in
+      expect(label('labels.words', { count: 2 })).toBe('Slova: 2'); // instance key: beats both callbacks
+      expect(label('labels.chars', { count: 5 })).toBe('T:Chars: {count}'); // own beats page
+      expect(label('ariaLabels.bold', undefined, 'Bold')).toBe('Tučné'); // own null → page
       expect(own).not.toHaveBeenCalledWith(expect.objectContaining({ key: 'km-editor.labels.words' }));
+      expect(page).not.toHaveBeenCalledWith(expect.objectContaining({ key: 'km-editor.labels.words' }));
+      expect(page).not.toHaveBeenCalledWith(expect.objectContaining({ key: 'km-editor.labels.chars' }));
       expect(own).toHaveBeenCalledWith(expect.objectContaining({ component: 'km-editor', key: 'km-editor.labels.chars', params: { count: 5 } }));
-      expect(page).not.toHaveBeenCalled();
+      // Page callback null → built-in; a throwing callback is logged and the next rule decides.
+      reg.locale = { translateCallback: () => null };
+      expect(label('ariaLabels.bold', undefined, 'Bold')).toBe('Bold');
+      const throwing = createLabelResolver(() => null, null, () => () => { throw new Error('boom'); });
+      reg.locale = { translateCallback: ({ template }: { template: string }) => `P:${template}` };
+      expect(throwing('buttons.ok')).toBe('P:OK');
     } finally {
       reg.locale = null;
     }
@@ -74,7 +81,12 @@ describe('label helpers', () => {
     try {
       expect(engine.label('buttons.ok')).toBe('Dobře');
       expect(engine.label('buttons.cancel')).toBe('Cancel');
+      // The page-wide translateCallback is asked after the engine's own (same order as the element).
+      (window as any).components.locale = { translateCallback: ({ key }: { key: string }) => (key === 'km-editor.buttons.cancel' || key === 'km-editor.buttons.ok' ? 'PAGE' : null) };
+      expect(engine.label('buttons.ok')).toBe('Dobře');
+      expect(engine.label('buttons.cancel')).toBe('PAGE');
     } finally {
+      (window as any).components.locale = null;
       engine.destroy();
       mountEl.remove();
     }
