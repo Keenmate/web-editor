@@ -94,6 +94,17 @@
   block-size: 1.25em;
   vertical-align: middle;
 }
+/* An icon-font item icon (core renderIcon: `<i class="we__icon fa-solid fa-gear">`) sits like the masked span:
+   same size, never squeezed, the font glyph centred on one line. */
+.we__icon {
+  flex: none;
+}
+.we-cmd > i.we__icon {
+  display: inline-block;
+  font-size: 1.25em;
+  line-height: 1;
+  vertical-align: middle;
+}
 .we-cmd:hover:not(:disabled) {
   background: var(--we-hover-bg);
 }

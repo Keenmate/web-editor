@@ -47,6 +47,22 @@ released to a registry yet.
   still its (translated) text + the shortcut. The prompt dialogs are named by their visible title (`headers.*`,
   `aria-labelledby`). No key was removed.
 
+### Added — `renderIconCallback` (rulebook C-CA-33, core 1.0.0-rc25)
+
+- **`renderIconCallback`** (property only, `(name, ctx) => string | null | undefined`, applies live): this
+  element's own icon hook — asked for an item `icon` after markup and the reserved built-in names, BEFORE the
+  page-wide `window.components.renderIconCallback`; `null` / `undefined` = not mine → the page-wide one.
+  `ctx` = `{ component: 'km-editor', element, prefix: 'we', item }`. One editor on a page needs no
+  `window.components` setup.
+
+### Changed — BREAKING (icon order, core 1.0.0-rc25 `renderIcon`)
+
+- **A one-word icon name that is not a core built-in now renders an icon-font `<i class="we__icon gear"
+  aria-hidden="true">`**, no longer a `--base-icon-gear` mask. The mask is reserved for the built-in names
+  (`check`, `close`, `settings`, `delete`, … — core `BUILT_IN_ICON_NAMES`); an ASCII class list
+  (`'fa-solid fa-star'`) is an icon font. Upgrade: `icon: 'gear'` → a built-in name (`'settings'`), markup, an
+  icon-font class list, or draw it in `renderIconCallback`. `.we__icon` is `flex: none` and sized like the mask.
+
 ### Changed — BREAKING (icons, rulebook C-CA-33)
 
 - **Item icons go through core `renderIcon`** (SPEC §12.33): an `icon` string starting with `<` is inserted as

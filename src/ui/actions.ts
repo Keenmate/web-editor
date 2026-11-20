@@ -29,6 +29,11 @@ export interface ActionSurfaceHost {
   readonly registry: CommandRegistry;
   /** The engine's label resolver (the element's `labels` → English). */
   readonly label: LabelResolver;
+  /**
+   * The element the surfaces belong to (`<km-editor>`; absent for a bare engine) — the `host` of every item
+   * icon's core `renderIcon`, so the element's own `renderIconCallback` is asked (SPEC §12.33).
+   */
+  readonly element?: HTMLElement | null;
   /** The surface ctx (current state + component context) for render-time callbacks. */
   context(): EditorActionContext;
   /** Activate an item (core `runAction`). Resolves `false` when vetoed or busy. */
@@ -42,6 +47,8 @@ export interface ActionSurfaceHost {
 
 export interface ActionHostOptions {
   engine: EditorEngine;
+  /** The hosting element (`<km-editor>`): item icons render with it as core `renderIcon`'s `host`. */
+  element?: HTMLElement | null;
   /** The element's `beforeActionCallback` (read per activation). */
   getBeforeActionCallback?: () => ((detail: EditorActionEventDetail) => unknown) | null | undefined;
   /** Fire the `action` event + `onAction` twin (the element's `emit`). */
@@ -54,6 +61,7 @@ export function createActionHost(opts: ActionHostOptions): ActionSurfaceHost {
   return {
     registry: engine.commands,
     label: engine.label,
+    element: opts.element ?? null,
     context: () => engine.createContext({ state: engine.view.state }),
     activate(item, source, event, trigger) {
       const detail = engine.createContext({

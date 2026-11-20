@@ -242,6 +242,11 @@
                 "type": "Function | null"
               },
               {
+                "name": "renderIconCallback",
+                "description": "Property only. `(name, ctx) => string | null | undefined` — draws an item `icon` string (toolbar / selection toolbar) this element's way: return markup, `''` = no icon, `null` / `undefined` = not mine (the page-wide `window.components.renderIconCallback` decides, then the built-in rules). Asked AFTER markup (a string starting with `<`) and the reserved built-in names (`check`, `close`, …, never sent to a hook), BEFORE the page-wide hook (core `renderIcon`, SPEC §12.33). `ctx` = `{ component: 'km-editor', element, prefix: 'we', item }`. Applies live.",
+                "type": "Function | null"
+              },
+              {
                 "name": "renderLoadingCallback",
                 "description": "Property only. Draws the pending loader (shown while a deferred pipeline's work — e.g. a cloud-image upload — outlives its loader threshold; not while a dialog waits for the user) instead of the default spinner: `({ component, context, containerElement, element, label }) => void | cleanup`, `context` = `'pipeline'`. Fill `containerElement` (it already has `role=\"status\"` + `aria-label` = label `loading`); a returned function runs when the loader is removed. Beats the page-wide `window.components.renderLoadingCallback` (core SPEC §12.14). Read each time the loader shows.",
                 "type": "Function | null"

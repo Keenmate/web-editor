@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>km-editor — icons</title>
+</head>
+<body>
+    <!-- Targeted by e2e/icons.spec.ts: item icons through core renderIcon — the element's renderIconCallback,
+         the page-wide window.components.renderIconCallback, icon-font class lists, reserved built-in names. -->
+    <km-editor id="subject" value="plain words here"></km-editor>
+
+    <script type="module">
+        import { defaultPlugins, definePlugin } from '/src/index.ts';
+        const el = document.getElementById('subject');
+        const item = (id, icon) => ({ action: 'custom', id, text: id, icon });
+        el.plugins = [
+            ...defaultPlugins(),
+            definePlugin({
+                name: 'icons',
+                toolbarGroups: [{
+                    id: 'icons',
+                    text: 'Icons',
+                    items: [
+                        item('own', 'mine'),
+                        item('shared', 'shared'),
+                        item('font', 'fa-solid fa-star'),
+                        item('builtin', 'check'),
+                    ],
+                }],
+            }),
+        ];
+        // Every name each hook was asked for (a built-in name must never show up here).
+        window.iconCalls = { element: [], page: [] };
+        window.components ??= {};
+        window.components.renderIconCallback = (name, ctx) => {
+            window.iconCalls.page.push(name);
+            return name === 'mine' || name === 'shared' ? `<b class="page-icon">${name}</b>` : null;
+        };
+        el.renderIconCallback = (name, ctx) => {
+            window.iconCalls.element.push(name);
+            if (name !== 'mine') return null; // not mine → the page hook decides
+            return `<b class="own-icon" data-component="${ctx.component}" data-item="${ctx.item?.id}">${name}</b>`;
+        };
+
+        window.fixtureReady = true;
+    </script>
+</body>
+</html>

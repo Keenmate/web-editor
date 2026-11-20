@@ -1,7 +1,8 @@
 /**
  * The built-in toolbar icons — inline SVG markup (1em, `currentColor`, hidden from assistive tech: the button's
  * `aria-label` names it). Every item `icon` goes through core `renderIcon` (SPEC §12.33, rulebook C-CA-33):
- * markup (starts with `<`) is inserted raw, an ASCII name is a `--base-icon-<name>` mask, anything else is text.
+ * markup (starts with `<`) is inserted raw, a built-in name a `--base-icon-<name>` mask, then the element's /
+ * page-wide `renderIconCallback`, an ASCII class list an icon-font `<i class="we__icon …">`, anything else text.
  */
 const svg = (body: string): string =>
   `<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false">${body}</svg>`;

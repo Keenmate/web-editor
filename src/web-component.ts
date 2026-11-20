@@ -44,6 +44,7 @@ import {
   type EventDef,
   type InputDef,
   type RenderLoaderCallback,
+  type RenderIconCallback,
   type ResponsiveCallback,
   type ResponsiveMap,
 } from '@keenmate/web-components-core';
@@ -112,6 +113,7 @@ export interface EditorConfig {
   labels: EditorLabels | null;
   beforeActionCallback: ((detail: EditorActionEventDetail) => unknown) | null;
   renderLoadingCallback: RenderLoaderCallback | null;
+  renderIconCallback: RenderIconCallback | null;
   interactionHost: InteractionHost | null;
   customStyles: string | null;
   getCustomStylesCallback: CustomStylesCallback<EditorComponentContext> | null;
@@ -249,6 +251,14 @@ const INPUTS: readonly InputDef[] = [
     on: 'none',
     description:
       'Property only. `(detail) => false | void` (may be async) — runs first on every toolbar / selection-toolbar / context-menu activation, with the `action` event detail. Return `false` to cancel: no `onClick`, no `action` event, no command. Keyboard shortcuts do not pass through it.',
+  },
+  {
+    configKey: 'renderIconCallback',
+    converter: toFunction<RenderIconCallback>(),
+    default: null,
+    on: 'update',
+    description:
+      "Property only. `(name, ctx) => string | null | undefined` — draws an item `icon` string (toolbar / selection toolbar) this element's way: return markup, `''` = no icon, `null` / `undefined` = not mine (the page-wide `window.components.renderIconCallback` decides, then the built-in rules). Asked AFTER markup (a string starting with `<`) and the reserved built-in names (`check`, `close`, …, never sent to a hook), BEFORE the page-wide hook (core `renderIcon`, SPEC §12.33). `ctx` = `{ component: 'km-editor', element, prefix: 'we', item }`. Applies live.",
   },
   {
     configKey: 'renderLoadingCallback',
@@ -483,6 +493,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     // UI strings are resolved on render: re-render the chrome (and the empty-document
     // placeholder) with the new labels.
     if ('labels' in partial) this.#relabel();
+    // Item icons are drawn on render: re-render the toolbars with the new hook.
+    else if ('renderIconCallback' in partial) this.#chrome?.refresh();
     if ('name' in partial || 'contentFormat' in partial || 'getValueFormatCallback' in partial) this.#syncFormInput();
     if ('interactionHost' in partial) {
       this.#engine?.setInteractionHost(this.#interactionHost());
@@ -614,6 +626,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
       // Item activation: beforeActionCallback → onClick → `action` → the command.
       actions: createActionHost({
         engine,
+        element: this, // item icons: core renderIcon asks this element's renderIconCallback
         getBeforeActionCallback: () =>
           this.config.beforeActionCallback as ((detail: EditorActionEventDetail) => unknown) | null,
         emitAction: (detail) => this.emit('action', detail),

@@ -90,7 +90,7 @@ export class CommandBar {
       );
     }
     for (const r of resolved) {
-      if (r.kind === 'item') this.#apply(this.#button(r.item), r.resolved);
+      if (r.kind === 'item') this.#apply(this.#button(r.item), r.item, r.resolved);
     }
     this.#roving?.refresh();
   }
@@ -136,17 +136,18 @@ export class CommandBar {
     return btn;
   }
 
-  #apply(btn: HTMLButtonElement, r: ResolvedActionItem<EditorAction>): void {
+  #apply(btn: HTMLButtonElement, item: EditorActionItem, r: ResolvedActionItem<EditorAction>): void {
     btn.dataset.action = r.action;
     if (r.id !== undefined) btn.dataset.id = r.id;
     else delete btn.dataset.id;
     btn.className = ['we-cmd', r.cssClass, r.isToggled && 'toggled', r.isDanger && 'we-danger']
       .filter(Boolean)
       .join(' ');
-    // An icon string follows core `renderIcon` (markup raw / ASCII name = `--base-icon-<name>` mask / else
-    // text); an icon button's name is its `aria-label`. No icon → the text, which names the button itself
+    // An icon string follows core `renderIcon` (markup raw / built-in name = `--base-icon-<name>` mask / the
+    // element's `renderIconCallback` → the page-wide one / class list = icon-font `<i class="we__icon …">` /
+    // else text); an icon button's name is its `aria-label`. No icon → the text, which names the button itself
     // (one text, one key — D-NC-24: no `aria-label` twin on a text button).
-    if (r.icon) btn.innerHTML = renderIcon(r.icon, { prefix: 'we' });
+    if (r.icon) btn.innerHTML = renderIcon(r.icon, { prefix: 'we', host: this.#host.element ?? null, context: { item } });
     else btn.textContent = r.text;
     if (r.isToggled) btn.setAttribute('aria-pressed', 'true');
     else btn.removeAttribute('aria-pressed');
