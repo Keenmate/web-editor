@@ -11,6 +11,14 @@ Target: **1.0.0-rc01** (first release).
 Pre-1.0, pre-publish. Everything below is the work to date; nothing has been
 released to a registry yet.
 
+### Docs — the shared localization page
+
+- **`examples-localization.html`** — the shared localization page (LO01–LO06): instance `labels` (short + full keys),
+  the page-wide dictionary (toolbar names, group name, view buttons, status bar, the code-block prompt),
+  `translateCallback` (the element's own first, then the page-wide one; instance `labels` still win), and the
+  screen-reader name / tooltip following a translated caption. LO05 / LO06 say why they don't apply (no
+  locale-specific formatting; every label is text).
+
 ### Changed — BREAKING (label keys, rulebook D-NC-24 / core 1.0.0-rc25 `/locale`)
 
 - **`labels` keys are flat `<elementType>.<name>`** — the element type says where the text is shown. The

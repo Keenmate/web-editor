@@ -1,0 +1,295 @@
+<meta name="kmwc:title" content="🌍 Localization">
+<meta name="kmwc:subtitle" content="The shared localization page — instance <code>labels</code>, the page-wide dictionary, <code>translateCallback</code>, screen-reader name / tooltip follow, locale formatting and <code>shouldEscapeLabels</code>, in the same six sections every Keenmate component has.">
+
+<div class="note">
+    Every UI string of <code>&lt;km-editor&gt;</code> goes through core <code>/locale</code>. Keys are flat
+    <code>&lt;elementType&gt;.&lt;name&gt;</code>. Command keys derive <code>&lt;name&gt;</code> from the command id
+    (<code>insert-code-block</code> → <code>insertCodeBlock</code>) and the element type from where the text is shown:
+    <code>ariaLabels.bold</code> (an icon toolbar button's accessible name), <code>buttons.viewEdit</code> (a text toolbar
+    button), <code>tooltips.bold</code>, <code>menuItems.bold</code>. The named keys (<code>labels.words</code>,
+    <code>headers.codeLanguage</code>, <code>buttons.ok</code>, <code>ariaLabels.formatGroup</code>, …) are
+    <code>DEFAULT_LABELS</code> in <code>src/labels.ts</code>. Per key: the instance <code>labels</code> (short or full
+    <code>km-editor.</code> key) → the element's own <code>translateCallback</code> → the page-wide
+    <code>translateCallback</code> → the page dictionary <code>window.components.locale.labels</code> → the built-in English.
+    The page-wide toggles (LO02, LO03) change <strong>every</strong> editor on this page, on purpose.
+</div>
+
+<!-- ============================================================= -->
+<!-- LO01 · Instance labels                                        -->
+<!-- ============================================================= -->
+<div class="card">
+    <h2>LO01 · Instance <code>labels</code></h2>
+    <p>
+        Override texts on ONE element with the <code>labels</code> property (or a JSON <code>labels</code> attribute).
+        Short keys (<code>tooltips.bold</code>, <code>buttons.viewEdit</code>) and a full key
+        (<code>km-editor.labels.words</code>, with its <code>{count}</code> placeholder) both work; every key you leave out
+        stays English. The neighbour editor is untouched. Hover <b>B</b> to see the tooltip.
+    </p>
+    <div class="controls">
+        <label><input type="checkbox" id="lo01-labels" checked> instance <code>labels</code> on the first editor</label>
+    </div>
+    <div class="demo-area">
+        <div class="grid grid-2">
+            <div class="form-group">
+                <label class="demo-label">With <code>labels</code></label>
+                <km-editor id="lo01" view-mode="edit" toolbar="top" statusbar="bottom" value="Three little words."></km-editor>
+            </div>
+            <div class="form-group">
+                <label class="demo-label">Without (English)</label>
+                <km-editor id="lo01-plain" view-mode="edit" toolbar="top" statusbar="bottom" value="Three little words."></km-editor>
+            </div>
+        </div>
+        <div class="output"><div class="output-label">rendered strings (read from the shadow root)</div><pre id="lo01-out"></pre></div>
+    </div>
+    <div class="code-block" data-language="js"><pre><code>el.labels = {
+  'tooltips.bold': 'Tučné písmo (Ctrl+B)',      // short key
+  'buttons.viewEdit': 'Upravit',
+  'km-editor.labels.words': 'Slova: {count}',  // full key
+};
+// or declaratively
+&lt;km-editor labels='{"labels.words": "Slova: {count}"}'&gt;&lt;/km-editor&gt;</code></pre></div>
+</div>
+
+<!-- ============================================================= -->
+<!-- LO02 · Page-wide dictionary                                    -->
+<!-- ============================================================= -->
+<div class="card">
+    <h2>LO02 · Page-wide dictionary</h2>
+    <p>
+        One flat dictionary on <code>window.components.locale.labels</code> — the app's translation JSON as loaded, full
+        keys <code>'km-editor.&lt;elementType&gt;.&lt;name&gt;'</code>, other components' keys side by side — translates
+        every editor on the page at once: toolbar names, the toolbar group name, the view buttons, the status bar and the
+        prompts. Click <b>Insert code block</b> (the <code>&lt;/&gt;</code> button) to see the translated prompt
+        (<code>headers.codeLanguage</code> with its <code>{languages}</code> placeholder, <code>buttons.ok</code> /
+        <code>buttons.cancel</code>). Keys an instance set itself (LO01) still win.
+    </p>
+    <div class="controls">
+        <label><input type="checkbox" id="lo02-dict"> page dictionary (Czech)</label>
+    </div>
+    <div class="demo-area">
+        <div class="grid grid-2">
+            <div class="form-group">
+                <label class="demo-label">Editor A</label>
+                <km-editor id="lo02a" view-mode="edit" toolbar="top" statusbar="bottom" value="A page-wide dictionary."></km-editor>
+            </div>
+            <div class="form-group">
+                <label class="demo-label">Editor B</label>
+                <km-editor id="lo02b" view-mode="edit" toolbar="top" statusbar="bottom" value="Same JSON, every editor."></km-editor>
+            </div>
+        </div>
+        <div class="output"><div class="output-label">rendered strings (read from the shadow root)</div><pre id="lo02-out"></pre></div>
+    </div>
+    <div class="code-block" data-language="js"><pre><code>// e.g. const labels = await (await fetch('/i18n/cs.json')).json();
+window.components.locale = {
+  labels: {
+    'km-editor.ariaLabels.bold': 'Tučně',
+    'km-editor.ariaLabels.italic': 'Kurzíva',
+    'km-editor.ariaLabels.formatGroup': 'Formát',
+    'km-editor.buttons.viewEdit': 'Upravit',
+    'km-editor.labels.words': 'Slova: {count}',
+    'km-editor.labels.chars': 'Znaky: {count}',
+    'km-editor.headers.codeLanguage': 'Zadejte jazyk ({languages})',
+    'km-editor.buttons.ok': 'OK',
+    'km-editor.buttons.cancel': 'Zrušit',
+    'web-multiselect.placeholders.search': 'Hledat…',   // other components share the same JSON
+  },
+};</code></pre></div>
+</div>
+
+<!-- ============================================================= -->
+<!-- LO03 · translateCallback                                       -->
+<!-- ============================================================= -->
+<div class="card">
+    <h2>LO03 · <code>translateCallback</code></h2>
+    <p>
+        An app with its own i18n (i18next, FormatJS, …) answers keys through a callback instead of a dictionary. It gets
+        <code>{ component, key, template, params, locale }</code> — <code>key</code> is the full
+        <code>km-editor.&lt;elementType&gt;.&lt;name&gt;</code> — and returns the text, or <code>null</code> = not mine.
+        The element's own <code>translateCallback</code> is asked first (German, only <code>ariaLabels.bold</code> and
+        <code>labels.words</code> here); its <code>null</code> passes the key on to the page-wide one (a small Slovak
+        i18next-like lookup with <code>{{count}}</code>). A key the instance <code>labels</code> set (the second editor's
+        <code>labels.words</code>) is never sent to any callback.
+    </p>
+    <div class="controls">
+        <label><input type="checkbox" id="lo03-page"> page-wide <code>translateCallback</code> (Slovak)</label>
+        <label><input type="checkbox" id="lo03-own"> first editor's own <code>translateCallback</code> (German)</label>
+    </div>
+    <div class="demo-area">
+        <div class="grid grid-2">
+            <div class="form-group">
+                <label class="demo-label">Own callback</label>
+                <km-editor id="lo03a" view-mode="edit" toolbar="top" statusbar="bottom" value="Ask the callback."></km-editor>
+            </div>
+            <div class="form-group">
+                <label class="demo-label">Instance <code>labels.words</code></label>
+                <km-editor id="lo03b" view-mode="edit" toolbar="top" statusbar="bottom" value="Ask the callback."
+                    labels='{"labels.words": "Instance wins: {count}"}'></km-editor>
+            </div>
+        </div>
+        <div class="output"><div class="output-label">rendered strings (read from the shadow root)</div><pre id="lo03-out"></pre></div>
+    </div>
+    <div class="code-block" data-language="js"><pre><code>// an i18next-like lookup: a dictionary + t(key, params)
+const sk = {
+  'km-editor.ariaLabels.bold': 'Tučné',
+  'km-editor.ariaLabels.italic': 'Kurzíva',
+  'km-editor.labels.words': 'Slová: {{count}}',
+  'km-editor.labels.chars': 'Znaky: {{count}}',
+};
+const t = (key, params) =&gt; sk[key].replace(/\{\{(\w+)\}\}/g, (_, p) =&gt; params?.[p] ?? '');
+
+// page-wide — every component on the page
+window.components.locale = { translateCallback: ({ key, params }) =&gt; (key in sk ? t(key, params) : null) };
+
+// one element — asked BEFORE the page-wide callback; null = not mine
+el.translateCallback = ({ key, params }) =&gt; {
+  if (key === 'km-editor.ariaLabels.bold') return 'Fett';
+  if (key === 'km-editor.labels.words') return `Wörter: ${params.count}`;
+  return null;
+};</code></pre></div>
+</div>
+
+<!-- ============================================================= -->
+<!-- LO04 · Screen-reader name / tooltip follow                     -->
+<!-- ============================================================= -->
+<div class="card">
+    <h2>LO04 · Screen-reader name / tooltip follow</h2>
+    <p>
+        An <code>ariaLabels.x</code> / <code>tooltips.x</code> nobody set takes the customized key of the same
+        <code>&lt;name&gt;</code>, so translating one string of a pair translates its twin. The view buttons are TEXT
+        buttons: translate their caption <code>buttons.viewSplit</code> and the tooltip (<code>tooltips.viewSplit</code>,
+        nobody set) follows. The <b>B</b> button is an ICON button whose only visible text is its tooltip: translate
+        <code>tooltips.bold</code> and its accessible name <code>ariaLabels.bold</code> (nobody set) follows. The box reads
+        the button text, the tooltip (<code>data-tooltip</code>) and the <code>aria-label</code> from the shadow root.
+    </p>
+    <div class="controls">
+        <label><input type="checkbox" id="lo04-follow"> translate only <code>buttons.viewSplit</code> + <code>tooltips.bold</code></label>
+    </div>
+    <div class="demo-area">
+        <km-editor id="lo04" view-mode="edit" toolbar="top" value="Hover the toolbar buttons."></km-editor>
+        <div class="output"><div class="output-label">visible text / tooltip / accessible name</div><pre id="lo04-out"></pre></div>
+    </div>
+    <div class="code-block" data-language="js"><pre><code>el.labels = { 'buttons.viewSplit': 'Rozdělit', 'tooltips.bold': 'Tučně' };
+// → the Split button reads "Rozdělit" AND its tooltip is "Rozdělit" (tooltips.viewSplit was never set)
+// → the B button's tooltip is "Tučně" AND its aria-label is "Tučně" (ariaLabels.bold was never set)
+// an explicitly set ariaLabels.x / tooltips.x always wins over the twin</code></pre></div>
+</div>
+
+<!-- ============================================================= -->
+<!-- LO05 · locale + formatting                                     -->
+<!-- ============================================================= -->
+<div class="card">
+    <h2>LO05 · <code>locale</code> + formatting</h2>
+    <p>
+        Not applicable: the editor formats nothing locale-specific (no dates, no decimals — the only numbers are the
+        <code>{count}</code> integers of <code>labels.words</code> / <code>labels.chars</code>), so it has no
+        <code>locale</code> input and the page locale changes nothing.
+    </p>
+</div>
+
+<!-- ============================================================= -->
+<!-- LO06 · shouldEscapeLabels                                      -->
+<!-- ============================================================= -->
+<div class="card">
+    <h2>LO06 · <code>shouldEscapeLabels</code></h2>
+    <p>
+        Not applicable: every editor label is TEXT (<code>textContent</code> / attributes / the tooltip's text — no label is
+        an HTML template), so a <code>&lt;b&gt;</code> in a label always shows as characters and
+        <code>window.components.security.shouldEscapeLabels</code> changes nothing.
+    </p>
+</div>
+
+<script type="module">
+    const $ = (id) => document.getElementById(id);
+
+    // ── Page-wide state: window.components.locale is ONE object (assigning replaces it), so every
+    //    page-wide toggle (LO02 dictionary, LO03 callback) composes it from here.
+    const page = { labels: null, translateCallback: null };
+    const applyPage = () => {
+        const next = {};
+        if (page.labels) next.labels = page.labels;
+        if (page.translateCallback) next.translateCallback = page.translateCallback;
+        window.components.locale = next;
+        refreshAll();
+    };
+
+    // ── Readouts: what the shadow root actually renders.
+    const part = (id, selector) => $(id).shadowRoot?.querySelector(selector) ?? null;
+    const cmd = (id, action) => part(id, `.we-toolbar-zone .we-cmd[data-action="${action}"]`);
+    const aria = (id, action) => cmd(id, action)?.getAttribute('aria-label') ?? '(none)';
+    const tip = (id, action) => cmd(id, action)?.dataset.tooltip ?? '(none)';
+    const caption = (id, action) => cmd(id, action)?.textContent.trim() || '(none)';
+    const status = (id, item) => part(id, `.we-status-item[data-status="${item}"]`)?.textContent.trim() || '(none)';
+    const group = (id) => part(id, '.we-toolbar-zone .we-group')?.getAttribute('aria-label') ?? '(none)';
+    const settle = async () => {
+        await Promise.all([...document.querySelectorAll('km-editor')].map(async (el) => { await el.whenReady?.(); await el.whenSettled?.(); }));
+        await new Promise((r) => requestAnimationFrame(() => r()));
+    };
+    const write = (id, lines) => { $(id).textContent = lines.join('\n'); };
+
+    let chain = Promise.resolve();
+    const refreshAll = () => (chain = chain.then(doRefresh, doRefresh));
+    async function doRefresh() {
+        await settle();
+        write('lo01-out', ['lo01', 'lo01-plain'].map((id) =>
+            `#${id.padEnd(10)}  bold tooltip: ${tip(id, 'bold')}   view-edit: ${caption(id, 'view-edit')}   status: ${status(id, 'words')}`));
+        write('lo02-out', ['lo02a', 'lo02b'].map((id) =>
+            `#${id}  bold: ${aria(id, 'bold')}   italic: ${aria(id, 'italic')}   group: ${group(id)}   view-edit: ${caption(id, 'view-edit')}   status: ${status(id, 'words')} / ${status(id, 'chars')}`));
+        write('lo03-out', ['lo03a', 'lo03b'].map((id) =>
+            `#${id}  bold: ${aria(id, 'bold')}   italic: ${aria(id, 'italic')}   status: ${status(id, 'words')} / ${status(id, 'chars')}`));
+        write('lo04-out', [
+            `split button text:     ${caption('lo04', 'view-split')}`,
+            `split button tooltip:  ${tip('lo04', 'view-split')}`,
+            `bold tooltip:          ${tip('lo04', 'bold')}`,
+            `bold aria-label:       ${aria('lo04', 'bold')}`,
+        ]);
+    }
+
+    // ── LO01 · instance labels.
+    const LO01_LABELS = {
+        'tooltips.bold': 'Tučné písmo (Ctrl+B)',
+        'buttons.viewEdit': 'Upravit',
+        'km-editor.labels.words': 'Slova: {count}',
+    };
+    $('lo01-labels').addEventListener('change', (e) => { $('lo01').labels = e.target.checked ? LO01_LABELS : undefined; refreshAll(); });
+    $('lo01').labels = LO01_LABELS;
+
+    // ── LO02 · page dictionary.
+    const CS = {
+        'km-editor.ariaLabels.bold': 'Tučně',
+        'km-editor.ariaLabels.italic': 'Kurzíva',
+        'km-editor.ariaLabels.formatGroup': 'Formát',
+        'km-editor.buttons.viewEdit': 'Upravit',
+        'km-editor.labels.words': 'Slova: {count}',
+        'km-editor.labels.chars': 'Znaky: {count}',
+        'km-editor.headers.codeLanguage': 'Zadejte jazyk ({languages})',
+        'km-editor.buttons.ok': 'OK',
+        'km-editor.buttons.cancel': 'Zrušit',
+        'web-multiselect.placeholders.search': 'Hledat…',
+    };
+    $('lo02-dict').addEventListener('change', (e) => { page.labels = e.target.checked ? CS : null; applyPage(); });
+
+    // ── LO03 · translateCallback.
+    const sk = {
+        'km-editor.ariaLabels.bold': 'Tučné',
+        'km-editor.ariaLabels.italic': 'Kurzíva',
+        'km-editor.labels.words': 'Slová: {{count}}',
+        'km-editor.labels.chars': 'Znaky: {{count}}',
+    };
+    const t = (key, params) => sk[key].replace(/\{\{(\w+)\}\}/g, (_, p) => String(params?.[p] ?? ''));
+    const pageTranslate = ({ key, params }) => (key in sk ? t(key, params) : null);
+    const ownTranslate = ({ key, params }) => {
+        if (key === 'km-editor.ariaLabels.bold') return 'Fett';
+        if (key === 'km-editor.labels.words') return `Wörter: ${params.count}`;
+        return null;
+    };
+    $('lo03-page').addEventListener('change', (e) => { page.translateCallback = e.target.checked ? pageTranslate : null; applyPage(); });
+    $('lo03-own').addEventListener('change', (e) => { $('lo03a').translateCallback = e.target.checked ? ownTranslate : undefined; refreshAll(); });
+
+    // ── LO04 · twin follow.
+    $('lo04-follow').addEventListener('change', (e) => {
+        $('lo04').labels = e.target.checked ? { 'buttons.viewSplit': 'Rozdělit', 'tooltips.bold': 'Tučně' } : undefined;
+        refreshAll();
+    });
+
+    refreshAll();
+</script>
