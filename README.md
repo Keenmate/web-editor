@@ -136,8 +136,8 @@ before the DOM event. Every detail carries `controller` and `element` (non-enume
 | `controller`              | `EditorController`   | The public facade (also `detail.controller` / `ctx.controller`): `value` (read-only), `getHTML` / `getMarkdown` / `getJSON`, `setValue`, `setViewMode`, `focus`, `runCommand(name \| ProseMirror command)`, `isCommandToggled(name)`, `isCommandEnabled(name)`. Programmatic — no `action` event. |
 | `destroy()`               | `void`               | Core: final teardown of the engine and shadow layout (idempotent; `isDestroyed`). The element stays inert — create a new one instead of re-inserting it. |
 
-The internal engine is not exposed on the element; `EditorEngine` is exported for
-standalone (headless) use.
+The element's own engine is not exposed on it (`el.controller` is its API); to draw your
+own editor UI, use the exported `EditorEngine` — see [Build your own UI](#build-your-own-ui).
 
 ## Labels
 
@@ -165,8 +165,8 @@ window.components.locale = { labels: { 'km-editor.ariaLabels.bold': 'Tučně', '
 One editor needs no page setup: its own **`translateCallback`** (property only, same
 `({ component, key, template, params, locale }) => string | null` shape) is asked first for every key its
 `labels` didn't set, then the page-wide one; `null` / `undefined` = not mine → the next. A standalone
-`EditorEngine` (no element) takes the same function as its `translateCallback` option, in the same order
-(its `getLabels` → the page dictionary → it → the page-wide `translateCallback` → English):
+`EditorEngine` (no element) takes the same function as its `translateCallback` option (and the same `labels`
+object as its `labels` option), in the same order:
 
 ```js
 editor.translateCallback = ({ key, params }) => (i18next.exists(key) ? i18next.t(key, params) : null);
@@ -393,6 +393,69 @@ the Markdown-serializer contract) and the content-pipeline layer are covered in
 [`docs/`](./docs/) — see the **[Pipelines guide](./docs/pipelines/README.md)** (with
 diagrams) — plus [`PLAN.md`](./PLAN.md) and the [`PIPELINES.md`](./PIPELINES.md)
 design note.
+
+## Build your own UI
+
+`EditorEngine` is the headless editor behind `<km-editor>` — exported so you can drive the
+same document from **your own** toolbar, menus and status line (any framework). It is a seam
+for your own UI; if you just want the editor without writing UI, use `<km-editor>`.
+
+**What the engine does:** owns the ProseMirror document + view in the element you give it
+(`mount`), assembles schema, commands, keybindings, Markdown I/O and pipelines from the plugin
+set (`editorPlugins`, default `defaultPlugins()`), runs commands through their pipelines
+(`engine.commands.run(id)` / `engine.run(name)`), answers command state
+(`commands.isEnabled(id)` / `isToggled(id)` / `shortcut(id)`, `get(id)` → `text` / `icon` /
+`tooltip`), serializes (`getMarkdown()` / `getHTML()` / `getJSON()`, `setContent(value, format)`),
+resolves UI strings (`engine.label(key, params?, fallback?)`), and emits `change`,
+`selection-change`, `lock` and `pending` on `engine.events`. The assembled item lists
+(`toolbarGroups`, `selectionItems`, `menuItems`, `statusItems`) are data for your UI.
+
+**What you draw:** every control — buttons, menus, the status line, a loader while
+`pending` is true — and the CSS of your container (the element's stylesheet targets its
+shadow root; a ProseMirror surface needs at least `white-space: pre-wrap`). The built-in
+prompts (`insert-link`, `insert-image`, code language) open core `/dialog` prompts for you;
+interactive pipeline stages (the cloud-image picker) ask the `interactionHost` option.
+
+**Options = the element's settings**, same names and same defaults (rulebook C-CA-37):
+`isReadonly` (`false`), `labels` (`null` = English, live: `engine.labels = …`),
+`translateCallback` (`null`, live; asked before the page-wide
+`window.components.locale.translateCallback`), `interactionHost` (`null` = the core dialog).
+Content: one of `markdown` / `html` / `json` / `doc`. The element's chrome settings
+(`toolbar`, `statusbar`, `viewMode`, `anchor`, `menu-presentation`, `renderIconCallback`,
+`renderLoadingCallback`, `beforeActionCallback`, `customStyles`, `name`, …) have no engine
+option — they configure UI the engine does not draw.
+
+```js
+import { EditorEngine, labelKey } from '@keenmate/web-editor';
+
+const engine = new EditorEngine({
+  mount: document.querySelector('#surface'),
+  markdown: '# Hello',
+  labels: { 'ariaLabels.bold': 'Tučně' },
+});
+
+const bar = document.querySelector('#bar');
+const ids = ['bold', 'italic', 'bullet-list', 'undo', 'redo'];
+for (const id of ids) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.dataset.id = id;
+  button.textContent = engine.label(`ariaLabels.${labelKey(id)}`, undefined, engine.commands.get(id)?.text ?? id);
+  button.addEventListener('mousedown', (e) => e.preventDefault()); // keep the editor selection
+  button.addEventListener('click', () => engine.commands.run(id));
+  bar.append(button);
+}
+const refresh = () => {
+  for (const button of bar.children) {
+    button.disabled = !engine.commands.isEnabled(button.dataset.id);
+    button.setAttribute('aria-pressed', String(engine.commands.isToggled(button.dataset.id)));
+  }
+};
+engine.events.on('selection-change', refresh);
+engine.events.on('change', () => save(engine.getMarkdown()));
+refresh();
+// later: engine.setEditable(false); engine.destroy();
+```
 
 ## Browser support
 

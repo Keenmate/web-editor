@@ -96,3 +96,34 @@ describe('EditorEngine — the element settings it shares (C-CA-37)', () => {
     }
   });
 });
+
+describe('EditorEngine — README "Build your own UI" example', () => {
+  it('drives the document from an own toolbar: labels, run, enabled / toggled state, change', async () => {
+    const { labelKey } = await import('../../src/labels');
+    const engine = new EditorEngine({ mount: mount(), markdown: 'hello', labels: { 'ariaLabels.bold': 'Tučně' } });
+    const bar = document.body.appendChild(document.createElement('div'));
+    try {
+      for (const id of ['bold', 'italic', 'undo']) {
+        const button = document.createElement('button');
+        button.dataset.id = id;
+        button.textContent = engine.label(`ariaLabels.${labelKey(id)}`, undefined, engine.commands.get(id)?.text ?? id);
+        button.addEventListener('click', () => engine.commands.run(id));
+        bar.append(button);
+      }
+      const buttons = [...bar.children] as HTMLButtonElement[];
+      expect(buttons.map((b) => b.textContent)).toEqual(['Tučně', 'Italic', 'Undo']);
+      let saved = '';
+      engine.events.on('change', () => (saved = engine.getMarkdown()));
+      const { TextSelection } = await import('prosemirror-state');
+      const { view } = engine;
+      view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 1, 6)));
+      buttons[0].click();
+      expect(saved.trim()).toBe('**hello**');
+      expect(engine.commands.isToggled('bold')).toBe(true);
+      expect(engine.commands.isEnabled('undo')).toBe(true);
+    } finally {
+      bar.remove();
+      engine.destroy();
+    }
+  });
+});

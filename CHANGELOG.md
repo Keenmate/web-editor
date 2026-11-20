@@ -58,6 +58,8 @@ released to a registry yet.
 - Every option the engine shares with `<km-editor>` (`isReadonly`, `labels`, `translateCallback`,
   `interactionHost`) defaults from ONE source: the element's input table moved to `src/inputs.ts` and the engine
   reads `ENGINE_DEFAULTS`, derived from its rows the way the element seeds its config. The element is unchanged.
+- README **"Build your own UI"**: what `EditorEngine` does, what you draw, a minimal own-toolbar example
+  (also a unit test); stale "the engine is internal" / `plugins:` engine snippets fixed.
 
 ### Added — `translateCallback` (rulebook C-CA-33, core 1.0.0-rc25)
 

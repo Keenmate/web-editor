@@ -7,7 +7,7 @@
 > (`engine.pipelines`, `engine.run`, `engine.setInteractionHost`, the `lock`
 > event) and exported from `index.ts`. On the `<km-editor>` element the same
 > surface is `el.controller.runCommand(name)`, the `interactionHost` property and
-> the `lock-change` event (the engine itself is internal to the element). The first-party `imageBrowserPlugin` /
+> the `lock-change` event (the element does not expose its engine; `EditorEngine` is the public seam for building your own UI — README "Build your own UI"). The first-party `imageBrowserPlugin` /
 > `imageBase64Plugin` and the `pipelines.html` visualizer exercise it end to end.
 > The **Demo slice** at the end records the dev-playground proof that preceded the
 > engine integration.
@@ -351,7 +351,7 @@ plugin churn). The override is **additive and partial**:
 
 ```ts
 new EditorEngine({
-  plugins: [imageBrowserPlugin({ upload }), cropPlugin(), imageBase64Plugin],
+  editorPlugins: [imageBrowserPlugin({ upload }), cropPlugin(), imageBase64Plugin],
   pipelines: {
     'image:browser:pick': {
       // coarse: the ordered vocabulary for THIS app (across-phase order)
@@ -395,7 +395,7 @@ property of the plugin — it's a property of the (stage × pipeline) cell.** On
 
 ```ts
 new EditorEngine({
-  plugins: [imageBrowserPlugin({ upload }), cropPlugin(), imageBase64Plugin],
+  editorPlugins: [imageBrowserPlugin({ upload }), cropPlugin(), imageBase64Plugin],
   pipelines: {
     'image:portrait:pick': {               // a manager's portrait
       phases: ['acquire', 'geometry', 'encode', 'insert'],

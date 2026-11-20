@@ -162,10 +162,15 @@ small framework-free chrome layer in `ui/`. Things the code won't tell you:
   prototype (non-enumerable, one allocation); standalone it is just the fields.
   Command predicates, status items, item callbacks and `InteractionHost.request`
   all use it. Events go through `this.emit()` (twins get the detail).
-- **The engine is internal to the element**: `el.controller`
-  (`createEditorController`, a method list) is the public API.
+- **The element does not expose its engine**: `el.controller`
+  (`createEditorController`, a method list) is the element's public API.
   `getEditorEngine(el)` (`web-component.ts`, not exported from `index.ts`) is
-  for this repo's dev pages / tests only.
+  for this repo's dev pages / tests only. `EditorEngine` itself IS public — the
+  headless seam for an app's own UI (README "Build your own UI", rulebook
+  C-CA-37): every `<km-editor>` setting it applies (`isReadonly`, `labels`,
+  `translateCallback`, `interactionHost`) is an engine option with the same name
+  and the element's default from ONE source — the input table in `src/inputs.ts`
+  (`ENGINE_DEFAULTS`). A new shared setting goes into `ENGINE_KEYS` there.
 - `PipelineStage.run(ctx, rt)` stays two-argument — a plugin-author reducer
   contract (threaded value + runtime), not a consumer callback.
 - happy-dom can't focus / select inside a shadow-mounted view: unit tests that
