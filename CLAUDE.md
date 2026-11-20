@@ -170,7 +170,9 @@ small framework-free chrome layer in `ui/`. Things the code won't tell you:
   C-CA-37): every `<km-editor>` setting it applies (`isReadonly`, `labels`,
   `translateCallback`, `interactionHost`) is an engine option with the same name
   and the element's default from ONE source — the input table in `src/inputs.ts`
-  (`ENGINE_DEFAULTS`). A new shared setting goes into `ENGINE_KEYS` there.
+  (`ENGINE_DEFAULTS`). A new shared setting goes into `ENGINE_KEYS` there. The
+  element's `plugins` property (not an input row) = engine `plugins` (default
+  `defaultPlugins()`); raw ProseMirror plugins are the engine-only `prosemirrorPlugins`.
 - `PipelineStage.run(ctx, rt)` stays two-argument — a plugin-author reducer
   contract (threaded value + runtime), not a consumer callback.
 - happy-dom can't focus / select inside a shadow-mounted view: unit tests that

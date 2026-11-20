@@ -52,6 +52,11 @@ released to a registry yet.
 - **BREAKING:** the `EditorEngine` option `isEditable` is now **`isReadonly`** — the name of `<km-editor>`'s
   setting, same default (`false`, editable). No alias: `new EditorEngine({ mount, isEditable: false })` →
   `new EditorEngine({ mount, isReadonly: true })`. The `isEditable()` / `setEditable()` methods are unchanged.
+- **BREAKING:** the `EditorEngine` option **`plugins`** is now the editor plugin list — the name and default
+  (`defaultPlugins()`) of `<km-editor>`'s `plugins` (rulebook C-CA-37). The old editor-list option
+  `editorPlugins` is gone, and the raw ProseMirror plugin option (was `plugins`) is now **`prosemirrorPlugins`**.
+  No aliases: `new EditorEngine({ mount, editorPlugins: [...defaultPlugins(), myPlugin], plugins: [pmPlugin] })` →
+  `new EditorEngine({ mount, plugins: [...defaultPlugins(), myPlugin], prosemirrorPlugins: [pmPlugin] })`.
 - New `EditorEngine` option **`labels`** (the element's `labels`, same keys, default `null` = English), also a
   live `engine.labels` property; `engine.translateCallback` is now live too (assign it to switch). A `getLabels`
   option (the element's live source) still beats `labels`.

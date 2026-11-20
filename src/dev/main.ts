@@ -66,7 +66,7 @@ const mount = document.querySelector('#editor') as HTMLElement;
 const engine = new EditorEngine({
   mount,
   doc: createDefaultDoc(schema), // demo welcome text (the editor itself starts empty)
-  plugins: [createFloatingToolbarPlugin(schema), ...createDebugPlugins()],
+  prosemirrorPlugins: [createFloatingToolbarPlugin(schema), ...createDebugPlugins()],
 });
 
 // ── Toolbars ────────────────────────────────────────────────────────────

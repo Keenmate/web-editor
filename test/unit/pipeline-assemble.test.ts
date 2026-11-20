@@ -110,7 +110,7 @@ describe('EditorEngine pipeline integration', () => {
   };
 
   it('exposes every command as a pipeline and registers plugin pipelines', () => {
-    const engine = new EditorEngine({ mount: mount(), markdown: 'hi', editorPlugins: [...defaultPlugins(), imageBrowserPlugin()] });
+    const engine = new EditorEngine({ mount: mount(), markdown: 'hi', plugins: [...defaultPlugins(), imageBrowserPlugin()] });
     expect(engine.pipelines.has('bold')).toBe(true); // command → pipeline
     expect(engine.pipelines.get('bold')!.timing).toBe('sync');
     expect(engine.pipelines.has('image:browser:pick')).toBe(true); // declared pipeline
@@ -124,7 +124,7 @@ describe('EditorEngine pipeline integration', () => {
       name: 'bold-hook',
       stages: { bold: [{ before: 'bold', stage: { id: 'pre', run: () => { spy(); return { action: 'skip' }; } } }] },
     });
-    const engine = new EditorEngine({ mount: mount(), markdown: 'hi', editorPlugins: [...defaultPlugins(), hook] });
+    const engine = new EditorEngine({ mount: mount(), markdown: 'hi', plugins: [...defaultPlugins(), hook] });
     engine.run('bold');
     expect(spy).toHaveBeenCalledTimes(1);
     engine.destroy();
@@ -137,7 +137,7 @@ describe('EditorEngine pipeline integration', () => {
     const engine = new EditorEngine({
       mount: mount(),
       markdown: 'hi',
-      editorPlugins: [...defaultPlugins(), imageBrowserPlugin({ upload: async ({ asset }) => asset.url })],
+      plugins: [...defaultPlugins(), imageBrowserPlugin({ upload: async ({ asset }) => asset.url })],
       interactionHost: host,
     });
     const locks: boolean[] = [];

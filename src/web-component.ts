@@ -399,7 +399,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     const options: EditorEngineOptions = {
       mount: this.#layout.mount,
       isReadonly: !this.#resolveEditable(),
-      editorPlugins: this.#customPlugins, // undefined → engine uses defaultPlugins()
+      plugins: this.#customPlugins, // undefined → engine uses defaultPlugins()
       interactionHost: this.#interactionHost(),
       // Every ctx the engine builds carries this element + its controller.
       host: {

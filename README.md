@@ -402,7 +402,7 @@ for your own UI; if you just want the editor without writing UI, use `<km-editor
 
 **What the engine does:** owns the ProseMirror document + view in the element you give it
 (`mount`), assembles schema, commands, keybindings, Markdown I/O and pipelines from the plugin
-set (`editorPlugins`, default `defaultPlugins()`), runs commands through their pipelines
+set (`plugins`, default `defaultPlugins()`), runs commands through their pipelines
 (`engine.commands.run(id)` / `engine.run(name)`), answers command state
 (`commands.isEnabled(id)` / `isToggled(id)` / `shortcut(id)`, `get(id)` → `text` / `icon` /
 `tooltip`), serializes (`getMarkdown()` / `getHTML()` / `getJSON()`, `setContent(value, format)`),
@@ -419,7 +419,8 @@ interactive pipeline stages (the cloud-image picker) ask the `interactionHost` o
 **Options = the element's settings**, same names and same defaults (rulebook C-CA-37):
 `isReadonly` (`false`), `labels` (`null` = English, live: `engine.labels = …`),
 `translateCallback` (`null`, live; asked before the page-wide
-`window.components.locale.translateCallback`), `interactionHost` (`null` = the core dialog).
+`window.components.locale.translateCallback`), `interactionHost` (`null` = the core dialog),
+`plugins` (the editor plugin list, `defaultPlugins()`; raw ProseMirror plugins go in `prosemirrorPlugins`).
 Content: one of `markdown` / `html` / `json` / `doc`. The element's chrome settings
 (`toolbar`, `statusbar`, `viewMode`, `anchor`, `menu-presentation`, `renderIconCallback`,
 `renderLoadingCallback`, `beforeActionCallback`, `customStyles`, `name`, …) have no engine

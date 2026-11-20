@@ -3,7 +3,7 @@
  *
  * Owns the ProseMirror view/state, the document schema, the command registry,
  * and the event bus, and exposes the HTML/Markdown/JSON serialization API. In
- * Phase 5 it ASSEMBLES itself from a plugin set (`editorPlugins`, defaulting to
+ * Phase 5 it ASSEMBLES itself from a plugin set (`plugins`, defaulting to
  * the first-party plugins): schema, commands, ProseMirror plugins, keymaps,
  * Markdown I/O, and toolbar/menu items are all merged from the plugins in
  * dependency order. It has no UI-framework dependency; the `<km-editor>` Web
@@ -112,11 +112,14 @@ export interface EditorEngineOptions {
   html?: string;
   markdown?: string;
   json?: DocJSON;
+  /**
+   * Editor plugin set (schema/commands/serializers/…) — `<km-editor>`'s `plugins`, same
+   * default (`defaultPlugins()`, the first-party set).
+   */
+  plugins?: EditorPlugin[];
   /** Extra raw ProseMirror plugins appended after the assembled stack. */
-  plugins?: Plugin[];
-  /** Editor plugin set (schema/commands/serializers/…). Defaults to the first-party set. */
-  editorPlugins?: EditorPlugin[];
-  /** Override the document schema (defaults to one assembled from `editorPlugins`). */
+  prosemirrorPlugins?: Plugin[];
+  /** Override the document schema (defaults to one assembled from `plugins`). */
   schema?: Schema;
   /**
    * Start read-only (no editing) — `<km-editor>`'s `isReadonly`, same default (`false`, editable). Toggle later
@@ -215,7 +218,7 @@ export class EditorEngine {
         : {}),
     });
 
-    const plugins = orderPlugins(options.editorPlugins ?? defaultPlugins());
+    const plugins = orderPlugins(options.plugins ?? defaultPlugins());
     this.#plugins = plugins;
 
     const schema = options.schema ?? buildSchema(mergeSchemaSpecs(plugins));
@@ -316,7 +319,7 @@ export class EditorEngine {
         keymap(baseKeymap),
         // `labels.placeholder` while the document is empty ('' = off).
         placeholderPlugin(() => this.label('placeholders.document')),
-        ...(options.plugins ?? []),
+        ...(options.prosemirrorPlugins ?? []),
       ],
     });
 

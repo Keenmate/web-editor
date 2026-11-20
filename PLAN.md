@@ -183,7 +183,7 @@ bar**:
 `definePlugin({ name, dependencies?, nodes?, marks?, markdown?, commands?,
 keymap?, pmPlugins?, toolbarItems?, selectionItems?, menuItems?, setup?,
 destroy? })` (`engine/plugin.ts`). The engine assembles itself from a plugin set
-(`editorPlugins`, default `defaultPlugins()`) in dependency order
+(`plugins`, default `defaultPlugins()`) in dependency order
 (`orderPlugins`, topological): schema (`buildSchema(mergeSchemaSpecs(...))`),
 commands (core + plugin), ProseMirror plugins + structural keymaps, Markdown I/O,
 and toolbar/selection/menu item lists are all merged.

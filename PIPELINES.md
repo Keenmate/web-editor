@@ -351,7 +351,7 @@ plugin churn). The override is **additive and partial**:
 
 ```ts
 new EditorEngine({
-  editorPlugins: [imageBrowserPlugin({ upload }), cropPlugin(), imageBase64Plugin],
+  plugins: [imageBrowserPlugin({ upload }), cropPlugin(), imageBase64Plugin],
   pipelines: {
     'image:browser:pick': {
       // coarse: the ordered vocabulary for THIS app (across-phase order)
@@ -395,7 +395,7 @@ property of the plugin — it's a property of the (stage × pipeline) cell.** On
 
 ```ts
 new EditorEngine({
-  editorPlugins: [imageBrowserPlugin({ upload }), cropPlugin(), imageBase64Plugin],
+  plugins: [imageBrowserPlugin({ upload }), cropPlugin(), imageBase64Plugin],
   pipelines: {
     'image:portrait:pick': {               // a manager's portrait
       phases: ['acquire', 'geometry', 'encode', 'insert'],

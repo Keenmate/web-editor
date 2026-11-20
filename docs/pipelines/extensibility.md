@@ -134,7 +134,7 @@ override is additive — you only name what you care about:
 
 ```ts
 new EditorEngine({
-  editorPlugins: [...],
+  plugins: [...],
   pipelines: {
     'image:browser:pick': {
       phases: ['acquire', 'geometry', 'optimize', 'annotate', 'encode', 'insert'],
