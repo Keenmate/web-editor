@@ -49,6 +49,7 @@ import {
 import type { EditorController, EditorLabelContext, EditorToolbarEntry } from '../interaction';
 import type { EditorViewMode } from '../web-component';
 import { createLabelResolver, type EditorLabels, type LabelResolver } from '../labels';
+import type { TranslateCallback } from '@keenmate/web-components-core/locale';
 import {
   docToHTML,
   htmlToDoc,
@@ -126,6 +127,13 @@ export interface EditorEngineOptions {
   host?: EditorEngineHost;
   /** UI-string overrides, read live on every use (`<km-editor>` passes its `labels`). Default: English. */
   getLabels?: () => EditorLabels | null | undefined;
+  /**
+   * Translate a UI string for a key `getLabels` did not set (core `/locale` `TranslateCallback`:
+   * `({ component, key: 'km-editor.<key>', template, params, locale }) => string | null`; `null` = not mine →
+   * the built-in English). Standalone: instance labels → this → built-in. With `host`, omit it — core asks
+   * the element's own `translateCallback`, then the page-wide one.
+   */
+  translateCallback?: TranslateCallback | null;
 }
 
 export interface EngineEventMap {
@@ -176,7 +184,8 @@ export class EditorEngine {
   constructor(options: EditorEngineOptions) {
     const host = options.host;
     const getLabels = options.getLabels;
-    const label = createLabelResolver(() => getLabels?.(), host?.element);
+    const translateCallback = options.translateCallback;
+    const label = createLabelResolver(() => getLabels?.(), host?.element, translateCallback ? () => translateCallback : undefined);
     this.label = label;
     this.#ctxProto = Object.create(Object.prototype, {
       label: { value: label, enumerable: false },

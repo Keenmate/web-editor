@@ -162,6 +162,16 @@ didn't set; assigning `window.components.locale` re-renders live editors:
 window.components.locale = { labels: { 'km-editor.ariaLabels.bold': 'Tučně', 'km-editor.labels.words': 'Slova: {count}' } };
 ```
 
+One editor needs no page setup: its own **`translateCallback`** (property only, same
+`({ component, key, template, params, locale }) => string | null` shape) is asked first for every key its
+`labels` didn't set, then the page-wide one; `null` / `undefined` = not mine → the next. A standalone
+`EditorEngine` (no element) takes the same function as its `translateCallback` option (its `getLabels` →
+it → English):
+
+```js
+editor.translateCallback = ({ key, params }) => (i18next.exists(key) ? i18next.t(key, params) : null);
+```
+
 | Key | English default |
 | --- | --------------- |
 | `<name>` = the command id camel-cased (`bold`, `insertLink`, `insertTable`, `bulletList`, `undo`, `viewEdit`, a plugin's `imageBrowserPick`, …): `ariaLabels.<name>` (an icon toolbar button's accessible name), `buttons.<name>` (a toolbar button showing its text — `viewEdit` / `viewSplit` / `viewPreview`; named by that text, no `aria-label`), `menuItems.<name>` (the context-menu entry). Twins share `<name>`: an `ariaLabels.<name>` you didn't set follows a customized `tooltips.<name>` | the command's own text (`Bold`, `Insert link`, …) |

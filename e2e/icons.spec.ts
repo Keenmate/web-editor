@@ -1,4 +1,4 @@
-import { test, expect, load, editor } from './fixtures';
+import { test, expect, load, editor, pm } from './fixtures';
 
 // Item icons through core renderIcon (SPEC §12.33): the element's own `renderIconCallback` beats the page-wide
 // `window.components.renderIconCallback`; `null` falls through to it; an ASCII class list is an icon-font
@@ -34,6 +34,14 @@ test.describe('icons', () => {
         expect(calls.element).not.toContain('check');
         expect(calls.page).not.toContain('check');
         expect(calls.element).toContain('mine');
+    });
+
+    test('a context-menu item icon is answered by the element hook (ctx.item present)', async ({ page }) => {
+        await pm(page).locator('p').click({ button: 'right' });
+        const icon = page.locator('km-editor#subject .we-context-menu b.own-menu-icon');
+        await expect(icon).toHaveText('M');
+        await expect(icon).toHaveAttribute('data-component', 'km-editor');
+        await expect(icon).toHaveAttribute('data-item', 'menu-own');
     });
 
     test('assigning renderIconCallback re-renders the icons live', async ({ page }) => {

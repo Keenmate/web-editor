@@ -47,6 +47,16 @@ released to a registry yet.
   still its (translated) text + the shortcut. The prompt dialogs are named by their visible title (`headers.*`,
   `aria-labelledby`). No key was removed.
 
+### Added — `translateCallback` (rulebook C-CA-33, core 1.0.0-rc25)
+
+- **`translateCallback`** (property only, core `/locale` `TranslateCallback`:
+  `({ component, key: 'km-editor.<key>', template, params, locale }) => string | null | undefined`, applies live):
+  this element's own translation seam — asked for every label key its `labels` didn't set, BEFORE the page-wide
+  `window.components.locale.translateCallback`; `null` / `undefined` = not mine → the page-wide one. Instance
+  `labels` still beat both.
+- **`EditorEngine` `translateCallback` option** — a standalone engine (no `<km-editor>` host) asks it too:
+  `getLabels` → `translateCallback` → built-in English (the page-wide hook is not consulted without a host).
+
 ### Added — `renderIconCallback` (rulebook C-CA-33, core 1.0.0-rc25)
 
 - **`renderIconCallback`** (property only, `(name, ctx) => string | null | undefined`, applies live): this

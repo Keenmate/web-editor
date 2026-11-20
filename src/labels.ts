@@ -1,4 +1,5 @@
-import { createLabels, resolveLabel, formatLabel as formatCoreLabel } from '@keenmate/web-components-core/locale';
+import { createLabels, resolveLabel, resolveLocale, formatLabel as formatCoreLabel, type TranslateCallback } from '@keenmate/web-components-core/locale';
+import { uiLogger } from './logger';
 
 /**
  * UI strings (rulebook D-NC-24, core `/locale` SPEC §12.24): one `labels` object
@@ -7,8 +8,9 @@ import { createLabels, resolveLabel, formatLabel as formatCoreLabel } from '@kee
  * (`buttons.ok`, `tooltips.bold`); the full key is `km-editor.<key>`. Resolution
  * per key (core `createLabels`): the element's `labels` (short or full key) → the
  * page-wide flat dictionary `window.components.locale.labels['km-editor.<key>']`
- * → the built-in English default; then the page's `translateCallback` (ICU /
- * i18next) or the `{name}` replacement. Labels are TEXT (`textContent` /
+ * → the built-in English default; then the element's own `translateCallback`, the page's
+ * `window.components.locale.translateCallback` (ICU / i18next; `null` = not mine → next), or the `{name}`
+ * replacement. A key the instance `labels` set is never sent to a callback. Labels are TEXT (`textContent` /
  * attributes) — never HTML.
  *
  * Keys:
@@ -111,13 +113,39 @@ const TAG = 'km-editor';
 /**
  * Build the one label-resolving function over core `/locale`: instance `labels` → page-wide labels → built-in
  * English → `fallback` (the English text of a command / group key) → the key itself. With `host` (the element)
- * the page's `translateCallback` and `locale` apply too; a standalone engine resolves without them.
+ * core `createLabels` applies the element's own `translateCallback` (`host.translateCallback`, or
+ * `getTranslateCallback` when given), then the page's, and the `locale`. A standalone engine (no host) asks only
+ * `getTranslateCallback` (its `translateCallback` option): instance `labels` → that callback → built-in.
  */
-export function createLabelResolver(getLabels: () => EditorLabels | null | undefined, host?: Element | null): LabelResolver {
+export function createLabelResolver(
+  getLabels: () => EditorLabels | null | undefined,
+  host?: Element | null,
+  getTranslateCallback?: () => TranslateCallback | null | undefined,
+): LabelResolver {
   // Derived keys (commands, groups) have no built-in default: the caller's fallback is theirs (per call).
   const defaults: Record<string, string> = { ...DEFAULT_LABELS };
-  const labels = host ? createLabels<Record<string, string>>(host, defaults, () => getLabels() as Record<string, string> | null, { tag: TAG }) : null;
+  const labels = host
+    ? createLabels<Record<string, string>>(host, defaults, () => getLabels() as Record<string, string> | null, {
+        tag: TAG,
+        ...(getTranslateCallback ? { getTranslateCallback } : {}),
+      })
+    : null;
   const isBuiltIn = (key: string): boolean => Object.prototype.hasOwnProperty.call(DEFAULT_LABELS, key);
+  /** Standalone: the own `translateCallback` for a key the instance `labels` did not set (string wins). */
+  const translate = (key: string, template: string, params?: LabelParams): string | null => {
+    const callback = getTranslateCallback?.();
+    if (typeof callback !== 'function') return null;
+    const own = getLabels() as Record<string, unknown> | null | undefined;
+    const full = `${TAG}.${key}`;
+    if (typeof own?.[key] === 'string' || typeof own?.[full] === 'string') return null;
+    try {
+      const out = callback({ component: TAG, key: full, template, params: params ?? {}, locale: resolveLocale() });
+      return typeof out === 'string' ? out : null;
+    } catch (error) {
+      uiLogger.warn(`translateCallback threw for "${full}" — the built-in text is used`, error);
+      return null;
+    }
+  };
   return (key, params, fallback, twins) => {
     // Derived keys are registered only for this call: whether a twin exists must not depend on what
     // rendered before.
@@ -125,7 +153,8 @@ export function createLabelResolver(getLabels: () => EditorLabels | null | undef
     for (const k of derived) defaults[k] = k === key ? (fallback ?? key) : twins![k];
     try {
       if (labels) return labels.text(key, params);
-      return formatCoreLabel(resolveLabel(TAG, defaults, getLabels() as Record<string, string> | null, key), params);
+      const template = resolveLabel(TAG, defaults, getLabels() as Record<string, string> | null, key);
+      return translate(key, template, params) ?? formatCoreLabel(template, params);
     } finally {
       for (const k of derived) delete defaults[k];
     }

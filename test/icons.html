@@ -5,7 +5,7 @@
     <title>km-editor — icons</title>
 </head>
 <body>
-    <!-- Targeted by e2e/icons.spec.ts: item icons through core renderIcon — the element's renderIconCallback,
+    <!-- Targeted by e2e/icons.spec.ts: toolbar + context-menu item icons through core renderIcon — the element's renderIconCallback,
          the page-wide window.components.renderIconCallback, icon-font class lists, reserved built-in names. -->
     <km-editor id="subject" value="plain words here"></km-editor>
 
@@ -27,6 +27,9 @@
                         item('builtin', 'check'),
                     ],
                 }],
+                // A context-menu item: core openMenu renders it in a layer inside the shadow root and must still
+                // ask THIS element's renderIconCallback (ctx.item = the menu item).
+                menuItems: [item('menu-own', 'menu-mine')],
             }),
         ];
         // Every name each hook was asked for (a built-in name must never show up here).
@@ -38,6 +41,7 @@
         };
         el.renderIconCallback = (name, ctx) => {
             window.iconCalls.element.push(name);
+            if (name === 'menu-mine') return `<b class="own-menu-icon" data-component="${ctx.component}" data-item="${ctx.item?.id}">M</b>`;
             if (name !== 'mine') return null; // not mine → the page hook decides
             return `<b class="own-icon" data-component="${ctx.component}" data-item="${ctx.item?.id}">${name}</b>`;
         };

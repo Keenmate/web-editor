@@ -7,6 +7,7 @@ import { describe, it, expect, beforeAll, vi } from 'vitest';
 import type { KmEditorElement } from '../../src/web-component';
 import { getEditorEngine } from '../../src/web-component';
 import { labelKey, formatLabel, createLabelResolver } from '../../src/labels';
+import { EditorEngine } from '../../src/engine/editor-engine';
 
 beforeAll(async () => {
   await import('../../src/index');
@@ -43,6 +44,40 @@ describe('label helpers', () => {
     expect(label('labels.chars', { count: 5 })).toBe('Chars: 5');
     expect(label('ariaLabels.insertLink', undefined, 'Insert link')).toBe('Insert link');
     expect(label('nope')).toBe('nope');
+  });
+
+  it('standalone resolver: instance labels → its own translateCallback (null = not mine) → built-in; the page hook is not asked', () => {
+    const reg = (window as any).components;
+    const page = vi.fn(() => 'PAGE');
+    const own = vi.fn(({ key, template }: { key: string; template: string }) => (key === 'km-editor.labels.chars' ? `T:${template}` : null));
+    try {
+      reg.locale = { translateCallback: page };
+      const label = createLabelResolver(() => ({ 'labels.words': 'Slova: {count}' }), null, () => own);
+      expect(label('labels.words', { count: 2 })).toBe('Slova: 2'); // instance key: never sent to the callback
+      expect(label('labels.chars', { count: 5 })).toBe('T:Chars: {count}');
+      expect(label('ariaLabels.bold', undefined, 'Bold')).toBe('Bold'); // null → built-in
+      expect(own).not.toHaveBeenCalledWith(expect.objectContaining({ key: 'km-editor.labels.words' }));
+      expect(own).toHaveBeenCalledWith(expect.objectContaining({ component: 'km-editor', key: 'km-editor.labels.chars', params: { count: 5 } }));
+      expect(page).not.toHaveBeenCalled();
+    } finally {
+      reg.locale = null;
+    }
+  });
+
+  it('a standalone EditorEngine takes a translateCallback option', () => {
+    const mountEl = document.body.appendChild(document.createElement('div'));
+    const engine = new EditorEngine({
+      mount: mountEl,
+      markdown: 'x',
+      translateCallback: ({ key }) => (key === 'km-editor.buttons.ok' ? 'Dobře' : null),
+    });
+    try {
+      expect(engine.label('buttons.ok')).toBe('Dobře');
+      expect(engine.label('buttons.cancel')).toBe('Cancel');
+    } finally {
+      engine.destroy();
+      mountEl.remove();
+    }
   });
 });
 
@@ -133,6 +168,28 @@ describe('<km-editor> labels', () => {
       reg.locale = null;
     }
     expect(cmd(el, 'bold').getAttribute('aria-label')).toBe('Bold');
+  });
+
+  it('translateCallback (instance): beats the page-wide one, null → the page one, instance labels beat both; live', async () => {
+    const el = await mount({ value: 'x', labels: JSON.stringify({ 'ariaLabels.italic': 'Kurzíva' }) });
+    const reg = (window as any).components;
+    try {
+      reg.locale = { translateCallback: ({ template }: { template: string }) => `page:${template}` };
+      expect(cmd(el, 'bold').getAttribute('aria-label')).toBe('page:Bold');
+      el.translateCallback = ({ key, template }) => (key === 'km-editor.ariaLabels.bold' ? `own:${template}` : null);
+      await el.whenSettled();
+      expect(cmd(el, 'bold').getAttribute('aria-label')).toBe('own:Bold'); // element beats page
+      expect(cmd(el, 'underline').getAttribute('aria-label')).toBe('page:Underline'); // null → page
+      expect(cmd(el, 'italic').getAttribute('aria-label')).toBe('Kurzíva'); // instance labels beat both
+      reg.locale = null;
+      expect(cmd(el, 'underline').getAttribute('aria-label')).toBe('Underline');
+      expect(cmd(el, 'bold').getAttribute('aria-label')).toBe('own:Bold'); // one element needs no page setup
+      el.translateCallback = null;
+      await el.whenSettled();
+      expect(cmd(el, 'bold').getAttribute('aria-label')).toBe('Bold');
+    } finally {
+      reg.locale = null;
+    }
   });
 
   it('the split view output tabs take labels (buttons.markdownTab / htmlTab / jsonTab), live', async () => {

@@ -81,6 +81,7 @@ import {
   type MenuDrawerSide,
   type MenuPresentation,
 } from '@keenmate/web-components-core/menu';
+import type { TranslateCallback } from '@keenmate/web-components-core/locale';
 
 // Build-time constant (vite `define`).
 declare const __VERSION__: string;
@@ -111,6 +112,7 @@ export interface EditorConfig {
   statusbar: EditorStatusBar;
   anchor: string | null;
   labels: EditorLabels | null;
+  translateCallback: TranslateCallback | null;
   beforeActionCallback: ((detail: EditorActionEventDetail) => unknown) | null;
   renderLoadingCallback: RenderLoaderCallback | null;
   renderIconCallback: RenderIconCallback | null;
@@ -242,7 +244,15 @@ const INPUTS: readonly InputDef[] = [
     converter: toObject<EditorLabels>({ validate: isLabels }),
     on: 'update',
     description:
-      'Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders; an empty string = deliberately empty. Keys are flat `<elementType>.<name>`, short (`tooltips.bold`) or full (`km-editor.tooltips.bold`). `placeholders.document` (default empty = off) is shown while the document is empty. Command items (`<name>` = the camel-cased command id: `bold`, `insertLink`, `viewEdit`): `buttons.<name>` (a toolbar button with text), `ariaLabels.<name>` (an icon toolbar button), `menuItems.<name>` (the context menu), `tooltips.<name>`; toolbar groups `ariaLabels.<groupId>Group` (`ariaLabels.formatGroup`, …); status `labels.words` / `labels.chars` (`{count}`); prompt titles `headers.linkUrl`, `headers.imageUrl`, `headers.imageAlt`, `headers.codeLanguage` / `headers.codeLanguageChange` (`{languages}`); cloud image `ariaLabels.cloudImage`, `tooltips.cloudImage`, `menuItems.cloudImage`, `headers.cloudImagePicker`, `messages.cloudImagePicker`; context menu as a sheet / drawer `buttons.back`, `ariaLabels.close` (also the dialogs\' ✕); dialog buttons `buttons.ok`, `buttons.cancel`; split output tabs `buttons.markdownTab`, `buttons.htmlTab`, `buttons.jsonTab`; `errors.valueFormat`; the loader\'s `ariaLabels.loading`. Per key: these → the page-wide flat `window.components.locale.labels[\'km-editor.<key>\']` → English; `window.components.locale.translateCallback` translates the rest. Property (object) or JSON attribute (`labels=\'{"ariaLabels.bold":"Tučně"}\'`). Applies live (no rebuild).',
+      'Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders; an empty string = deliberately empty. Keys are flat `<elementType>.<name>`, short (`tooltips.bold`) or full (`km-editor.tooltips.bold`). `placeholders.document` (default empty = off) is shown while the document is empty. Command items (`<name>` = the camel-cased command id: `bold`, `insertLink`, `viewEdit`): `buttons.<name>` (a toolbar button with text), `ariaLabels.<name>` (an icon toolbar button), `menuItems.<name>` (the context menu), `tooltips.<name>`; toolbar groups `ariaLabels.<groupId>Group` (`ariaLabels.formatGroup`, …); status `labels.words` / `labels.chars` (`{count}`); prompt titles `headers.linkUrl`, `headers.imageUrl`, `headers.imageAlt`, `headers.codeLanguage` / `headers.codeLanguageChange` (`{languages}`); cloud image `ariaLabels.cloudImage`, `tooltips.cloudImage`, `menuItems.cloudImage`, `headers.cloudImagePicker`, `messages.cloudImagePicker`; context menu as a sheet / drawer `buttons.back`, `ariaLabels.close` (also the dialogs\' ✕); dialog buttons `buttons.ok`, `buttons.cancel`; split output tabs `buttons.markdownTab`, `buttons.htmlTab`, `buttons.jsonTab`; `errors.valueFormat`; the loader\'s `ariaLabels.loading`. Per key: these → the page-wide flat `window.components.locale.labels[\'km-editor.<key>\']` → English; the element\'s own `translateCallback`, then `window.components.locale.translateCallback`, translate the rest. Property (object) or JSON attribute (`labels=\'{"ariaLabels.bold":"Tučně"}\'`). Applies live (no rebuild).',
+  },
+  {
+    configKey: 'translateCallback',
+    converter: toFunction<TranslateCallback>(),
+    default: null,
+    on: 'update',
+    description:
+      "Property only. `({ component, key, template, params, locale }) => string | null | undefined` — this element's translation seam (core `/locale` `TranslateCallback`): asked for every label key this instance's `labels` did not set (`key` = the full `km-editor.<key>`, `template` = the page-wide / English text, `params` raw), BEFORE the page-wide `window.components.locale.translateCallback`. Return the finished text; `null` / `undefined` = not mine (the page-wide one decides, then the `{name}` replacement). Applies live.",
   },
   {
     configKey: 'beforeActionCallback',
@@ -492,7 +502,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     // native `input.value`, state assignment never fires events (suite rule).
     // UI strings are resolved on render: re-render the chrome (and the empty-document
     // placeholder) with the new labels.
-    if ('labels' in partial) this.#relabel();
+    if ('labels' in partial || 'translateCallback' in partial) this.#relabel();
     // Item icons are drawn on render: re-render the toolbars with the new hook.
     else if ('renderIconCallback' in partial) this.#chrome?.refresh();
     if ('name' in partial || 'contentFormat' in partial || 'getValueFormatCallback' in partial) this.#syncFormInput();
@@ -501,7 +511,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     }
     if ('customStyles' in partial || 'getCustomStylesCallback' in partial) this.#customStyles?.refresh();
     // A showing pending loader re-renders with the new label / render hook.
-    if (('labels' in partial || 'renderLoadingCallback' in partial) && this.#removeLoader) {
+    if (('labels' in partial || 'translateCallback' in partial || 'renderLoadingCallback' in partial) && this.#removeLoader) {
       this.#setPendingLoader(false);
       this.#setPendingLoader(true);
     }
