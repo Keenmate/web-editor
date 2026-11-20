@@ -58,6 +58,9 @@ released to a registry yet.
   the element's order: `getLabels` → page dictionary → `translateCallback` → the page-wide
   `window.components.locale.translateCallback` → built-in English (`null` = not mine; a throw is logged → the
   next rule).
+  The standalone path now goes through core `createLabels(null, …, { tag: 'km-editor', getTranslateCallback })`
+  (core rc25) instead of the editor's own copy of the chain: same order; numeric `{count}`-style params are
+  locale-formatted like the element's, and a throwing callback is logged by core.
 
 ### Added — `renderIconCallback` (rulebook C-CA-33, core 1.0.0-rc25)
 

@@ -1,12 +1,4 @@
-import {
-  createLabels,
-  getPageLocale,
-  resolveLabel,
-  resolveLocale,
-  formatLabel as formatCoreLabel,
-  type TranslateCallback,
-} from '@keenmate/web-components-core/locale';
-import { uiLogger } from './logger';
+import { createLabels, formatLabel as formatCoreLabel, type TranslateCallback } from '@keenmate/web-components-core/locale';
 
 /**
  * UI strings (rulebook D-NC-24, core `/locale` SPEC §12.24): one `labels` object
@@ -118,12 +110,12 @@ export function formatLabel(template: string, params?: LabelParams): string {
 const TAG = 'km-editor';
 
 /**
- * Build the one label-resolving function over core `/locale`: instance `labels` → page-wide labels → built-in
- * English → `fallback` (the English text of a command / group key) → the key itself. With `host` (the element)
- * core `createLabels` applies the element's own `translateCallback` (`host.translateCallback`, or
- * `getTranslateCallback` when given), then the page's, and the `locale`. A standalone engine (no host) follows the
- * same order: instance `labels` → page dictionary → `getTranslateCallback` (its `translateCallback` option) → the
- * page-wide `window.components.locale.translateCallback` → built-in (`null` = not mine; a throw is logged → next).
+ * Build the one label-resolving function over core `/locale` `createLabels`: instance `labels` → the element's own
+ * `translateCallback` (`host.translateCallback`, or `getTranslateCallback` when given) → the page-wide
+ * `window.components.locale.translateCallback` (`null` = not mine; a throw is logged → next) → page-wide labels →
+ * built-in English → `fallback` (the English text of a command / group key) → the key itself. A standalone engine
+ * passes `host: null` (core resolves the same way, with `tag: 'km-editor'` and the engine's own `translateCallback`
+ * option as `getTranslateCallback`).
  */
 export function createLabelResolver(
   getLabels: () => EditorLabels | null | undefined,
@@ -132,45 +124,18 @@ export function createLabelResolver(
 ): LabelResolver {
   // Derived keys (commands, groups) have no built-in default: the caller's fallback is theirs (per call).
   const defaults: Record<string, string> = { ...DEFAULT_LABELS };
-  const labels = host
-    ? createLabels<Record<string, string>>(host, defaults, () => getLabels() as Record<string, string> | null, {
-        tag: TAG,
-        ...(getTranslateCallback ? { getTranslateCallback } : {}),
-      })
-    : null;
+  const labels = createLabels<Record<string, string>>(host ?? null, defaults, () => getLabels() as Record<string, string> | null, {
+    tag: TAG,
+    ...(getTranslateCallback ? { getTranslateCallback } : {}),
+  });
   const isBuiltIn = (key: string): boolean => Object.prototype.hasOwnProperty.call(DEFAULT_LABELS, key);
-  /**
-   * Standalone: the own `translateCallback`, then the page-wide one (core `getPageLocale()`), for a key the
-   * instance `labels` did not set — the first string wins.
-   */
-  const translate = (key: string, template: string, params?: LabelParams): string | null => {
-    const own = getLabels() as Record<string, unknown> | null | undefined;
-    const full = `${TAG}.${key}`;
-    if (typeof own?.[key] === 'string' || typeof own?.[full] === 'string') return null;
-    const callbacks: Array<[TranslateCallback | null | undefined, string]> = [
-      [getTranslateCallback?.(), 'translateCallback'],
-      [getPageLocale()?.translateCallback, 'window.components.locale.translateCallback'],
-    ];
-    for (const [callback, name] of callbacks) {
-      if (typeof callback !== 'function') continue;
-      try {
-        const out = callback({ component: TAG, key: full, template, params: params ?? {}, locale: resolveLocale() });
-        if (typeof out === 'string') return out;
-      } catch (error) {
-        uiLogger.warn(`${name} threw for "${full}" — the next rule decides`, error);
-      }
-    }
-    return null;
-  };
   return (key, params, fallback, twins) => {
     // Derived keys are registered only for this call: whether a twin exists must not depend on what
     // rendered before.
     const derived = [key, ...Object.keys(twins ?? {})].filter((k) => !isBuiltIn(k));
     for (const k of derived) defaults[k] = k === key ? (fallback ?? key) : twins![k];
     try {
-      if (labels) return labels.text(key, params);
-      const template = resolveLabel(TAG, defaults, getLabels() as Record<string, string> | null, key);
-      return translate(key, template, params) ?? formatCoreLabel(template, params);
+      return labels.text(key, params);
     } finally {
       for (const k of derived) delete defaults[k];
     }
