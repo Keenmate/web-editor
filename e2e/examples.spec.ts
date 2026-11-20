@@ -65,5 +65,11 @@ test('examples-localization.html: every toggle changes the shown text', async ({
     await page.locator('#lo04-follow').check();
     await expect(out('lo04-out')).toContainText('split button tooltip:  Rozdělit');
     await expect(out('lo04-out')).toContainText('bold aria-label:       Tučně');
+
+    // LO05 — the status counts are formatted for the page locale.
+    await page.locator('input[name="lo05-locale"][value="de-DE"]').check();
+    await expect(out('lo05-out')).toHaveText('Words: 1.234 / Chars: 2.467');
+    await page.locator('input[name="lo05-locale"][value="en-IN"]').check();
+    await expect(out('lo05-out')).toHaveText('Words: 1,234 / Chars: 2,467');
     expect(errors).toEqual([]);
 });

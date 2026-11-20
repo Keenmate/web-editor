@@ -213,6 +213,28 @@ describe('<km-editor> labels', () => {
     expect(tabs()).toEqual(['MD', 'HTML', 'JSON']);
   });
 
+  it('status counts are raw numbers: shown formatted for the page locale, a translateCallback gets the number', async () => {
+    const el = await mount({ value: Array(1234).fill('word').join(' '), statusbar: 'bottom' });
+    const reg = (window as any).components;
+    const text = (id: string) => status(el, id).textContent!.replace(/\s/g, ' '); // cs groups with a no-break space
+    try {
+      reg.locale = { locale: 'en-US' };
+      expect(text('words')).toBe('Words: 1,234');
+      expect(text('chars')).toBe('Chars: 6,169');
+      reg.locale = { locale: 'cs' };
+      expect(text('words')).toBe('Words: 1 234');
+      const seen: unknown[] = [];
+      reg.locale = { locale: 'cs', translateCallback: ({ key, params }: { key: string; params: Record<string, unknown> }) => {
+        if (key === 'km-editor.labels.words') seen.push(params.count);
+        return null;
+      } };
+      expect(text('words')).toBe('Words: 1 234');
+      expect(seen.at(-1)).toBe(1234);
+    } finally {
+      reg.locale = null;
+    }
+  });
+
   it('rejects a non-string value (warns, keeps the previous labels)', async () => {
     const el = await mount({ value: 'x' });
     el.labels = { 'ariaLabels.bold': 'B!' };
