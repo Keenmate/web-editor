@@ -27,7 +27,8 @@ released to a registry yet.
   `setOptions({ locale })` (`<km-editor>` now pushes its settings from `update()`).
 - `engine.isEditable()` stays: `!isReadonly` AND not locked by a gating pipeline run. The lock is now separate
   state — it no longer overwrites `isReadonly`, and a read-only change during a locked run is kept on unlock.
-- New exported type `EditorEngineSettings` (the `setOptions()` keys). The element's API is unchanged.
+- One settings type: `setOptions()` takes `Partial<EditorEngineOptions>` (the constructor's type) — no separate
+  `*Settings` / `*Config` type (C-CA-39). The element's API is unchanged.
 
 ### Added — `locale` input (rulebook C-CA-38)
 

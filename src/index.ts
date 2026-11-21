@@ -89,7 +89,6 @@ export {
 export { EditorEngine } from './engine/editor-engine';
 export type {
   EditorEngineOptions,
-  EditorEngineSettings,
   EditorEngineHost,
   EngineEventMap,
 } from './engine/editor-engine';

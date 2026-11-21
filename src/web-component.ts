@@ -42,7 +42,7 @@ import {
   type ResponsiveMap,
 } from '@keenmate/web-components-core';
 import type { Command } from 'prosemirror-state';
-import { EditorEngine, type EditorEngineOptions, type EditorEngineSettings } from './engine/editor-engine';
+import { EditorEngine, type EditorEngineOptions } from './engine/editor-engine';
 import { defaultPlugins } from './engine/default-plugins';
 import type { InteractionHost } from './engine/pipeline/types';
 import type { EditorPlugin } from './engine/plugin';
@@ -625,9 +625,9 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
    * those a batch changed (`update(partial)` → `engine.setOptions()`). `isReadonly` is the EFFECTIVE value
    * (read-only, disabled or previewing); `null` `interactionHost` = the engine's default dialog host.
    */
-  #engineSettings(partial: Record<string, unknown> | null): Partial<EditorEngineSettings> {
+  #engineSettings(partial: Record<string, unknown> | null): Partial<EditorEngineOptions> {
     const has = (key: string): boolean => partial === null || key in partial;
-    const settings: Partial<EditorEngineSettings> = {};
+    const settings: Partial<EditorEngineOptions> = {};
     if (has('isReadonly') || has('viewMode')) settings.isReadonly = !this.#resolveEditable();
     if (has('labels')) settings.labels = this.config.labels as EditorLabels | null;
     if (has('locale')) settings.locale = this.config.locale as string | null;

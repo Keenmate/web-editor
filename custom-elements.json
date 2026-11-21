@@ -633,7 +633,7 @@
                 {
                   "name": "partial",
                   "type": {
-                    "text": "Partial<EditorEngineSettings>"
+                    "text": "Partial<EditorEngineOptions>"
                   }
                 }
               ],
@@ -2513,14 +2513,6 @@
           "name": "EditorEngineOptions",
           "declaration": {
             "name": "EditorEngineOptions",
-            "module": "./engine/editor-engine"
-          }
-        },
-        {
-          "kind": "js",
-          "name": "EditorEngineSettings",
-          "declaration": {
-            "name": "EditorEngineSettings",
             "module": "./engine/editor-engine"
           }
         },

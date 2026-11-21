@@ -50,7 +50,7 @@ import type { EditorController, EditorLabelContext, EditorToolbarEntry } from '.
 import type { EditorViewMode } from '../web-component';
 import { createLabelResolver, type EditorLabels, type LabelResolver } from '../labels';
 import type { TranslateCallback } from '@keenmate/web-components-core/locale';
-import { ENGINE_DEFAULTS } from '../inputs';
+import { ENGINE_DEFAULTS, type EditorEngineDefaults } from '../inputs';
 import { initLogger } from '../logger';
 import {
   docToHTML,
@@ -105,15 +105,6 @@ export interface EditorEngineHost {
   };
 }
 
-/**
- * The settings a live engine takes through {@link EditorEngine.setOptions} — the `<km-editor>` settings it shares
- * (same name, same default: `ENGINE_DEFAULTS`, C-CA-37). Every other option is construction-only.
- */
-export type EditorEngineSettings = Pick<
-  EditorEngineOptions,
-  'isReadonly' | 'labels' | 'locale' | 'translateCallback' | 'interactionHost'
->;
-
 /** `new EditorEngine(mount, options)` — the element the view mounts into is the first argument, not an option. */
 export interface EditorEngineOptions {
   /** Initial content — provide at most one of these (data, construction-only; not kept in `getOptions()`). */
@@ -163,7 +154,7 @@ export interface EditorEngineOptions {
 }
 
 /** The option keys `setOptions()` applies (the rest are construction-only). */
-const SETTING_KEYS = Object.keys(ENGINE_DEFAULTS) as (keyof EditorEngineSettings)[];
+const SETTING_KEYS = Object.keys(ENGINE_DEFAULTS) as (keyof EditorEngineDefaults)[];
 
 export interface EngineEventMap {
   change: EditorEngine;
@@ -437,9 +428,9 @@ export class EditorEngine {
    * (redraw your own UI). A key set to `undefined` resets it to the default. A construction-only key
    * (`plugins`, `schema`, `host`, the initial content, …) is ignored with a warning — build a new engine.
    */
-  setOptions(partial: Partial<EditorEngineSettings>): void {
-    const changed = new Set<keyof EditorEngineSettings>();
-    for (const key of Object.keys(partial) as (keyof EditorEngineSettings)[]) {
+  setOptions(partial: Partial<EditorEngineOptions>): void {
+    const changed = new Set<keyof EditorEngineDefaults>();
+    for (const key of Object.keys(partial) as (keyof EditorEngineDefaults)[]) {
       if (!SETTING_KEYS.includes(key)) {
         initLogger.warn(`EditorEngine.setOptions(): "${String(key)}" is construction-only — ignored (build a new engine)`);
         continue;
