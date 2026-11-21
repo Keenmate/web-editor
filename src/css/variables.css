@@ -60,7 +60,6 @@
   /* Tooltips of the toolbar buttons / status items (core createTooltip) — the shared tooltip tokens */
   --we-tooltip-bg: var(--base-tooltip-bg, light-dark(color-mix(in srgb, var(--we-text-color) 85%, var(--we-bg)), oklch(from var(--we-bg) calc(l + 0.15) c h)));
   --we-tooltip-color: var(--base-tooltip-text-color, light-dark(var(--we-bg), var(--we-text-color)));
-  --we-tooltip-duration: var(--base-duration-fast, 120ms);
 
   /* Stacking — core's Z_INDEX tiers: the inline-mode card + the selection toolbar are popovers over the page */
   --we-popover-z-index: var(--base-z-popover, 7600);

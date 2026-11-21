@@ -17,7 +17,8 @@
 }
 
 /* Tooltip — core createTooltip (delegated over the toolbar buttons / status items, `data-tooltip`).
-   Hidden until core adds the visible class; never takes the pointer. */
+   Mounted only while shown; never takes the pointer. Fade in / out: core TOOLTIP_CSS
+   (km-tooltip--hiding, --base-duration-fast — follows `motion`). */
 .we-tooltip {
   z-index: var(--we-tooltip-z-index);
   max-inline-size: 240px;
@@ -27,14 +28,6 @@
   color: var(--we-tooltip-color);
   font: 12px/1.3 var(--we-font-family);
   pointer-events: none;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity var(--we-tooltip-duration) ease;
-}
-
-.we-tooltip--visible {
-  opacity: 1;
-  visibility: visible;
 }
 
 /* Selection toolbar — a dark pill over the selection (in both modes, like a tooltip). */

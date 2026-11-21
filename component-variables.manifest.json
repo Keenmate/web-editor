@@ -248,10 +248,6 @@
       "usage": "Toolbar button / status item tooltip text"
     },
     {
-      "name": "we-tooltip-duration",
-      "usage": "Tooltip fade-in (the motion level / reduced motion reach it through --base-duration-fast)"
-    },
-    {
       "name": "we-tooltip-z-index",
       "usage": "Tooltip stacking (core Z_INDEX tooltip tier)"
     },

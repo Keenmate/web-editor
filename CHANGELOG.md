@@ -11,6 +11,13 @@ Target: **1.0.0-rc01** (first release).
 Pre-1.0, pre-publish. Everything below is the work to date; nothing has been
 released to a registry yet.
 
+### Changed — tooltips fade through core (2026-11-22)
+
+- `.we-tooltip` drops its own opacity / visibility fade (and the `.we-tooltip--visible` rule): core `createTooltip`
+  fades it in AND out (`km-tooltip--hiding`, `--base-duration-fast`, follows `motion`) and sets `data-placement` (the
+  resolved side) on it. `.we-tooltip--visible` is still the shown-state class (no rule of its own).
+- Removed, no alias: `--we-tooltip-duration` (nothing reads it any more — the fade is timed by `--base-duration-fast`).
+
 ### Added — icons repaint when the page-wide icon hook changes (2026-11-22)
 
 - Assigning `window.components.renderIconCallback` after the editor rendered repaints the toolbar / selection-toolbar
