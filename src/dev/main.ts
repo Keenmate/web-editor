@@ -63,8 +63,7 @@ if (km) {
 
 const mount = document.querySelector('#editor') as HTMLElement;
 
-const engine = new EditorEngine({
-  mount,
+const engine = new EditorEngine(mount, {
   doc: createDefaultDoc(schema), // demo welcome text (the editor itself starts empty)
   prosemirrorPlugins: [createFloatingToolbarPlugin(schema), ...createDebugPlugins()],
 });

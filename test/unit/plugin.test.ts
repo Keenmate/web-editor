@@ -43,7 +43,7 @@ describe('serializer contract', () => {
       },
       // no markdown.nodes.widget → contract violation
     });
-    expect(() => new EditorEngine({ mount: mount(), plugins: [bad] })).toThrow(
+    expect(() => new EditorEngine(mount(), { plugins: [bad] })).toThrow(
       /Serializer contract: node "widget"/
     );
   });
@@ -53,7 +53,7 @@ describe('serializer contract', () => {
       name: 'badmark',
       marks: { glow: { toDOM: () => ['span', 0], parseDOM: [{ tag: 'span.glow' }] } },
     });
-    expect(() => new EditorEngine({ mount: mount(), plugins: [bad] })).toThrow(
+    expect(() => new EditorEngine(mount(), { plugins: [bad] })).toThrow(
       /Serializer contract: mark "glow"/
     );
   });
@@ -69,7 +69,7 @@ describe('custom plugin', () => {
   });
 
   it('merges schema, command, group, and Markdown serializer', () => {
-    const engine = new EditorEngine({ mount: mount(), plugins: [strike] });
+    const engine = new EditorEngine(mount(), { plugins: [strike] });
     expect(engine.schema.marks.strike).toBeTruthy();
     expect(engine.commands.has('strike')).toBe(true);
     expect(engine.toolbarGroups.some((g) => g.id === 'strike')).toBe(true);
@@ -82,7 +82,7 @@ describe('custom plugin', () => {
 
 describe('trimmed plugin set', () => {
   it('drops feature schema + items when no plugins are given', () => {
-    const engine = new EditorEngine({ mount: mount(), plugins: [] });
+    const engine = new EditorEngine(mount(), { plugins: [] });
     expect(engine.schema.marks.link).toBeUndefined();
     expect(engine.schema.nodes.image).toBeUndefined();
     expect(engine.schema.nodes.table).toBeUndefined();
@@ -103,7 +103,7 @@ describe('trimmed plugin set', () => {
 describe('status item override / remove (by id)', () => {
   it('a matching id replaces a core item in place', () => {
     const p = definePlugin({ name: 'ovr', statusItems: [{ id: 'words', render: () => 'W!' }] });
-    const engine = new EditorEngine({ mount: mount(), plugins: [p] });
+    const engine = new EditorEngine(mount(), { plugins: [p] });
     const words = engine.statusItems.filter((i) => i.id === 'words');
     expect(words.length).toBe(1); // not duplicated
     expect(words[0].render(engine.createContext({ state: engine.view.state }))).toBe('W!'); // plugin's render wins
@@ -113,7 +113,7 @@ describe('status item override / remove (by id)', () => {
 
   it('removeStatusItems drops a core item', () => {
     const p = definePlugin({ name: 'rm', removeStatusItems: ['chars'] });
-    const engine = new EditorEngine({ mount: mount(), plugins: [p] });
+    const engine = new EditorEngine(mount(), { plugins: [p] });
     expect(engine.statusItems.some((i) => i.id === 'chars')).toBe(false);
     expect(engine.statusItems.some((i) => i.id === 'words')).toBe(true);
   });
@@ -121,7 +121,7 @@ describe('status item override / remove (by id)', () => {
   it('later plugin wins on an id conflict', () => {
     const a = definePlugin({ name: 'a', statusItems: [{ id: 'x', render: () => 'A' }] });
     const b = definePlugin({ name: 'b', statusItems: [{ id: 'x', render: () => 'B' }] });
-    const engine = new EditorEngine({ mount: mount(), plugins: [a, b] });
+    const engine = new EditorEngine(mount(), { plugins: [a, b] });
     const x = engine.statusItems.filter((i) => i.id === 'x');
     expect(x.length).toBe(1);
     expect(x[0].render(engine.createContext({ state: engine.view.state }))).toBe('B');
@@ -130,8 +130,7 @@ describe('status item override / remove (by id)', () => {
 
 describe('default plugins', () => {
   it('reproduce the full editor (link/image/table + round-trip)', () => {
-    const engine = new EditorEngine({
-      mount: mount(),
+    const engine = new EditorEngine(mount(), {
       markdown: '[x](https://e.com) and ![a](img.png)',
     });
     expect(engine.schema.marks.link).toBeTruthy();

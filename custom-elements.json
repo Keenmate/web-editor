@@ -719,32 +719,8 @@
                 "text": "LabelResolver"
               },
               "readonly": true,
-              "description": "Resolve a UI string: the `labels` override → built-in English → `fallback`.\nEvery ctx the engine builds carries it as `ctx.label` (non-enumerable).",
+              "description": "Resolve a UI string: the `labels` option → built-in English → `fallback`.\nEvery ctx the engine builds carries it as `ctx.label` (non-enumerable).",
               "default": "label"
-            },
-            {
-              "kind": "field",
-              "name": "labels",
-              "type": {
-                "text": "EditorLabels | null"
-              },
-              "description": "The `labels` option, read live by label (a `getLabels` option beats it)."
-            },
-            {
-              "kind": "field",
-              "name": "locale",
-              "type": {
-                "text": "string | null"
-              },
-              "description": "The `locale` option, read live by label (a `getLocale` option beats it)."
-            },
-            {
-              "kind": "field",
-              "name": "translateCallback",
-              "type": {
-                "text": "TranslateCallback | null"
-              },
-              "description": "The `translateCallback` option, read live by label (standalone, or hosted when given)."
             },
             {
               "kind": "field",
@@ -752,16 +728,27 @@
               "type": {
                 "text": "EditorView"
               },
-              "default": "new EditorView(options.mount, { state, editable: () => this.#isEditable, ...readOnlyKeyboardProps, dispatchTransaction: (tr) => { const newState = this.view.state.apply(tr); this.view.updateState(newState); this.#keepInactive(); this.events.emit('transaction', { tr, engine: this }); if (tr.docChanged) this.events.emit('change', this); if (tr.selectionSet || tr.docChanged) this.events.emit('selection-change', this); }, })"
+              "default": "new EditorView(mount, { state, editable: () => this.isEditable(), ...readOnlyKeyboardProps, dispatchTransaction: (tr) => { const newState = this.view.state.apply(tr); this.view.updateState(newState); this.#keepInactive(); this.events.emit('transaction', { tr, engine: this }); if (tr.docChanged) this.events.emit('change', this); if (tr.selectionSet || tr.docChanged) this.events.emit('selection-change', this); }, })"
             },
             {
               "kind": "field",
-              "name": "#isEditable",
+              "name": "#options",
+              "privacy": "private",
+              "type": {
+                "text": "EditorEngineOptions"
+              },
+              "description": "The merged options (getOptions): settings filled from `ENGINE_DEFAULTS`, no initial content.",
+              "default": "kept"
+            },
+            {
+              "kind": "field",
+              "name": "#isLocked",
               "privacy": "private",
               "type": {
                 "text": "boolean"
               },
-              "default": "!(options.isReadonly !== undefined ? options.isReadonly : ENGINE_DEFAULTS.isReadonly)"
+              "default": "false",
+              "description": "True while a gating pipeline run locks the surface (independent of `isReadonly`)."
             },
             {
               "kind": "field",
@@ -806,15 +793,6 @@
               "type": {
                 "text": "InteractionHost"
               }
-            },
-            {
-              "kind": "field",
-              "name": "#preLockIsEditable",
-              "privacy": "private",
-              "type": {
-                "text": "boolean | undefined"
-              },
-              "description": "Editability to restore when a gating lock releases."
             },
             {
               "kind": "field",
@@ -930,7 +908,17 @@
             },
             {
               "kind": "method",
-              "name": "setInteractionHost",
+              "name": "getOptions",
+              "return": {
+                "type": {
+                  "text": "Readonly<EditorEngineOptions>"
+                }
+              },
+              "description": "The merged options — the construction options (minus the initial content) with every setting filled from\nthe element's defaults and every setOptions applied. The live object, read-only: change it through\n`setOptions()`."
+            },
+            {
+              "kind": "method",
+              "name": "setOptions",
               "return": {
                 "type": {
                   "text": "void"
@@ -938,13 +926,13 @@
               },
               "parameters": [
                 {
-                  "name": "host",
+                  "name": "partial",
                   "type": {
-                    "text": "InteractionHost"
+                    "text": "Partial<EditorEngineSettings>"
                   }
                 }
               ],
-              "description": "Replace the host modal bridge used by interactive pipeline stages."
+              "description": "Merge `partial` into the current settings and apply only what changed, in place (no rebuild — the document,\nselection and undo history stay): `isReadonly` re-evaluates the view's editability, `interactionHost`\nswaps the dialog bridge, `labels` / `locale` / `translateCallback` redraw the empty-document placeholder\n(redraw your own UI). A key set to `undefined` resets it to the default. A construction-only key\n(`plugins`, `schema`, `host`, the initial content, …) is ignored with a warning — build a new engine."
             },
             {
               "kind": "method",
@@ -974,7 +962,7 @@
                   }
                 }
               ],
-              "description": "Lock / unlock editing for a gating run, remembering the pre-lock state."
+              "description": "Lock / unlock editing for a gating run (separate state — `isReadonly` is never touched)."
             },
             {
               "kind": "method",
@@ -1130,25 +1118,18 @@
                   "text": "boolean"
                 }
               },
-              "description": "Whether the editor currently accepts input."
+              "description": "Whether the editor currently accepts input: not `isReadonly` and not locked by a gating pipeline run."
             },
             {
               "kind": "method",
-              "name": "setEditable",
+              "name": "#applyEditable",
+              "privacy": "private",
               "return": {
                 "type": {
                   "text": "void"
                 }
               },
-              "parameters": [
-                {
-                  "name": "isEditable",
-                  "type": {
-                    "text": "boolean"
-                  }
-                }
-              ],
-              "description": "Toggle read-only. Re-evaluates the view's `editable` prop in place."
+              "description": "Re-evaluate the view's `editable` prop in place."
             },
             {
               "kind": "method",
@@ -1477,7 +1458,7 @@
               "text": "InteractionHost"
             }
           },
-          "description": "The default host: an interactive request becomes a core `/dialog` confirmation (resolve on OK, cancel\notherwise; a superseded run closes it). Button texts come from the editor's `labels` (`buttons.ok` / `buttons.cancel` /\n`ariaLabels.close`) when the ctx carries its `label` resolver. A host that needs a richer picker injects its own via\n`engine.setInteractionHost` / the element's `interactionHost`."
+          "description": "The default host: an interactive request becomes a core `/dialog` confirmation (resolve on OK, cancel\notherwise; a superseded run closes it). Button texts come from the editor's `labels` (`buttons.ok` / `buttons.cancel` /\n`ariaLabels.close`) when the ctx carries its `label` resolver. A host that needs a richer picker injects its own via\n`engine.setOptions({ interactionHost })` / the element's `interactionHost`."
         },
         {
           "kind": "class",
@@ -3327,6 +3308,14 @@
           "name": "EditorEngineOptions",
           "declaration": {
             "name": "EditorEngineOptions",
+            "module": "./engine/editor-engine"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "EditorEngineSettings",
+          "declaration": {
+            "name": "EditorEngineSettings",
             "module": "./engine/editor-engine"
           }
         },
@@ -7186,13 +7175,22 @@
             },
             {
               "kind": "method",
-              "name": "#interactionHost",
+              "name": "#engineSettings",
               "privacy": "private",
               "return": {
                 "type": {
-                  "text": "InteractionHost"
+                  "text": "Partial<EditorEngineSettings>"
                 }
-              }
+              },
+              "parameters": [
+                {
+                  "name": "partial",
+                  "type": {
+                    "text": "Record<string, unknown> | null"
+                  }
+                }
+              ],
+              "description": "The engine settings (C-CA-39) from this element's config: all of them (`partial: null`, a build) or only\nthose a batch changed (`update(partial)` → `engine.setOptions()`). `isReadonly` is the EFFECTIVE value\n(read-only, disabled or previewing); `null` `interactionHost` = the engine's default dialog host."
             },
             {
               "kind": "method",

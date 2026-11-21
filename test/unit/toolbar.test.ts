@@ -257,7 +257,7 @@ describe('CommandBar', () => {
   function setup(markdown = '# Hello world') {
     const mountEl = document.createElement('div');
     document.body.appendChild(mountEl);
-    const engine = new EditorEngine({ mount: mountEl, markdown });
+    const engine = new EditorEngine(mountEl, { markdown });
     const parent = document.createElement('div');
     document.body.appendChild(parent);
     const bar = new CommandBar(parent, defaultToolbarItems, createActionHost({ engine }));
@@ -309,7 +309,7 @@ describe('SelectionToolbar', () => {
     document.body.appendChild(mountEl);
     const container = document.createElement('div');
     document.body.appendChild(container);
-    const engine = new EditorEngine({ mount: mountEl, markdown });
+    const engine = new EditorEngine(mountEl, { markdown });
     const toolbar = new SelectionToolbar({
       view: engine.view,
       host: createActionHost({ engine }),
@@ -354,7 +354,7 @@ describe('ContextMenu', () => {
     document.body.appendChild(mountEl);
     const container = document.createElement('div');
     document.body.appendChild(container);
-    const engine = new EditorEngine({ mount: mountEl, markdown: '# Hello' });
+    const engine = new EditorEngine(mountEl, { markdown: '# Hello' });
     const menu = new ContextMenu({
       view: engine.view,
       host: createActionHost({ engine }),
@@ -384,7 +384,7 @@ describe('ContextMenu', () => {
     document.body.appendChild(mountEl);
     const container = document.createElement('div');
     document.body.appendChild(container);
-    const engine = new EditorEngine({ mount: mountEl, markdown: '# Hello world' });
+    const engine = new EditorEngine(mountEl, { markdown: '# Hello world' });
     const menu = new ContextMenu({
       view: engine.view,
       host: createActionHost({ engine }),

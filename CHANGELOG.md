@@ -11,6 +11,24 @@ Target: **1.0.0-rc01** (first release).
 Pre-1.0, pre-publish. Everything below is the work to date; nothing has been
 released to a registry yet.
 
+### Changed — BREAKING: `EditorEngine` takes settings one way (rulebook C-CA-39)
+
+- **`new EditorEngine(mount, options)`** — the mount element is the first argument (the `mount` option is gone):
+  `new EditorEngine({ mount, markdown })` → `new EditorEngine(mount, { markdown })`.
+- **`engine.setOptions(partial)`** merges into the current settings and applies only what changed, in place (no
+  rebuild — document, selection and undo history stay); a key set to `undefined` resets it to the element's default.
+  **`engine.getOptions()`** returns the merged options (read-only; the initial content is not kept). Settings:
+  `isReadonly`, `labels`, `locale`, `translateCallback`, `interactionHost`; `plugins` / `prosemirrorPlugins` /
+  `schema` / `host` stay construction-only (`setOptions` ignores them with a warning).
+- Removed, no aliases: `engine.setEditable(x)` → `engine.setOptions({ isReadonly: !x })`;
+  `engine.setInteractionHost(host)` → `engine.setOptions({ interactionHost: host })`; the writable
+  `engine.labels` / `engine.locale` / `engine.translateCallback` properties → `setOptions({ … })` /
+  `getOptions().…`; the `getLabels` / `getLocale` live-source options → `setOptions({ labels })` /
+  `setOptions({ locale })` (`<km-editor>` now pushes its settings from `update()`).
+- `engine.isEditable()` stays: `!isReadonly` AND not locked by a gating pipeline run. The lock is now separate
+  state — it no longer overwrites `isReadonly`, and a read-only change during a locked run is kept on unlock.
+- New exported type `EditorEngineSettings` (the `setOptions()` keys). The element's API is unchanged.
+
 ### Added — `locale` input (rulebook C-CA-38)
 
 - **`locale` input (attribute + property):** the BCP-47 locale of the numbers the editor formats — the status-bar

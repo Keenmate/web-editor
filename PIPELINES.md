@@ -4,7 +4,7 @@
 > pipeline layer. The design is below; the "commands ARE pipelines" decision and
 > the cloud-image worked example are now live in `src/engine/pipeline/`
 > (`types` / `runner` / `assemble` / `registry`), wired into `EditorEngine`
-> (`engine.pipelines`, `engine.run`, `engine.setInteractionHost`, the `lock`
+> (`engine.pipelines`, `engine.run`, `engine.setOptions({ interactionHost })`, the `lock`
 > event) and exported from `index.ts`. On the `<km-editor>` element the same
 > surface is `el.controller.runCommand(name)`, the `interactionHost` property and
 > the `lock-change` event (the element does not expose its engine; `EditorEngine` is the public seam for building your own UI — README "Build your own UI"). The first-party `imageBrowserPlugin` /
@@ -350,7 +350,7 @@ config, and it must **not** require listing every stage (that would be brittle t
 plugin churn). The override is **additive and partial**:
 
 ```ts
-new EditorEngine({
+new EditorEngine(mount, {
   plugins: [imageBrowserPlugin({ upload }), cropPlugin(), imageBase64Plugin],
   pipelines: {
     'image:browser:pick': {
@@ -394,7 +394,7 @@ property of the plugin — it's a property of the (stage × pipeline) cell.** On
 `cropPlugin`, but two pipelines crop differently:
 
 ```ts
-new EditorEngine({
+new EditorEngine(mount, {
   plugins: [imageBrowserPlugin({ upload }), cropPlugin(), imageBase64Plugin],
   pipelines: {
     'image:portrait:pick': {               // a manager's portrait
@@ -657,7 +657,7 @@ doesn't; it's a loop inside one stage honoring one `rt.signal`.
    - **Gating** (e.g. async paste that owns insertion) — **locks the editor for
      the whole run** (modal or not), so no edit can race the insert and the stored
      position stays valid without mapping. The lock covers pre-modal async spans
-     and windowless pipelines too — a true `setEditable(false)`, not just a visual
+     and windowless pipelines too — a true ProseMirror `editable: false`, not just a visual
      overlay. (Demonstrated in the visualizer's async paste lane.)
    - **Ambient** (background enrichment that must not block typing — "related
      docs", auto-attach) — *cannot* lock, so it genuinely needs transaction

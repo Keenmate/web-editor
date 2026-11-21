@@ -42,9 +42,8 @@ import {
   type ResponsiveMap,
 } from '@keenmate/web-components-core';
 import type { Command } from 'prosemirror-state';
-import { EditorEngine, type EditorEngineOptions } from './engine/editor-engine';
+import { EditorEngine, type EditorEngineOptions, type EditorEngineSettings } from './engine/editor-engine';
 import { defaultPlugins } from './engine/default-plugins';
-import { defaultInteractionHost } from './engine/pipeline/registry';
 import type { InteractionHost } from './engine/pipeline/types';
 import type { EditorPlugin } from './engine/plugin';
 import type { SerializationFormat } from './engine/serialization';
@@ -296,7 +295,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
    * into `isEffectivelyDisabled`): toggle editing, the chrome and `inert`.
    */
   protected override disabledChanged(): void {
-    this.#engine?.setEditable(this.#resolveEditable());
+    this.#engine?.setOptions({ isReadonly: !this.#resolveEditable() });
     this.#layout.setInert(this.isEffectivelyDisabled);
     this.#applyChromeState();
     this.#syncFormInput();
@@ -317,9 +316,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
 
   /** Cosmetic/behavioural change: patch the live engine without a rebuild. */
   protected override update(partial: Record<string, unknown>): void {
-    if ('isReadonly' in partial || 'viewMode' in partial) {
-      this.#engine?.setEditable(this.#resolveEditable());
-    }
+    // The engine's settings first (C-CA-39) — the chrome re-renders below read them.
+    this.#engine?.setOptions(this.#engineSettings(partial));
     // Structural view-mode / anchor change: re-arrange the shadow layout in place
     // (the persistent mount is re-parented, so the live document survives).
     if ('viewMode' in partial || 'anchor' in partial || 'toolbar' in partial || 'statusbar' in partial) {
@@ -337,9 +335,6 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     // Item icons are drawn on render: re-render the toolbars with the new hook.
     else if ('renderIconCallback' in partial) this.#chrome?.refresh();
     if ('name' in partial || 'contentFormat' in partial || 'getValueFormatCallback' in partial) this.#syncFormInput();
-    if ('interactionHost' in partial) {
-      this.#engine?.setInteractionHost(this.#interactionHost());
-    }
     if ('customStyles' in partial || 'getCustomStylesCallback' in partial) this.#customStyles?.refresh();
     // A showing pending loader re-renders with the new label / render hook.
     if (('labels' in partial || 'locale' in partial || 'translateCallback' in partial || 'renderLoadingCallback' in partial) && this.#removeLoader) {
@@ -403,10 +398,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     this.#applyLayout();
 
     const options: EditorEngineOptions = {
-      mount: this.#layout.mount,
-      isReadonly: !this.#resolveEditable(),
+      ...this.#engineSettings(null),
       plugins: this.#customPlugins, // undefined → engine uses defaultPlugins()
-      interactionHost: this.#interactionHost(),
       // Every ctx the engine builds carries this element + its controller.
       host: {
         element: this,
@@ -418,17 +411,13 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
           set: (mode, via) => this.#switchViewMode(mode, via === 'plugin' ? 'plugin' : this.#commandSource, false),
         },
       },
-      // UI strings: read live, so a `labels` change applies without a rebuild.
-      getLabels: () => this.config.labels as EditorLabels | null | undefined,
-      // The `locale` input, read live the same way (the `{count}` numbers in labels).
-      getLocale: () => this.config.locale as string | null | undefined,
     };
     this.#applyContentOption(options, this.#seed.format, this.#seed.content);
 
     const mount = this.#layout.mount;
     const before = new Set(Array.from(mount.childNodes));
     try {
-      return new EditorEngine(options);
+      return new EditorEngine(mount, options);
     } catch (err) {
       // A throw after the view was created (a plugin's `setup()` or a PM plugin
       // view) leaves the half-built view's DOM in the mount — remove it so the
@@ -631,8 +620,20 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     return { value: this.#engine!.serialize(this.#format()), contentFormat: this.#format() };
   }
 
-  #interactionHost(): InteractionHost {
-    return (this.config.interactionHost as InteractionHost | null) ?? defaultInteractionHost();
+  /**
+   * The engine settings (C-CA-39) from this element's config: all of them (`partial: null`, a build) or only
+   * those a batch changed (`update(partial)` → `engine.setOptions()`). `isReadonly` is the EFFECTIVE value
+   * (read-only, disabled or previewing); `null` `interactionHost` = the engine's default dialog host.
+   */
+  #engineSettings(partial: Record<string, unknown> | null): Partial<EditorEngineSettings> {
+    const has = (key: string): boolean => partial === null || key in partial;
+    const settings: Partial<EditorEngineSettings> = {};
+    if (has('isReadonly') || has('viewMode')) settings.isReadonly = !this.#resolveEditable();
+    if (has('labels')) settings.labels = this.config.labels as EditorLabels | null;
+    if (has('locale')) settings.locale = this.config.locale as string | null;
+    if (has('translateCallback')) settings.translateCallback = this.config.translateCallback as TranslateCallback | null;
+    if (has('interactionHost')) settings.interactionHost = this.config.interactionHost as InteractionHost | null;
+    return settings;
   }
 
   /** The public facade (`el.controller`): content I/O, focus, commands — never the engine. */

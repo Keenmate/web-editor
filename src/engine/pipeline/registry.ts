@@ -35,7 +35,7 @@ export interface PipelineRegistryDeps {
   getContext: () => PipelineContext;
   /** The host modal bridge passed to interactive stages. */
   getInteractionHost: () => InteractionHost;
-  /** Lock / unlock the surface for a gating run (a true `setEditable(false)`). */
+  /** Lock / unlock the surface for a gating run (a true ProseMirror `editable: false`, separate from `isReadonly`). */
   setLock: (locked: boolean) => void;
   /** Label resolver handed to stages as `rt.label` (optional). */
   label?: StageServices['label'];
@@ -46,7 +46,7 @@ export interface PipelineRegistryDeps {
 /** The default host: an interactive request becomes a core `/dialog` confirmation (resolve on OK, cancel
  * otherwise; a superseded run closes it). Button texts come from the editor's `labels` (`buttons.ok` / `buttons.cancel` /
  * `ariaLabels.close`) when the ctx carries its `label` resolver. A host that needs a richer picker injects its own via
- * `engine.setInteractionHost` / the element's `interactionHost`. */
+ * `engine.setOptions({ interactionHost })` / the element's `interactionHost`. */
 export function defaultInteractionHost(): InteractionHost {
   return {
     async request(req) {

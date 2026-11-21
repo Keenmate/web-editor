@@ -63,7 +63,7 @@ triggerable is extensible the same way* — a plugin can splice a stage into
 | `engine.run(name)` | Fire a pipeline by name. Sync → returns whether it resolved; deferred → kicks off and returns `true`. |
 | `engine.pipelines` | The `PipelineRegistry` — `has` / `get` / `names` / `on(name, listener)`. |
 | `engine.pipelines.on(name, fn)` | Subscribe to a run's `start` / `stage` / `status` / `result` events. Returns an unsubscribe fn. |
-| `engine.setInteractionHost(host)` | Provide the modal UI for interactive (dialog) stages (`host.request(ctx)`, `ctx` = request + `signal`). |
+| `engine.setOptions({ interactionHost: host })` | Provide the modal UI for interactive (dialog) stages (`host.request(ctx)`, `ctx` = request + `signal`). |
 | `'lock'` event | Emitted when a gating run locks/unlocks the editing surface. |
 
 On the `<km-editor>` element (whose engine is internal) the same surface is

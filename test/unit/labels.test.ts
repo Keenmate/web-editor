@@ -73,8 +73,7 @@ describe('label helpers', () => {
 
   it('a standalone EditorEngine takes a translateCallback option', () => {
     const mountEl = document.body.appendChild(document.createElement('div'));
-    const engine = new EditorEngine({
-      mount: mountEl,
+    const engine = new EditorEngine(mountEl, {
       markdown: 'x',
       translateCallback: ({ key }) => (key === 'km-editor.buttons.ok' ? 'Dobře' : null),
     });
@@ -266,14 +265,14 @@ describe('<km-editor> labels', () => {
     const reg = (window as any).components;
     try {
       reg.locale = { locale: 'en-US' };
-      const bare = new EditorEngine({ mount: document.createElement('div') });
-      expect(bare.locale).toBeNull();
+      const bare = new EditorEngine(document.createElement('div'));
+      expect(bare.getOptions().locale).toBeNull();
       expect(bare.label('labels.words', { count: 1234 })).toBe('Words: 1,234');
       bare.destroy();
-      const engine = new EditorEngine({ mount: document.createElement('div'), locale: 'de' });
-      expect(engine.locale).toBe('de');
+      const engine = new EditorEngine(document.createElement('div'), { locale: 'de' });
+      expect(engine.getOptions().locale).toBe('de');
       expect(engine.label('labels.words', { count: 1234 })).toBe('Words: 1.234');
-      engine.locale = null;
+      engine.setOptions({ locale: null });
       expect(engine.label('labels.words', { count: 1234 })).toBe('Words: 1,234');
       engine.destroy();
     } finally {

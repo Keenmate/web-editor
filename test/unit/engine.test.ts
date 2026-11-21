@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { EditorEngine } from '../../src/engine/editor-engine';
+import { defaultPlugins } from '../../src/engine/default-plugins';
+import { ENGINE_DEFAULTS } from '../../src/inputs';
 
 function mount(): HTMLElement {
   const el = document.createElement('div');
@@ -9,7 +11,7 @@ function mount(): HTMLElement {
 
 describe('EditorEngine', () => {
   it('constructs from markdown and serializes to all formats', () => {
-    const engine = new EditorEngine({ mount: mount(), markdown: '# Hello\n\nWorld **bold**\n' });
+    const engine = new EditorEngine(mount(), { markdown: '# Hello\n\nWorld **bold**\n' });
     expect(engine.getJSON().type).toBe('doc');
     expect(engine.getHTML()).toContain('<h1');
     expect(engine.getHTML()).toContain('<strong>bold</strong>');
@@ -18,7 +20,7 @@ describe('EditorEngine', () => {
   });
 
   it('replaces content via setMarkdown and emits change', () => {
-    const engine = new EditorEngine({ mount: mount() });
+    const engine = new EditorEngine(mount());
     let changes = 0;
     engine.events.on('change', () => (changes += 1));
     engine.setMarkdown('## A\n\ntext\n');
@@ -28,7 +30,7 @@ describe('EditorEngine', () => {
   });
 
   it('registers default commands with keybindings and active-state', () => {
-    const engine = new EditorEngine({ mount: mount() });
+    const engine = new EditorEngine(mount());
     expect(engine.commands.has('bold')).toBe(true);
     expect(engine.commands.has('insert-table')).toBe(true);
     expect(engine.commands.get('bold')?.keys).toContain('Mod-b');
@@ -45,34 +47,36 @@ describe('EditorEngine — the element settings it shares (C-CA-37)', () => {
     const { INPUTS, ENGINE_DEFAULTS } = await import('../../src/inputs');
     expect(ENGINE_DEFAULTS).toEqual({ isReadonly: false, labels: null, locale: null, translateCallback: null, interactionHost: null });
     for (const key of Object.keys(ENGINE_DEFAULTS)) expect(INPUTS.some((row) => row.configKey === key)).toBe(true);
-    const engine = new EditorEngine({ mount: mount(), markdown: 'x' });
+    const engine = new EditorEngine(mount(), { markdown: 'x' });
     expect(engine.isEditable()).toBe(!ENGINE_DEFAULTS.isReadonly);
-    expect(engine.labels).toBe(ENGINE_DEFAULTS.labels);
-    expect(engine.locale).toBe(ENGINE_DEFAULTS.locale);
-    expect(engine.translateCallback).toBe(ENGINE_DEFAULTS.translateCallback);
+    expect(engine.getOptions().labels).toBe(ENGINE_DEFAULTS.labels);
+    expect(engine.getOptions().locale).toBe(ENGINE_DEFAULTS.locale);
+    expect(engine.getOptions().translateCallback).toBe(ENGINE_DEFAULTS.translateCallback);
+    expect(engine.getOptions().isReadonly).toBe(ENGINE_DEFAULTS.isReadonly);
+    expect(engine.getOptions().interactionHost).toBe(ENGINE_DEFAULTS.interactionHost);
     expect(engine.label('buttons.ok')).toBe('OK');
     engine.destroy();
   });
 
   it('isReadonly: true starts read-only (undefined = the default, editable)', () => {
-    const readonly = new EditorEngine({ mount: mount(), markdown: 'x', isReadonly: true });
+    const readonly = new EditorEngine(mount(), { markdown: 'x', isReadonly: true });
     expect(readonly.isEditable()).toBe(false);
     readonly.destroy();
-    const unset = new EditorEngine({ mount: mount(), markdown: 'x', isReadonly: undefined });
+    const unset = new EditorEngine(mount(), { markdown: 'x', isReadonly: undefined });
     expect(unset.isEditable()).toBe(true);
     unset.destroy();
   });
 
   it('labels: an option with the element keys, read live; it beats the page dictionary and the page translateCallback', () => {
     const reg = (window as any).components;
-    const engine = new EditorEngine({ mount: mount(), markdown: 'x', labels: { 'buttons.ok': 'Dobře', 'km-editor.buttons.cancel': 'Zrušit' } });
+    const engine = new EditorEngine(mount(), { markdown: 'x', labels: { 'buttons.ok': 'Dobře', 'km-editor.buttons.cancel': 'Zrušit' } });
     try {
       reg.locale = { labels: { 'km-editor.buttons.ok': 'page' }, translateCallback: () => 'PAGE' };
       expect(engine.label('buttons.ok')).toBe('Dobře');
       expect(engine.label('buttons.cancel')).toBe('Zrušit');
       expect(engine.label('labels.words', { count: 2 })).toBe('PAGE');
       reg.locale = null;
-      engine.labels = { 'labels.words': 'Slova: {count}' };
+      engine.setOptions({ labels: { 'labels.words': 'Slova: {count}' } });
       expect(engine.label('labels.words', { count: 2 })).toBe('Slova: 2');
       expect(engine.label('buttons.ok')).toBe('OK');
     } finally {
@@ -83,13 +87,13 @@ describe('EditorEngine — the element settings it shares (C-CA-37)', () => {
 
   it("translateCallback: read live; the engine's own beats the page-wide one", () => {
     const reg = (window as any).components;
-    const engine = new EditorEngine({ mount: mount(), markdown: 'x' });
+    const engine = new EditorEngine(mount(), { markdown: 'x' });
     try {
       reg.locale = { translateCallback: ({ template }: { template: string }) => `page:${template}` };
       expect(engine.label('buttons.ok')).toBe('page:OK');
-      engine.translateCallback = ({ template }) => `own:${template}`;
+      engine.setOptions({ translateCallback: ({ template }) => `own:${template}` });
       expect(engine.label('buttons.ok')).toBe('own:OK');
-      engine.translateCallback = () => null;
+      engine.setOptions({ translateCallback: () => null });
       expect(engine.label('buttons.ok')).toBe('page:OK');
     } finally {
       reg.locale = null;
@@ -98,10 +102,82 @@ describe('EditorEngine — the element settings it shares (C-CA-37)', () => {
   });
 });
 
+describe('EditorEngine — settings one way: setOptions / getOptions (C-CA-39)', () => {
+  it('getOptions(): the merged options, no initial content; setOptions() merges in place (document kept)', () => {
+    const plugins = defaultPlugins();
+    const engine = new EditorEngine(mount(), { markdown: 'hello', plugins, labels: { 'buttons.ok': 'A' } });
+    try {
+      const options = engine.getOptions();
+      expect(options.plugins).toBe(plugins);
+      expect('markdown' in options).toBe(false);
+      expect(options.labels).toEqual({ 'buttons.ok': 'A' });
+      const view = engine.view;
+      engine.setOptions({ locale: 'de' });
+      expect(engine.getOptions().labels).toEqual({ 'buttons.ok': 'A' }); // untouched keys stay
+      expect(engine.getOptions().locale).toBe('de');
+      expect(engine.view).toBe(view); // no rebuild
+      expect(engine.getMarkdown().trim()).toBe('hello');
+      engine.setOptions({ labels: undefined }); // undefined = the default
+      expect(engine.getOptions().labels).toBe(ENGINE_DEFAULTS.labels);
+    } finally {
+      engine.destroy();
+    }
+  });
+
+  it('isReadonly toggles editability in place', () => {
+    const engine = new EditorEngine(mount(), { markdown: 'x' });
+    try {
+      engine.setOptions({ isReadonly: true });
+      expect(engine.isEditable()).toBe(false);
+      expect(engine.view.editable).toBe(false);
+      engine.setOptions({ isReadonly: false });
+      expect(engine.isEditable()).toBe(true);
+      expect(engine.view.editable).toBe(true);
+    } finally {
+      engine.destroy();
+    }
+  });
+
+  it('interactionHost: replaced live (null = the default dialog host)', () => {
+    const host = { request: async () => ({ isCancelled: true }) };
+    const engine = new EditorEngine(mount(), { markdown: 'x' });
+    try {
+      engine.setOptions({ interactionHost: host as never });
+      expect(engine.getOptions().interactionHost).toBe(host);
+      engine.setOptions({ interactionHost: null });
+      expect(engine.getOptions().interactionHost).toBeNull();
+    } finally {
+      engine.destroy();
+    }
+  });
+
+  it('a construction-only key is ignored', () => {
+    const engine = new EditorEngine(mount(), { markdown: 'x' });
+    try {
+      const before = engine.getOptions().plugins;
+      engine.setOptions({ plugins: [] } as never);
+      expect(engine.getOptions().plugins).toBe(before);
+    } finally {
+      engine.destroy();
+    }
+  });
+
+  it('has no setEditable / setInteractionHost / writable setting properties', () => {
+    const engine = new EditorEngine(mount(), { markdown: 'x' });
+    try {
+      for (const name of ['setEditable', 'setInteractionHost', 'labels', 'locale', 'translateCallback']) {
+        expect(name in engine).toBe(false);
+      }
+    } finally {
+      engine.destroy();
+    }
+  });
+});
+
 describe('EditorEngine — README "Build your own UI" example', () => {
   it('drives the document from an own toolbar: labels, run, enabled / toggled state, change', async () => {
     const { labelKey } = await import('../../src/labels');
-    const engine = new EditorEngine({ mount: mount(), markdown: 'hello', labels: { 'ariaLabels.bold': 'Tučně' } });
+    const engine = new EditorEngine(mount(), { markdown: 'hello', labels: { 'ariaLabels.bold': 'Tučně' } });
     const bar = document.body.appendChild(document.createElement('div'));
     try {
       for (const id of ['bold', 'italic', 'undo']) {

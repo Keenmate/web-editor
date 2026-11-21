@@ -51,6 +51,7 @@ import type { EditorViewMode } from '../web-component';
 import { createLabelResolver, type EditorLabels, type LabelResolver } from '../labels';
 import type { TranslateCallback } from '@keenmate/web-components-core/locale';
 import { ENGINE_DEFAULTS } from '../inputs';
+import { initLogger } from '../logger';
 import {
   docToHTML,
   htmlToDoc,
@@ -104,59 +105,65 @@ export interface EditorEngineHost {
   };
 }
 
+/**
+ * The settings a live engine takes through {@link EditorEngine.setOptions} — the `<km-editor>` settings it shares
+ * (same name, same default: `ENGINE_DEFAULTS`, C-CA-37). Every other option is construction-only.
+ */
+export type EditorEngineSettings = Pick<
+  EditorEngineOptions,
+  'isReadonly' | 'labels' | 'locale' | 'translateCallback' | 'interactionHost'
+>;
+
+/** `new EditorEngine(mount, options)` — the element the view mounts into is the first argument, not an option. */
 export interface EditorEngineOptions {
-  /** Element the editor view mounts into. */
-  mount: HTMLElement;
-  /** Initial content — provide at most one of these. */
+  /** Initial content — provide at most one of these (data, construction-only; not kept in `getOptions()`). */
   doc?: PMNode;
   html?: string;
   markdown?: string;
   json?: DocJSON;
   /**
    * Editor plugin set (schema/commands/serializers/…) — `<km-editor>`'s `plugins`, same
-   * default (`defaultPlugins()`, the first-party set).
+   * default (`defaultPlugins()`, the first-party set). Construction-only.
    */
   plugins?: EditorPlugin[];
-  /** Extra raw ProseMirror plugins appended after the assembled stack. */
+  /** Extra raw ProseMirror plugins appended after the assembled stack. Construction-only. */
   prosemirrorPlugins?: Plugin[];
-  /** Override the document schema (defaults to one assembled from `plugins`). */
+  /** Override the document schema (defaults to one assembled from `plugins`). Construction-only. */
   schema?: Schema;
+  /** The element hosting this engine (set by `<km-editor>`; omit standalone). Construction-only. */
+  host?: EditorEngineHost;
   /**
-   * Start read-only (no editing) — `<km-editor>`'s `isReadonly`, same default (`false`, editable). Toggle later
-   * with `setEditable()`.
+   * Read-only (no editing) — `<km-editor>`'s `isReadonly`, same default (`false`, editable). Live:
+   * `setOptions({ isReadonly })`. A gating pipeline's lock is separate state — `isEditable()` answers both.
    */
   isReadonly?: boolean;
   /** Host modal bridge for interactive pipeline stages (`<km-editor>`'s `interactionHost`). Default (`null`):
-   * a core `/dialog` confirmation host; inject a richer picker via this or `setInteractionHost`. */
+   * a core `/dialog` confirmation host. Live: `setOptions({ interactionHost })`. */
   interactionHost?: InteractionHost | null;
-  /** The element hosting this engine (set by `<km-editor>`; omit standalone). */
-  host?: EditorEngineHost;
   /**
-   * UI-string overrides — `<km-editor>`'s `labels` (same keys, default `null` = English). Read live: assign
-   * `engine.labels` later to switch (then redraw your UI; `refreshView()` redraws the placeholder).
+   * UI-string overrides — `<km-editor>`'s `labels` (same keys, default `null` = English). Live:
+   * `setOptions({ labels })` (redraws the empty-document placeholder; redraw your own UI).
    */
   labels?: EditorLabels | null;
-  /** A live source of `labels`, read on every use — beats `labels` (`<km-editor>` passes its config). */
-  getLabels?: () => EditorLabels | null | undefined;
   /**
    * BCP-47 locale for the numbers the engine's labels format (the `{count}` of `labels.words` / `labels.chars`:
    * `1234` → `1.234` for `'de'`) and the `locale` a `translateCallback` gets — `<km-editor>`'s `locale`, same
    * default (`null` = unset: the page-wide `window.components.locale.locale`, else the browser; `'auto'` = unset).
-   * Read live: assign `engine.locale` later to switch (then redraw your UI).
+   * Live: `setOptions({ locale })` (then redraw your UI).
    */
   locale?: string | null;
-  /** A live source of `locale`, read on every use — beats `locale` (`<km-editor>` passes its config). */
-  getLocale?: () => string | null | undefined;
   /**
-   * Translate a UI string for a key `getLabels` did not set (core `/locale` `TranslateCallback`:
+   * Translate a UI string for a key `labels` did not set (core `/locale` `TranslateCallback`:
    * `({ component, key: 'km-editor.<key>', template, params, locale }) => string | null`; `null` = not mine →
-   * the next rule). Standalone, the same order as the element: instance labels → page dictionary → this → the
+   * the next rule). The same order as the element: instance labels → page dictionary → this → the
    * page-wide `window.components.locale.translateCallback` → built-in. `<km-editor>`'s `translateCallback`, same
-   * default (`null`); read live (`engine.translateCallback = …`). With `host`, omit it — core asks the element's
-   * own `translateCallback`, then the page-wide one.
+   * default (`null`); `<km-editor>` passes its own. Live: `setOptions({ translateCallback })`.
    */
   translateCallback?: TranslateCallback | null;
 }
+
+/** The option keys `setOptions()` applies (the rest are construction-only). */
+const SETTING_KEYS = Object.keys(ENGINE_DEFAULTS) as (keyof EditorEngineSettings)[];
 
 export interface EngineEventMap {
   change: EditorEngine;
@@ -183,43 +190,42 @@ export class EditorEngine {
   readonly menuItems: EditorToolbarEntry[];
   readonly statusItems: StatusItem[];
   /**
-   * Resolve a UI string: the `labels` override → built-in English → `fallback`.
+   * Resolve a UI string: the `labels` option → built-in English → `fallback`.
    * Every ctx the engine builds carries it as `ctx.label` (non-enumerable).
    */
   readonly label: LabelResolver;
-  /** The `labels` option, read live by {@link label} (a `getLabels` option beats it). */
-  labels: EditorLabels | null;
-  /** The `locale` option, read live by {@link label} (a `getLocale` option beats it). */
-  locale: string | null;
-  /** The `translateCallback` option, read live by {@link label} (standalone, or hosted when given). */
-  translateCallback: TranslateCallback | null;
   view: EditorView;
 
-  #isEditable: boolean;
+  /** The merged options ({@link getOptions}): settings filled from `ENGINE_DEFAULTS`, no initial content. */
+  #options: EditorEngineOptions;
+  /** True while a gating pipeline run locks the surface (independent of `isReadonly`). */
+  #isLocked = false;
   /** False between deactivate() and activate() (the host element is detached). */
   #isActive = true;
   #plugins: EditorPlugin[];
   #markdown: MarkdownIO;
   #pipelines: PipelineRegistry;
   #interactionHost: InteractionHost;
-  /** Editability to restore when a gating lock releases. */
-  #preLockIsEditable?: boolean;
   /** Names of deferred pipelines whose run is past its loader threshold. */
   #pendingNames = new Set<string>();
   /** Prototype of every ctx: `controller` / `element` getters when hosted (inherited ⇒ non-enumerable). */
   #ctxProto: object;
 
-  constructor(options: EditorEngineOptions) {
+  constructor(mount: HTMLElement, options: EditorEngineOptions = {}) {
     const host = options.host;
-    // Every option `<km-editor>` also has defaults like the element (one source: its input table, C-CA-37).
-    this.labels = options.labels !== undefined ? options.labels : ENGINE_DEFAULTS.labels;
-    this.translateCallback = options.translateCallback !== undefined ? options.translateCallback : ENGINE_DEFAULTS.translateCallback;
-    this.locale = options.locale !== undefined ? options.locale : ENGINE_DEFAULTS.locale;
-    const getLabels = options.getLabels ?? (() => this.labels);
-    const getLocale = options.getLocale ?? (() => this.locale);
-    // Hosted without the option: core asks the element's own `translateCallback`.
-    const isOwnTranslate = !host || options.translateCallback !== undefined;
-    const label = createLabelResolver(() => getLabels(), host?.element, isOwnTranslate ? () => this.translateCallback : undefined, getLocale);
+    // The initial content is data, not an option to keep. Every setting `<km-editor>` also has defaults like
+    // the element (one source: its input table, C-CA-37).
+    const { doc: _doc, html: _html, markdown: _markdown, json: _json, ...kept } = options;
+    this.#options = kept;
+    for (const key of SETTING_KEYS) {
+      if (kept[key] === undefined) (kept as Record<string, unknown>)[key] = ENGINE_DEFAULTS[key];
+    }
+    const label = createLabelResolver(
+      () => this.#options.labels,
+      host?.element,
+      () => this.#options.translateCallback,
+      () => this.#options.locale,
+    );
     this.label = label;
     this.#ctxProto = Object.create(Object.prototype, {
       label: { value: label, enumerable: false },
@@ -265,7 +271,7 @@ export class EditorEngine {
     // Pipelines: every command auto-wraps into a one-stage sync pipeline; plugins
     // add/override pipelines and splice stages by anchor. Firing a command id runs
     // its pipeline (hooks apply), so toolbar / keymap / `run()` share one path.
-    this.#interactionHost = (options.interactionHost !== undefined ? options.interactionHost : ENGINE_DEFAULTS.interactionHost) ?? defaultInteractionHost();
+    this.#interactionHost = this.#options.interactionHost ?? defaultInteractionHost();
     const commandSpecs = this.commands.ids().map((id) => this.commands.get(id)!);
     const pipelineMap = assemblePipelines(plugins, commandSpecs);
     // A declared-pipeline-only name (no backing command) still needs a command
@@ -305,8 +311,6 @@ export class EditorEngine {
     this.menuItems = assembleItems(plugins, 'menuItems', coreMenuItems, coreMenuHistoryItems);
     this.statusItems = assembleStatusItems(plugins, coreStatusItems);
 
-    this.#isEditable = !(options.isReadonly !== undefined ? options.isReadonly : ENGINE_DEFAULTS.isReadonly);
-
     const doc = this.resolveInitialDoc(options, schema);
     const state = EditorState.create({
       schema,
@@ -336,9 +340,9 @@ export class EditorEngine {
       ],
     });
 
-    this.view = new EditorView(options.mount, {
+    this.view = new EditorView(mount, {
       state,
-      editable: () => this.#isEditable,
+      editable: () => this.isEditable(),
       ...readOnlyKeyboardProps,
       dispatchTransaction: (tr) => {
         const newState = this.view.state.apply(tr);
@@ -416,9 +420,38 @@ export class EditorEngine {
     this.view.dispatch(this.view.state.tr.setMeta(placeholderKey, 'refresh').setMeta('addToHistory', false));
   }
 
-  /** Replace the host modal bridge used by interactive pipeline stages. */
-  setInteractionHost(host: InteractionHost): void {
-    this.#interactionHost = host;
+  // ── Options (rulebook C-CA-39) ────────────────────────────────────────
+  /**
+   * The merged options — the construction options (minus the initial content) with every setting filled from
+   * the element's defaults and every {@link setOptions} applied. The live object, read-only: change it through
+   * `setOptions()`.
+   */
+  getOptions(): Readonly<EditorEngineOptions> {
+    return this.#options;
+  }
+
+  /**
+   * Merge `partial` into the current settings and apply only what changed, in place (no rebuild — the document,
+   * selection and undo history stay): `isReadonly` re-evaluates the view's editability, `interactionHost`
+   * swaps the dialog bridge, `labels` / `locale` / `translateCallback` redraw the empty-document placeholder
+   * (redraw your own UI). A key set to `undefined` resets it to the default. A construction-only key
+   * (`plugins`, `schema`, `host`, the initial content, …) is ignored with a warning — build a new engine.
+   */
+  setOptions(partial: Partial<EditorEngineSettings>): void {
+    const changed = new Set<keyof EditorEngineSettings>();
+    for (const key of Object.keys(partial) as (keyof EditorEngineSettings)[]) {
+      if (!SETTING_KEYS.includes(key)) {
+        initLogger.warn(`EditorEngine.setOptions(): "${String(key)}" is construction-only — ignored (build a new engine)`);
+        continue;
+      }
+      const value = partial[key] === undefined ? ENGINE_DEFAULTS[key] : partial[key];
+      if (Object.is(this.#options[key], value)) continue;
+      (this.#options as Record<string, unknown>)[key] = value;
+      changed.add(key);
+    }
+    if (changed.has('interactionHost')) this.#interactionHost = this.#options.interactionHost ?? defaultInteractionHost();
+    if (changed.has('isReadonly')) this.#applyEditable();
+    if (changed.has('labels') || changed.has('locale') || changed.has('translateCallback')) this.refreshView();
   }
 
   /** Build the PM keymap, binding each command's keys to firing its pipeline. */
@@ -431,15 +464,11 @@ export class EditorEngine {
     return keymap(bindings);
   }
 
-  /** Lock / unlock editing for a gating run, remembering the pre-lock state. */
+  /** Lock / unlock editing for a gating run (separate state — `isReadonly` is never touched). */
   #setLock(isLocked: boolean): void {
-    if (isLocked) {
-      if (this.#preLockIsEditable === undefined) this.#preLockIsEditable = this.#isEditable;
-      this.setEditable(false);
-    } else {
-      const restore = this.#preLockIsEditable ?? true;
-      this.#preLockIsEditable = undefined;
-      this.setEditable(restore);
+    if (isLocked !== this.#isLocked) {
+      this.#isLocked = isLocked;
+      this.#applyEditable();
     }
     this.events.emit('lock', { engine: this, isLocked });
   }
@@ -497,16 +526,14 @@ export class EditorEngine {
     this.view.focus();
   }
 
-  /** Whether the editor currently accepts input. */
+  /** Whether the editor currently accepts input: not `isReadonly` and not locked by a gating pipeline run. */
   isEditable(): boolean {
-    return this.#isEditable;
+    return !this.#options.isReadonly && !this.#isLocked;
   }
 
-  /** Toggle read-only. Re-evaluates the view's `editable` prop in place. */
-  setEditable(isEditable: boolean): void {
-    if (isEditable === this.#isEditable) return;
-    this.#isEditable = isEditable;
-    this.view.setProps({ editable: () => this.#isEditable });
+  /** Re-evaluate the view's `editable` prop in place. */
+  #applyEditable(): void {
+    this.view.setProps({ editable: () => this.isEditable() });
     this.#keepInactive();
   }
 

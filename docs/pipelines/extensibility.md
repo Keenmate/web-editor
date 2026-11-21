@@ -133,7 +133,7 @@ Plugins **propose** (a stage's `phase`, plus optional soft `afterIfPresent` /
 override is additive — you only name what you care about:
 
 ```ts
-new EditorEngine({
+new EditorEngine(mount, {
   plugins: [...],
   pipelines: {
     'image:browser:pick': {

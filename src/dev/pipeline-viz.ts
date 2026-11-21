@@ -421,7 +421,7 @@ let asyncPasteCtrl: AbortController | null = null;
 
 /** Lock/unlock the editor for the duration of a gating run (truly read-only + dimmed). */
 function setEditorLocked(engine: any, locked: boolean): void {
-  engine.setEditable(!locked);
+  engine.setOptions({ isReadonly: locked });
   (document.querySelector('#pv-editor-col') as HTMLElement | null)?.classList.toggle('pv-locked', locked);
 }
 
@@ -537,7 +537,7 @@ function wire(engine: any) {
       })
     );
   }
-  // Reflect the real engine lock (setEditable(false) during a gating run) as the
+  // Reflect the real engine lock (ProseMirror editable: false during a gating run) as the
   // page dim + badge — this is the engine locking itself, not a page-level trick.
   disposers.push(
     engine.events.on('lock', (e: any) => {

@@ -402,7 +402,7 @@ same document from **your own** toolbar, menus and status line (any framework). 
 for your own UI; if you just want the editor without writing UI, use `<km-editor>`.
 
 **What the engine does:** owns the ProseMirror document + view in the element you give it
-(`mount`), assembles schema, commands, keybindings, Markdown I/O and pipelines from the plugin
+(the first constructor argument), assembles schema, commands, keybindings, Markdown I/O and pipelines from the plugin
 set (`plugins`, default `defaultPlugins()`), runs commands through their pipelines
 (`engine.commands.run(id)` / `engine.run(name)`), answers command state
 (`commands.isEnabled(id)` / `isToggled(id)` / `shortcut(id)`, `get(id)` → `text` / `icon` /
@@ -417,13 +417,17 @@ shadow root; a ProseMirror surface needs at least `white-space: pre-wrap`). The 
 prompts (`insert-link`, `insert-image`, code language) open core `/dialog` prompts for you;
 interactive pipeline stages (the cloud-image picker) ask the `interactionHost` option.
 
-**Options = the element's settings**, same names and same defaults (rulebook C-CA-37):
-`isReadonly` (`false`), `labels` (`null` = English, live: `engine.labels = …`),
-`locale` (`null` = the page locale, then the browser; live: `engine.locale = …` — the `{count}` numbers
-`engine.label()` formats), `translateCallback` (`null`, live; asked before the page-wide
-`window.components.locale.translateCallback`), `interactionHost` (`null` = the core dialog),
-`plugins` (the editor plugin list, `defaultPlugins()`; raw ProseMirror plugins go in `prosemirrorPlugins`).
-Content: one of `markdown` / `html` / `json` / `doc`. The element's chrome settings
+**Settings go one way** (rulebook C-CA-39): `new EditorEngine(mount, options)` →
+`engine.setOptions(partial)` (merges into the current settings and applies only what changed, in place — the
+document and undo history stay) → `engine.getOptions()` (the merged options, read-only).
+
+**Options = the element's settings**, same names and same defaults (rulebook C-CA-37). Live through
+`setOptions()`: `isReadonly` (`false`), `labels` (`null` = English), `locale` (`null` = the page locale, then
+the browser — the `{count}` numbers `engine.label()` formats), `translateCallback` (`null`; asked before the
+page-wide `window.components.locale.translateCallback`), `interactionHost` (`null` = the core dialog). After a
+`labels` / `locale` / `translateCallback` change, redraw your own UI. Construction-only (build a new engine to
+change them): `plugins` (the editor plugin list, `defaultPlugins()`; raw ProseMirror plugins go in `prosemirrorPlugins`).
+Content: one of `markdown` / `html` / `json` / `doc` (data, not kept in `getOptions()`; later `setContent()`). The element's chrome settings
 (`toolbar`, `statusbar`, `viewMode`, `anchor`, `menu-presentation`, `renderIconCallback`,
 `renderLoadingCallback`, `beforeActionCallback`, `customStyles`, `name`, …) have no engine
 option — they configure UI the engine does not draw.
@@ -431,8 +435,7 @@ option — they configure UI the engine does not draw.
 ```js
 import { EditorEngine, labelKey } from '@keenmate/web-editor';
 
-const engine = new EditorEngine({
-  mount: document.querySelector('#surface'),
+const engine = new EditorEngine(document.querySelector('#surface'), {
   markdown: '# Hello',
   labels: { 'ariaLabels.bold': 'Tučně' },
 });
@@ -457,7 +460,7 @@ const refresh = () => {
 engine.events.on('selection-change', refresh);
 engine.events.on('change', () => save(engine.getMarkdown()));
 refresh();
-// later: engine.setEditable(false); engine.destroy();
+// later: engine.setOptions({ isReadonly: true }); engine.destroy();
 ```
 
 ## Browser support

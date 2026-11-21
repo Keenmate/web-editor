@@ -76,7 +76,7 @@ for the user (`ui.request` — a dialog is open) the run reports `waiting` inste
 dialog closes. `<km-editor>` shows its pending loader (core `renderLoader()`,
 context `'pipeline'`; replaceable via `renderLoadingCallback`) while any run is pending —
 the engine aggregates this as its `pending` event `{ isPending }` / `engine.isPending`. A pipeline with `policy.lock` **locks the surface** (a true
-`setEditable(false)`) for the whole run.
+ProseMirror `editable: false`, separate from the `isReadonly` option — `engine.isEditable()` is `false`) for the whole run.
 
 ```mermaid
 sequenceDiagram
@@ -161,7 +161,7 @@ interface InteractionHost {
 A stage passes the run's signal along: `rt.ui.request({ kind, title, signal: rt.signal })`.
 
 The default host is a core `/dialog` confirmation (OK / Cancel, the ✕ / Escape cancel; a superseded run closes it). Provide a richer one (a cloud
-picker, an image editor) with `engine.setInteractionHost(host)` — or, on the
+picker, an image editor) with `engine.setOptions({ interactionHost: host })` — or, on the
 element, `el.interactionHost = host` (survives engine rebuilds). The host **must**
 honor `ctx.signal` — a superseded run closes its open dialog. The awaited promise
 **is** the pause: `resolve` folds the result into `extra`, `halt` stops the chain.
