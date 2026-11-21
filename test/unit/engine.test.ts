@@ -174,7 +174,7 @@ describe('EditorEngine — settings one way: setOptions / getOptions (C-CA-39)',
   });
 });
 
-describe('EditorEngine — README "Build your own UI" example', () => {
+describe('EditorEngine — docs/usage.md "Build your own UI" example', () => {
   it('drives the document from an own toolbar: labels, run, enabled / toggled state, change', async () => {
     const { labelKey } = await import('../../src/labels');
     const engine = new EditorEngine(mount(), { markdown: 'hello', labels: { 'ariaLabels.bold': 'Tučně' } });
