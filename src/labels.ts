@@ -115,18 +115,22 @@ const TAG = 'km-editor';
  * `window.components.locale.translateCallback` (`null` = not mine; a throw is logged → next) → page-wide labels →
  * built-in English → `fallback` (the English text of a command / group key) → the key itself. A standalone engine
  * passes `host: null` (core resolves the same way, with `tag: 'km-editor'` and the engine's own `translateCallback`
- * option as `getTranslateCallback`).
+ * option as `getTranslateCallback`). `getLocale` = the `locale` input / engine option: a NUMBER param (`{count}`) is
+ * shown formatted for it (unset → the page-wide `window.components.locale.locale` → the browser), and it is the
+ * callbacks' `ctx.locale`.
  */
 export function createLabelResolver(
   getLabels: () => EditorLabels | null | undefined,
   host?: Element | null,
   getTranslateCallback?: () => TranslateCallback | null | undefined,
+  getLocale?: () => string | null | undefined,
 ): LabelResolver {
   // Derived keys (commands, groups) have no built-in default: the caller's fallback is theirs (per call).
   const defaults: Record<string, string> = { ...DEFAULT_LABELS };
   const labels = createLabels<Record<string, string>>(host ?? null, defaults, () => getLabels() as Record<string, string> | null, {
     tag: TAG,
     ...(getTranslateCallback ? { getTranslateCallback } : {}),
+    ...(getLocale ? { getLocale } : {}),
   });
   const isBuiltIn = (key: string): boolean => Object.prototype.hasOwnProperty.call(DEFAULT_LABELS, key);
   return (key, params, fallback, twins) => {

@@ -92,6 +92,7 @@ removing the attribute) resets an input to its default.
 | `statusbar` | `none` \| `top` \| `bottom` \| `both`           | `none`       | A dedicated strip of live indicators (word/char count, plugin items). `both` splits items across two strips. |
 | `anchor`    | CSS selector                                    | —            | For `view-mode="inline"` only: the page element the floating card tracks. |
 | `labels`    | JSON object                                     | English      | UI strings — see [Labels](#labels). Also a property (object). |
+| `locale`    | BCP-47 tag                                      | —            | The locale of the numbers the editor formats — the status-bar word / char counts (`1234` → `1,234` / `1.234` for `de` / `1 234` for `cs`) — and the `locale` a `translateCallback` gets. Unset (or `auto`): the page-wide `window.components.locale.locale`, else the browser language. UI strings are `labels`. Live. |
 | `menu-presentation` | `auto` \| `floating` \| `sheet` \| `drawer` | `auto`       | How the right-click menu opens (core `/menu`): `auto` = a bottom sheet on a phone, floating otherwise; `drawer` slides in from `menu-side`. Read at every open; responsive rules can set it (`menuPresentation`). |
 | `menu-side` | `start` \| `end`                               | `end`        | The edge a `drawer` menu slides in from. |
 | `custom-styles` | CSS string                                  | —            | CSS injected into the shadow root (`customStyles`), after the page-wide layer — see [Theming](#theming). Raw CSS: never untrusted input. |
@@ -418,7 +419,8 @@ interactive pipeline stages (the cloud-image picker) ask the `interactionHost` o
 
 **Options = the element's settings**, same names and same defaults (rulebook C-CA-37):
 `isReadonly` (`false`), `labels` (`null` = English, live: `engine.labels = …`),
-`translateCallback` (`null`, live; asked before the page-wide
+`locale` (`null` = the page locale, then the browser; live: `engine.locale = …` — the `{count}` numbers
+`engine.label()` formats), `translateCallback` (`null`, live; asked before the page-wide
 `window.components.locale.translateCallback`), `interactionHost` (`null` = the core dialog),
 `plugins` (the editor plugin list, `defaultPlugins()`; raw ProseMirror plugins go in `prosemirrorPlugins`).
 Content: one of `markdown` / `html` / `json` / `doc`. The element's chrome settings

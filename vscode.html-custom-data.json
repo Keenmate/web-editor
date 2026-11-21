@@ -77,6 +77,11 @@
           "values": [{ "name": "object" }]
         },
         {
+          "name": "locale",
+          "description": "BCP-47 locale for the numbers the editor formats — the status-bar word / char counts (`{count}` in `labels.words` / `labels.chars`: `1234` → `1,234` en / `1.234` de / `1 234` cs) — and the `locale` a `translateCallback` gets; or unset (`'auto'` / empty = unset): the page-wide `window.components.locale.locale`, else the browser language. UI strings are `labels`. Applies live (no rebuild).",
+          "values": []
+        },
+        {
           "name": "custom-styles",
           "description": "CSS injected into the editor's shadow root (a `<style class=\"we-custom-styles\">` after the page-wide `window.components['km-editor'].customStyles` layer, so it overrides it). An `@import`ed font is also linked once in the document `<head>` (core). Raw CSS — never put untrusted input here.",
           "values": []

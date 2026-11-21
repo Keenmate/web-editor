@@ -181,9 +181,10 @@ el.translateCallback = ({ key, params }) =&gt; {
     <h2>LO05 · <code>locale</code> + formatting</h2>
     <p>
         The numbers in labels — the <code>{count}</code> of <code>labels.words</code> / <code>labels.chars</code> in the status
-        bar — are formatted for the page language: <code>window.components.locale.locale</code> → the browser. The editor has no
-        <code>locale</code> input of its own and formats no dates — numbers only. A <code>translateCallback</code> gets the raw
-        number (<code>params.count === 1234</code>), so ICU / i18next plural rules work. The editor below holds 1,234 words.
+        bar — are formatted for the element's <code>locale</code> input → the page language
+        <code>window.components.locale.locale</code> → the browser. The editor formats no dates — numbers only. A
+        <code>translateCallback</code> gets the raw number (<code>params.count === 1234</code>) and the resolved
+        <code>locale</code>, so ICU / i18next plural rules work. The editor below holds 1,234 words.
     </p>
     <div class="controls"><strong class="muted">page locale</strong>
         <label><input type="radio" name="lo05-locale" value="" checked> unset (browser)</label>
@@ -191,12 +192,21 @@ el.translateCallback = ({ key, params }) =&gt; {
         <label><input type="radio" name="lo05-locale" value="cs-CZ"> cs-CZ</label>
         <label><input type="radio" name="lo05-locale" value="en-IN"> en-IN</label>
     </div>
+    <div class="controls"><strong class="muted">element <code>locale</code></strong>
+        <label><input type="radio" name="lo05-own" value="" checked> unset (page locale)</label>
+        <label><input type="radio" name="lo05-own" value="de"> locale="de"</label>
+        <label><input type="radio" name="lo05-own" value="cs"> locale="cs"</label>
+    </div>
     <div class="demo-area">
         <km-editor id="lo05" view-mode="edit" statusbar="bottom"></km-editor>
         <div class="output"><div class="output-label">status bar</div><pre id="lo05-out"></pre></div>
     </div>
     <div class="code-block" data-language="js"><pre><code>window.components.locale = { locale: 'de-DE' };
-// "Words: 1.234 / Chars: 2.467"   (cs-CZ: "1 234", en-IN: "1,234")</code></pre></div>
+// "Words: 1.234 / Chars: 2.467"   (cs-CZ: "1 234", en-IN: "1,234")
+
+// one editor, beating the page locale (unset / 'auto' = follow the page)
+&lt;km-editor locale="cs" statusbar="bottom"&gt;&lt;/km-editor&gt;
+el.locale = 'de';</code></pre></div>
 </div>
 
 <!-- ============================================================= -->
@@ -306,8 +316,15 @@ el.translateCallback = ({ key, params }) =&gt; {
         refreshAll();
     });
 
-    // ── LO05 · page locale (1,234 words).
+    // ── LO05 · page locale + the element's own `locale` (1,234 words).
     $('lo05').value = Array(1234).fill('a').join(' ');
+    for (const radio of document.querySelectorAll('input[name="lo05-own"]')) {
+        radio.addEventListener('change', (e) => {
+            if (e.target.value) $('lo05').setAttribute('locale', e.target.value);
+            else $('lo05').removeAttribute('locale');
+            refreshAll();
+        });
+    }
     for (const radio of document.querySelectorAll('input[name="lo05-locale"]')) {
         radio.addEventListener('change', (e) => { page.locale = e.target.value; applyPage(); });
     }

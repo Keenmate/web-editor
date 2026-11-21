@@ -11,6 +11,16 @@ Target: **1.0.0-rc01** (first release).
 Pre-1.0, pre-publish. Everything below is the work to date; nothing has been
 released to a registry yet.
 
+### Added — `locale` input (rulebook C-CA-38)
+
+- **`locale` input (attribute + property):** the BCP-47 locale of the numbers the editor formats — the status-bar
+  `{count}` of `labels.words` / `labels.chars` (`locale="de"`: `Words: 1.234`) — and the `locale` a
+  `translateCallback` gets. Unset (default; `'auto'` / empty = unset): the page-wide
+  `window.components.locale.locale`, else the browser language. Applies live (no rebuild), not reflected.
+- **`EditorEngine` `locale` option** (+ `getLocale` live source, `engine.locale` read live): the element's default
+  (`null`) from the same input table (C-CA-37); `<km-editor>` passes its `locale` through.
+- `examples-localization.html` LO05 has a `locale` toggle (`de` / `cs` / unset) next to the page-locale one.
+
 ### Docs — the shared localization page
 
 - **`examples-localization.html`** — the shared localization page (LO01–LO06): instance `labels` (short + full keys),

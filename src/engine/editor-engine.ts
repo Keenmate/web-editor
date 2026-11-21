@@ -139,6 +139,15 @@ export interface EditorEngineOptions {
   /** A live source of `labels`, read on every use — beats `labels` (`<km-editor>` passes its config). */
   getLabels?: () => EditorLabels | null | undefined;
   /**
+   * BCP-47 locale for the numbers the engine's labels format (the `{count}` of `labels.words` / `labels.chars`:
+   * `1234` → `1.234` for `'de'`) and the `locale` a `translateCallback` gets — `<km-editor>`'s `locale`, same
+   * default (`null` = unset: the page-wide `window.components.locale.locale`, else the browser; `'auto'` = unset).
+   * Read live: assign `engine.locale` later to switch (then redraw your UI).
+   */
+  locale?: string | null;
+  /** A live source of `locale`, read on every use — beats `locale` (`<km-editor>` passes its config). */
+  getLocale?: () => string | null | undefined;
+  /**
    * Translate a UI string for a key `getLabels` did not set (core `/locale` `TranslateCallback`:
    * `({ component, key: 'km-editor.<key>', template, params, locale }) => string | null`; `null` = not mine →
    * the next rule). Standalone, the same order as the element: instance labels → page dictionary → this → the
@@ -180,6 +189,8 @@ export class EditorEngine {
   readonly label: LabelResolver;
   /** The `labels` option, read live by {@link label} (a `getLabels` option beats it). */
   labels: EditorLabels | null;
+  /** The `locale` option, read live by {@link label} (a `getLocale` option beats it). */
+  locale: string | null;
   /** The `translateCallback` option, read live by {@link label} (standalone, or hosted when given). */
   translateCallback: TranslateCallback | null;
   view: EditorView;
@@ -203,10 +214,12 @@ export class EditorEngine {
     // Every option `<km-editor>` also has defaults like the element (one source: its input table, C-CA-37).
     this.labels = options.labels !== undefined ? options.labels : ENGINE_DEFAULTS.labels;
     this.translateCallback = options.translateCallback !== undefined ? options.translateCallback : ENGINE_DEFAULTS.translateCallback;
+    this.locale = options.locale !== undefined ? options.locale : ENGINE_DEFAULTS.locale;
     const getLabels = options.getLabels ?? (() => this.labels);
+    const getLocale = options.getLocale ?? (() => this.locale);
     // Hosted without the option: core asks the element's own `translateCallback`.
     const isOwnTranslate = !host || options.translateCallback !== undefined;
-    const label = createLabelResolver(() => getLabels(), host?.element, isOwnTranslate ? () => this.translateCallback : undefined);
+    const label = createLabelResolver(() => getLabels(), host?.element, isOwnTranslate ? () => this.translateCallback : undefined, getLocale);
     this.label = label;
     this.#ctxProto = Object.create(Object.prototype, {
       label: { value: label, enumerable: false },

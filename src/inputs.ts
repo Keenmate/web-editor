@@ -132,6 +132,16 @@ export const INPUTS: readonly InputDef[] = [
       'Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{name}` placeholders; an empty string = deliberately empty. Keys are flat `<elementType>.<name>`, short (`tooltips.bold`) or full (`km-editor.tooltips.bold`). `placeholders.document` (default empty = off) is shown while the document is empty. Command items (`<name>` = the camel-cased command id: `bold`, `insertLink`, `viewEdit`): `buttons.<name>` (a toolbar button with text), `ariaLabels.<name>` (an icon toolbar button), `menuItems.<name>` (the context menu), `tooltips.<name>`; toolbar groups `ariaLabels.<groupId>Group` (`ariaLabels.formatGroup`, …); status `labels.words` / `labels.chars` (`{count}`); prompt titles `headers.linkUrl`, `headers.imageUrl`, `headers.imageAlt`, `headers.codeLanguage` / `headers.codeLanguageChange` (`{languages}`); cloud image `ariaLabels.cloudImage`, `tooltips.cloudImage`, `menuItems.cloudImage`, `headers.cloudImagePicker`, `messages.cloudImagePicker`; context menu as a sheet / drawer `buttons.back`, `ariaLabels.close` (also the dialogs\' ✕); dialog buttons `buttons.ok`, `buttons.cancel`; split output tabs `buttons.markdownTab`, `buttons.htmlTab`, `buttons.jsonTab`; `errors.valueFormat`; the loader\'s `ariaLabels.loading`. Per key: these → the page-wide flat `window.components.locale.labels[\'km-editor.<key>\']` → English; the element\'s own `translateCallback`, then `window.components.locale.translateCallback`, translate the rest. Property (object) or JSON attribute (`labels=\'{"ariaLabels.bold":"Tučně"}\'`). Applies live (no rebuild).',
   },
   {
+    configKey: 'locale',
+    attribute: 'locale',
+    converter: toText({ isNullable: true }),
+    // The one default (`null` = unset) — `EditorEngine`'s `locale` option reads it through ENGINE_DEFAULTS.
+    default: null,
+    on: 'update',
+    description:
+      "BCP-47 locale for the numbers the editor formats — the status-bar word / char counts (`{count}` in `labels.words` / `labels.chars`: `1234` → `1,234` en / `1.234` de / `1 234` cs) — and the `locale` a `translateCallback` gets; or unset (`'auto'` / empty = unset): the page-wide `window.components.locale.locale`, else the browser language. UI strings are `labels`. Applies live (no rebuild).",
+  },
+  {
     configKey: 'translateCallback',
     converter: toFunction<TranslateCallback>(),
     default: null,
@@ -195,12 +205,13 @@ export const INPUTS: readonly InputDef[] = [
 const NO_ATTRIBUTES: AttrReader = { getAttribute: () => null, hasAttribute: () => false };
 
 /** The `<km-editor>` settings a standalone {@link EditorEngine} takes as options (same name, same meaning). */
-const ENGINE_KEYS = ['isReadonly', 'labels', 'translateCallback', 'interactionHost'] as const;
+const ENGINE_KEYS = ['isReadonly', 'labels', 'locale', 'translateCallback', 'interactionHost'] as const;
 
 /** Defaults of the settings `<km-editor>` shares with `EditorEngine` (`configKey` → value). */
 export interface EditorEngineDefaults {
   isReadonly: boolean;
   labels: EditorLabels | null;
+  locale: string | null;
   translateCallback: TranslateCallback | null;
   interactionHost: InteractionHost | null;
 }

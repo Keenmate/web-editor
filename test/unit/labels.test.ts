@@ -235,6 +235,52 @@ describe('<km-editor> labels', () => {
     }
   });
 
+  it('the `locale` input formats the status counts (beats the page locale), live; unset / auto follow the page', async () => {
+    const reg = (window as any).components;
+    try {
+      reg.locale = { locale: 'en-US' };
+      const el = await mount({ value: Array(1234).fill('word').join(' '), statusbar: 'bottom', locale: 'de' });
+      const text = (id: string) => status(el, id).textContent!.replace(/\s/g, ' ');
+      expect(el.locale).toBe('de');
+      expect(text('words')).toBe('Words: 1.234');
+      const seen: unknown[] = [];
+      el.translateCallback = ({ locale }) => { seen.push(locale); return null; };
+      await el.whenSettled();
+      expect(seen.at(-1)).toBe('de');
+      el.locale = 'cs';
+      await el.whenSettled();
+      expect(text('words')).toBe('Words: 1 234');
+      el.removeAttribute('locale');
+      await el.whenSettled();
+      expect(el.locale).toBeNull();
+      expect(text('words')).toBe('Words: 1,234'); // unset → window.components.locale.locale
+      el.setAttribute('locale', 'auto');
+      await el.whenSettled();
+      expect(text('words')).toBe('Words: 1,234'); // 'auto' = unset (core resolveLocale)
+    } finally {
+      reg.locale = null;
+    }
+  });
+
+  it('EditorEngine `locale` option: same default as the element (null), formats {count} standalone, read live', () => {
+    const reg = (window as any).components;
+    try {
+      reg.locale = { locale: 'en-US' };
+      const bare = new EditorEngine({ mount: document.createElement('div') });
+      expect(bare.locale).toBeNull();
+      expect(bare.label('labels.words', { count: 1234 })).toBe('Words: 1,234');
+      bare.destroy();
+      const engine = new EditorEngine({ mount: document.createElement('div'), locale: 'de' });
+      expect(engine.locale).toBe('de');
+      expect(engine.label('labels.words', { count: 1234 })).toBe('Words: 1.234');
+      engine.locale = null;
+      expect(engine.label('labels.words', { count: 1234 })).toBe('Words: 1,234');
+      engine.destroy();
+    } finally {
+      reg.locale = null;
+    }
+  });
+
   it('rejects a non-string value (warns, keeps the previous labels)', async () => {
     const el = await mount({ value: 'x' });
     el.labels = { 'ariaLabels.bold': 'B!' };

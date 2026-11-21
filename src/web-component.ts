@@ -104,6 +104,7 @@ export interface EditorConfig {
   statusbar: EditorStatusBar;
   anchor: string | null;
   labels: EditorLabels | null;
+  locale: string | null;
   translateCallback: TranslateCallback | null;
   beforeActionCallback: ((detail: EditorActionEventDetail) => unknown) | null;
   renderLoadingCallback: RenderLoaderCallback | null;
@@ -212,7 +213,12 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   #removeLoader?: () => void;
   // The light-DOM hidden form input (only while `name` is set).
   /** UI strings (core `/locale`: instance `labels` → page-wide labels → English). */
-  #label = createLabelResolver(() => this.config.labels as EditorLabels | null | undefined, this);
+  #label = createLabelResolver(
+    () => this.config.labels as EditorLabels | null | undefined,
+    this,
+    undefined,
+    () => this.config.locale as string | null | undefined,
+  );
   /** The light-DOM hidden input (core `createFormInputs`, SPEC §12.21). */
   #formInputs = createFormInputs(this);
   /** Whether the host is currently invalid because of a throwing `getValueFormatCallback`. */
@@ -327,7 +333,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     // native `input.value`, state assignment never fires events (suite rule).
     // UI strings are resolved on render: re-render the chrome (and the empty-document
     // placeholder) with the new labels.
-    if ('labels' in partial || 'translateCallback' in partial) this.#relabel();
+    if ('labels' in partial || 'locale' in partial || 'translateCallback' in partial) this.#relabel();
     // Item icons are drawn on render: re-render the toolbars with the new hook.
     else if ('renderIconCallback' in partial) this.#chrome?.refresh();
     if ('name' in partial || 'contentFormat' in partial || 'getValueFormatCallback' in partial) this.#syncFormInput();
@@ -336,7 +342,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     }
     if ('customStyles' in partial || 'getCustomStylesCallback' in partial) this.#customStyles?.refresh();
     // A showing pending loader re-renders with the new label / render hook.
-    if (('labels' in partial || 'translateCallback' in partial || 'renderLoadingCallback' in partial) && this.#removeLoader) {
+    if (('labels' in partial || 'locale' in partial || 'translateCallback' in partial || 'renderLoadingCallback' in partial) && this.#removeLoader) {
       this.#setPendingLoader(false);
       this.#setPendingLoader(true);
     }
@@ -414,6 +420,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
       },
       // UI strings: read live, so a `labels` change applies without a rebuild.
       getLabels: () => this.config.labels as EditorLabels | null | undefined,
+      // The `locale` input, read live the same way (the `{count}` numbers in labels).
+      getLocale: () => this.config.locale as string | null | undefined,
     };
     this.#applyContentOption(options, this.#seed.format, this.#seed.content);
 

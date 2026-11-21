@@ -71,5 +71,10 @@ test('examples-localization.html: every toggle changes the shown text', async ({
     await expect(out('lo05-out')).toHaveText('Words: 1.234 / Chars: 2.467');
     await page.locator('input[name="lo05-locale"][value="en-IN"]').check();
     await expect(out('lo05-out')).toHaveText('Words: 1,234 / Chars: 2,467');
+    // The element's own `locale` beats the page locale; unset follows it again.
+    await page.locator('input[name="lo05-own"][value="de"]').check();
+    await expect(out('lo05-out')).toHaveText('Words: 1.234 / Chars: 2.467');
+    await page.locator('input[name="lo05-own"][value=""]').check();
+    await expect(out('lo05-out')).toHaveText('Words: 1,234 / Chars: 2,467');
     expect(errors).toEqual([]);
 });

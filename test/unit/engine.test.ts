@@ -43,11 +43,12 @@ describe('EditorEngine', () => {
 describe('EditorEngine — the element settings it shares (C-CA-37)', () => {
   it("defaults come from <km-editor>'s input table", async () => {
     const { INPUTS, ENGINE_DEFAULTS } = await import('../../src/inputs');
-    expect(ENGINE_DEFAULTS).toEqual({ isReadonly: false, labels: null, translateCallback: null, interactionHost: null });
+    expect(ENGINE_DEFAULTS).toEqual({ isReadonly: false, labels: null, locale: null, translateCallback: null, interactionHost: null });
     for (const key of Object.keys(ENGINE_DEFAULTS)) expect(INPUTS.some((row) => row.configKey === key)).toBe(true);
     const engine = new EditorEngine({ mount: mount(), markdown: 'x' });
     expect(engine.isEditable()).toBe(!ENGINE_DEFAULTS.isReadonly);
     expect(engine.labels).toBe(ENGINE_DEFAULTS.labels);
+    expect(engine.locale).toBe(ENGINE_DEFAULTS.locale);
     expect(engine.translateCallback).toBe(ENGINE_DEFAULTS.translateCallback);
     expect(engine.label('buttons.ok')).toBe('OK');
     engine.destroy();
