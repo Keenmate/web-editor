@@ -41,7 +41,7 @@
         </div>
         <div class="output"><div class="output-label">rendered strings (read from the shadow root)</div><pre id="lo01-out"></pre></div>
     </div>
-    <div class="code-block" data-language="js"><pre><code>el.labels = {
+    <div class="code-block" data-language="js" data-kmwc-snippet><pre><code>el.labels = {
   'tooltips.bold': 'Tučné písmo (Ctrl+B)',      // short key
   'buttons.viewEdit': 'Upravit',
   'km-editor.labels.words': 'Slova: {count}',  // full key
@@ -79,7 +79,7 @@
         </div>
         <div class="output"><div class="output-label">rendered strings (read from the shadow root)</div><pre id="lo02-out"></pre></div>
     </div>
-    <div class="code-block" data-language="js"><pre><code>// e.g. const labels = await (await fetch('/i18n/cs.json')).json();
+    <div class="code-block" data-language="js" data-kmwc-snippet><pre><code>// e.g. const labels = await (await fetch('/i18n/cs.json')).json();
 window.components.locale = {
   labels: {
     'km-editor.ariaLabels.bold': 'Tučně',
@@ -128,7 +128,7 @@ window.components.locale = {
         </div>
         <div class="output"><div class="output-label">rendered strings (read from the shadow root)</div><pre id="lo03-out"></pre></div>
     </div>
-    <div class="code-block" data-language="js"><pre><code>// an i18next-like lookup: a dictionary + t(key, params)
+    <div class="code-block" data-language="js" data-kmwc-snippet><pre><code>// an i18next-like lookup: a dictionary + t(key, params)
 const sk = {
   'km-editor.ariaLabels.bold': 'Tučné',
   'km-editor.ariaLabels.italic': 'Kurzíva',
@@ -168,7 +168,7 @@ el.translateCallback = ({ key, params }) =&gt; {
         <km-editor id="lo04" view-mode="edit" toolbar="top" value="Hover the toolbar buttons."></km-editor>
         <div class="output"><div class="output-label">visible text / tooltip / accessible name</div><pre id="lo04-out"></pre></div>
     </div>
-    <div class="code-block" data-language="js"><pre><code>el.labels = { 'buttons.viewSplit': 'Rozdělit', 'tooltips.bold': 'Tučně' };
+    <div class="code-block" data-language="js" data-kmwc-snippet><pre><code>el.labels = { 'buttons.viewSplit': 'Rozdělit', 'tooltips.bold': 'Tučně' };
 // → the Split button reads "Rozdělit" AND its tooltip is "Rozdělit" (tooltips.viewSplit was never set)
 // → the B button's tooltip is "Tučně" AND its aria-label is "Tučně" (ariaLabels.bold was never set)
 // an explicitly set ariaLabels.x / tooltips.x always wins over the twin</code></pre></div>
@@ -201,7 +201,7 @@ el.translateCallback = ({ key, params }) =&gt; {
         <km-editor id="lo05" view-mode="edit" statusbar="bottom"></km-editor>
         <div class="output"><div class="output-label">status bar</div><pre id="lo05-out"></pre></div>
     </div>
-    <div class="code-block" data-language="js"><pre><code>window.components.locale = { locale: 'de-DE' };
+    <div class="code-block" data-language="js" data-kmwc-snippet><pre><code>window.components.locale = { locale: 'de-DE' };
 // "Words: 1.234 / Chars: 2.467"   (cs-CZ: "1 234", en-IN: "1,234")
 
 // one editor, beating the page locale (unset / 'auto' = follow the page)
