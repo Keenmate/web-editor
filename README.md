@@ -32,6 +32,8 @@ Blazor, or plain HTML.
 - 🧪 [Live examples](https://examples.web-editor.keenmate.dev) — the hosted example
   site (basic usage, rich content, plugins, the pipeline lab, and the playground).
 - 📘 [Pipelines guide](./docs/pipelines/README.md) — how pipelines work, with diagrams.
+- 🎨 [Theming](./docs/theming.md) · 🛠 [Usage — build your own UI](./docs/usage.md)
+- 📝 [Changelog](./CHANGELOG.md) — every change (pre-release: the `[Unreleased]` section).
 - 📚 [Examples guide](./EXAMPLES.md) — the example-site convention.
 
 ## Install
@@ -95,7 +97,7 @@ removing the attribute) resets an input to its default.
 | `locale`    | BCP-47 tag                                      | —            | The locale of the numbers the editor formats — the status-bar word / char counts (`1234` → `1,234` / `1.234` for `de` / `1 234` for `cs`) — and the `locale` a `translateCallback` gets. Unset (or `auto`): the page-wide `window.components.locale.locale`, else the browser language. UI strings are `labels`. Live. |
 | `menu-presentation` | `auto` \| `floating` \| `sheet` \| `drawer` | `auto`       | How the right-click menu opens (core `/menu`): `auto` = a bottom sheet on a phone, floating otherwise; `drawer` slides in from `menu-side`. Read at every open; responsive rules can set it (`menuPresentation`). |
 | `menu-side` | `start` \| `end`                               | `end`        | The edge a `drawer` menu slides in from. |
-| `custom-styles` | CSS string                                  | —            | CSS injected into the shadow root (`customStyles`), after the page-wide layer — see [Theming](#theming). Raw CSS: never untrusted input. |
+| `custom-styles` | CSS string                                  | —            | CSS injected into the shadow root (`customStyles`), after the page-wide layer — see [Theming](./docs/theming.md#custom-css-shadow-root). Raw CSS: never untrusted input. |
 
 Property-only inputs:
 
@@ -103,9 +105,9 @@ Property-only inputs:
 | ---------------------- | ---- | ----------- |
 | `getValueFormatCallback` | `(ctx) => string` | Formats the value written into the hidden form input (e.g. sanitizing); `ctx` = `{ value, contentFormat }` + `controller` / `element`. Affects only the submitted value — see [Forms](#forms). |
 | `beforeActionCallback` | `(detail) => false \| void \| Promise<…>` | Runs first on every toolbar / selection-toolbar / context-menu activation; `false` cancels (no `onClick`, no `action` event, no command). |
-| `renderLoadingCallback` | `(ctx) => void \| cleanup` | Draws the pending loader (shown while a deferred pipeline's work — e.g. a cloud-image upload — outlives its threshold; not while a dialog waits for the user) instead of the default spinner; `ctx` = `{ component, context: 'pipeline', containerElement, element, label }`. Beats the page-wide `window.components.renderLoadingCallback`. See [Theming](#theming). |
+| `renderLoadingCallback` | `(ctx) => void \| cleanup` | Draws the pending loader (shown while a deferred pipeline's work — e.g. a cloud-image upload — outlives its threshold; not while a dialog waits for the user) instead of the default spinner; `ctx` = `{ component, context: 'pipeline', containerElement, element, label }`. Beats the page-wide `window.components.renderLoadingCallback`. See [Theming](./docs/theming.md). |
 | `interactionHost`      | `{ request(ctx) }` | The modal bridge interactive pipeline stages call (`ctx` = request + `signal` + `controller` / `element`). Default: a core `/dialog` confirmation (OK / Cancel, closed when the run is superseded). Survives engine rebuilds. |
-| `getCustomStylesCallback` | `(ctx) => string \| null` | Computes the instance CSS (wins over `customStyles`); `ctx` = `controller` / `element`. See [Theming](#theming). |
+| `getCustomStylesCallback` | `(ctx) => string \| null` | Computes the instance CSS (wins over `customStyles`); `ctx` = `controller` / `element`. See [Theming](./docs/theming.md). |
 
 **Events** — bubble, not composed. Each has a camelCase twin property (`onChange`,
 `onReady`, `onViewModeChange`, `onLockChange`, `onValueFormatError`, `onAction`) called with the **same detail**
@@ -138,7 +140,7 @@ before the DOM event. Every detail carries `controller` and `element` (non-enume
 | `destroy()`               | `void`               | Core: final teardown of the engine and shadow layout (idempotent; `isDestroyed`). The element stays inert — create a new one instead of re-inserting it. |
 
 The element's own engine is not exposed on it (`el.controller` is its API); to draw your
-own editor UI, use the exported `EditorEngine` — see [Build your own UI](#build-your-own-ui).
+own editor UI, use the exported `EditorEngine` — see [Build your own UI](./docs/usage.md#build-your-own-ui).
 
 ## Labels
 
@@ -266,78 +268,17 @@ bleed in. Ship the stylesheet once:
 <link rel="stylesheet" href="@keenmate/web-editor/style.css" />
 ```
 
-**Dark mode follows the page.** Every color is a `--we-*` variable chained to the shared
-`--base-*` contract with `light-dark()` fallbacks, so the editor resolves whichever scheme its
-host is in:
-
-- **No signal** — the editor inherits the page's `color-scheme` (`html { color-scheme: light dark }`
-  follows the OS).
-- **Page signal** — `data-theme` / `data-bs-theme` / `.dark` / `.light` on `<html>` or `<body>`, a
-  `theme-source` section, or core `setThemeMode()`: core mirrors it onto the host as
-  `data-context-theme`.
-- **Per instance** — `<km-editor data-theme="dark">` (or `"light"`) wins over the page.
-
-The selection toolbar and the toolbar / status tooltips (core `createTooltip`: hover and keyboard focus,
-`--we-tooltip-bg` / `--we-tooltip-color`) are dark in both modes (the shared tooltip tokens), and code blocks
-stay dark in both (the syntax highlighting is Prism's dark theme). Re-theme with `--base-*` on
-`:root` (every Keenmate component follows), or `--we-*` on the element:
+Dark mode follows the page (its `color-scheme`, a `data-theme` / `.dark` signal, or
+`<km-editor data-theme="dark">` per instance). Re-theme with `--base-*` on `:root` (every
+Keenmate component follows) or `--we-*` on the element:
 
 ```css
 km-editor { --we-accent: #7c3aed; --we-min-height: 320px; }
 ```
 
-All variables are listed in `component-variables.manifest.json`
-(`import manifest from '@keenmate/web-editor/manifest'`).
-
-**Custom CSS (shadow root).** Page CSS can't reach inside the shadow root; inject it instead
-(core `createCustomStyles()`). Two layers, each a `<style>` in the shadow root, the instance one
-last so it wins:
-
-```js
-// every <km-editor> on the page (one file, fetched once)
-window.components['km-editor'].customStyles = "@import url('/css/editor-overrides.css');";
-// or computed per instance (wins over the page-wide customStyles)
-window.components['km-editor'].getCustomStylesCallback = ({ element }) =>
-  element.classList.contains('notes') ? '.ProseMirror { font-family: Georgia, serif; }' : null;
-```
-
-```html
-<!-- this editor only: attribute custom-styles / property customStyles, or getCustomStylesCallback(ctx) -->
-<km-editor custom-styles=".ProseMirror { letter-spacing: .02em; }"></km-editor>
-```
-
-An `@import`ed font (`@font-face`) is also linked once in the document `<head>`, since Chromium
-ignores `@font-face` inside a shadow root (`window.components.shouldHoistImports = false` turns
-that off). Custom CSS is raw — never put untrusted input there.
-
-The editor's own classes and custom properties use the `we-` prefix (`--we-bg`,
-`--we-border`, `--we-accent`, …). Disabled commands fade by `--we-disabled-opacity`
-(default `var(--base-disabled-opacity, 0.65)`). While a deferred pipeline outlives its threshold a
-loader shows in the body's top-end corner (`::part(loader)`, `role="status"`, label `loading`): the
-shared Keenmate loader, drawn from `--we-loader-icon` / `--we-loader-rotate` / `--we-loader-duration`
-/ `--we-loader-size` (each chained to `--base-loader-*`, so one page-level change restyles every
-component's loader; it slows under reduced motion). For a richer loader set `renderLoadingCallback`
-on the element or `window.components.renderLoadingCallback` for the page. Apart from that spinner
-the editor has no transitions or animations of its own; the right-click menu's motion follows core's `--km-menu-*` / `--base-duration-*`
-(`--base-duration-*: 0s` turns it off page-wide). The right-click menu is the shared Keenmate menu
-from `@keenmate/web-components-core` (`.km-menu*`, `::part(context-menu)`); restyle it
-with the `--we-context-menu-*` properties on the element — `bg`, `text-color`,
-`border`, `border-radius`, `shadow`, `min-width`, `padding`, `font-size`,
-`item-padding`, `hover-bg`, `hover-color`, `toggled-color`, `shortcut-color`,
-`danger-color`, `divider-color`, `disabled-opacity`, `z-index`.
-
-Each menu value resolves, highest precedence first: **`--we-context-menu-*`** (this
-editor) → **`--km-menu-*`** (every Keenmate menu on the page) → **`--base-*`** (theme)
-→ core's default. The `--we-context-menu-*` properties are unset by default, so a
-page-wide `--km-menu-*` reaches the editor's menu:
-
-```css
-:root { --km-menu-bg: #fffbe6; }                /* every menu on the page */
-km-editor.notes { --we-context-menu-bg: #eef; } /* just this editor's menu */
-```
-
-The list of `--km-menu-*` variables ships in core's
-`@keenmate/web-components-core/component-variables.manifest.json`.
+Dark mode, the variable manifest, custom CSS in the shadow root (`customStyles` /
+`getCustomStylesCallback`), the loader, motion and the context-menu properties:
+**[docs/theming.md](./docs/theming.md)**.
 
 ## Extending
 
@@ -398,70 +339,10 @@ design note.
 ## Build your own UI
 
 `EditorEngine` is the headless editor behind `<km-editor>` — exported so you can drive the
-same document from **your own** toolbar, menus and status line (any framework). It is a seam
-for your own UI; if you just want the editor without writing UI, use `<km-editor>`.
-
-**What the engine does:** owns the ProseMirror document + view in the element you give it
-(the first constructor argument), assembles schema, commands, keybindings, Markdown I/O and pipelines from the plugin
-set (`plugins`, default `defaultPlugins()`), runs commands through their pipelines
-(`engine.commands.run(id)` / `engine.run(name)`), answers command state
-(`commands.isEnabled(id)` / `isToggled(id)` / `shortcut(id)`, `get(id)` → `text` / `icon` /
-`tooltip`), serializes (`getMarkdown()` / `getHTML()` / `getJSON()`, `setContent(value, format)`),
-resolves UI strings (`engine.label(key, params?, fallback?)`), and emits `change`,
-`selection-change`, `lock` and `pending` on `engine.events`. The assembled item lists
-(`toolbarGroups`, `selectionItems`, `menuItems`, `statusItems`) are data for your UI.
-
-**What you draw:** every control — buttons, menus, the status line, a loader while
-`pending` is true — and the CSS of your container (the element's stylesheet targets its
-shadow root; a ProseMirror surface needs at least `white-space: pre-wrap`). The built-in
-prompts (`insert-link`, `insert-image`, code language) open core `/dialog` prompts for you;
-interactive pipeline stages (the cloud-image picker) ask the `interactionHost` option.
-
-**Settings go one way** (rulebook C-CA-39): `new EditorEngine(mount, options)` →
-`engine.setOptions(partial)` (merges into the current settings and applies only what changed, in place — the
-document and undo history stay) → `engine.getOptions()` (the merged options, read-only).
-
-**Options = the element's settings**, same names and same defaults (rulebook C-CA-37). Live through
-`setOptions()`: `isReadonly` (`false`), `labels` (`null` = English), `locale` (`null` = the page locale, then
-the browser — the `{count}` numbers `engine.label()` formats), `translateCallback` (`null`; asked before the
-page-wide `window.components.locale.translateCallback`), `interactionHost` (`null` = the core dialog). After a
-`labels` / `locale` / `translateCallback` change, redraw your own UI. Construction-only (build a new engine to
-change them): `plugins` (the editor plugin list, `defaultPlugins()`; raw ProseMirror plugins go in `prosemirrorPlugins`).
-Content: one of `markdown` / `html` / `json` / `doc` (data, not kept in `getOptions()`; later `setContent()`). The element's chrome settings
-(`toolbar`, `statusbar`, `viewMode`, `anchor`, `menu-presentation`, `renderIconCallback`,
-`renderLoadingCallback`, `beforeActionCallback`, `customStyles`, `name`, …) have no engine
-option — they configure UI the engine does not draw.
-
-```js
-import { EditorEngine, labelKey } from '@keenmate/web-editor';
-
-const engine = new EditorEngine(document.querySelector('#surface'), {
-  markdown: '# Hello',
-  labels: { 'ariaLabels.bold': 'Tučně' },
-});
-
-const bar = document.querySelector('#bar');
-const ids = ['bold', 'italic', 'bullet-list', 'undo', 'redo'];
-for (const id of ids) {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.dataset.id = id;
-  button.textContent = engine.label(`ariaLabels.${labelKey(id)}`, undefined, engine.commands.get(id)?.text ?? id);
-  button.addEventListener('mousedown', (e) => e.preventDefault()); // keep the editor selection
-  button.addEventListener('click', () => engine.commands.run(id));
-  bar.append(button);
-}
-const refresh = () => {
-  for (const button of bar.children) {
-    button.disabled = !engine.commands.isEnabled(button.dataset.id);
-    button.setAttribute('aria-pressed', String(engine.commands.isToggled(button.dataset.id)));
-  }
-};
-engine.events.on('selection-change', refresh);
-engine.events.on('change', () => save(engine.getMarkdown()));
-refresh();
-// later: engine.setOptions({ isReadonly: true }); engine.destroy();
-```
+same document from **your own** toolbar, menus and status line (any framework):
+`new EditorEngine(mount, options)` → `engine.setOptions(partial)` / `engine.getOptions()`.
+What the engine does, what you draw, its options and a minimal own-toolbar example:
+**[docs/usage.md](./docs/usage.md#build-your-own-ui)**.
 
 ## Browser support
 
@@ -482,6 +363,22 @@ The example site (hub + per-feature pages) runs on
 [`@keenmate/web-components-devkit`](https://github.com/keenmate/web-components):
 `npm run build:examples` produces the static `dist-examples/` site, and `make
 image-build` packages it with nginx. `make` lists every target.
+
+## About
+
+Authored and maintained by [Keenmate s.r.o.](https://keenmate.com/).
+The component ships standalone with sensible light/dark defaults;
+when mounted inside [Pure Admin](https://pureadmin.io/) — or any
+host that publishes the `--base-*` taxonomy via
+[`@keenmate/theme-designer`](https://www.npmjs.com/package/@keenmate/theme-designer) — it adopts the host's colors,
+typography, and sizing automatically. There is no runtime
+dependency on Pure Admin; the integration is opt-in via CSS
+variables.
+
+## Built with BlissFramework
+
+Follows the [BlissFramework component guidelines](https://blissframework.dev/)
+for structure, theming, color-scheme, and accessibility.
 
 ## License
 

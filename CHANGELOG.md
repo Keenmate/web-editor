@@ -43,6 +43,13 @@ released to a registry yet.
   default (`null`) from the same input table (C-CA-37); `<km-editor>` passes its `locale` through.
 - `examples-localization.html` LO05 has a `locale` toggle (`de` / `cs` / unset) next to the page-locale one.
 
+### Docs — README under the 400-line cap (readme-structure C-RS-2)
+
+- **"Build your own UI"** (the `EditorEngine` guide + own-toolbar example) moved to **`docs/usage.md`**; the full
+  theming guide (dark mode, variables, custom CSS, loader / motion, context-menu properties) to **`docs/theming.md`**.
+  The README keeps a short section with a link for each, and gains the canonical `## About` / `## Built with
+  BlissFramework` sections and a CHANGELOG link.
+
 ### Docs — the shared localization page
 
 - **`examples-localization.html`** — the shared localization page (LO01–LO06): instance `labels` (short + full keys),
