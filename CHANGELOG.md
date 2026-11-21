@@ -36,8 +36,11 @@ released to a registry yet.
   `{count}` of `labels.words` / `labels.chars` (`locale="de"`: `Words: 1.234`) — and the `locale` a
   `translateCallback` gets. Unset (default; `'auto'` / empty = unset): the page-wide
   `window.components.locale.locale`, else the browser language. Applies live (no rebuild), not reflected.
-- **`EditorEngine` `locale` option** (+ `getLocale` live source, `engine.locale` read live): the element's default
-  (`null`) from the same input table (C-CA-37); `<km-editor>` passes its `locale` through.
+- **The status-bar `{count}` is locale-formatted** — the counts go to core `/locale` as raw numbers, so 1234 words
+  read `Words: 1,234` in `en-US`, `1.234` in `de-DE`, `1 234` in `cs`, and a `translateCallback` receives
+  `params.count === 1234` (plural rules work).
+- **`EditorEngine` `locale` option** (live: `setOptions({ locale })`, read: `getOptions().locale`): the element's
+  default (`null`) from the same input table (C-CA-37); `<km-editor>` passes its `locale` through.
 - `examples-localization.html` LO05 has a `locale` toggle (`de` / `cs` / unset) next to the page-locale one.
 
 ### Docs — the shared localization page
@@ -47,13 +50,6 @@ released to a registry yet.
   `translateCallback` (the element's own first, then the page-wide one; instance `labels` still win), and the
   screen-reader name / tooltip following a translated caption, the status-bar counts formatted per page locale
   (LO05, a locale toggle). LO06 says why it doesn't apply (every label is text).
-
-### Fixed — locale-formatted label numbers (core 1.0.0-rc25 `/locale`)
-
-- **The status-bar `{count}` of `labels.words` / `labels.chars` follows the page locale** — the counts are passed
-  to core `/locale` as raw numbers, so 1234 words read `Words: 1,234` in `en-US`, `1.234` in `de-DE`, `1 234` in
-  `cs`, and a `translateCallback` receives `params.count === 1234` (plural rules work). Unit-tested; shown in
-  `examples-localization.html` LO05.
 
 ### Changed — BREAKING (label keys, rulebook D-NC-24 / core 1.0.0-rc25 `/locale`)
 
@@ -101,9 +97,8 @@ released to a registry yet.
   `editorPlugins` is gone, and the raw ProseMirror plugin option (was `plugins`) is now **`prosemirrorPlugins`**.
   No aliases: `new EditorEngine({ mount, editorPlugins: [...defaultPlugins(), myPlugin], plugins: [pmPlugin] })` →
   `new EditorEngine({ mount, plugins: [...defaultPlugins(), myPlugin], prosemirrorPlugins: [pmPlugin] })`.
-- New `EditorEngine` option **`labels`** (the element's `labels`, same keys, default `null` = English), also a
-  live `engine.labels` property; `engine.translateCallback` is now live too (assign it to switch). A `getLabels`
-  option (the element's live source) still beats `labels`.
+- New `EditorEngine` option **`labels`** (the element's `labels`, same keys, default `null` = English); `labels` and
+  `translateCallback` apply live through `engine.setOptions({ … })` (read back with `getOptions()`).
 - Every option the engine shares with `<km-editor>` (`isReadonly`, `labels`, `translateCallback`,
   `interactionHost`) defaults from ONE source: the element's input table moved to `src/inputs.ts` and the engine
   reads `ENGINE_DEFAULTS`, derived from its rows the way the element seeds its config. The element is unchanged.
@@ -118,7 +113,7 @@ released to a registry yet.
   `window.components.locale.translateCallback`; `null` / `undefined` = not mine → the page-wide one. Instance
   `labels` still beat both.
 - **`EditorEngine` `translateCallback` option** — a standalone engine (no `<km-editor>` host) asks it too, in
-  the element's order: `getLabels` → page dictionary → `translateCallback` → the page-wide
+  the element's order: `labels` → page dictionary → `translateCallback` → the page-wide
   `window.components.locale.translateCallback` → built-in English (`null` = not mine; a throw is logged → the
   next rule).
   The standalone path now goes through core `createLabels(null, …, { tag: 'km-editor', getTranslateCallback })`
