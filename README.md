@@ -321,7 +321,9 @@ markup (starts with `<` — an `<svg>`, an `<img>`) is inserted as-is; a built-i
 only), then the page-wide `window.components.renderIconCallback` — each returns markup, `''` = no icon,
 `null` / `undefined` = not mine (`ctx` = `{ component: 'km-editor', element, prefix: 'we', item }`); an ASCII
 class list (`'fa-solid fa-floppy-disk'`, `'bi-gear'`) is an icon font `<i class="we__icon fa-solid fa-floppy-disk"
-aria-hidden="true">`; anything else (an emoji, `'¶'`) is text.
+aria-hidden="true">`; anything else (an emoji, `'¶'`) is text. Changing `window.components.renderIconCallback`
+later repaints the icons. The icon font's CSS must reach the shadow root — load it through `customStyles` (or the
+page-wide `window.components['km-editor'].customStyles`); a stylesheet in the page `<head>` alone doesn't style it.
 
 ```js
 editor.renderIconCallback = (name) => (name === 'save' ? mySaveSvg : null); // null → the page-wide hook

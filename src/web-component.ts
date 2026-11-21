@@ -526,6 +526,15 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   }
 
   /**
+   * A page-wide `window.components.renderIconCallback` change (core, rulebook C-CA-40): the item icons
+   * (toolbar, selection toolbar) re-render in place through the chrome's state refresh — the document,
+   * selection, focus, undo history and an open menu stay. A menu renders its icons on open.
+   */
+  protected override iconsChanged(): void {
+    this.#chrome?.refresh();
+  }
+
+  /**
    * Form convention (Keenmate suite, core `createFormInputs`): a light-DOM hidden
    * input named by `name` carries the live content in `contentFormat` — the host
    * never calls `setFormValue`. No `name` → no input. Disabled (not submitted)

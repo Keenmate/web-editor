@@ -11,6 +11,12 @@ Target: **1.0.0-rc01** (first release).
 Pre-1.0, pre-publish. Everything below is the work to date; nothing has been
 released to a registry yet.
 
+### Added — icons repaint when the page-wide icon hook changes (2026-11-22)
+
+- Assigning `window.components.renderIconCallback` after the editor rendered repaints the toolbar / selection-toolbar
+  item icons in place (core `iconsChanged()`, rulebook C-CA-40) — the document, selection, focus, undo history and an
+  open menu are kept. `EditorEngine` renders no icons (your own UI draws them), so it has no icon refresh method.
+
 ### Changed — BREAKING: `EditorEngine` takes settings one way (rulebook C-CA-39)
 
 - **`new EditorEngine(mount, options)`** — the mount element is the first argument (the `mount` option is gone):
