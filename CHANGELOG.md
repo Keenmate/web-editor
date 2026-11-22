@@ -11,6 +11,17 @@ Target: **1.0.0-rc01** (first release).
 Pre-1.0, pre-publish. Everything below is the work to date; nothing has been
 released to a registry yet.
 
+### Docs — full API in docs/usage.md, + examples / accessibility guides (readme-structure C-RS-3 / C-RS-10, 2026-11-22)
+
+- The README's Options / Labels / Forms / Responsive rules / Extending sections moved to **`docs/usage.md`**
+  (attributes and properties, property-only inputs, events, methods, slots and lifecycle, labels, forms,
+  responsive rules, extending, build your own UI). The README keeps a short `## Usage` overview with links
+  (387 → 148 lines).
+- New **`docs/examples.md`** — every example page and section code (BU / RC / PP / PV / LO / PG), plus worked
+  examples (sanitized form submission, a trimmed toolbar with an own item, a live preview mirror).
+- New **`docs/accessibility.md`** — keyboard map (shortcuts, toolbar roving focus, context menu, dialogs), roles /
+  ARIA, screen-reader names, focus management, motion, and the known gaps.
+
 ### Changed — tooltips fade through core (2026-11-22)
 
 - `.we-tooltip` drops its own opacity / visibility fade (and the `.we-tooltip--visible` rule): core `createTooltip`

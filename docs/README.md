@@ -1,9 +1,14 @@
 # Documentation
 
-Guides for `@keenmate/web-editor`. (For the basics — install, attributes, events,
-methods — see the root [`README.md`](../README.md).)
+Guides for `@keenmate/web-editor`. (Install and the quick start are in the root
+[`README.md`](../README.md).)
 
-- **[Usage](./usage.md)** — the headless `EditorEngine`: build your own toolbar / menus / status line.
+- **[Usage](./usage.md)** — the full API: attributes, properties, events, methods, labels, forms,
+  responsive rules, extending (plugins, toolbar items, icons), and the headless `EditorEngine`
+  (build your own toolbar / menus / status line).
+- **[Examples](./examples.md)** — every example page and its sections, one line each.
+- **[Accessibility](./accessibility.md)** — keyboard map, roles / ARIA, accessible names, focus,
+  reduced motion.
 - **[Theming](./theming.md)** — dark mode, `--we-*` / `--base-*` variables, custom CSS in the shadow root,
   the loader, motion, the context-menu properties.
 - **[Pipelines](./pipelines/README.md)** — how the editor runs everything a user
