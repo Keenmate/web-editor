@@ -11,6 +11,13 @@ Target: **1.0.0-rc01** (first release).
 Pre-1.0, pre-publish. Everything below is the work to date; nothing has been
 released to a registry yet.
 
+### Docs — example pages follow the theme switch (kmwc doctor, 2026-11-22)
+
+- `examples-pipelines.html` (85 hard-coded colours), `examples-plugins.html` (6), `examples-content.html` (3) →
+  0: page CSS reads the kit's `--kmwc-*` tokens (the visualizer lanes keep their dark "microscope" look via the
+  console tokens; stage states = success / warning / danger); form controls take the kit's own styling instead of
+  page-local borders / backgrounds.
+
 ### Docs — example pages fit a phone (check-pages 390 / 320 px, 2026-11-22)
 
 - `examples-pipelines.html`: the visualizer's fixed `1fr 460px` columns and its own controls row → the kit's

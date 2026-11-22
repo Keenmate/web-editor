@@ -5,20 +5,19 @@
     /* The cloud-picker modal the example's InteractionHost renders — part of
        the example code (there is no shared modal). Layout only; buttons/inline
        code inherit the shared styles. */
-    .pick-modal { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: grid; place-items: center; z-index: 9999; }
-    .pick-card { background: #fff; border-radius: 12px; padding: 1.25rem; max-width: 460px; box-shadow: 0 12px 48px rgba(0,0,0,.4); }
+    .pick-modal { position: fixed; inset: 0; background: var(--kmwc-overlay-bg); display: grid; place-items: center; z-index: 9999; }
+    .pick-card { background: var(--kmwc-elevated-bg); color: var(--kmwc-text-color-1); border-radius: 12px; padding: 1.25rem; max-width: 460px; box-shadow: 0 12px 48px var(--kmwc-shadow-color); }
     .pick-title { font-weight: 700; margin-bottom: .75rem; }
     .pick-grid { display: flex; gap: .5rem; margin-bottom: .75rem; }
     .pick-grid img { width: 120px; height: 84px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
-    .pick-grid img:hover { border-color: #16a34a; }
+    .pick-grid img:hover { border-color: var(--kmwc-accent-color); }
     .pick-actions { display: flex; justify-content: flex-end; gap: .5rem; }
 
     /* PP03 crop dialog — a preview + aspect picker. Layout only; buttons use
        the shared vocabulary. */
-    .pick-grid img.sel { border-color: #16a34a; }
+    .pick-grid img.sel { border-color: var(--kmwc-accent-color); }
     .crop-prev { max-width: 100%; max-height: 220px; border-radius: 8px; display: block; margin-bottom: .75rem; }
     .crop-row { display: flex; align-items: center; gap: .5rem; margin-bottom: .75rem; font-size: 13px; }
-    .crop-row select { padding: 4px 7px; border: 1px solid #cbd5e0; border-radius: 6px; }
 </style>
 
 <!-- ============================================================= -->
