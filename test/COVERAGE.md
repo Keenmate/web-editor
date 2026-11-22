@@ -133,6 +133,8 @@ script-built `DataTransfer` arrives empty in a synthetic paste event), the liste
 | Feature | Status | Spec | Fixture |
 | --- | :-: | --- | --- |
 | Editing surface `role="textbox"` + `aria-multiline` + name (`ariaLabels.editor`, host `aria-label` / `aria-labelledby` / `<label for>` via `ariaLabelledByElements`), `aria-readonly` / `aria-disabled` following read-only / preview / disabled | ✓ | `a11y.spec.ts` | `a11y.html` |
+| Alt+F10 → selection toolbar (shown) else static toolbar; arrows rove; Enter runs; Escape → back to the text with the selection kept (a shown tooltip takes the first Escape) | ✓ | `a11y.spec.ts` | `a11y.html` |
+| Shift+F10 / ContextMenu key → context menu at the caret, first item focused; the following native `contextmenu` swallowed; off in read-only | ✓ | `a11y.spec.ts` | `a11y.html` |
 
 ## Not implemented (feature gaps — no tests)
 

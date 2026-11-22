@@ -75,6 +75,16 @@ export class SelectionToolbar {
     else this.#hide();
   }
 
+  /** The floating panel (the chrome's Escape handler listens on it). */
+  get element(): HTMLElement {
+    return this.#panel;
+  }
+
+  /** Move focus into the bar (Alt+F10) — only while it shows; `false` otherwise. */
+  focus(): boolean {
+    return this.#open && this.#popover.isOpen && this.#bar.focus();
+  }
+
   /** Close the floating bar now (e.g. the host was detached); the next `update()` may re-show it. */
   hide(): void {
     this.#hide();

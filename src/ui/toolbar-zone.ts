@@ -114,6 +114,17 @@ export class ToolbarZone {
     this.el.hidden = shown === 0;
   }
 
+  /** Focus the zone's tab stop (Alt+F10); `false` when the zone is hidden or has no enabled button. */
+  focus(): boolean {
+    if (this.el.hidden || !this.el.isConnected) return false;
+    this.#syncKeyboard();
+    const roving = this.#roving!;
+    const target = roving.current ?? this.#groups.flatMap((bar) => bar.focusableButtons())[0];
+    if (!target) return false;
+    roving.focusItem(target);
+    return true;
+  }
+
   destroy(): void {
     this.#roving?.destroy();
     this.#roving = null;

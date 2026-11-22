@@ -104,6 +104,17 @@ export class CommandBar {
     this.el.hidden = !visible;
   }
 
+  /** Focus the bar's tab stop (a standalone `'toolbar'` bar); `false` when it has no enabled button. */
+  focus(): boolean {
+    const roving = this.#roving;
+    if (!roving) return false;
+    roving.refresh();
+    const target = roving.current ?? this.focusableButtons()[0];
+    if (!target) return false;
+    roving.focusItem(target);
+    return true;
+  }
+
   destroy(): void {
     this.#roving?.destroy();
     this.el.remove();

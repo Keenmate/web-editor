@@ -21,6 +21,8 @@ first shortcut ("Bold (Ctrl+B)").
 | <kbd>Enter</kbd> | New paragraph; in a list, split the list item |
 | <kbd>Tab</kbd> / <kbd>Shift</kbd>+<kbd>Tab</kbd> | In a table: next / previous cell. In a list: nest / lift the item. Elsewhere: the browser's focus move |
 | <kbd>Mod</kbd>+<kbd>A</kbd> | Select the whole document (also while read-only) |
+| <kbd>Alt</kbd>+<kbd>F10</kbd> | Focus the selection toolbar while it shows (a text selection), else the static toolbar |
+| <kbd>Shift</kbd>+<kbd>F10</kbd> / <kbd>ContextMenu</kbd> | Open the context menu at the caret, its first item focused (not while read-only / `preview`) |
 | Backspace / Delete, arrows, Home / End | ProseMirror's base editing keys |
 
 Headings, lists, code blocks, tables and the view modes have no shortcut — use the toolbar or the
@@ -37,14 +39,24 @@ The static toolbar is **one tab stop** (roving `tabindex`) for all its groups:
 | <kbd>↑</kbd> / <kbd>↓</kbd> (`toolbar="start"` / `"end"`) | Previous / next button |
 | <kbd>Home</kbd> / <kbd>End</kbd> | First / last button |
 | <kbd>Enter</kbd> / <kbd>Space</kbd> | Activate the button |
+| <kbd>Escape</kbd> | Back to the editing surface, the selection kept (a tooltip shown on the focused button takes the first <kbd>Escape</kbd>) |
 
 Focus does not wrap at the ends; disabled buttons are skipped. Activating a command returns focus to
-the editing surface.
+the editing surface. <kbd>Alt</kbd>+<kbd>F10</kbd> from the text lands on the toolbar's current tab stop.
+
+### Selection toolbar
+
+Shown over a non-empty text selection; <kbd>Alt</kbd>+<kbd>F10</kbd> moves focus into it (the selection stays).
+Same keys as the static toolbar: one tab stop (`role="toolbar"`, roving `tabindex`), <kbd>←</kbd> / <kbd>→</kbd>,
+<kbd>Home</kbd> / <kbd>End</kbd>, <kbd>Enter</kbd> / <kbd>Space</kbd> run the command (focus returns to the text),
+<kbd>Escape</kbd> goes back to the text with the selection kept.
 
 ### Context menu
 
-Opens on the browser's `contextmenu` event over the editing surface (right click; the keyboard
-<kbd>Shift</kbd>+<kbd>F10</kbd> / Menu key where the browser raises that event). Core `/menu`:
+Opens on right click (the browser's `contextmenu` event over the editing surface) at the pointer, and on
+<kbd>Shift</kbd>+<kbd>F10</kbd> / the <kbd>ContextMenu</kbd> key at the caret with its first item focused — the
+editor handles those keys itself (the `contextmenu` event a browser may raise right after is swallowed, so the
+native menu never shows over it). Core `/menu`:
 
 | Key | Action |
 | --- | ------ |
@@ -126,10 +138,6 @@ pending loader's spin (`--we-loader-duration`, chained to `--base-loader-duratio
 
 ## Known gaps
 
-- **Selection toolbar:** no key moves focus into it — its commands are reachable by their shortcuts,
-  the static toolbar and the context menu.
-- **Context menu:** no own keyboard opener; it relies on the browser raising `contextmenu` for
-  <kbd>Shift</kbd>+<kbd>F10</kbd> / the Menu key.
 - **Announcements:** no live region — the status-bar counts and the split view's output are not announced;
   the split tabs are buttons, not a `tablist`.
 - **Loader spin:** not stopped by reduced motion.

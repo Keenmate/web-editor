@@ -19,6 +19,12 @@ released to a registry yet.
   `<label for>` (referenced through `ariaLabelledByElements` where supported, its text copied into `aria-label`)
   — else the new label **`ariaLabels.editor`** ("Rich text editor"). `EditorEngineHost` gains the optional
   `getAccessibleName()` / `isDisabled()`; `EditorEngine.refreshAttributes()` re-reads the surface attributes.
+- **Alt+F10** moves focus from the text into the selection toolbar while it shows, else into the static
+  toolbar; **Escape** in either toolbar returns to the text with the selection kept (a tooltip shown on the
+  focused button takes the first Escape).
+- **Shift+F10** / the **ContextMenu** key open the context menu at the caret with its first item focused —
+  handled by the editor itself (the browser's follow-up `contextmenu` is swallowed, so the native menu never
+  shows over it). Off while read-only / `preview`, like the right-click menu.
 
 ### Docs — example pages follow the theme switch (kmwc doctor, 2026-11-22)
 

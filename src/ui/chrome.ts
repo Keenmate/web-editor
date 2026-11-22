@@ -25,6 +25,7 @@ import type { ToolGroup, StatusItem } from './items';
 import type { EditorStatusBar } from '../web-component';
 import type { EditorToolbarEntry } from '../interaction';
 import { createActionHost, type ActionSurfaceHost } from './actions';
+import { matchesShortcut } from '@keenmate/web-components-core/actions';
 
 export interface EditorChromeOptions {
   engine: EditorEngine;
@@ -101,6 +102,34 @@ export class EditorChrome {
       delay: { show: 400 },
       cssClass: 'we-tooltip',
       visibleClass: 'we-tooltip--visible',
+    });
+
+    // Keyboard openers on the editing surface (docs/accessibility.md): Alt+F10 → the selection toolbar
+    // (while it shows), else the static toolbar; Shift+F10 / the ContextMenu key → the context menu at the
+    // caret. Escape in a toolbar → back to the text, the selection kept (the view restores it on focus).
+    const view = engine.view;
+    const onSurfaceKeydown = (event: KeyboardEvent): void => {
+      if (event.defaultPrevented || event.isComposing) return;
+      if (matchesShortcut(event, 'Alt+F10')) {
+        if (this.#selection.focus() || this.#toolbar.focus()) event.preventDefault();
+      } else if (matchesShortcut(event, 'Shift+F10') || matchesShortcut(event, 'ContextMenu')) {
+        if (this.#menu.openAtCaret()) event.preventDefault();
+      }
+    };
+    const onToolbarKeydown = (event: KeyboardEvent): void => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return;
+      // A shown tooltip takes the first Escape (core createTooltip hides it, WCAG 1.4.13); the next one leaves.
+      if (this.#tooltip.isVisible) return;
+      event.preventDefault();
+      view.focus();
+    };
+    view.dom.addEventListener('keydown', onSurfaceKeydown);
+    this.#toolbar.el.addEventListener('keydown', onToolbarKeydown);
+    this.#selection.element.addEventListener('keydown', onToolbarKeydown);
+    this.#unsubscribe.push(() => {
+      view.dom.removeEventListener('keydown', onSurfaceKeydown);
+      this.#toolbar.el.removeEventListener('keydown', onToolbarKeydown);
+      this.#selection.element.removeEventListener('keydown', onToolbarKeydown);
     });
 
     this.#unsubscribe.push(engine.events.on('selection-change', () => this.refresh()));

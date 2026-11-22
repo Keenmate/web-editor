@@ -71,6 +71,27 @@ export class ContextMenu {
     if (!enabled) this.close();
   }
 
+  /**
+   * Open the menu from the keyboard (Shift+F10 / the ContextMenu key) at the caret, its first item focused.
+   * The browser may raise its own `contextmenu` right after (on key-up) — swallowed, so the native menu
+   * never shows over ours. `false` when the menu is off (read-only / preview) or has nothing to show.
+   */
+  openAtCaret(): boolean {
+    if (!this.#enabled) return false;
+    let at = { x: 0, y: 0 };
+    try {
+      const c = this.#view.coordsAtPos(this.#view.state.selection.head);
+      at = { x: c.left, y: c.bottom };
+    } catch {
+      const r = (this.#view.dom as HTMLElement).getBoundingClientRect();
+      at = { x: r.left, y: r.top };
+    }
+    this.#open(at.x, at.y, true);
+    if (!this.#menu) return false;
+    this.#swallowNativeMenu();
+    return true;
+  }
+
   /** Close the menu (and drop its document listeners) if it is open. */
   close(): void {
     const menu = this.#menu;
@@ -80,12 +101,34 @@ export class ContextMenu {
 
   destroy(): void {
     this.#view.dom.removeEventListener('contextmenu', this.#onContextMenu);
+    this.#stopSwallowing?.();
     this.close();
   }
 
   // ── internals ─────────────────────────────────────────────────────────────
 
-  #open(x: number, y: number): void {
+  #stopSwallowing?: () => void;
+
+  /** Cancel the one browser `contextmenu` a keyboard open may be followed by (within a second). */
+  #swallowNativeMenu(): void {
+    this.#stopSwallowing?.();
+    const doc = (this.#view.dom as HTMLElement).ownerDocument;
+    const onNative = (event: Event): void => {
+      event.preventDefault();
+      event.stopPropagation();
+      stop();
+    };
+    const timer = setTimeout(() => stop(), 1000);
+    const stop = (): void => {
+      clearTimeout(timer);
+      doc.removeEventListener('contextmenu', onNative, true);
+      if (this.#stopSwallowing === stop) this.#stopSwallowing = undefined;
+    };
+    doc.addEventListener('contextmenu', onNative, true);
+    this.#stopSwallowing = stop;
+  }
+
+  #open(x: number, y: number, isKeyboard = false): void {
     this.close();
     const host = this.#host;
     const registry = host.registry;
@@ -94,6 +137,8 @@ export class ContextMenu {
       // The sheet / drawer chrome strings (submenu back button, close button) via `labels`.
       labels: { back: host.label('buttons.back'), close: host.label('ariaLabels.close') },
       at: { x, y },
+      // Opened from the keyboard: the first item takes focus (a pointer open focuses the menu itself).
+      shouldFocusFirst: isKeyboard,
       host: this.#container,
       cssClass: 'we-context-menu',
       returnFocusTo: this.#view.dom as HTMLElement,
