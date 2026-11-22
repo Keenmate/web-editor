@@ -116,8 +116,8 @@ Every name comes from `labels` (English defaults, translatable per key — see
   else its `aria-label`, else its `<label for>` / wrapping `<label>` — else `ariaLabels.editor`
   ("Rich text editor"). A label element is referenced through `ariaLabelledByElements` where the browser
   has ARIA element reflection (the label sits outside the shadow root), and its text is copied into the
-  surface's `aria-label` everywhere. Re-read on connect and on a `labels` / locale change — a label added
-  later takes effect on the next of those;
+  surface's `aria-label` everywhere. Re-read on connect, on a `labels` / locale change and whenever the
+  surface takes focus — a label added, reworded or removed later is picked up the next time it is focused;
 - the loader: `ariaLabels.loading`; the split tabs: `buttons.markdownTab` / `htmlTab` / `jsonTab`, their
   tab list `ariaLabels.outputTabs`;
   the sheet / drawer menu chrome: `buttons.back` / `ariaLabels.close`.

@@ -37,6 +37,8 @@ build (a `file:` link or a git checkout).
 
 - Clicking the element's `<label for>` / a wrapping `<label>` focuses the editing surface (it did nothing — the
   browser sends the label's click to the host, which isn't focusable). Not while disabled.
+- A `<label for>` added, reworded or removed after the editor connected now names the editing surface: the name
+  is re-read whenever the surface takes focus (before: only on connect / a `labels` change).
 
 ### Fixed — accessibility / doctor (2026-11-22)
 

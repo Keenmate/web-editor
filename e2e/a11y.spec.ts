@@ -46,6 +46,28 @@ test.describe('a11y — editing surface', () => {
         await expect(pm(page, 'dis')).not.toBeFocused();
     });
 
+    test('a <label for> added / changed / removed after connect names the surface once it takes focus', async ({ page }) => {
+        const surface = pm(page);
+        await page.evaluate(() => {
+            const label = document.createElement('label');
+            label.htmlFor = 'subject';
+            label.id = 'late';
+            label.textContent = 'Late label';
+            document.body.prepend(label);
+        });
+        await surface.focus();
+        await expect(surface).toHaveAttribute('aria-label', 'Late label');
+        await expect(editor(page).getByRole('textbox', { name: 'Late label' })).toHaveCount(1);
+        await page.evaluate(() => (document.getElementById('late')!.textContent = 'Renamed label'));
+        await surface.blur();
+        await surface.focus();
+        await expect(surface).toHaveAttribute('aria-label', 'Renamed label');
+        await page.evaluate(() => document.getElementById('late')!.remove());
+        await surface.blur();
+        await surface.focus();
+        await expect(surface).toHaveAttribute('aria-label', 'Rich text editor');
+    });
+
     test('the host aria-label / aria-labelledby name the surface', async ({ page }) => {
         await expect(pm(page, 'named')).toHaveAttribute('aria-label', 'Comment body');
         await expect(pm(page, 'byref')).toHaveAttribute('aria-label', 'External heading');

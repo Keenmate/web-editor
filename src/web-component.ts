@@ -274,6 +274,12 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
       if (e.composedPath()[0] !== this || this.isEffectivelyDisabled) return;
       this.focus();
     });
+    // The surface's name is re-read when the surface takes focus — the moment a screen reader speaks it — so a
+    // `<label for>` added / changed / removed after connect (or a changed host `id`) is picked up without a
+    // document-wide MutationObserver. Focus moves inside the chrome (toolbar, tabs) don't re-read it.
+    this.addEventListener('focusin', (e) => {
+      if (this.#engine && e.composedPath()[0] === this.#engine.view.dom) this.#syncSurfaceName();
+    });
   }
 
   // ── core lifecycle hooks ──────────────────────────────────────────────────
@@ -396,7 +402,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   /**
    * Point the surface at the host's visible label (ARIA element reflection, `ariaLabelledByElements` — the
    * label lives outside the shadow root) where the browser has it; the `aria-label` copy of its text (engine
-   * attribute) names the surface everywhere else. Re-read on connect and on a labels change.
+   * attribute) names the surface everywhere else. Re-read on connect, on a labels change and when the surface
+   * takes focus (a label added after connect).
    */
   #syncSurfaceName(): void {
     const engine = this.#engine;
