@@ -184,7 +184,7 @@ editor.getValueFormatCallback = ({ value, contentFormat }) =>
 
 Tune any input per device class or window width without app-side resize code — the shared
 `@keenmate/web-components-core` mechanism
-([SPEC §6.7](https://github.com/KeenMate/web-components-core/blob/main/docs/SPEC.md)).
+([SPEC §6.7](https://github.com/KeenMate/web-components-core/blob/prod/docs/SPEC.md)).
 A **map** has two axes, each keyed `mobile | tablet | desktop` → partial config:
 
 - `device` — what the device *is*: a touch phone (`mobile`) / tablet by capability; a mouse /
