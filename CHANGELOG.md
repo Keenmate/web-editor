@@ -45,6 +45,14 @@ build (a `file:` link or a git checkout).
   button Alt+F10 lands on (Chromium doesn't count Alt+… as keyboard interaction; the bar is marked
   `data-keyboard-focus` until focus leaves it). The manifest lists both + `--base-focused-outline` / `--base-outline-width`.
 
+### Internal — the CSS variables reach the editor tooling (2026-11-22)
+
+- `custom-elements-manifest.config.mjs` runs core's `cssVariablesFromManifestPlugin()` (like the other
+  components): the `--we-*` variables from `component-variables.manifest.json` are now `cssProperties` in
+  `custom-elements.json`, `web-types.json` and the VS Code custom-data files (CSS autocomplete). The config
+  comment and the publish command no longer claim there is no manifest / no `check:vars` step (stale since
+  the manifest landed); the publish checks run `npm run check:vars`.
+
 ### Fixed — accessibility / doctor (2026-11-22)
 
 - The pending loader keeps spinning under `motion="none"` and OS reduced motion — by design (core SPEC §12.16:

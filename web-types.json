@@ -8,7 +8,7 @@
       "elements": [
         {
           "name": "km-editor",
-          "description": "\n\n---\n\n\n### **Events:**\n - **change** - The document changed by the user (typing, toolbar, paste, …), a plugin, or `setValue()` (not `{ isSilent: true }`). Assigning `value` / `contentFormat` is silent, like a native `input.value`, and so is a form reset (like a native `form.reset()`). `detail`: `{ value, contentFormat }` — the content serialized in the active `contentFormat`. Twin: `onChange(detail)`.\n- **ready** - The editor was built and is live for the first time (once per element lifetime; core `BlissElement`). Fires right after the first build — during upgrade for a normal element, or when the `defer` gate is released (`el.release()` / removing `defer`). The host then has the `ready` attribute and matches `:state(ready)`; `el.whenReady()` resolves. `detail`: `controller` / `element`. Twin: `onReady(detail)`.\n- **view-mode-change** - The view mode was switched by anything but the app's own assignment: a view-mode toolbar item (`source: 'user'`), `setViewMode()` on the element or `controller` (`'api'`, unless `{ isSilent: true }`), or a plugin / pipeline stage through its `setViewMode` port (`'plugin'`). Assigning `viewMode` (attribute `view-mode`) is silent. `detail`: `{ viewMode, oldViewMode, source }`. Twin: `onViewModeChange(detail)`.\n- **lock-change** - A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`.\n- **value-format-error** - A `getValueFormatCallback` threw while formatting the submitted value. The hidden input then carries an empty string and the host is invalid (`customError`, message = label `valueFormatError`), so the form refuses to submit (`<form novalidate>` submits an empty string); the next successful format clears it. `detail`: `{ error, value }` (`value` = the unformatted document in `contentFormat`). Twin: `onValueFormatError(detail)`.\n- **action** - A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick` and the command (a notification after the fact; `state` is the snapshot from activation); `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`.\n- **input-rejected** - Fired when a written value is refused (core, SPEC §6): an invalid attribute or property value, or an unknown `setAttributes()` key. The element warns and keeps its previous value. Detail `{ configKey, attribute?, value, reason?, kept, source }`. Twin callback `onInputRejected`.\n\n### **Methods:**\n - **formResetCallback(): _void_** - The surrounding `<form>` was reset: restore the initial content (`defaultValue`,\nattribute `value`), like a native control — silently: a native `form.reset()`\nfires no `input` / `change`, so neither does this (the hidden input is synced).\n- **setValue(value: _string_, format: _EditorFormat_, options: _{ isSilent?: boolean }_): _void_** - Replace the document with `value`, parsed in `format` (defaults to the active\n`contentFormat`) — the controller's write path. Fires `change` unless\n`options.isSilent`; assigning `el.value` is the silent form (like a native\n`input.value`). Either way the hidden form input is synced.\n- **setViewMode(mode: _EditorViewMode_, options: _{ isSilent?: boolean }_): _void_** - Switch the view mode (`edit` | `split` | `preview` | `inline`). Fires\n`view-mode-change` (`source: 'api'`) unless `options.isSilent`; a no-op (no event)\nwhen `mode` is already active, and an invalid mode warns and keeps the current one.\nAssigning `el.viewMode` is the silent form.\n- **whenReady(): _Promise<void>_** - Resolves once the first build is live (also settles when the element is destroyed first). Never rejects.\n- **release(): _void_** - Build an element held by `defer` (SPEC §6.3), with everything assigned meanwhile.\n- **setAttributes(values: _Record<string, unknown>_): _InputRejection[]_** - Apply many inputs (by configKey or attribute name) as ONE rebuild / update. Returns the values it refused (each also fires `input-rejected`).\n- **batch(fn: _() => void_): _void_** - Run `fn` and coalesce every input change it makes into one rebuild / update.\n- **flush(): _void_** - Apply pending input writes synchronously, now (SPEC §12.7).\n- **whenSettled(): _Promise<void>_** - Resolves once every staged input change has been applied (SPEC §12.7).\n- **destroy(): _void_** - Final teardown (SPEC §6.5): the element is inert afterwards; idempotent.\n- **enableLogging(level: _LogLevelDesc_): _void_** - Set this element's own log level (default `debug`): it logs that level and above, whatever its component type or the page is set to.\n- **disableLogging(): _void_** - Silence this element (its own level = `silent`).\n- **resetLogging(): _void_** - Clear this element's own log level: it follows its component type / the page again.\n- **checkValidity(): _boolean_** - Form validity check (SPEC §6.6).\n- **reportValidity(): _boolean_** - Form validity check that reports to the user (SPEC §6.6).",
+          "description": "\n\n---\n\n\n### **Events:**\n - **change** - The document changed by the user (typing, toolbar, paste, …), a plugin, or `setValue()` (not `{ isSilent: true }`). Assigning `value` / `contentFormat` is silent, like a native `input.value`, and so is a form reset (like a native `form.reset()`). `detail`: `{ value, contentFormat }` — the content serialized in the active `contentFormat`. Twin: `onChange(detail)`.\n- **ready** - The editor was built and is live for the first time (once per element lifetime; core `BlissElement`). Fires right after the first build — during upgrade for a normal element, or when the `defer` gate is released (`el.release()` / removing `defer`). The host then has the `ready` attribute and matches `:state(ready)`; `el.whenReady()` resolves. `detail`: `controller` / `element`. Twin: `onReady(detail)`.\n- **view-mode-change** - The view mode was switched by anything but the app's own assignment: a view-mode toolbar item (`source: 'user'`), `setViewMode()` on the element or `controller` (`'api'`, unless `{ isSilent: true }`), or a plugin / pipeline stage through its `setViewMode` port (`'plugin'`). Assigning `viewMode` (attribute `view-mode`) is silent. `detail`: `{ viewMode, oldViewMode, source }`. Twin: `onViewModeChange(detail)`.\n- **lock-change** - A gating pipeline (e.g. the cloud-image `image:browser:pick`) locked the editor for its run, or released it. `detail`: `{ isLocked }`. Twin: `onLockChange(detail)`.\n- **value-format-error** - A `getValueFormatCallback` threw while formatting the submitted value. The hidden input then carries an empty string and the host is invalid (`customError`, message = label `valueFormatError`), so the form refuses to submit (`<form novalidate>` submits an empty string); the next successful format clears it. `detail`: `{ error, value }` (`value` = the unformatted document in `contentFormat`). Twin: `onValueFormatError(detail)`.\n- **action** - A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick` and the command (a notification after the fact; `state` is the snapshot from activation); `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`.\n- **input-rejected** - Fired when a written value is refused (core, SPEC §6): an invalid attribute or property value, or an unknown `setAttributes()` key. The element warns and keeps its previous value. Detail `{ configKey, attribute?, value, reason?, kept, source }`. Twin callback `onInputRejected`.\n\n### **Methods:**\n - **formResetCallback(): _void_** - The surrounding `<form>` was reset: restore the initial content (`defaultValue`,\nattribute `value`), like a native control — silently: a native `form.reset()`\nfires no `input` / `change`, so neither does this (the hidden input is synced).\n- **setValue(value: _string_, format: _EditorFormat_, options: _{ isSilent?: boolean }_): _void_** - Replace the document with `value`, parsed in `format` (defaults to the active\n`contentFormat`) — the controller's write path. Fires `change` unless\n`options.isSilent`; assigning `el.value` is the silent form (like a native\n`input.value`). Either way the hidden form input is synced.\n- **setViewMode(mode: _EditorViewMode_, options: _{ isSilent?: boolean }_): _void_** - Switch the view mode (`edit` | `split` | `preview` | `inline`). Fires\n`view-mode-change` (`source: 'api'`) unless `options.isSilent`; a no-op (no event)\nwhen `mode` is already active, and an invalid mode warns and keeps the current one.\nAssigning `el.viewMode` is the silent form.\n- **whenReady(): _Promise<void>_** - Resolves once the first build is live (also settles when the element is destroyed first). Never rejects.\n- **release(): _void_** - Build an element held by `defer` (SPEC §6.3), with everything assigned meanwhile.\n- **setAttributes(values: _Record<string, unknown>_): _InputRejection[]_** - Apply many inputs (by configKey or attribute name) as ONE rebuild / update. Returns the values it refused (each also fires `input-rejected`).\n- **batch(fn: _() => void_): _void_** - Run `fn` and coalesce every input change it makes into one rebuild / update.\n- **flush(): _void_** - Apply pending input writes synchronously, now (SPEC §12.7).\n- **whenSettled(): _Promise<void>_** - Resolves once every staged input change has been applied (SPEC §12.7).\n- **destroy(): _void_** - Final teardown (SPEC §6.5): the element is inert afterwards; idempotent.\n- **enableLogging(level: _LogLevelDesc_): _void_** - Set this element's own log level (default `debug`): it logs that level and above, whatever its component type or the page is set to.\n- **disableLogging(): _void_** - Silence this element (its own level = `silent`).\n- **resetLogging(): _void_** - Clear this element's own log level: it follows its component type / the page again.\n- **checkValidity(): _boolean_** - Form validity check (SPEC §6.6).\n- **reportValidity(): _boolean_** - Form validity check that reports to the user (SPEC §6.6).\n\n### **CSS Properties:**\n - **--we-radius** - Corner radius of the frame, output panel, inline card and floating panels _(default: undefined)_\n- **--we-gap** - Gap between the editor and the live output in split view _(default: undefined)_\n- **--we-min-height** - Minimum height of the editor frame and body _(default: undefined)_\n- **--we-font-family** - Editor font _(default: undefined)_\n- **--we-accent** - Accent: toggled commands (both toolbars), pending loader; --we-selected-outline-color follows it _(default: undefined)_\n- **--we-text-on-accent** - Text on the accent fill (toggled commands) — black or white, whichever reads better _(default: undefined)_\n- **--we-text-color** - Body text _(default: undefined)_\n- **--we-muted-fg** - Muted text: status bar, empty-document placeholder _(default: undefined)_\n- **--we-bg** - Editing surface and output panel background; the derived surfaces follow it _(default: undefined)_\n- **--we-muted-bg** - Raised strips: zone toolbar, status bar, output tabs, table headers, preview surface _(default: undefined)_\n- **--we-hover-bg** - Hover overlay of toolbar commands and output tabs _(default: undefined)_\n- **--we-border** - Frame, dividers, group separators, table cell borders, image hover outline _(default: undefined)_\n- **--we-danger** - Destructive commands _(default: undefined)_\n- **--we-shadow-color** - Shadow tone of the inline card and the floating panels _(default: undefined)_\n- **--we-selection-toolbar-bg** - Selection-toolbar pill background — a dark pill in both modes (tooltip tokens) _(default: undefined)_\n- **--we-selection-toolbar-color** - Selection-toolbar pill text; its hover and separator are mixes of it _(default: undefined)_\n- **--we-tooltip-bg** - Toolbar button / status item tooltip background (core createTooltip; the shared tooltip tokens) _(default: undefined)_\n- **--we-tooltip-color** - Toolbar button / status item tooltip text _(default: undefined)_\n- **--we-tooltip-z-index** - Tooltip stacking (core Z_INDEX tooltip tier) _(default: undefined)_\n- **--we-popover-z-index** - Stacking of the inline-mode card over the page and of the selection toolbar (core Z_INDEX popover tier) _(default: undefined)_\n- **--we-link-color** - Links in the document _(default: undefined)_\n- **--we-link-color-hover** - Hovered links _(default: undefined)_\n- **--we-focus-outline** - Keyboard focus ring (:focus-visible) of toolbar / selection-toolbar buttons, output tabs, output panel _(default: undefined)_\n- **--we-focus-outline-offset** - Offset of the focus ring around a button / output tab (the output panel's is inset) _(default: undefined)_\n- **--we-selected-outline-color** - Outline of a selected node (image, …), selected-cell border, column-resize handle _(default: undefined)_\n- **--we-selected-cell-bg** - Selected table cells _(default: undefined)_\n- **--we-inline-code-bg** - Inline code background _(default: undefined)_\n- **--we-inline-code-color** - Inline code text _(default: undefined)_\n- **--we-code-block-bg** - Code block background — the same in both modes on purpose (Prism's dark \"tomorrow\" highlighting) _(default: undefined)_\n- **--we-code-block-color** - Code block text — the same in both modes on purpose _(default: undefined)_\n- **--we-code-block-label-color** - Code block language label — the same in both modes on purpose _(default: undefined)_\n- **--we-code-toolbar-label-color** - Code toolbar label — the same in both modes on purpose _(default: undefined)_\n- **--we-disabled-opacity** - Fade of disabled toolbar / selection-toolbar commands _(default: undefined)_\n- **--we-loader-icon** - Pending loader glyph (a mask tinted by the accent) _(default: undefined)_\n- **--we-loader-rotate** - Pending loader rotation per cycle (0 for a self-animating SVG) _(default: undefined)_\n- **--we-loader-duration** - Pending loader spin duration _(default: undefined)_\n- **--we-loader-size** - Pending loader size _(default: undefined)_\n- **--we-context-menu-z-index** - Context menu: stacking (unset: --km-menu-z-index, then the --base-* theme, then core's default) _(default: undefined)_\n- **--we-context-menu-bg** - Context menu: background (unset: --km-menu-bg, then the --base-* theme, then core's default) _(default: undefined)_\n- **--we-context-menu-text-color** - Context menu: item text (unset: --km-menu-text-color, then the --base-* theme, then core's default) _(default: undefined)_\n- **--we-context-menu-border** - Context menu: border (unset: --km-menu-border, then the --base-* theme, then core's default) _(default: undefined)_\n- **--we-context-menu-border-radius** - Context menu: corner radius (unset: --km-menu-border-radius, then the --base-* theme, then core's default) _(default: undefined)_\n- **--we-context-menu-shadow** - Context menu: shadow (unset: --km-menu-shadow, then the --base-* theme, then core's default) _(default: undefined)_\n- **--we-context-menu-min-width** - Context menu: minimum width (unset: --km-menu-min-width, then the --base-* theme, then core's default) _(default: undefined)_\n- **--we-context-menu-padding** - Context menu: padding (unset: --km-menu-padding, then the --base-* theme, then core's default) _(default: undefined)_\n- **--we-context-menu-font-size** - Context menu: font size (unset: --km-menu-font-size, then the --base-* theme, then core's default) _(default: undefined)_\n- **--we-context-menu-item-padding** - Context menu: item padding (unset: --km-menu-item-padding, then the --base-* theme, then core's default) _(default: undefined)_\n- **--we-context-menu-hover-bg** - Context menu: hovered item background (unset: --km-menu-hover-bg, then the --base-* theme, then core's default) _(default: undefined)_\n- **--we-context-menu-hover-color** - Context menu: hovered item text (unset: --km-menu-hover-color, then the --base-* theme, then core's default) _(default: undefined)_\n- **--we-context-menu-toggled-color** - Context menu: toggled item check / text (unset: --km-menu-toggled-color, then the --base-* theme, then core's default) _(default: undefined)_\n- **--we-context-menu-shortcut-color** - Context menu: shortcut hint text (unset: --km-menu-shortcut-color, then the --base-* theme, then core's default) _(default: undefined)_\n- **--we-context-menu-danger-color** - Context menu: destructive item text (unset: --km-menu-danger-color, then the --base-* theme, then core's default) _(default: undefined)_\n- **--we-context-menu-divider-color** - Context menu: divider (unset: --km-menu-divider-color, then the --base-* theme, then core's default) _(default: undefined)_\n- **--we-context-menu-disabled-opacity** - Context menu: disabled item fade (unset: --km-menu-disabled-opacity, then the --base-* theme, then core's default) _(default: undefined)_",
           "doc-url": "",
           "attributes": [
             {
@@ -382,7 +382,203 @@
       ]
     },
     "css": {
-      "properties": [],
+      "properties": [
+        {
+          "name": "--we-radius",
+          "description": "Corner radius of the frame, output panel, inline card and floating panels"
+        },
+        {
+          "name": "--we-gap",
+          "description": "Gap between the editor and the live output in split view"
+        },
+        {
+          "name": "--we-min-height",
+          "description": "Minimum height of the editor frame and body"
+        },
+        { "name": "--we-font-family", "description": "Editor font" },
+        {
+          "name": "--we-accent",
+          "description": "Accent: toggled commands (both toolbars), pending loader; --we-selected-outline-color follows it"
+        },
+        {
+          "name": "--we-text-on-accent",
+          "description": "Text on the accent fill (toggled commands) — black or white, whichever reads better"
+        },
+        { "name": "--we-text-color", "description": "Body text" },
+        {
+          "name": "--we-muted-fg",
+          "description": "Muted text: status bar, empty-document placeholder"
+        },
+        {
+          "name": "--we-bg",
+          "description": "Editing surface and output panel background; the derived surfaces follow it"
+        },
+        {
+          "name": "--we-muted-bg",
+          "description": "Raised strips: zone toolbar, status bar, output tabs, table headers, preview surface"
+        },
+        {
+          "name": "--we-hover-bg",
+          "description": "Hover overlay of toolbar commands and output tabs"
+        },
+        {
+          "name": "--we-border",
+          "description": "Frame, dividers, group separators, table cell borders, image hover outline"
+        },
+        { "name": "--we-danger", "description": "Destructive commands" },
+        {
+          "name": "--we-shadow-color",
+          "description": "Shadow tone of the inline card and the floating panels"
+        },
+        {
+          "name": "--we-selection-toolbar-bg",
+          "description": "Selection-toolbar pill background — a dark pill in both modes (tooltip tokens)"
+        },
+        {
+          "name": "--we-selection-toolbar-color",
+          "description": "Selection-toolbar pill text; its hover and separator are mixes of it"
+        },
+        {
+          "name": "--we-tooltip-bg",
+          "description": "Toolbar button / status item tooltip background (core createTooltip; the shared tooltip tokens)"
+        },
+        {
+          "name": "--we-tooltip-color",
+          "description": "Toolbar button / status item tooltip text"
+        },
+        {
+          "name": "--we-tooltip-z-index",
+          "description": "Tooltip stacking (core Z_INDEX tooltip tier)"
+        },
+        {
+          "name": "--we-popover-z-index",
+          "description": "Stacking of the inline-mode card over the page and of the selection toolbar (core Z_INDEX popover tier)"
+        },
+        { "name": "--we-link-color", "description": "Links in the document" },
+        { "name": "--we-link-color-hover", "description": "Hovered links" },
+        {
+          "name": "--we-focus-outline",
+          "description": "Keyboard focus ring (:focus-visible) of toolbar / selection-toolbar buttons, output tabs, output panel"
+        },
+        {
+          "name": "--we-focus-outline-offset",
+          "description": "Offset of the focus ring around a button / output tab (the output panel's is inset)"
+        },
+        {
+          "name": "--we-selected-outline-color",
+          "description": "Outline of a selected node (image, …), selected-cell border, column-resize handle"
+        },
+        {
+          "name": "--we-selected-cell-bg",
+          "description": "Selected table cells"
+        },
+        {
+          "name": "--we-inline-code-bg",
+          "description": "Inline code background"
+        },
+        { "name": "--we-inline-code-color", "description": "Inline code text" },
+        {
+          "name": "--we-code-block-bg",
+          "description": "Code block background — the same in both modes on purpose (Prism's dark \"tomorrow\" highlighting)"
+        },
+        {
+          "name": "--we-code-block-color",
+          "description": "Code block text — the same in both modes on purpose"
+        },
+        {
+          "name": "--we-code-block-label-color",
+          "description": "Code block language label — the same in both modes on purpose"
+        },
+        {
+          "name": "--we-code-toolbar-label-color",
+          "description": "Code toolbar label — the same in both modes on purpose"
+        },
+        {
+          "name": "--we-disabled-opacity",
+          "description": "Fade of disabled toolbar / selection-toolbar commands"
+        },
+        {
+          "name": "--we-loader-icon",
+          "description": "Pending loader glyph (a mask tinted by the accent)"
+        },
+        {
+          "name": "--we-loader-rotate",
+          "description": "Pending loader rotation per cycle (0 for a self-animating SVG)"
+        },
+        {
+          "name": "--we-loader-duration",
+          "description": "Pending loader spin duration"
+        },
+        { "name": "--we-loader-size", "description": "Pending loader size" },
+        {
+          "name": "--we-context-menu-z-index",
+          "description": "Context menu: stacking (unset: --km-menu-z-index, then the --base-* theme, then core's default)"
+        },
+        {
+          "name": "--we-context-menu-bg",
+          "description": "Context menu: background (unset: --km-menu-bg, then the --base-* theme, then core's default)"
+        },
+        {
+          "name": "--we-context-menu-text-color",
+          "description": "Context menu: item text (unset: --km-menu-text-color, then the --base-* theme, then core's default)"
+        },
+        {
+          "name": "--we-context-menu-border",
+          "description": "Context menu: border (unset: --km-menu-border, then the --base-* theme, then core's default)"
+        },
+        {
+          "name": "--we-context-menu-border-radius",
+          "description": "Context menu: corner radius (unset: --km-menu-border-radius, then the --base-* theme, then core's default)"
+        },
+        {
+          "name": "--we-context-menu-shadow",
+          "description": "Context menu: shadow (unset: --km-menu-shadow, then the --base-* theme, then core's default)"
+        },
+        {
+          "name": "--we-context-menu-min-width",
+          "description": "Context menu: minimum width (unset: --km-menu-min-width, then the --base-* theme, then core's default)"
+        },
+        {
+          "name": "--we-context-menu-padding",
+          "description": "Context menu: padding (unset: --km-menu-padding, then the --base-* theme, then core's default)"
+        },
+        {
+          "name": "--we-context-menu-font-size",
+          "description": "Context menu: font size (unset: --km-menu-font-size, then the --base-* theme, then core's default)"
+        },
+        {
+          "name": "--we-context-menu-item-padding",
+          "description": "Context menu: item padding (unset: --km-menu-item-padding, then the --base-* theme, then core's default)"
+        },
+        {
+          "name": "--we-context-menu-hover-bg",
+          "description": "Context menu: hovered item background (unset: --km-menu-hover-bg, then the --base-* theme, then core's default)"
+        },
+        {
+          "name": "--we-context-menu-hover-color",
+          "description": "Context menu: hovered item text (unset: --km-menu-hover-color, then the --base-* theme, then core's default)"
+        },
+        {
+          "name": "--we-context-menu-toggled-color",
+          "description": "Context menu: toggled item check / text (unset: --km-menu-toggled-color, then the --base-* theme, then core's default)"
+        },
+        {
+          "name": "--we-context-menu-shortcut-color",
+          "description": "Context menu: shortcut hint text (unset: --km-menu-shortcut-color, then the --base-* theme, then core's default)"
+        },
+        {
+          "name": "--we-context-menu-danger-color",
+          "description": "Context menu: destructive item text (unset: --km-menu-danger-color, then the --base-* theme, then core's default)"
+        },
+        {
+          "name": "--we-context-menu-divider-color",
+          "description": "Context menu: divider (unset: --km-menu-divider-color, then the --base-* theme, then core's default)"
+        },
+        {
+          "name": "--we-context-menu-disabled-opacity",
+          "description": "Context menu: disabled item fade (unset: --km-menu-disabled-opacity, then the --base-* theme, then core's default)"
+        }
+      ],
       "pseudo-elements": []
     }
   }

@@ -1,6 +1,269 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vscode-css-languageservice/main/docs/customData.schema.json",
   "version": 1.1,
-  "properties": [],
+  "properties": [
+    {
+      "name": "--we-radius",
+      "description": "Corner radius of the frame, output panel, inline card and floating panels",
+      "values": []
+    },
+    {
+      "name": "--we-gap",
+      "description": "Gap between the editor and the live output in split view",
+      "values": []
+    },
+    {
+      "name": "--we-min-height",
+      "description": "Minimum height of the editor frame and body",
+      "values": []
+    },
+    { "name": "--we-font-family", "description": "Editor font", "values": [] },
+    {
+      "name": "--we-accent",
+      "description": "Accent: toggled commands (both toolbars), pending loader; --we-selected-outline-color follows it",
+      "values": []
+    },
+    {
+      "name": "--we-text-on-accent",
+      "description": "Text on the accent fill (toggled commands) — black or white, whichever reads better",
+      "values": []
+    },
+    { "name": "--we-text-color", "description": "Body text", "values": [] },
+    {
+      "name": "--we-muted-fg",
+      "description": "Muted text: status bar, empty-document placeholder",
+      "values": []
+    },
+    {
+      "name": "--we-bg",
+      "description": "Editing surface and output panel background; the derived surfaces follow it",
+      "values": []
+    },
+    {
+      "name": "--we-muted-bg",
+      "description": "Raised strips: zone toolbar, status bar, output tabs, table headers, preview surface",
+      "values": []
+    },
+    {
+      "name": "--we-hover-bg",
+      "description": "Hover overlay of toolbar commands and output tabs",
+      "values": []
+    },
+    {
+      "name": "--we-border",
+      "description": "Frame, dividers, group separators, table cell borders, image hover outline",
+      "values": []
+    },
+    {
+      "name": "--we-danger",
+      "description": "Destructive commands",
+      "values": []
+    },
+    {
+      "name": "--we-shadow-color",
+      "description": "Shadow tone of the inline card and the floating panels",
+      "values": []
+    },
+    {
+      "name": "--we-selection-toolbar-bg",
+      "description": "Selection-toolbar pill background — a dark pill in both modes (tooltip tokens)",
+      "values": []
+    },
+    {
+      "name": "--we-selection-toolbar-color",
+      "description": "Selection-toolbar pill text; its hover and separator are mixes of it",
+      "values": []
+    },
+    {
+      "name": "--we-tooltip-bg",
+      "description": "Toolbar button / status item tooltip background (core createTooltip; the shared tooltip tokens)",
+      "values": []
+    },
+    {
+      "name": "--we-tooltip-color",
+      "description": "Toolbar button / status item tooltip text",
+      "values": []
+    },
+    {
+      "name": "--we-tooltip-z-index",
+      "description": "Tooltip stacking (core Z_INDEX tooltip tier)",
+      "values": []
+    },
+    {
+      "name": "--we-popover-z-index",
+      "description": "Stacking of the inline-mode card over the page and of the selection toolbar (core Z_INDEX popover tier)",
+      "values": []
+    },
+    {
+      "name": "--we-link-color",
+      "description": "Links in the document",
+      "values": []
+    },
+    {
+      "name": "--we-link-color-hover",
+      "description": "Hovered links",
+      "values": []
+    },
+    {
+      "name": "--we-focus-outline",
+      "description": "Keyboard focus ring (:focus-visible) of toolbar / selection-toolbar buttons, output tabs, output panel",
+      "values": []
+    },
+    {
+      "name": "--we-focus-outline-offset",
+      "description": "Offset of the focus ring around a button / output tab (the output panel's is inset)",
+      "values": []
+    },
+    {
+      "name": "--we-selected-outline-color",
+      "description": "Outline of a selected node (image, …), selected-cell border, column-resize handle",
+      "values": []
+    },
+    {
+      "name": "--we-selected-cell-bg",
+      "description": "Selected table cells",
+      "values": []
+    },
+    {
+      "name": "--we-inline-code-bg",
+      "description": "Inline code background",
+      "values": []
+    },
+    {
+      "name": "--we-inline-code-color",
+      "description": "Inline code text",
+      "values": []
+    },
+    {
+      "name": "--we-code-block-bg",
+      "description": "Code block background — the same in both modes on purpose (Prism's dark \"tomorrow\" highlighting)",
+      "values": []
+    },
+    {
+      "name": "--we-code-block-color",
+      "description": "Code block text — the same in both modes on purpose",
+      "values": []
+    },
+    {
+      "name": "--we-code-block-label-color",
+      "description": "Code block language label — the same in both modes on purpose",
+      "values": []
+    },
+    {
+      "name": "--we-code-toolbar-label-color",
+      "description": "Code toolbar label — the same in both modes on purpose",
+      "values": []
+    },
+    {
+      "name": "--we-disabled-opacity",
+      "description": "Fade of disabled toolbar / selection-toolbar commands",
+      "values": []
+    },
+    {
+      "name": "--we-loader-icon",
+      "description": "Pending loader glyph (a mask tinted by the accent)",
+      "values": []
+    },
+    {
+      "name": "--we-loader-rotate",
+      "description": "Pending loader rotation per cycle (0 for a self-animating SVG)",
+      "values": []
+    },
+    {
+      "name": "--we-loader-duration",
+      "description": "Pending loader spin duration",
+      "values": []
+    },
+    {
+      "name": "--we-loader-size",
+      "description": "Pending loader size",
+      "values": []
+    },
+    {
+      "name": "--we-context-menu-z-index",
+      "description": "Context menu: stacking (unset: --km-menu-z-index, then the --base-* theme, then core's default)",
+      "values": []
+    },
+    {
+      "name": "--we-context-menu-bg",
+      "description": "Context menu: background (unset: --km-menu-bg, then the --base-* theme, then core's default)",
+      "values": []
+    },
+    {
+      "name": "--we-context-menu-text-color",
+      "description": "Context menu: item text (unset: --km-menu-text-color, then the --base-* theme, then core's default)",
+      "values": []
+    },
+    {
+      "name": "--we-context-menu-border",
+      "description": "Context menu: border (unset: --km-menu-border, then the --base-* theme, then core's default)",
+      "values": []
+    },
+    {
+      "name": "--we-context-menu-border-radius",
+      "description": "Context menu: corner radius (unset: --km-menu-border-radius, then the --base-* theme, then core's default)",
+      "values": []
+    },
+    {
+      "name": "--we-context-menu-shadow",
+      "description": "Context menu: shadow (unset: --km-menu-shadow, then the --base-* theme, then core's default)",
+      "values": []
+    },
+    {
+      "name": "--we-context-menu-min-width",
+      "description": "Context menu: minimum width (unset: --km-menu-min-width, then the --base-* theme, then core's default)",
+      "values": []
+    },
+    {
+      "name": "--we-context-menu-padding",
+      "description": "Context menu: padding (unset: --km-menu-padding, then the --base-* theme, then core's default)",
+      "values": []
+    },
+    {
+      "name": "--we-context-menu-font-size",
+      "description": "Context menu: font size (unset: --km-menu-font-size, then the --base-* theme, then core's default)",
+      "values": []
+    },
+    {
+      "name": "--we-context-menu-item-padding",
+      "description": "Context menu: item padding (unset: --km-menu-item-padding, then the --base-* theme, then core's default)",
+      "values": []
+    },
+    {
+      "name": "--we-context-menu-hover-bg",
+      "description": "Context menu: hovered item background (unset: --km-menu-hover-bg, then the --base-* theme, then core's default)",
+      "values": []
+    },
+    {
+      "name": "--we-context-menu-hover-color",
+      "description": "Context menu: hovered item text (unset: --km-menu-hover-color, then the --base-* theme, then core's default)",
+      "values": []
+    },
+    {
+      "name": "--we-context-menu-toggled-color",
+      "description": "Context menu: toggled item check / text (unset: --km-menu-toggled-color, then the --base-* theme, then core's default)",
+      "values": []
+    },
+    {
+      "name": "--we-context-menu-shortcut-color",
+      "description": "Context menu: shortcut hint text (unset: --km-menu-shortcut-color, then the --base-* theme, then core's default)",
+      "values": []
+    },
+    {
+      "name": "--we-context-menu-danger-color",
+      "description": "Context menu: destructive item text (unset: --km-menu-danger-color, then the --base-* theme, then core's default)",
+      "values": []
+    },
+    {
+      "name": "--we-context-menu-divider-color",
+      "description": "Context menu: divider (unset: --km-menu-divider-color, then the --base-* theme, then core's default)",
+      "values": []
+    },
+    {
+      "name": "--we-context-menu-disabled-opacity",
+      "description": "Context menu: disabled item fade (unset: --km-menu-disabled-opacity, then the --base-* theme, then core's default)",
+      "values": []
+    }
+  ],
   "pseudoElements": []
 }
