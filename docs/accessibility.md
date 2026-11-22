@@ -122,6 +122,20 @@ Every name comes from `labels` (English defaults, translatable per key — see
   tab list `ariaLabels.outputTabs`;
   the sheet / drawer menu chrome: `buttons.back` / `ariaLabels.close`.
 
+## Announcements
+
+Screen-reader announcements go through core `announce()` — the page's one polite live region (shared by
+every Keenmate component). Only explicit actions are announced, never typing:
+
+| When | Text (`labels` key; `''` silences it) |
+| ---- | ------------------------------------- |
+| The view mode switches with a `view-mode-change` event (a view-mode toolbar button, `setViewMode()`, a plugin) — not a plain `viewMode` assignment or `setViewMode(…, { isSilent: true })` | `ariaLabels.viewModeEdit` / `viewModeSplit` / `viewModePreview` / `viewModeInline` ("Edit view" / "Split view" / "Preview" / "Inline view") |
+
+Deliberately **not** announced: the status-bar counts (words / characters) — they change on every keystroke,
+so the status bar is no live region (read it by navigating to it); the split view's output — it follows every
+edit; the selected output tab is conveyed by `aria-selected`. A running pipeline's loader is its own
+`role="status"` (named by `ariaLabels.loading`).
+
 ## Focus management
 
 - `el.focus()` / `controller.focus()` focus the editing surface (after applying pending writes).
@@ -141,7 +155,6 @@ pending loader's spin (`--we-loader-duration`, chained to `--base-loader-duratio
 
 ## Known gaps
 
-- **Announcements:** no live region — the status-bar counts and the split view's output are not announced.
 - **Loader spin:** not stopped by reduced motion.
 - No automated axe audit; the keyboard / ARIA behaviour above is covered by the e2e specs
   (`toolbar`, `context-menu`, `readonly`, `formatting`, `history`, `links`, `tables`, `lists`, `loader`, `modes`).

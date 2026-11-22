@@ -136,6 +136,7 @@ script-built `DataTransfer` arrives empty in a synthetic paste event), the liste
 | Alt+F10 → selection toolbar (shown) else static toolbar; arrows rove; Enter runs; Escape → back to the text with the selection kept (a shown tooltip takes the first Escape) | ✓ | `a11y.spec.ts` | `a11y.html` |
 | Shift+F10 / ContextMenu key → context menu at the caret, first item focused; the following native `contextmenu` swallowed; off in read-only | ✓ | `a11y.spec.ts` | `a11y.html` |
 | Split view output tabs: `tablist` / `tab` / `tabpanel` (`aria-selected`, `aria-controls`, `aria-labelledby`, name `ariaLabels.outputTabs`), one tab stop, arrows / Home / End select (wrapping), click selects | ✓ | `a11y.spec.ts` | `a11y.html` |
+| Announcements (core `announce()`): a view-mode switch with an event (toolbar, `setViewMode()`) is announced, a plain `viewMode` assignment is not; `labels` reword / `''` silences; the status bar is no live region, typing announces nothing | ✓ | `a11y.spec.ts` | `a11y.html` |
 
 ## Not implemented (feature gaps — no tests)
 

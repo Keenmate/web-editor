@@ -33,6 +33,7 @@ import {
   createCustomStyles,
   renderLoader,
   createFormInputs,
+  announce,
   type CustomStylesCallback,
   type CustomStylesHandle,
   type EventDef,
@@ -168,6 +169,14 @@ const EVENTS: readonly EventDef[] = [
       'A toolbar / selection-toolbar / context-menu item was activated. `detail`: `action` (the command name, or `custom`), `id`, `item`, `source` (`toolbar` | `selection-toolbar` | `context-menu`), `sourceEvent`, `triggerElement`, `dataset`, `state` (the ProseMirror state). Fires after the item’s `onClick` and the command (a notification after the fact; `state` is the snapshot from activation); `beforeActionCallback` → `false` cancels. Keyboard shortcuts do not fire it. Twin: `onAction(detail)`.',
   },
 ];
+
+/** The `labels` key announced when the view mode switches (with a `view-mode-change` event). */
+const VIEW_MODE_ANNOUNCEMENTS: Record<EditorViewMode, string> = {
+  edit: 'ariaLabels.viewModeEdit',
+  split: 'ariaLabels.viewModeSplit',
+  preview: 'ariaLabels.viewModePreview',
+  inline: 'ariaLabels.viewModeInline',
+};
 
 /** Element → its live engine. Internal: backs {@link getEditorEngine}. */
 const engines = new WeakMap<KmEditorElement, EditorEngine>();
@@ -809,6 +818,9 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     this.flush();
     if (this.config.viewMode !== mode || isSilent) return;
     this.emit('view-mode-change', { viewMode: mode, oldViewMode, source });
+    // Screen readers hear the switch (the layout changed under them); '' silences it.
+    const spoken = this.#label(VIEW_MODE_ANNOUNCEMENTS[mode]);
+    if (spoken) announce(spoken, { document: this.ownerDocument });
   }
 
   /**

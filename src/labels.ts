@@ -71,6 +71,12 @@ export const DEFAULT_LABELS = {
   'buttons.markdownTab': 'Markdown',
   'buttons.htmlTab': 'HTML',
   'buttons.jsonTab': 'JSON',
+  /** Screen-reader announcements (core `announce()`, the page's polite live region) when the view mode
+   * switches with a `view-mode-change` event — not on a plain `viewMode` assignment. `''` silences one. */
+  'ariaLabels.viewModeEdit': 'Edit view',
+  'ariaLabels.viewModeSplit': 'Split view',
+  'ariaLabels.viewModePreview': 'Preview',
+  'ariaLabels.viewModeInline': 'Inline view',
   /** Split view: the output tab list's accessible name. */
   'ariaLabels.outputTabs': 'Output format',
   /** Context menu as a sheet / drawer (`menu-presentation`): the submenu back button + the ✕ close button

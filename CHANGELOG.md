@@ -28,6 +28,11 @@ released to a registry yet.
 - The split view's output tabs are a WAI-ARIA **tab list** (`role="tablist"` / `tab` / `tabpanel`,
   `aria-selected`, `aria-controls`, `aria-labelledby`): one tab stop, arrows (wrapping) / Home / End move and
   select (core `createRovingFocus`); the panel is focusable. New label **`ariaLabels.outputTabs`** ("Output format").
+- Screen-reader **announcements** through core `announce()`: a view-mode switch that fires `view-mode-change`
+  (toolbar, `setViewMode()`, a plugin) says "Edit view" / "Split view" / "Preview" / "Inline view" (new labels
+  `ariaLabels.viewModeEdit` / `viewModeSplit` / `viewModePreview` / `viewModeInline`; `''` silences one). The
+  status-bar counts are deliberately not a live region (no announcement per keystroke) — docs/accessibility.md →
+  Announcements lists what is and isn't announced.
 
 ### Docs — example pages follow the theme switch (kmwc doctor, 2026-11-22)
 

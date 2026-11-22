@@ -188,3 +188,39 @@ test.describe('a11y — split view tabs', () => {
         await expect(tab(page, 'markdown')).toHaveAttribute('aria-selected', 'false');
     });
 });
+
+test.describe('a11y — announcements', () => {
+    test.beforeEach(async ({ page }) => load(page, 'a11y.html', { flag: 'fixtureReady' }));
+
+    const region = (page: Page) => page.locator('[data-km-announcer="polite"]');
+
+    test('a view-mode switch is announced (core announce()); a plain viewMode assignment is not', async ({ page }) => {
+        await page.locator('km-editor#subject .we-toolbar-zone [data-action="view-split"]').click();
+        await expect(region(page)).toHaveText('Split view');
+        await page.evaluate(() => (document.getElementById('subject') as any).setViewMode('preview'));
+        await expect(region(page)).toHaveText('Preview');
+        await page.evaluate(() => ((document.getElementById('subject') as any).viewMode = 'edit'));
+        await page.waitForTimeout(200);
+        await expect(region(page)).toHaveText('Preview');
+    });
+
+    test("labels can reword or silence it ('')", async ({ page }) => {
+        await page.evaluate(() => ((document.getElementById('subject') as any).labels = { 'ariaLabels.viewModeSplit': '' , 'ariaLabels.viewModeEdit': 'Editing' }));
+        await page.evaluate(() => (document.getElementById('subject') as any).setViewMode('split'));
+        await page.waitForTimeout(200);
+        await expect(region(page)).toHaveCount(0);
+        await page.evaluate(() => (document.getElementById('subject') as any).setViewMode('edit'));
+        await expect(region(page)).toHaveText('Editing');
+    });
+
+    test('the status bar is not a live region — typing announces nothing', async ({ page }) => {
+        const bar = page.locator('km-editor#subject .we-statusbar').first();
+        await expect(bar).toBeVisible();
+        await expect(bar).not.toHaveAttribute('aria-live', /.*/);
+        await expect(bar).not.toHaveAttribute('role', /.*/);
+        await caretAfter(page, 'plain');
+        await page.keyboard.type(' more');
+        await page.waitForTimeout(200);
+        await expect(page.locator('[data-km-announcer]')).toHaveCount(0);
+    });
+});
