@@ -1,5 +1,5 @@
 <meta name="kmwc:title" content="Basic Usage">
-<meta name="kmwc:subtitle" content="The shipped <code>&lt;km-editor&gt;</code> element — each input as ONE live editor you drive with control switches: view mode &amp; read-only, the I/O format lens, toolbar &amp; status-bar placement, theme, and a declarative no-JavaScript setup.">
+<meta name="kmwc:subtitle" content="The shipped <code>&lt;km-editor&gt;</code> element — each input as ONE live editor you drive with control switches: view mode &amp; read-only, the I/O format lens, toolbar &amp; status-bar placement, theme, and a declarative no-JavaScript setup, and a required field in a form.">
 <meta name="kmwc:body-class" content="dark-output">
 
 <!-- ============================================================= -->
@@ -233,6 +233,51 @@ This editor was set up entirely in **HTML** — no script wired it.
         <km-editor id="eb08a" statusbar="bottom" value="Select a word and press **Ctrl+K**."></km-editor>
         <km-editor id="eb08b" statusbar="bottom" labels='{"ariaLabels.bold":"Fett"}' value="This one has its own **bold** label."></km-editor>
     </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- BU09 · Required + validation                                    -->
+<!-- ============================================================= -->
+<div class="card">
+    <h2>BU09 · Required + Validation</h2>
+    <p>
+        <code>required</code> blocks the submit while the document has no content — no text after trimming
+        whitespace and no image, table or other non-text node (<code>validity.valueMissing</code>, message
+        <code>errors.required</code>). The host gets <code>aria-required</code> and <code>:state(required)</code>; a
+        read-only or disabled editor is never missing. Submit empty (or with only spaces), then type something:
+        the browser shows its bubble on the editing surface.
+    </p>
+    <kmwc-demo>
+        <form id="eb09-form" novalidate>
+            <km-editor id="eb09" name="body" required toolbar="none" labels='{"placeholders.document":"Write something…"}'></km-editor>
+            <div class="form-actions">
+                <button type="submit">Submit</button>
+                <button type="reset">Reset</button>
+            </div>
+        </form>
+        <div class="output" id="eb09-status"></div>
+        <script type="module" data-kmwc-show>
+            const form = document.getElementById('eb09-form')
+            const editor = document.getElementById('eb09')
+            const status = document.getElementById('eb09-status')
+
+            const flags = ['valueMissing', 'customError']
+            const show = async () => {
+                await editor.whenSettled()
+                const set = flags.filter((f) => editor.validity[f])
+                status.textContent = `validity: ${set.join(' / ') || 'valid'} — ${editor.validationMessage || '(no message)'}`
+            }
+
+            // novalidate + reportValidity(): the native bubble, and the submit stays in the page.
+            form.addEventListener('submit', (e) => {
+                e.preventDefault()
+                if (form.reportValidity()) status.textContent = `submitted ${editor.value.length} character(s)`
+            })
+            form.addEventListener('reset', () => setTimeout(show))
+            editor.addEventListener('change', show)
+            editor.whenReady().then(show)
+        </script>
+    </kmwc-demo>
 </div>
 
 <!-- Page wiring: bind each card's control switches to its editor. -->

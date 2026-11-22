@@ -532,7 +532,8 @@ export class EditorEngine {
   /**
    * The editing surface's ARIA (WAI-ARIA textbox): `role="textbox"` + `aria-multiline`, an accessible name
    * (the host's, else `ariaLabels.editor`), `aria-readonly` while not editable (read-only, preview, a gating
-   * lock) or `aria-disabled` while the host is disabled. `tabindex="0"` keeps a read-only surface focusable.
+   * lock) or `aria-disabled` while the host is disabled, `aria-required` while the host has `required`.
+   * `tabindex="0"` keeps a read-only surface focusable.
    * Re-read on every view update; {@link refreshAttributes} re-reads them without one.
    */
   #surfaceAttributes(): Record<string, string> {
@@ -545,10 +546,13 @@ export class EditorEngine {
     };
     if (host?.isDisabled?.()) attrs['aria-disabled'] = 'true';
     else if (!this.isEditable()) attrs['aria-readonly'] = 'true';
+    // A `required` host (the reflected attribute, like a native control's): the textbox says so too — the
+    // host's own `aria-required` (core, ElementInternals) isn't on the element that takes focus.
+    if (host?.element.hasAttribute('required')) attrs['aria-required'] = 'true';
     return attrs;
   }
 
-  /** Re-read the editing surface's attributes (accessible name, read-only / disabled state) — no transaction. */
+  /** Re-read the editing surface's attributes (accessible name, read-only / disabled / required state) — no transaction. */
   refreshAttributes(): void {
     this.view.setProps({});
   }

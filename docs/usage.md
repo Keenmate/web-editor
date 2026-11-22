@@ -27,6 +27,7 @@ removing the attribute) resets an input to its default.
 | `view-mode` | `edit` \| `split` \| `preview` \| `inline`      | `edit`       | Presentation. `preview` forces read-only. `inline` renders a floating card (see `anchor`). Assigning is silent; `setViewMode()` and the toolbar's Edit / Split / Preview items fire `view-mode-change`. |
 | `readonly`  | boolean                                         | `false`      | Read-only (`isReadonly`): the content can't change, the editing toolbar groups are hidden (the view-mode group stays), but it stays focusable (in the tab order) / selectable / copyable (Ctrl/⌘+A selects the document). `view-mode="preview"` also forces this on. Reflects. |
 | `disabled`  | boolean                                         | `false`      | Disabled (`isDisabled`): no interaction — not editable, focusable or selectable (the surface is `inert`). An ancestor `<fieldset disabled>` disables it too. Reflects, like a native control. |
+| `required`  | boolean                                         | `false`      | Required (`isRequired`): while the document has no content, the form validity is `valueMissing` and the `<form>` refuses to submit — see [Required and validation](#required-and-validation). Never missing while read-only or disabled. Reflects, like a native control. |
 | `toolbar`   | `top` \| `bottom` \| `start` \| `end` \| `none` | `top`        | Which edge the command toolbar docks to (`none` hides it). Its last group, at the far end, is the view-mode radio group — `view-edit` / `view-split` / `view-preview` (`Edit` / `Split` / `Preview`; toggled = the active mode; not shown in `inline`). While read-only / `preview` only that group shows; disabled hides the toolbar. The selection toolbar and context menu are always available while editing. |
 | `statusbar` | `none` \| `top` \| `bottom` \| `both`           | `none`       | A dedicated strip of live indicators (word/char count, plugin items). `both` splits items across two strips. |
 | `anchor`    | CSS selector                                    | —            | For `view-mode="inline"` only: the page element the floating card tracks. |
@@ -145,6 +146,7 @@ editor.translateCallback = ({ key, params }) => (i18next.exists(key) ? i18next.t
 | `ariaLabels.editor` | `Rich text editor` — the editing surface's accessible name when the element has none of its own (`aria-labelledby`, `aria-label`, a `<label for>`) |
 | `ariaLabels.loading` | `aria-label` of the pending loader ("Loading…") |
 | `errors.valueFormat` | validation message while `getValueFormatCallback` throws ("The value could not be formatted.") |
+| `errors.required` | validation message (`valueMissing`) while a `required` editor has no content ("This field is required.") |
 
 Plugin code resolves strings with `label(key, params?, fallback?)` — on the plugin
 builder ctx (`commands: ({ schema, label }) => …`), on every callback ctx (`ctx.label`)
@@ -179,6 +181,34 @@ The next successful format clears it. The standard `el.validity` / `validationMe
 editor.getValueFormatCallback = ({ value, contentFormat }) =>
   contentFormat === 'html' ? DOMPurify.sanitize(value) : value;
 ```
+
+### Required and validation
+
+`required` (`isRequired`) works like a native control's: while the editor has **no content** the host is
+invalid with `validity.valueMissing` (message = label `errors.required`, "This field is required."), the
+`<form>` refuses to submit and `invalid` fires on the editor. "No content" = no text after trimming whitespace
+**and** no non-text node — an image, a table (even with empty cells), a horizontal rule or another node a plugin
+adds counts as content; empty headings, list items, quotes, code blocks and line breaks don't. Typing, `value`,
+`setValue()` and a form reset re-check it at once.
+
+A **read-only** (`readonly`, not `view-mode="preview"`) or **disabled** (`disabled`, `<fieldset disabled>`)
+editor is never missing, like a native control. The host gets `aria-required` and matches `:state(required)`
+(the native `:required` doesn't match a custom element); the editing surface (`role="textbox"`) says
+`aria-required="true"` too. `reportValidity()` points the browser's bubble at the editing surface.
+
+```html
+<form>
+  <km-editor name="body" required labels='{"errors.required":"Write the message first."}'></km-editor>
+  <button>Send</button>
+</form>
+```
+
+```css
+km-editor:state(required) { border-inline-start: 3px solid currentColor; }
+```
+
+`el.validity` / `validationMessage` / `checkValidity()` / `reportValidity()` and `:invalid` are core's; a
+throwing `getValueFormatCallback` (above) is a separate flag (`customError`) — both can be set at once.
 
 ## Responsive rules
 

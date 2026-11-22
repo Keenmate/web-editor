@@ -25,6 +25,7 @@ test, an issue or a doc can point at it. The full API is in [usage.md](./usage.m
 - **BU06 · Custom CSS** — page-wide `window.components['km-editor'].customStyles` + instance `custom-styles`.
 - **BU07 · Disabled / Readonly States** — `disabled` (inert) vs `readonly` (focusable, selectable).
 - **BU08 · Labels & Page-wide Locale** — instance `labels` vs `window.components.locale.labels`.
+- **BU09 · Required + Validation** — `required` in a `<form>`: the native bubble on submit, a live `validity` / `validationMessage` line.
 
 **Rich content** — `examples-content.html`
 

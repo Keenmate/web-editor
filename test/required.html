@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>km-editor — required</title>
+</head>
+<body>
+    <!-- Targeted by e2e/required.spec.ts: `required` → valueMissing (core SPEC §6.6, rulebook C-CA-41). -->
+    <form id="form">
+        <km-editor id="subject" name="body" required></km-editor>
+        <button id="submit" type="submit">Submit</button>
+        <button id="reset" type="reset">Reset</button>
+    </form>
+    <form id="form2">
+        <km-editor id="seeded" name="notes" required value="# Seeded"></km-editor>
+    </form>
+
+    <script type="module">
+        import '/src/index.ts';
+        // Submission probe: count submits, never navigate.
+        window.submits = 0;
+        document.getElementById('form').addEventListener('submit', (e) => { e.preventDefault(); window.submits++; });
+        window.fixtureReady = true;
+    </script>
+</body>
+</html>

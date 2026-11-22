@@ -91,7 +91,7 @@ Read-only and `preview` editors show the browser's own menu instead.
 | Tooltip | core tooltip (`role="tooltip"`), wired as `aria-describedby` while shown; buttons carry no `title` |
 | Selection toolbar | `role="toolbar"` (horizontal), shown for a non-empty text selection while editable |
 | Context menu | `role="menu"`; items `menuitem`, toggles `menuitemcheckbox` + `aria-checked`, disabled `aria-disabled` |
-| Editing surface | ProseMirror `contenteditable` (`true` / `false`), `tabindex="0"`, `role="textbox"` + `aria-multiline="true"` + an accessible name (see below); `aria-readonly="true"` while not editable (read-only, `preview`, a gating pipeline lock), `aria-disabled="true"` while disabled; `aria-placeholder` while empty (from `placeholders.document`) |
+| Editing surface | ProseMirror `contenteditable` (`true` / `false`), `tabindex="0"`, `role="textbox"` + `aria-multiline="true"` + an accessible name (see below); `aria-readonly="true"` while not editable (read-only, `preview`, a gating pipeline lock), `aria-disabled="true"` while disabled; `aria-required="true"` while the host has `required` (the host itself also gets `aria-required` + `:state(required)` from core); `aria-placeholder` while empty (from `placeholders.document`) |
 | Split view output | `role="tablist"` (`aria-label` = `ariaLabels.outputTabs`) of `role="tab"` buttons (`aria-selected`, `aria-controls`, roving `tabindex`) over one `role="tabpanel"` (`aria-labelledby` the selected tab, `tabindex="0"`) |
 | Pending loader | `role="status"` + `aria-label` (`ariaLabels.loading`) |
 | Dialogs | core `/dialog` — modal, titled by the prompt header (`headers.*`) |

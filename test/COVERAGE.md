@@ -36,6 +36,7 @@ script-built `DataTransfer` arrives empty in a synthetic paste event), the liste
 | Form reset → `defaultValue` (silent: no `change`); `<fieldset disabled>` excludes it | ✓ | `form.spec.ts` | `form.html` |
 | Form: `getValueFormatCallback` formats the submitted value only (`el.value` unchanged); a throw submits `''`, marks the host invalid (submit blocked, `invalid` fires; `novalidate` submits `''`), fires `value-format-error`; a working callback recovers | ✓ | `form.spec.ts`, unit `web-component.test.ts` | `form.html` |
 | Empty document by default; `labels` `placeholders.document` while empty | ✓ | `form.spec.ts` | `form.html` |
+| `required`: empty (no non-whitespace text, no image / table / other non-text node) → `valueMissing` (`errors.required`), submit blocked; typing / `value` clears it, deleting / form reset brings it back; read-only / disabled / `<fieldset disabled>` → valid; `:state(required)` + `aria-required` + reflected attribute; bubble anchored on the surface (also after a `plugins` swap) | ✓ | `required.spec.ts`, unit `placeholder.test.ts` | `required.html` |
 
 ## 2. Lifecycle
 

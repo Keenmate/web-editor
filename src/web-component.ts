@@ -7,6 +7,7 @@
  * Reactivity (per input `on:`):
  *   - `reinit` — content source changed (`defaultValue`, attribute `value`) → rebuild the engine.
  *   - `update` — `viewMode` / `isReadonly` / `isDisabled` (via `disabledChanged()`) / `contentFormat` / `interactionHost`
+ *                / `isRequired` (core re-evaluates `valueMissing` after every flush; content changes call `refreshRequired()`)
  *                → patch in place (toggle editable, reflect the attribute,
  *                re-report content, swap the modal bridge).
  *
@@ -45,6 +46,7 @@ import {
 import type { Command } from 'prosemirror-state';
 import { EditorEngine, type EditorEngineOptions } from './engine/editor-engine';
 import { defaultPlugins } from './engine/default-plugins';
+import { isDocBlank } from './engine/placeholder';
 import type { InteractionHost } from './engine/pipeline/types';
 import type { EditorPlugin } from './engine/plugin';
 import type { SerializationFormat } from './engine/serialization';
@@ -100,6 +102,7 @@ export interface EditorConfig {
   viewMode: EditorViewMode;
   isReadonly: boolean;
   isDisabled: boolean;
+  isRequired: boolean;
   toolbar: EditorToolbar;
   statusbar: EditorStatusBar;
   anchor: string | null;
@@ -196,7 +199,7 @@ export function getEditorEngine(el: KmEditorElement): EditorEngine | null {
 export class KmEditorElement extends BlissElement<EditorEventMap, EditorController> {
   protected static override inputs = INPUTS;
   protected static override events = EVENTS;
-  /** Form-associated for `<fieldset disabled>` (core `isEffectivelyDisabled`) and `el.form`. */
+  /** Form-associated for `<fieldset disabled>` (core `isEffectivelyDisabled`), `el.form` and the form validity (`required`). */
   static formAssociated = true;
 
   // Type-only: core installs the managed accessors at runtime (§12.5). Each
@@ -351,6 +354,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     if ('isReadonly' in partial || 'viewMode' in partial || 'toolbar' in partial || 'statusbar' in partial) {
       this.#applyChromeState();
     }
+    // `required` → the surface's `aria-required` (core handles validity, `:state(required)`, the host's ARIA).
+    if ('isRequired' in partial) this.#engine?.refreshAttributes();
     // Assigning `viewMode` / `contentFormat` (property or attribute) is silent — like a
     // native `input.value`, state assignment never fires events (suite rule).
     // UI strings are resolved on render: re-render the chrome (and the empty-document
@@ -500,6 +505,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     const offChange = engine.events.on('change', () => {
       this.#layout.refreshOutput();
       this.#syncFormInput();
+      this.refreshRequired(); // `required`: the content changed (user, setValue, value property, form reset)
       if (!this.#isSilentChange) this.emit('change', this.#changeDetail());
     });
     const offLock = engine.events.on('lock', ({ isLocked }) => this.emit('lock-change', { isLocked }));
@@ -511,6 +517,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     };
     this.#layout.refreshOutput(); // initial fill (engine now exists)
     this.#syncFormInput();
+    // A `plugins` swap rebuilds outside a flush: re-point `valueMissing` at the new surface (the old one is gone).
+    this.refreshRequired();
 
     // Command-driven chrome (zone toolbar + status bar + selection toolbar +
     // context menu). Bound to this engine's view/registry and the lists it
@@ -583,6 +591,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   /** A page-wide `window.components.locale` change (core `/locale`): the strings re-resolve. */
   protected override localeChanged(): void {
     this.#relabel();
+    this.refreshRequired(); // the `errors.required` message re-resolves
     if (this.#removeLoader) {
       this.#setPendingLoader(false);
       this.#setPendingLoader(true);
@@ -637,6 +646,22 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     }
     this.#clearFormatError();
     return formatted;
+  }
+
+  /** `required` (core SPEC §6.6): empty = no content — no non-whitespace text and no non-text node (image, table, …). */
+  protected override isValueEmpty(): boolean {
+    const engine = this.#engine;
+    return !engine || isDocBlank(engine.view.state.doc);
+  }
+
+  /** The `valueMissing` message — the `errors.required` label. */
+  protected override getRequiredMessage(): string {
+    return this.#label('errors.required');
+  }
+
+  /** The validation bubble points at the editing surface (the `contenteditable`); no engine → the host. */
+  protected override getValidityAnchor(): HTMLElement | undefined {
+    return (this.#engine?.view.dom as HTMLElement | undefined) ?? undefined;
   }
 
   #clearFormatError(): void {

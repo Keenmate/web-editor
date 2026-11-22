@@ -65,6 +65,8 @@ export const DEFAULT_LABELS = {
   'messages.cloudImagePicker': 'Pick an image to insert.',
   /** Validation message while a throwing `getValueFormatCallback` keeps the field invalid. */
   'errors.valueFormat': 'The value could not be formatted.',
+  /** Validation message (`valueMissing`) while a `required` editor has no content (whitespace only counts as none). */
+  'errors.required': 'This field is required.',
   /** Accessible label (`aria-label`) of the pending loader shown while a deferred pipeline runs. */
   'ariaLabels.loading': 'Loading…',
   /** Split view: the output tabs. */

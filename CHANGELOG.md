@@ -10,6 +10,16 @@ The first release — nothing has been published to npm before it. Everything be
 BREAKING entries record changes made during development and only matter to code written against an unpublished
 build (a `file:` link or a git checkout).
 
+### Added — `required` through core validity (rulebook C-CA-41, core 1.0.0-rc25, 2026-11-22)
+
+- **`required`** (`isRequired`, boolean, reflects): while the document has no content — no text after trimming
+  whitespace and no non-text node (image, table, horizontal rule, a plugin's node) — the host is invalid with
+  `validity.valueMissing` and the surrounding `<form>` refuses to submit. New label **`errors.required`** ("This
+  field is required."). Read-only / disabled (incl. `<fieldset disabled>`) are never missing; core adds
+  `aria-required` + `:state(required)` on the host, the editing surface gets `aria-required="true"`, and
+  `reportValidity()` anchors the bubble on the surface. Re-checked on every content change (typing, `value`,
+  `setValue()`, form reset) and after a `plugins` swap. Example BU09, docs/usage.md → Required and validation.
+
 ### Added — accessibility (2026-11-22)
 
 - The editing surface is a WAI-ARIA textbox: `role="textbox"` + `aria-multiline="true"`, `aria-readonly="true"`
