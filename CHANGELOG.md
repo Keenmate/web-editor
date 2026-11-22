@@ -10,6 +10,23 @@ The first release — nothing has been published to npm before it. Everything be
 BREAKING entries record changes made during development and only matter to code written against an unpublished
 build (a `file:` link or a git checkout).
 
+### Changed — BREAKING — labels read the spot's context, `{ctx.*}` (rulebook D-NC-24, 2026-11-23)
+
+- **A dynamic label passes its values as `{ ctx }`**, so the templates read dotted paths: `labels.words` /
+  `labels.chars` are `Words: {ctx.count}` / `Chars: {ctx.count}` (was `{count}`), `headers.codeLanguage` /
+  `headers.codeLanguageChange` are `Enter language ({ctx.languages})` / `Change language ({ctx.languages})` (was
+  `{languages}`). A bare `{count}` / `{languages}` in your `labels` or page dictionary is no longer filled (no alias).
+  `ctx.count` is the number the text's noun agrees with (words / characters), so an app's i18n can pluralize; the
+  number is still shown formatted for the `locale`.
+- A `translateCallback` gets the context as **`params.ctx`** (`params.ctx.count`, raw number), not flat `params.count`;
+  an i18next bridge is `t(key, { ...params, count: params.ctx?.count })`.
+- New exported types `StatusCountLabelContext` (`{ count }`) and `CodeLanguageLabelContext` (`{ languages, language? }`
+  — `language` = the code block's current language in the change prompt). `LabelParams` (the `label()` /
+  `formatLabel()` params) is now `{ ctx: object }`; a plugin's own dynamic text calls
+  `ctx.label(key, { ctx: { count } }, 'English: {ctx.count}')`.
+- The editor's `labels.ts` already delegated to core `/locale` (`createLabels` / `formatLabel`), so dotted paths
+  and locale number formatting come from core — no private copy to change.
+
 ### Added — `required` through core validity (rulebook C-CA-41, core 1.0.0-rc25, 2026-11-22)
 
 - **`required`** (`isRequired`, boolean, reflects): while the document has no content — no text after trimming

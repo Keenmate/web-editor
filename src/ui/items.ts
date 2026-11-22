@@ -16,6 +16,7 @@
  */
 import type { MenuDivider } from '@keenmate/web-components-core/actions';
 import type { EditorToolbarEntry, StatusContext } from '../interaction';
+import type { StatusCountLabelContext } from '../labels';
 
 const divider: MenuDivider = { divider: true };
 
@@ -135,8 +136,8 @@ function wordCount({ state }: StatusContext): number {
  * on each; single-edge status bars (`top`/`bottom`) show every item regardless.
  */
 export const coreStatusItems: readonly StatusItem[] = [
-  { id: 'words', align: 'end', bar: 'bottom', render: (ctx) => ctx.label('labels.words', { count: wordCount(ctx) }) },
-  { id: 'chars', align: 'end', bar: 'top', render: (ctx) => ctx.label('labels.chars', { count: ctx.state.doc.textContent.length }) },
+  { id: 'words', align: 'end', bar: 'bottom', render: (ctx) => ctx.label('labels.words', { ctx: { count: wordCount(ctx) } satisfies StatusCountLabelContext }) },
+  { id: 'chars', align: 'end', bar: 'top', render: (ctx) => ctx.label('labels.chars', { ctx: { count: ctx.state.doc.textContent.length } satisfies StatusCountLabelContext }) },
 ];
 
 /** The default static toolbar — the full editing command set. */

@@ -2,14 +2,16 @@ import { createLabels, formatLabel as formatCoreLabel, type TranslateCallback } 
 
 /**
  * UI strings (rulebook D-NC-24, core `/locale` SPEC §12.24): one `labels` object
- * per element — a PARTIAL map of keys to strings with `{name}` placeholders —
+ * per element — a PARTIAL map of keys to strings with `{ctx.*}` placeholders —
  * over built-in English defaults. Keys are flat `<elementType>.<name>`
  * (`buttons.ok`, `tooltips.bold`); the full key is `km-editor.<key>`. Resolution
  * per key (core `createLabels`): the element's `labels` (short or full key) → the
  * page-wide flat dictionary `window.components.locale.labels['km-editor.<key>']`
  * → the built-in English default; then the element's own `translateCallback`, the page's
- * `window.components.locale.translateCallback` (ICU / i18next; `null` = not mine → next), or the `{name}`
- * replacement. A key the instance `labels` set is never sent to a callback. Labels are TEXT (`textContent` /
+ * `window.components.locale.translateCallback` (ICU / i18next; `null` = not mine → next; `params.ctx` = the spot's
+ * context), or the `{ctx.*}` replacement. A dynamic label passes its values as `{ ctx }` — the templates read
+ * `{ctx.count}`, `{ctx.languages}` (dotted paths); `ctx.count` is the number the text's noun agrees with, so an
+ * app's i18n can pluralize (core never does). A key the instance `labels` set is never sent to a callback. Labels are TEXT (`textContent` /
  * attributes) — never HTML.
  *
  * Keys:
@@ -28,10 +30,10 @@ import { createLabels, formatLabel as formatCoreLabel, type TranslateCallback } 
 export const DEFAULT_LABELS = {
   /** Shown (as text) while the document is empty, like a native `placeholder`. `''` = none. */
   'placeholders.document': '',
-  /** Status bar: word count. */
-  'labels.words': 'Words: {count}',
-  /** Status bar: character count. */
-  'labels.chars': 'Chars: {count}',
+  /** Status bar: word count (ctx {@link StatusCountLabelContext}: `{ctx.count}` = the words). */
+  'labels.words': 'Words: {ctx.count}',
+  /** Status bar: character count (ctx {@link StatusCountLabelContext}: `{ctx.count}` = the characters). */
+  'labels.chars': 'Chars: {ctx.count}',
   /** The editing surface's accessible name (`role="textbox"`) when the element has none of its own
    * (`aria-label` / `aria-labelledby` / a `<label for>`). */
   'ariaLabels.editor': 'Rich text editor',
@@ -54,9 +56,10 @@ export const DEFAULT_LABELS = {
   /** `insert-image` prompts (the dialog titles). */
   'headers.imageUrl': 'Enter image URL',
   'headers.imageAlt': 'Enter alt text (optional)',
-  /** `insert-code-block` / `change-code-language` prompts (the dialog titles; `{languages}` = the list). */
-  'headers.codeLanguage': 'Enter language ({languages})',
-  'headers.codeLanguageChange': 'Change language ({languages})',
+  /** `insert-code-block` / `change-code-language` prompts (the dialog titles; ctx {@link CodeLanguageLabelContext}:
+   * `{ctx.languages}` = the list, `{ctx.language}` = the block's current language on a change). */
+  'headers.codeLanguage': 'Enter language ({ctx.languages})',
+  'headers.codeLanguageChange': 'Change language ({ctx.languages})',
   /** Cloud-image plugin (`image:browser:pick`): the icon toolbar button's name, its tooltip, the menu item, the picker request. */
   'ariaLabels.cloudImage': 'Cloud image',
   'tooltips.cloudImage': 'Insert image from the cloud',
@@ -97,8 +100,26 @@ export type EditorLabelKey = keyof typeof DEFAULT_LABELS;
  */
 export type EditorLabels = Partial<Record<EditorLabelKey, string>> & Record<string, string | undefined>;
 
-/** Placeholder values for a label template (`{count}`, `{languages}`, …). */
-export type LabelParams = Record<string, string | number>;
+/**
+ * The values of a dynamic label: the text spot's context as `{ ctx }` — the template reads `{ctx.count}`,
+ * `{ctx.languages}` (dotted paths; a number is shown formatted for the locale), a `translateCallback` gets it raw
+ * as `params.ctx`.
+ */
+export type LabelParams = { readonly ctx: object };
+
+/** The ctx of the status-bar counts `labels.words` / `labels.chars`. */
+export interface StatusCountLabelContext {
+  /** The counted words (`labels.words`) / characters (`labels.chars`) — the number the noun agrees with. */
+  readonly count: number;
+}
+
+/** The ctx of the code-language prompts `headers.codeLanguage` / `headers.codeLanguageChange`. */
+export interface CodeLanguageLabelContext {
+  /** The offered languages, comma-separated (`javascript, typescript, …`). */
+  readonly languages: string;
+  /** The code block's current language (`headers.codeLanguageChange` only). */
+  readonly language?: string;
+}
 
 /**
  * Resolve a label: `(key, params?, fallback?, twins?) => string`. The `fallback` is the
@@ -114,7 +135,7 @@ export function labelKey(id: string): string {
   return id.replace(/[-:_\s]+([a-zA-Z0-9])/g, (_m, c: string) => c.toUpperCase());
 }
 
-/** Fill `{name}` placeholders; an unknown placeholder is left as written (core `/locale` `formatLabel`). */
+/** Fill `{ctx.*}` placeholders (dotted paths); an unknown placeholder is left as written (core `/locale` `formatLabel`). */
 export function formatLabel(template: string, params?: LabelParams): string {
   return formatCoreLabel(template, params);
 }
@@ -128,7 +149,7 @@ const TAG = 'km-editor';
  * `window.components.locale.translateCallback` (`null` = not mine; a throw is logged → next) → page-wide labels →
  * built-in English → `fallback` (the English text of a command / group key) → the key itself. A standalone engine
  * passes `host: null` (core resolves the same way, with `tag: 'km-editor'` and the engine's own `translateCallback`
- * option as `getTranslateCallback`). `getLocale` = the `locale` input / engine option: a NUMBER param (`{count}`) is
+ * option as `getTranslateCallback`). `getLocale` = the `locale` input / engine option: a NUMBER param (`{ctx.count}`) is
  * shown formatted for it (unset → the page-wide `window.components.locale.locale` → the browser), and it is the
  * callbacks' `ctx.locale`.
  */

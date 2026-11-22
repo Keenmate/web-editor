@@ -143,7 +143,7 @@ export interface EditorEngineOptions {
    */
   labels?: EditorLabels | null;
   /**
-   * BCP-47 locale for the numbers the engine's labels format (the `{count}` of `labels.words` / `labels.chars`:
+   * BCP-47 locale for the numbers the engine's labels format (the `{ctx.count}` of `labels.words` / `labels.chars`:
    * `1234` → `1.234` for `'de'`) and the `locale` a `translateCallback` gets — `<km-editor>`'s `locale`, same
    * default (`null` = unset: the page-wide `window.components.locale.locale`, else the browser; `'auto'` = unset).
    * Live: `setOptions({ locale })` (then redraw your UI).

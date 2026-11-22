@@ -8,7 +8,7 @@
  */
 import type { Command } from 'prosemirror-state';
 import type { EditorState } from 'prosemirror-state';
-import { createLabelResolver, type LabelResolver } from './labels';
+import { createLabelResolver, type CodeLanguageLabelContext, type LabelResolver } from './labels';
 import { promptText, whenPrompted } from './dialogs';
 
 /** English-only resolver for standalone use (no element `labels`). */
@@ -39,7 +39,7 @@ export function insertCodeBlock(language = 'javascript'): Command {
 /** Prompt for a code-block language (label `codeLanguagePrompt`, core `/dialog`), then insert. */
 export function promptForCodeBlock(label: LabelResolver = englishLabels): Command {
   return whenPrompted(
-    (view) => promptText(view, label, { title: label('headers.codeLanguage', { languages: LANGUAGES.join(', ') }), value: 'javascript' }),
+    (view) => promptText(view, label, { title: label('headers.codeLanguage', { ctx: { languages: LANGUAGES.join(', ') } satisfies CodeLanguageLabelContext }), value: 'javascript' }),
     (language, state) => {
       const node = state.schema.nodes.code_block.create({ language: language.toLowerCase() });
       return language ? state.tr.replaceSelectionWith(node).scrollIntoView() : null;
@@ -63,7 +63,9 @@ export function changeCodeBlockLanguage(label: LabelResolver = englishLabels): C
     (view) => {
       const block = codeBlockAt(view.state);
       return promptText(view, label, {
-        title: label('headers.codeLanguageChange', { languages: LANGUAGES.join(', ') }),
+        title: label('headers.codeLanguageChange', {
+          ctx: { languages: LANGUAGES.join(', '), ...(block ? { language: block.language } : {}) } satisfies CodeLanguageLabelContext,
+        }),
         value: block?.language ?? '',
       });
     },

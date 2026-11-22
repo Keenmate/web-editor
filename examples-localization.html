@@ -22,7 +22,7 @@
     <p>
         Override texts on ONE element with the <code>labels</code> property (or a JSON <code>labels</code> attribute).
         Short keys (<code>tooltips.bold</code>, <code>buttons.viewEdit</code>) and a full key
-        (<code>km-editor.labels.words</code>, with its <code>{count}</code> placeholder) both work; every key you leave out
+        (<code>km-editor.labels.words</code>, with its <code>{ctx.count}</code> placeholder) both work; every key you leave out
         stays English. The neighbour editor is untouched. Hover <b>B</b> to see the tooltip.
     </p>
     <div class="controls">
@@ -44,10 +44,10 @@
     <div class="code-block" data-language="js" data-kmwc-snippet><pre><code>el.labels = {
   'tooltips.bold': 'Tučné písmo (Ctrl+B)',      // short key
   'buttons.viewEdit': 'Upravit',
-  'km-editor.labels.words': 'Slova: {count}',  // full key
+  'km-editor.labels.words': 'Slova: {ctx.count}',  // full key
 };
 // or declaratively
-&lt;km-editor labels='{"labels.words": "Slova: {count}"}'&gt;&lt;/km-editor&gt;</code></pre></div>
+&lt;km-editor labels='{"labels.words": "Slova: {ctx.count}"}'&gt;&lt;/km-editor&gt;</code></pre></div>
 </div>
 
 <!-- ============================================================= -->
@@ -60,7 +60,7 @@
         keys <code>'km-editor.&lt;elementType&gt;.&lt;name&gt;'</code>, other components' keys side by side — translates
         every editor on the page at once: toolbar names, the toolbar group name, the view buttons, the status bar and the
         prompts. Click <b>Insert code block</b> (the <code>&lt;/&gt;</code> button) to see the translated prompt
-        (<code>headers.codeLanguage</code> with its <code>{languages}</code> placeholder, <code>buttons.ok</code> /
+        (<code>headers.codeLanguage</code> with its <code>{ctx.languages}</code> placeholder, <code>buttons.ok</code> /
         <code>buttons.cancel</code>). Keys an instance set itself (LO01) still win.
     </p>
     <div class="controls">
@@ -86,9 +86,9 @@ window.components.locale = {
     'km-editor.ariaLabels.italic': 'Kurzíva',
     'km-editor.ariaLabels.formatGroup': 'Formát',
     'km-editor.buttons.viewEdit': 'Upravit',
-    'km-editor.labels.words': 'Slova: {count}',
-    'km-editor.labels.chars': 'Znaky: {count}',
-    'km-editor.headers.codeLanguage': 'Zadejte jazyk ({languages})',
+    'km-editor.labels.words': 'Slova: {ctx.count}',
+    'km-editor.labels.chars': 'Znaky: {ctx.count}',
+    'km-editor.headers.codeLanguage': 'Zadejte jazyk ({ctx.languages})',
     'km-editor.buttons.ok': 'OK',
     'km-editor.buttons.cancel': 'Zrušit',
     'web-multiselect.placeholders.search': 'Hledat…',   // other components share the same JSON
@@ -123,7 +123,7 @@ window.components.locale = {
             <div class="form-group">
                 <label class="demo-label">Instance <code>labels.words</code></label>
                 <km-editor id="lo03b" view-mode="edit" toolbar="top" statusbar="bottom" value="Ask the callback."
-                    labels='{"labels.words": "Instance wins: {count}"}'></km-editor>
+                    labels='{"labels.words": "Instance wins: {ctx.count}"}'></km-editor>
             </div>
         </div>
         <div class="output"><div class="output-label">rendered strings (read from the shadow root)</div><pre id="lo03-out"></pre></div>
@@ -138,12 +138,12 @@ const sk = {
 const t = (key, params) =&gt; sk[key].replace(/\{\{(\w+)\}\}/g, (_, p) =&gt; params?.[p] ?? '');
 
 // page-wide — every component on the page
-window.components.locale = { translateCallback: ({ key, params }) =&gt; (key in sk ? t(key, params) : null) };
+window.components.locale = { translateCallback: ({ key, params }) =&gt; (key in sk ? t(key, { ...params, count: params.ctx?.count }) : null) };
 
 // one element — asked BEFORE the page-wide callback; null = not mine
 el.translateCallback = ({ key, params }) =&gt; {
   if (key === 'km-editor.ariaLabels.bold') return 'Fett';
-  if (key === 'km-editor.labels.words') return `Wörter: ${params.count}`;
+  if (key === 'km-editor.labels.words') return `Wörter: ${params.ctx.count}`;
   return null;
 };</code></pre></div>
 </div>
@@ -180,10 +180,10 @@ el.translateCallback = ({ key, params }) =&gt; {
 <div class="card">
     <h2>LO05 · <code>locale</code> + formatting</h2>
     <p>
-        The numbers in labels — the <code>{count}</code> of <code>labels.words</code> / <code>labels.chars</code> in the status
+        The numbers in labels — the <code>{ctx.count}</code> of <code>labels.words</code> / <code>labels.chars</code> in the status
         bar — are formatted for the element's <code>locale</code> input → the page language
         <code>window.components.locale.locale</code> → the browser. The editor formats no dates — numbers only. A
-        <code>translateCallback</code> gets the raw number (<code>params.count === 1234</code>) and the resolved
+        <code>translateCallback</code> gets the raw number (<code>params.ctx.count === 1234</code>) and the resolved
         <code>locale</code>, so ICU / i18next plural rules work. The editor below holds 1,234 words.
     </p>
     <div class="controls"><strong class="muted">page locale</strong>
@@ -273,7 +273,7 @@ el.locale = 'de';</code></pre></div>
     const LO01_LABELS = {
         'tooltips.bold': 'Tučné písmo (Ctrl+B)',
         'buttons.viewEdit': 'Upravit',
-        'km-editor.labels.words': 'Slova: {count}',
+        'km-editor.labels.words': 'Slova: {ctx.count}',
     };
     $('lo01-labels').addEventListener('change', (e) => { $('lo01').labels = e.target.checked ? LO01_LABELS : undefined; refreshAll(); });
     $('lo01').labels = LO01_LABELS;
@@ -284,9 +284,9 @@ el.locale = 'de';</code></pre></div>
         'km-editor.ariaLabels.italic': 'Kurzíva',
         'km-editor.ariaLabels.formatGroup': 'Formát',
         'km-editor.buttons.viewEdit': 'Upravit',
-        'km-editor.labels.words': 'Slova: {count}',
-        'km-editor.labels.chars': 'Znaky: {count}',
-        'km-editor.headers.codeLanguage': 'Zadejte jazyk ({languages})',
+        'km-editor.labels.words': 'Slova: {ctx.count}',
+        'km-editor.labels.chars': 'Znaky: {ctx.count}',
+        'km-editor.headers.codeLanguage': 'Zadejte jazyk ({ctx.languages})',
         'km-editor.buttons.ok': 'OK',
         'km-editor.buttons.cancel': 'Zrušit',
         'web-multiselect.placeholders.search': 'Hledat…',
@@ -301,10 +301,10 @@ el.locale = 'de';</code></pre></div>
         'km-editor.labels.chars': 'Znaky: {{count}}',
     };
     const t = (key, params) => sk[key].replace(/\{\{(\w+)\}\}/g, (_, p) => String(params?.[p] ?? ''));
-    const pageTranslate = ({ key, params }) => (key in sk ? t(key, params) : null);
+    const pageTranslate = ({ key, params }) => (key in sk ? t(key, { ...params, count: params.ctx?.count }) : null);
     const ownTranslate = ({ key, params }) => {
         if (key === 'km-editor.ariaLabels.bold') return 'Fett';
-        if (key === 'km-editor.labels.words') return `Wörter: ${params.count}`;
+        if (key === 'km-editor.labels.words') return `Wörter: ${params.ctx.count}`;
         return null;
     };
     $('lo03-page').addEventListener('change', (e) => { page.translateCallback = e.target.checked ? pageTranslate : null; applyPage(); });

@@ -96,14 +96,14 @@ Moving the element in the DOM re-activates it without a rebuild (the document an
 ## Labels
 
 Every UI string goes through one `labels` object — partial (unset keys stay English),
-`{name}` placeholders, applied live (no rebuild). `''` means deliberately empty (renders
+`{ctx.*}` placeholders, applied live (no rebuild). `''` means deliberately empty (renders
 nothing); a missing key falls back to English. Every editor label is inserted as **text**
 (none is HTML), so there are no HTML-injection labels. Keys are flat `<elementType>.<name>`
 (rulebook D-NC-24) — the element type says where the text is shown (`buttons`, `tooltips`,
 `ariaLabels`, `placeholders`, `headers`, `labels`, `messages`, `errors`, `menuItems`):
 
 ```html
-<km-editor labels='{"ariaLabels.bold":"Tučně","ariaLabels.insertLink":"Vložit odkaz","headers.linkUrl":"Adresa odkazu:","labels.words":"Slova: {count}"}'></km-editor>
+<km-editor labels='{"ariaLabels.bold":"Tučně","ariaLabels.insertLink":"Vložit odkaz","headers.linkUrl":"Adresa odkazu:","labels.words":"Slova: {ctx.count}"}'></km-editor>
 ```
 
 Page-wide, for every editor on the page (core `/locale`): per key the element's `labels` win
@@ -113,7 +113,7 @@ Page-wide, for every editor on the page (core `/locale`): per key the element's 
 didn't set; assigning `window.components.locale` re-renders live editors:
 
 ```js
-window.components.locale = { labels: { 'km-editor.ariaLabels.bold': 'Tučně', 'km-editor.labels.words': 'Slova: {count}' } };
+window.components.locale = { labels: { 'km-editor.ariaLabels.bold': 'Tučně', 'km-editor.labels.words': 'Slova: {ctx.count}' } };
 ```
 
 One editor needs no page setup: its own **`translateCallback`** (property only, same
@@ -123,8 +123,19 @@ One editor needs no page setup: its own **`translateCallback`** (property only, 
 object as its `labels` option), in the same order:
 
 ```js
-editor.translateCallback = ({ key, params }) => (i18next.exists(key) ? i18next.t(key, params) : null);
+editor.translateCallback = ({ key, params }) => {
+  const options = { ...params, count: params.ctx?.count };
+  return i18next.exists(key, options) ? i18next.t(key, options) : null;
+};
 ```
+
+A dynamic label passes its values as **`{ ctx }`** — the spot's context: the template reads dotted paths
+(`{ctx.count}`, `{ctx.languages}`; a number is shown formatted for the `locale`), a `translateCallback` gets
+the raw object as `params.ctx`. `ctx.count` is the number the text's noun agrees with, so an app's i18n can
+pick a plural form (the editor never does; the English defaults put the number after a colon, `Words: 3`).
+The contexts are exported types: `StatusCountLabelContext` (`{ count }`) for `labels.words` / `labels.chars`,
+`CodeLanguageLabelContext` (`{ languages, language? }`) for the code-language prompts. A plugin resolves its own
+dynamic text the same way: `ctx.label('labels.matches', { ctx: { count } }, 'Matches: {ctx.count}')` (the third argument = its English default).
 
 | Key | English default |
 | --- | --------------- |
@@ -132,11 +143,11 @@ editor.translateCallback = ({ key, params }) => (i18next.exists(key) ? i18next.t
 | `tooltips.<name>` | the command's tooltip, else `<text> (<shortcut>)` (the text as translated) |
 | `ariaLabels.<groupId>Group` — `ariaLabels.formatGroup`, `blockGroup`, `listGroup`, `insertGroup`, `historyGroup`, `viewGroup`, `linkGroup`, `imageGroup`, `tableGroup`, `imageBrowserGroup` | toolbar group accessible names (`Format`, `Block`, `Lists`, …) |
 | `placeholders.document` | `''` (off) — shown (as text) while the document is empty |
-| `labels.words` / `labels.chars` | `Words: {count}` / `Chars: {count}` (status bar) |
+| `labels.words` / `labels.chars` | `Words: {ctx.count}` / `Chars: {ctx.count}` (status bar; ctx `StatusCountLabelContext`, `count` = the words / characters) |
 | `buttons.ok` / `buttons.cancel` | `OK` / `Cancel` (prompt and confirmation dialog buttons; the ✕ takes `ariaLabels.close`) |
 | `headers.linkUrl` | `Enter link URL` (prompt title) |
 | `headers.imageUrl` / `headers.imageAlt` | `Enter image URL` / `Enter alt text (optional)` |
-| `headers.codeLanguage` / `headers.codeLanguageChange` | `Enter language ({languages})` / `Change language ({languages})` |
+| `headers.codeLanguage` / `headers.codeLanguageChange` | `Enter language ({ctx.languages})` / `Change language ({ctx.languages})` (ctx `CodeLanguageLabelContext`: `languages` = the list, `language` = the block's current one on a change) |
 | `ariaLabels.cloudImage` / `tooltips.cloudImage` / `menuItems.cloudImage` | `Cloud image` / `Insert image from the cloud` / `Insert cloud image…` — the cloud-image plugin's toolbar button, its tooltip, its menu entry |
 | `headers.cloudImagePicker` / `messages.cloudImagePicker` | `Choose a cloud image` / `Pick an image to insert.` — the default picker confirmation |
 | `buttons.markdownTab` / `buttons.htmlTab` / `buttons.jsonTab` | `Markdown` / `HTML` / `JSON` — the split view's output tabs |
@@ -328,7 +339,7 @@ document and undo history stay) → `engine.getOptions()` (the merged options, r
 
 **Options = the element's settings**, same names and same defaults (rulebook C-CA-37). Live through
 `setOptions()`: `isReadonly` (`false`), `labels` (`null` = English), `locale` (`null` = the page locale, then
-the browser — the `{count}` numbers `engine.label()` formats), `translateCallback` (`null`; asked before the
+the browser — the `{ctx.count}` numbers `engine.label()` formats), `translateCallback` (`null`; asked before the
 page-wide `window.components.locale.translateCallback`), `interactionHost` (`null` = the core dialog). After a
 `labels` / `locale` / `translateCallback` change, redraw your own UI. Construction-only (build a new engine to
 change them): `plugins` (the editor plugin list, `defaultPlugins()`; raw ProseMirror plugins go in `prosemirrorPlugins`).

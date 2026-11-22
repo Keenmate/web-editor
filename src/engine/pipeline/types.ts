@@ -13,6 +13,7 @@
 
 import type { EditorController } from '../../interaction';
 import type { EditorViewMode } from '../../web-component';
+import type { LabelParams } from '../../labels';
 
 /** The value threaded through a pipeline run. `extra` is derived data outside the text. */
 export interface PipelineContext {
@@ -44,7 +45,7 @@ export interface StageServices {
   /** Run a ProseMirror `Command` against the live view; returns whether it applied. */
   runCommand?: (command: (state: any, dispatch?: any, view?: any) => boolean) => boolean;
   /** Resolve a UI string through the element's `labels` (see `src/labels.ts`). */
-  label?: (key: string, params?: Record<string, string | number>, fallback?: string) => string;
+  label?: (key: string, params?: LabelParams, fallback?: string) => string;
   /**
    * Switch the hosting `<km-editor>`'s view mode (`'edit' | 'split' | 'preview' | 'inline'`);
    * fires `view-mode-change` with `source: 'plugin'`. Absent on a standalone engine.

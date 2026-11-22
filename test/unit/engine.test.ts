@@ -74,10 +74,10 @@ describe('EditorEngine — the element settings it shares (C-CA-37)', () => {
       reg.locale = { labels: { 'km-editor.buttons.ok': 'page' }, translateCallback: () => 'PAGE' };
       expect(engine.label('buttons.ok')).toBe('Dobře');
       expect(engine.label('buttons.cancel')).toBe('Zrušit');
-      expect(engine.label('labels.words', { count: 2 })).toBe('PAGE');
+      expect(engine.label('labels.words', { ctx: { count: 2 } })).toBe('PAGE');
       reg.locale = null;
-      engine.setOptions({ labels: { 'labels.words': 'Slova: {count}' } });
-      expect(engine.label('labels.words', { count: 2 })).toBe('Slova: 2');
+      engine.setOptions({ labels: { 'labels.words': 'Slova: {ctx.count}' } });
+      expect(engine.label('labels.words', { ctx: { count: 2 } })).toBe('Slova: 2');
       expect(engine.label('buttons.ok')).toBe('OK');
     } finally {
       reg.locale = null;

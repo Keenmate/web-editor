@@ -33,15 +33,16 @@ describe('label helpers', () => {
     expect(labelKey('bold')).toBe('bold');
   });
 
-  it('formatLabel fills {name} placeholders and leaves unknown ones', () => {
-    expect(formatLabel('Words: {count}', { count: 3 })).toBe('Words: 3');
-    expect(formatLabel('{a} {b}', { a: 'x' })).toBe('x {b}');
+  it('formatLabel fills {ctx.*} dotted placeholders and leaves unknown ones', () => {
+    expect(formatLabel('Words: {ctx.count}', { ctx: { count: 3 } })).toBe('Words: 3');
+    expect(formatLabel('{ctx.a} {ctx.b} {count}', { ctx: { a: 'x' } })).toBe('x {ctx.b} {count}');
   });
 
   it('resolver: instance labels → English default → fallback → key (standalone: no host)', () => {
-    const label = createLabelResolver(() => ({ 'labels.words': 'Slova: {count}' }));
-    expect(label('labels.words', { count: 2 })).toBe('Slova: 2');
-    expect(label('labels.chars', { count: 5 })).toBe('Chars: 5');
+    const label = createLabelResolver(() => ({ 'labels.words': 'Slova: {ctx.count}' }));
+    expect(label('labels.words', { ctx: { count: 2 } })).toBe('Slova: 2');
+    expect(label('labels.chars', { ctx: { count: 5 } })).toBe('Chars: 5');
+    expect(label('headers.codeLanguage', { ctx: { languages: 'css, sql' } })).toBe('Enter language (css, sql)');
     expect(label('ariaLabels.insertLink', undefined, 'Insert link')).toBe('Insert link');
     expect(label('nope')).toBe('nope');
   });
@@ -52,14 +53,14 @@ describe('label helpers', () => {
     const own = vi.fn(({ key, template }: { key: string; template: string }) => (key === 'km-editor.labels.chars' ? `T:${template}` : null));
     try {
       reg.locale = { translateCallback: page };
-      const label = createLabelResolver(() => ({ 'labels.words': 'Slova: {count}' }), null, () => own);
-      expect(label('labels.words', { count: 2 })).toBe('Slova: 2'); // instance key: beats both callbacks
-      expect(label('labels.chars', { count: 5 })).toBe('T:Chars: {count}'); // own beats page
+      const label = createLabelResolver(() => ({ 'labels.words': 'Slova: {ctx.count}' }), null, () => own);
+      expect(label('labels.words', { ctx: { count: 2 } })).toBe('Slova: 2'); // instance key: beats both callbacks
+      expect(label('labels.chars', { ctx: { count: 5 } })).toBe('T:Chars: {ctx.count}'); // own beats page
       expect(label('ariaLabels.bold', undefined, 'Bold')).toBe('Tučné'); // own null → page
       expect(own).not.toHaveBeenCalledWith(expect.objectContaining({ key: 'km-editor.labels.words' }));
       expect(page).not.toHaveBeenCalledWith(expect.objectContaining({ key: 'km-editor.labels.words' }));
       expect(page).not.toHaveBeenCalledWith(expect.objectContaining({ key: 'km-editor.labels.chars' }));
-      expect(own).toHaveBeenCalledWith(expect.objectContaining({ component: 'km-editor', key: 'km-editor.labels.chars', params: { count: 5 } }));
+      expect(own).toHaveBeenCalledWith(expect.objectContaining({ component: 'km-editor', key: 'km-editor.labels.chars', params: { ctx: { count: 5 } } }));
       // Page callback null → built-in; a throwing callback is logged and the next rule decides.
       reg.locale = { translateCallback: () => null };
       expect(label('ariaLabels.bold', undefined, 'Bold')).toBe('Bold');
@@ -95,7 +96,7 @@ describe('label helpers', () => {
 describe('<km-editor> labels', () => {
   it("resolver: '' is deliberately empty, undefined falls back to English", () => {
     const label = createLabelResolver(() => ({ 'labels.words': '', 'ariaLabels.bold': undefined }));
-    expect(label('labels.words', { count: 3 })).toBe('');
+    expect(label('labels.words', { ctx: { count: 3 } })).toBe('');
     expect(label('ariaLabels.bold', undefined, 'Bold')).toBe('Bold');
     expect(label('placeholders.document')).toBe('');
   });
@@ -114,7 +115,7 @@ describe('<km-editor> labels', () => {
     const el = await mount({
       value: 'one two',
       statusbar: 'bottom',
-      labels: JSON.stringify({ 'ariaLabels.bold': 'Tučně', 'tooltips.bold': 'Tučné písmo', 'ariaLabels.formatGroup': 'Formát', 'labels.words': 'Slova: {count}' }),
+      labels: JSON.stringify({ 'ariaLabels.bold': 'Tučně', 'tooltips.bold': 'Tučné písmo', 'ariaLabels.formatGroup': 'Formát', 'labels.words': 'Slova: {ctx.count}' }),
     });
     expect(cmd(el, 'bold').getAttribute('aria-label')).toBe('Tučně');
     expect(cmd(el, 'bold').dataset.tooltip).toBe('Tučné písmo');
@@ -141,7 +142,7 @@ describe('<km-editor> labels', () => {
   it('a property change applies live, without rebuilding the engine', async () => {
     const el = await mount({ value: 'one', statusbar: 'bottom' });
     const engine = getEditorEngine(el);
-    el.labels = { 'ariaLabels.insertLink': 'Vložit odkaz', 'labels.chars': 'Znaky: {count}' };
+    el.labels = { 'ariaLabels.insertLink': 'Vložit odkaz', 'labels.chars': 'Znaky: {ctx.count}' };
     await el.whenSettled();
     expect(getEditorEngine(el)).toBe(engine);
     expect(cmd(el, 'insert-link').getAttribute('aria-label')).toBe('Vložit odkaz');
@@ -168,7 +169,7 @@ describe('<km-editor> labels', () => {
     const el = await mount({ value: 'one two', statusbar: 'bottom', labels: JSON.stringify({ 'ariaLabels.italic': 'Kurzíva' }) });
     const reg = (window as any).components;
     try {
-      reg.locale = { labels: { 'km-editor.ariaLabels.bold': 'Tučně', 'km-editor.ariaLabels.italic': 'page loses', 'km-editor.labels.words': 'Slova: {count}', 'web-editor.ariaLabels.underline': 'not ours' } };
+      reg.locale = { labels: { 'km-editor.ariaLabels.bold': 'Tučně', 'km-editor.ariaLabels.italic': 'page loses', 'km-editor.labels.words': 'Slova: {ctx.count}', 'web-editor.ariaLabels.underline': 'not ours' } };
       expect(cmd(el, 'bold').getAttribute('aria-label')).toBe('Tučně');
       expect(cmd(el, 'italic').getAttribute('aria-label')).toBe('Kurzíva');
       expect(cmd(el, 'underline').getAttribute('aria-label')).toBe('Underline');
@@ -223,8 +224,8 @@ describe('<km-editor> labels', () => {
       reg.locale = { locale: 'cs' };
       expect(text('words')).toBe('Words: 1 234');
       const seen: unknown[] = [];
-      reg.locale = { locale: 'cs', translateCallback: ({ key, params }: { key: string; params: Record<string, unknown> }) => {
-        if (key === 'km-editor.labels.words') seen.push(params.count);
+      reg.locale = { locale: 'cs', translateCallback: ({ key, params }: { key: string; params: { ctx: { count: number } } }) => {
+        if (key === 'km-editor.labels.words') seen.push(params.ctx.count);
         return null;
       } };
       expect(text('words')).toBe('Words: 1 234');
@@ -261,19 +262,19 @@ describe('<km-editor> labels', () => {
     }
   });
 
-  it('EditorEngine `locale` option: same default as the element (null), formats {count} standalone, read live', () => {
+  it('EditorEngine `locale` option: same default as the element (null), formats {ctx.count} standalone, read live', () => {
     const reg = (window as any).components;
     try {
       reg.locale = { locale: 'en-US' };
       const bare = new EditorEngine(document.createElement('div'));
       expect(bare.getOptions().locale).toBeNull();
-      expect(bare.label('labels.words', { count: 1234 })).toBe('Words: 1,234');
+      expect(bare.label('labels.words', { ctx: { count: 1234 } })).toBe('Words: 1,234');
       bare.destroy();
       const engine = new EditorEngine(document.createElement('div'), { locale: 'de' });
       expect(engine.getOptions().locale).toBe('de');
-      expect(engine.label('labels.words', { count: 1234 })).toBe('Words: 1.234');
+      expect(engine.label('labels.words', { ctx: { count: 1234 } })).toBe('Words: 1.234');
       engine.setOptions({ locale: null });
-      expect(engine.label('labels.words', { count: 1234 })).toBe('Words: 1,234');
+      expect(engine.label('labels.words', { ctx: { count: 1234 } })).toBe('Words: 1,234');
       engine.destroy();
     } finally {
       reg.locale = null;
