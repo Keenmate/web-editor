@@ -74,8 +74,9 @@ Read-only and `preview` editors show the browser's own menu instead.
   `/dialog` modals: the page is inert, <kbd>Tab</kbd> is trapped, <kbd>Enter</kbd> confirms, <kbd>Escape</kbd>
   cancels and returns focus to the editor.
 - **Tooltips** show on hover and on keyboard focus; <kbd>Escape</kbd> hides one (WCAG 1.4.13).
-- **Split view output tabs** (Markdown / HTML / JSON) are plain buttons — each a Tab stop, activated with
-  <kbd>Enter</kbd> / <kbd>Space</kbd>.
+- **Split view output tabs** (Markdown / HTML / JSON) are a WAI-ARIA tab list — one tab stop;
+  <kbd>←</kbd> / <kbd>→</kbd> (wrapping), <kbd>Home</kbd> / <kbd>End</kbd> move to a tab and select it
+  (automatic activation); <kbd>Tab</kbd> moves on to the output panel (focusable, so its text can be scrolled).
 - **Inline view mode** is a positioned card, not a dialog — no focus trap, no Escape handling.
 
 ## Roles and ARIA
@@ -91,6 +92,7 @@ Read-only and `preview` editors show the browser's own menu instead.
 | Selection toolbar | `role="toolbar"` (horizontal), shown for a non-empty text selection while editable |
 | Context menu | `role="menu"`; items `menuitem`, toggles `menuitemcheckbox` + `aria-checked`, disabled `aria-disabled` |
 | Editing surface | ProseMirror `contenteditable` (`true` / `false`), `tabindex="0"`, `role="textbox"` + `aria-multiline="true"` + an accessible name (see below); `aria-readonly="true"` while not editable (read-only, `preview`, a gating pipeline lock), `aria-disabled="true"` while disabled; `aria-placeholder` while empty (from `placeholders.document`) |
+| Split view output | `role="tablist"` (`aria-label` = `ariaLabels.outputTabs`) of `role="tab"` buttons (`aria-selected`, `aria-controls`, roving `tabindex`) over one `role="tabpanel"` (`aria-labelledby` the selected tab, `tabindex="0"`) |
 | Pending loader | `role="status"` + `aria-label` (`ariaLabels.loading`) |
 | Dialogs | core `/dialog` — modal, titled by the prompt header (`headers.*`) |
 
@@ -116,7 +118,8 @@ Every name comes from `labels` (English defaults, translatable per key — see
   has ARIA element reflection (the label sits outside the shadow root), and its text is copied into the
   surface's `aria-label` everywhere. Re-read on connect and on a `labels` / locale change — a label added
   later takes effect on the next of those;
-- the loader: `ariaLabels.loading`; the split tabs: `buttons.markdownTab` / `htmlTab` / `jsonTab`;
+- the loader: `ariaLabels.loading`; the split tabs: `buttons.markdownTab` / `htmlTab` / `jsonTab`, their
+  tab list `ariaLabels.outputTabs`;
   the sheet / drawer menu chrome: `buttons.back` / `ariaLabels.close`.
 
 ## Focus management
@@ -138,8 +141,7 @@ pending loader's spin (`--we-loader-duration`, chained to `--base-loader-duratio
 
 ## Known gaps
 
-- **Announcements:** no live region — the status-bar counts and the split view's output are not announced;
-  the split tabs are buttons, not a `tablist`.
+- **Announcements:** no live region — the status-bar counts and the split view's output are not announced.
 - **Loader spin:** not stopped by reduced motion.
 - No automated axe audit; the keyboard / ARIA behaviour above is covered by the e2e specs
   (`toolbar`, `context-menu`, `readonly`, `formatting`, `history`, `links`, `tables`, `lists`, `loader`, `modes`).

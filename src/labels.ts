@@ -71,6 +71,8 @@ export const DEFAULT_LABELS = {
   'buttons.markdownTab': 'Markdown',
   'buttons.htmlTab': 'HTML',
   'buttons.jsonTab': 'JSON',
+  /** Split view: the output tab list's accessible name. */
+  'ariaLabels.outputTabs': 'Output format',
   /** Context menu as a sheet / drawer (`menu-presentation`): the submenu back button + the ✕ close button
    * (also the ✕ of the prompt / confirmation dialogs). */
   'buttons.back': 'Back',

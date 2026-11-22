@@ -25,6 +25,9 @@ released to a registry yet.
 - **Shift+F10** / the **ContextMenu** key open the context menu at the caret with its first item focused —
   handled by the editor itself (the browser's follow-up `contextmenu` is swallowed, so the native menu never
   shows over it). Off while read-only / `preview`, like the right-click menu.
+- The split view's output tabs are a WAI-ARIA **tab list** (`role="tablist"` / `tab` / `tabpanel`,
+  `aria-selected`, `aria-controls`, `aria-labelledby`): one tab stop, arrows (wrapping) / Home / End move and
+  select (core `createRovingFocus`); the panel is focusable. New label **`ariaLabels.outputTabs`** ("Output format").
 
 ### Docs — example pages follow the theme switch (kmwc doctor, 2026-11-22)
 

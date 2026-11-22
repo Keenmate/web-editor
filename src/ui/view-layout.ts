@@ -14,6 +14,7 @@
  * mode-specific structure that is built/torn down.
  */
 import { anchor, type AnchorHandle } from '@keenmate/web-components-core/positioning';
+import { createRovingFocus, type RovingFocus } from '@keenmate/web-components-core/a11y';
 import type { SerializationFormat } from '../engine/serialization';
 import type { LabelResolver } from '../labels';
 import type { EditorViewMode, EditorToolbar, EditorStatusBar } from '../web-component';
@@ -57,6 +58,8 @@ export class ViewLayout {
   #root?: HTMLDivElement;
   #outputTabs?: HTMLDivElement;
   #outputPre?: HTMLPreElement;
+  /** Arrow keys across the output tabs (core roving focus; the tab list is one tab stop). */
+  #outputRoving?: RovingFocus;
   #outputFormat: SerializationFormat = 'html';
 
   #mode: EditorViewMode = 'edit';
@@ -142,6 +145,8 @@ export class ViewLayout {
     const root = this.#root;
     root.className = `we-root we-${mode}`;
     root.replaceChildren();
+    this.#outputRoving?.destroy();
+    this.#outputRoving = undefined;
     this.#outputTabs = undefined;
     this.#outputPre = undefined;
 
@@ -202,6 +207,8 @@ export class ViewLayout {
   }
 
   destroy(): void {
+    this.#outputRoving?.destroy();
+    this.#outputRoving = undefined;
     this.#teardownAnchor();
     this.overlayLayer.remove();
     this.#root?.remove();
@@ -213,10 +220,16 @@ export class ViewLayout {
     for (const btn of this.#outputTabs?.querySelectorAll<HTMLButtonElement>('button[data-format]') ?? []) {
       btn.textContent = this.#label(OUTPUT_LABEL_KEYS[btn.dataset.format as SerializationFormat]);
     }
+    this.#outputTabs?.setAttribute('aria-label', this.#label('ariaLabels.outputTabs'));
   }
 
   // ── split output panel ──────────────────────────────────────────────────
 
+  /**
+   * The output panel: a WAI-ARIA tab list (`role="tablist"`, one tab stop — Left / Right / Home / End move
+   * AND select, core `createRovingFocus`, wrapping) over one `role="tabpanel"` (the `<pre>`, focusable so its
+   * text can be scrolled / read).
+   */
   #buildOutputPanel(): HTMLDivElement {
     const panel = document.createElement('div');
     panel.className = 'we-output';
@@ -224,33 +237,59 @@ export class ViewLayout {
 
     const tabs = document.createElement('div');
     tabs.className = 'we-output-tabs';
+    tabs.setAttribute('role', 'tablist');
+    tabs.setAttribute('aria-label', this.#label('ariaLabels.outputTabs'));
+
+    const pre = document.createElement('pre');
+    pre.className = 'we-output-pre';
+    pre.id = 'we-output-panel';
+    pre.setAttribute('part', 'output-content');
+    pre.setAttribute('role', 'tabpanel');
+    pre.tabIndex = 0;
+
     for (const fmt of OUTPUT_FORMATS) {
       const btn = document.createElement('button');
       btn.type = 'button';
+      btn.id = `we-output-tab-${fmt}`;
+      btn.setAttribute('role', 'tab');
+      btn.setAttribute('aria-controls', pre.id);
       btn.textContent = this.#label(OUTPUT_LABEL_KEYS[fmt]);
       btn.dataset.format = fmt;
-      if (fmt === this.#outputFormat) btn.classList.add('active');
       btn.addEventListener('click', () => this.#selectOutput(fmt));
       tabs.appendChild(btn);
     }
 
-    const pre = document.createElement('pre');
-    pre.className = 'we-output-pre';
-    pre.setAttribute('part', 'output-content');
-
     panel.append(tabs, pre);
     this.#outputTabs = tabs;
     this.#outputPre = pre;
+    this.#applyOutputTabs();
+    const items = () => [...tabs.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+    this.#outputRoving = createRovingFocus(tabs, {
+      getItems: items,
+      orientation: 'horizontal',
+      isWrapping: true,
+      // Automatic activation (APG tabs): the output re-serializes at once.
+      onFocusItem: (item) => this.#selectOutput(item.dataset.format as SerializationFormat),
+    });
+    this.#outputRoving.focusItem(items().find((b) => b.dataset.format === this.#outputFormat) ?? 0, { shouldFocus: false });
     return panel;
   }
 
-  #selectOutput(format: SerializationFormat): void {
-    this.#outputFormat = format;
-    if (this.#outputTabs) {
-      for (const child of Array.from(this.#outputTabs.children)) {
-        child.classList.toggle('active', (child as HTMLElement).dataset.format === format);
-      }
+  /** Mark the selected tab (`aria-selected`, `.active`) and name the panel by it. */
+  #applyOutputTabs(): void {
+    if (!this.#outputTabs) return;
+    for (const tab of Array.from(this.#outputTabs.children) as HTMLElement[]) {
+      const isSelected = tab.dataset.format === this.#outputFormat;
+      tab.classList.toggle('active', isSelected);
+      tab.setAttribute('aria-selected', String(isSelected));
+      if (isSelected) this.#outputPre?.setAttribute('aria-labelledby', tab.id);
     }
+  }
+
+  #selectOutput(format: SerializationFormat): void {
+    if (format === this.#outputFormat && this.#outputTabs?.querySelector(`[data-format="${format}"][aria-selected="true"]`)) return;
+    this.#outputFormat = format;
+    this.#applyOutputTabs();
     this.refreshOutput();
   }
 

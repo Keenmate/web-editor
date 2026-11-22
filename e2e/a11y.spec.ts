@@ -140,3 +140,51 @@ test.describe('a11y — keyboard openers', () => {
         await expect(page.locator('km-editor#ro .we-context-menu')).toHaveCount(0);
     });
 });
+
+test.describe('a11y — split view tabs', () => {
+    test.beforeEach(async ({ page }) => load(page, 'a11y.html', { flag: 'fixtureReady' }));
+
+    const tabs = (page: Page) => page.locator('km-editor#split .we-output-tabs');
+    const tab = (page: Page, fmt: string) => tabs(page).locator(`[data-format="${fmt}"]`);
+    const panel = (page: Page) => page.locator('km-editor#split .we-output-pre');
+
+    test('tablist / tab / tabpanel with aria-selected, aria-controls, aria-labelledby; one tab stop', async ({ page }) => {
+        await expect(tabs(page)).toHaveAttribute('role', 'tablist');
+        await expect(tabs(page)).toHaveAttribute('aria-label', 'Output format');
+        await expect(tabs(page).locator('[role="tab"]')).toHaveCount(3);
+        // contentFormat defaults to markdown → the markdown tab is selected.
+        await expect(tab(page, 'markdown')).toHaveAttribute('aria-selected', 'true');
+        await expect(tab(page, 'html')).toHaveAttribute('aria-selected', 'false');
+        await expect(tab(page, 'markdown')).toHaveAttribute('tabindex', '0');
+        await expect(tab(page, 'html')).toHaveAttribute('tabindex', '-1');
+        await expect(panel(page)).toHaveAttribute('role', 'tabpanel');
+        await expect(panel(page)).toHaveAttribute('aria-labelledby', 'we-output-tab-markdown');
+        await expect(tab(page, 'markdown')).toHaveAttribute('aria-controls', 'we-output-panel');
+        await expect(editor(page, 'split').getByRole('tabpanel', { name: 'Markdown' })).toHaveCount(1);
+    });
+
+    test('arrows move and select (wrapping), Home / End; the panel follows', async ({ page }) => {
+        await tab(page, 'markdown').focus();
+        await page.keyboard.press('ArrowRight');
+        await expect(tab(page, 'html')).toBeFocused();
+        await expect(tab(page, 'html')).toHaveAttribute('aria-selected', 'true');
+        await expect(panel(page)).toContainText('<strong>text</strong>');
+        await expect(panel(page)).toHaveAttribute('aria-labelledby', 'we-output-tab-html');
+        await page.keyboard.press('End');
+        await expect(tab(page, 'json')).toHaveAttribute('aria-selected', 'true');
+        await page.keyboard.press('ArrowRight'); // wraps
+        await expect(tab(page, 'markdown')).toBeFocused();
+        await expect(tab(page, 'markdown')).toHaveAttribute('aria-selected', 'true');
+        await expect(panel(page)).toContainText('split **text**');
+        // Tab moves on to the panel (focusable), not the other tabs.
+        await page.keyboard.press('Tab');
+        await expect(panel(page)).toBeFocused();
+    });
+
+    test('a click selects too', async ({ page }) => {
+        await tab(page, 'json').click();
+        await expect(tab(page, 'json')).toHaveAttribute('aria-selected', 'true');
+        await expect(tab(page, 'json')).toHaveAttribute('tabindex', '0');
+        await expect(tab(page, 'markdown')).toHaveAttribute('aria-selected', 'false');
+    });
+});

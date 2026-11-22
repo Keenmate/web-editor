@@ -139,6 +139,7 @@ editor.translateCallback = ({ key, params }) => (i18next.exists(key) ? i18next.t
 | `ariaLabels.cloudImage` / `tooltips.cloudImage` / `menuItems.cloudImage` | `Cloud image` / `Insert image from the cloud` / `Insert cloud image…` — the cloud-image plugin's toolbar button, its tooltip, its menu entry |
 | `headers.cloudImagePicker` / `messages.cloudImagePicker` | `Choose a cloud image` / `Pick an image to insert.` — the default picker confirmation |
 | `buttons.markdownTab` / `buttons.htmlTab` / `buttons.jsonTab` | `Markdown` / `HTML` / `JSON` — the split view's output tabs |
+| `ariaLabels.outputTabs` | `Output format` — the split view's tab list (`role="tablist"`) |
 | `buttons.back` / `ariaLabels.close` | `Back` / `Close` — the context menu's submenu back button and ✕ close button when it opens as a sheet / drawer (`menu-presentation`); `ariaLabels.close` is also the dialogs' ✕ |
 | `ariaLabels.editor` | `Rich text editor` — the editing surface's accessible name when the element has none of its own (`aria-labelledby`, `aria-label`, a `<label for>`) |
 | `ariaLabels.loading` | `aria-label` of the pending loader ("Loading…") |
