@@ -31,6 +31,21 @@ test.describe('pending loader', () => {
         await expect(loader).toHaveCount(0);
     });
 
+    test('motion="none" + OS reduced motion do not stop the spin (core SPEC §12.16: a loader is an activity indicator)', async ({ page }) => {
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        await page.evaluate(() => document.getElementById('subject')!.setAttribute('motion', 'none'));
+        await page.evaluate(() => (window as any).runSlow());
+        const loader = slot(page).locator('.we__loader');
+        await expect(loader).toBeVisible();
+        const anim = await loader.evaluate((n) => {
+            const s = getComputedStyle(n);
+            return { name: s.animationName, duration: parseFloat(s.animationDuration) };
+        });
+        expect(anim.name).toBe('we-loader-spin');
+        expect(anim.duration).toBeGreaterThan(0);
+        await page.evaluate(() => (window as any).releaseSlow());
+    });
+
     test('the page hook replaces the default; the instance hook beats the page hook', async ({ page }) => {
         await page.evaluate(() => {
             (window as any).components.renderLoadingCallback = ({ containerElement, context }: any) => {

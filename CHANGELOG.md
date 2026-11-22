@@ -34,6 +34,15 @@ released to a registry yet.
   status-bar counts are deliberately not a live region (no announcement per keystroke) — docs/accessibility.md →
   Announcements lists what is and isn't announced.
 
+### Fixed — accessibility / doctor (2026-11-22)
+
+- The pending loader keeps spinning under `motion="none"` and OS reduced motion — by design (core SPEC §12.16:
+  a loader is an activity indicator, not a decorative animation; base-css-variables slows it to 1.5s under
+  reduced motion). Now documented (docs/accessibility.md → Motion) and pinned by an e2e; it was listed as a gap.
+- `component-variables.manifest.json`: `--base-duration-fast` is marked `"readBy": "@keenmate/web-components-core"`
+  — the tooltip fade it times moved to core `createTooltip` (73d4e31), so the editor CSS no longer reads it
+  (doctor `[vars]` + C-BV-6 pass).
+
 ### Docs — example pages follow the theme switch (kmwc doctor, 2026-11-22)
 
 - `examples-pipelines.html` (85 hard-coded colours), `examples-plugins.html` (6), `examples-content.html` (3) →

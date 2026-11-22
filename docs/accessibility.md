@@ -151,10 +151,14 @@ edit; the selected output tab is conveyed by `aria-selected`. A running pipeline
 The editor animates through the core motion tokens: tooltip, dialog and menu transitions use
 `--base-duration-*`, set by the core `motion` input (`auto | none | snappy | smooth`) or the page-wide
 `window.components.motion`; the OS reduced-motion setting always wins. The only own animation is the
-pending loader's spin (`--we-loader-duration`, chained to `--base-loader-duration`).
+pending loader's spin (`--we-loader-duration`, chained to `--base-loader-duration`). By the suite's motion
+rule (core SPEC §12.16) a loader is an **activity indicator, not a decorative animation**: `motion="none"`
+and OS reduced motion never stop it — it is the only sign something runs. Under OS reduced motion
+`@keenmate/base-css-variables` slows it (`--base-loader-duration` 1.5s); `--we-loader-duration` (or
+`--base-loader-duration`) tunes it, and `--base-loader-rotate: 0` with a self-animating SVG icon replaces the
+rotation altogether.
 
 ## Known gaps
 
-- **Loader spin:** not stopped by reduced motion.
 - No automated axe audit; the keyboard / ARIA behaviour above is covered by the e2e specs
-  (`toolbar`, `context-menu`, `readonly`, `formatting`, `history`, `links`, `tables`, `lists`, `loader`, `modes`).
+  (`a11y`, `toolbar`, `context-menu`, `selection-toolbar`, `readonly`, `formatting`, `history`, `links`, `tables`, `lists`, `loader`, `modes`).

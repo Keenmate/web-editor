@@ -52,7 +52,8 @@
     {
       "name": "base-duration-fast",
       "required": false,
-      "usage": "Tooltip fade-in (the motion level / reduced motion reach it through core MOTION_CSS)"
+      "readBy": "@keenmate/web-components-core",
+      "usage": "Tooltip fade in / out (core createTooltip; the motion level / reduced motion reach it through core MOTION_CSS)"
     },
     {
       "name": "base-elevated-bg",
