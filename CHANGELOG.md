@@ -11,6 +11,15 @@ Target: **1.0.0-rc01** (first release).
 Pre-1.0, pre-publish. Everything below is the work to date; nothing has been
 released to a registry yet.
 
+### Added — accessibility (2026-11-22)
+
+- The editing surface is a WAI-ARIA textbox: `role="textbox"` + `aria-multiline="true"`, `aria-readonly="true"`
+  while not editable (read-only, `preview`, a gating lock), `aria-disabled="true"` while disabled. Its accessible
+  name comes from the element like a native control's — `aria-labelledby`, else `aria-label`, else a
+  `<label for>` (referenced through `ariaLabelledByElements` where supported, its text copied into `aria-label`)
+  — else the new label **`ariaLabels.editor`** ("Rich text editor"). `EditorEngineHost` gains the optional
+  `getAccessibleName()` / `isDisabled()`; `EditorEngine.refreshAttributes()` re-reads the surface attributes.
+
 ### Docs — example pages follow the theme switch (kmwc doctor, 2026-11-22)
 
 - `examples-pipelines.html` (85 hard-coded colours), `examples-plugins.html` (6), `examples-content.html` (3) →

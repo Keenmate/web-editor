@@ -296,6 +296,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
    */
   protected override disabledChanged(): void {
     this.#engine?.setOptions({ isReadonly: !this.#resolveEditable() });
+    this.#engine?.refreshAttributes(); // aria-disabled ↔ aria-readonly
     this.#layout.setInert(this.isEffectivelyDisabled);
     this.#applyChromeState();
     this.#syncFormInput();
@@ -354,6 +355,41 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     this.#engine.activate();
     this.#layout.activate();
     this.#chrome?.refresh();
+    this.#syncSurfaceName();
+  }
+
+  /**
+   * The editing surface's accessible name, from the host (like a native control's): its `aria-labelledby`
+   * elements, else its `aria-label`, else its `<label for>` / wrapping `<label>`s. `text: null` → the engine
+   * falls back to the `ariaLabels.editor` label.
+   */
+  #accessibleName(): { text: string | null; elements: Element[] } {
+    const root = this.getRootNode() as Document | ShadowRoot;
+    const ids = (this.getAttribute('aria-labelledby') ?? '').split(/\s+/).filter(Boolean);
+    let elements: Element[] = ids.map((id) => root.getElementById?.(id) ?? null).filter((e): e is HTMLElement => !!e);
+    if (!elements.length) {
+      const own = this.getAttribute('aria-label')?.trim();
+      if (own) return { text: own, elements: [] };
+      elements = [...(this.internals?.labels ?? [])] as Element[];
+    }
+    const text = elements.map((e) => (e.textContent ?? '').replace(/\s+/g, ' ').trim()).filter(Boolean).join(' ');
+    return { text: text || null, elements: text ? elements : [] };
+  }
+
+  /**
+   * Point the surface at the host's visible label (ARIA element reflection, `ariaLabelledByElements` — the
+   * label lives outside the shadow root) where the browser has it; the `aria-label` copy of its text (engine
+   * attribute) names the surface everywhere else. Re-read on connect and on a labels change.
+   */
+  #syncSurfaceName(): void {
+    const engine = this.#engine;
+    if (!engine) return;
+    const dom = engine.view.dom as HTMLElement & { ariaLabelledByElements?: Element[] | null };
+    if ('ariaLabelledByElements' in dom) {
+      const { elements } = this.#accessibleName();
+      dom.ariaLabelledByElements = elements.length ? elements : null;
+    }
+    engine.refreshAttributes();
   }
 
   /**
@@ -410,6 +446,9 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
           get: () => this.config.viewMode as EditorViewMode,
           set: (mode, via) => this.#switchViewMode(mode, via === 'plugin' ? 'plugin' : this.#commandSource, false),
         },
+        // The editing surface's ARIA (role="textbox"): the host's own name and disabled state.
+        getAccessibleName: () => this.#accessibleName().text,
+        isDisabled: () => this.isEffectivelyDisabled,
       },
     };
     this.#applyContentOption(options, this.#seed.format, this.#seed.content);
@@ -514,6 +553,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     this.#chrome?.refresh();
     this.#engine?.refreshView();
     this.#layout.relabel();
+    this.#syncSurfaceName();
   }
 
   /** A page-wide `window.components.locale` change (core `/locale`): the strings re-resolve. */

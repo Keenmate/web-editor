@@ -32,6 +32,9 @@ export const DEFAULT_LABELS = {
   'labels.words': 'Words: {count}',
   /** Status bar: character count. */
   'labels.chars': 'Chars: {count}',
+  /** The editing surface's accessible name (`role="textbox"`) when the element has none of its own
+   * (`aria-label` / `aria-labelledby` / a `<label for>`). */
+  'ariaLabels.editor': 'Rich text editor',
   /** Toolbar group accessible names (`ariaLabels.<groupId>Group`). */
   'ariaLabels.formatGroup': 'Format',
   'ariaLabels.blockGroup': 'Block',

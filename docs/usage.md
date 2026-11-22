@@ -140,6 +140,7 @@ editor.translateCallback = ({ key, params }) => (i18next.exists(key) ? i18next.t
 | `headers.cloudImagePicker` / `messages.cloudImagePicker` | `Choose a cloud image` / `Pick an image to insert.` — the default picker confirmation |
 | `buttons.markdownTab` / `buttons.htmlTab` / `buttons.jsonTab` | `Markdown` / `HTML` / `JSON` — the split view's output tabs |
 | `buttons.back` / `ariaLabels.close` | `Back` / `Close` — the context menu's submenu back button and ✕ close button when it opens as a sheet / drawer (`menu-presentation`); `ariaLabels.close` is also the dialogs' ✕ |
+| `ariaLabels.editor` | `Rich text editor` — the editing surface's accessible name when the element has none of its own (`aria-labelledby`, `aria-label`, a `<label for>`) |
 | `ariaLabels.loading` | `aria-label` of the pending loader ("Loading…") |
 | `errors.valueFormat` | validation message while `getValueFormatCallback` throws ("The value could not be formatted.") |
 

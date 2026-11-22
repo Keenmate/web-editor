@@ -78,7 +78,7 @@ Read-only and `preview` editors show the browser's own menu instead.
 | Tooltip | core tooltip (`role="tooltip"`), wired as `aria-describedby` while shown; buttons carry no `title` |
 | Selection toolbar | `role="toolbar"` (horizontal), shown for a non-empty text selection while editable |
 | Context menu | `role="menu"`; items `menuitem`, toggles `menuitemcheckbox` + `aria-checked`, disabled `aria-disabled` |
-| Editing surface | ProseMirror `contenteditable` (`true` / `false`), `tabindex="0"`; `aria-placeholder` while empty (from `placeholders.document`) |
+| Editing surface | ProseMirror `contenteditable` (`true` / `false`), `tabindex="0"`, `role="textbox"` + `aria-multiline="true"` + an accessible name (see below); `aria-readonly="true"` while not editable (read-only, `preview`, a gating pipeline lock), `aria-disabled="true"` while disabled; `aria-placeholder` while empty (from `placeholders.document`) |
 | Pending loader | `role="status"` + `aria-label` (`ariaLabels.loading`) |
 | Dialogs | core `/dialog` — modal, titled by the prompt header (`headers.*`) |
 
@@ -98,6 +98,12 @@ Every name comes from `labels` (English defaults, translatable per key — see
   follows a customized `tooltips.x` (and the reverse), so translating one of the pair is enough;
 - toolbar groups: `ariaLabels.<groupId>Group`;
 - dialogs: `headers.*` (titles), `buttons.ok` / `buttons.cancel`, `ariaLabels.close` (the ✕);
+- the editing surface (`role="textbox"`), like a native control: the element's `aria-labelledby` elements,
+  else its `aria-label`, else its `<label for>` / wrapping `<label>` — else `ariaLabels.editor`
+  ("Rich text editor"). A label element is referenced through `ariaLabelledByElements` where the browser
+  has ARIA element reflection (the label sits outside the shadow root), and its text is copied into the
+  surface's `aria-label` everywhere. Re-read on connect and on a `labels` / locale change — a label added
+  later takes effect on the next of those;
 - the loader: `ariaLabels.loading`; the split tabs: `buttons.markdownTab` / `htmlTab` / `jsonTab`;
   the sheet / drawer menu chrome: `buttons.back` / `ariaLabels.close`.
 
@@ -124,8 +130,6 @@ pending loader's spin (`--we-loader-duration`, chained to `--base-loader-duratio
   the static toolbar and the context menu.
 - **Context menu:** no own keyboard opener; it relies on the browser raising `contextmenu` for
   <kbd>Shift</kbd>+<kbd>F10</kbd> / the Menu key.
-- **Editing surface:** no `role="textbox"`, `aria-multiline` or accessible name of its own — give the
-  editor a visible label next to it.
 - **Announcements:** no live region — the status-bar counts and the split view's output are not announced;
   the split tabs are buttons, not a `tablist`.
 - **Loader spin:** not stopped by reduced motion.

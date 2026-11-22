@@ -70,8 +70,7 @@ import {
  * every engine (Firefox / WebKit don't target a non-editable shadow surface with the copy
  * event, so ProseMirror's copy handler never sees it there).
  */
-const readOnlyKeyboardProps: Pick<DirectEditorProps, 'attributes' | 'handleDOMEvents'> = {
-  attributes: { tabindex: '0' },
+const readOnlyKeyboardProps: Pick<DirectEditorProps, 'handleDOMEvents'> = {
   handleDOMEvents: {
     keydown: (view, event) => {
       if (view.editable || !(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return false;
@@ -103,6 +102,13 @@ export interface EditorEngineHost {
     /** `'command'` = a view-mode command ran (toolbar / `runCommand`); `'plugin'` = a plugin / stage port. */
     set(mode: EditorViewMode, via: 'command' | 'plugin'): void;
   };
+  /**
+   * The editing surface's accessible name (`aria-label`): the host's own name (its `aria-label`, or the
+   * text of its `<label>`s). `null` / absent → the engine's `ariaLabels.editor` label.
+   */
+  getAccessibleName?(): string | null;
+  /** Whether the host is (effectively) disabled — the surface then says `aria-disabled="true"`, not `aria-readonly`. */
+  isDisabled?(): boolean;
 }
 
 /** `new EditorEngine(mount, options)` — the element the view mounts into is the first argument, not an option. */
@@ -334,6 +340,7 @@ export class EditorEngine {
     this.view = new EditorView(mount, {
       state,
       editable: () => this.isEditable(),
+      attributes: () => this.#surfaceAttributes(),
       ...readOnlyKeyboardProps,
       dispatchTransaction: (tr) => {
         const newState = this.view.state.apply(tr);
@@ -520,6 +527,30 @@ export class EditorEngine {
   /** Whether the editor currently accepts input: not `isReadonly` and not locked by a gating pipeline run. */
   isEditable(): boolean {
     return !this.#options.isReadonly && !this.#isLocked;
+  }
+
+  /**
+   * The editing surface's ARIA (WAI-ARIA textbox): `role="textbox"` + `aria-multiline`, an accessible name
+   * (the host's, else `ariaLabels.editor`), `aria-readonly` while not editable (read-only, preview, a gating
+   * lock) or `aria-disabled` while the host is disabled. `tabindex="0"` keeps a read-only surface focusable.
+   * Re-read on every view update; {@link refreshAttributes} re-reads them without one.
+   */
+  #surfaceAttributes(): Record<string, string> {
+    const host = this.#options.host;
+    const attrs: Record<string, string> = {
+      tabindex: '0',
+      role: 'textbox',
+      'aria-multiline': 'true',
+      'aria-label': host?.getAccessibleName?.() || this.label('ariaLabels.editor'),
+    };
+    if (host?.isDisabled?.()) attrs['aria-disabled'] = 'true';
+    else if (!this.isEditable()) attrs['aria-readonly'] = 'true';
+    return attrs;
+  }
+
+  /** Re-read the editing surface's attributes (accessible name, read-only / disabled state) — no transaction. */
+  refreshAttributes(): void {
+    this.view.setProps({});
   }
 
   /** Re-evaluate the view's `editable` prop in place. */

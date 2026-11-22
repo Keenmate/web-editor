@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>km-editor — a11y</title>
+</head>
+<body>
+    <!-- Targeted by e2e/a11y.spec.ts: the editing surface's role / name / state, the keyboard openers
+         (Alt+F10 toolbars, Shift+F10 / ContextMenu menu), announcements, the split-view tablist. -->
+    <km-editor id="subject" statusbar="bottom" value="# Title
+
+plain words here"></km-editor>
+
+    <label for="labelled">Release notes</label>
+    <km-editor id="labelled" value="text"></km-editor>
+
+    <km-editor id="named" aria-label="Comment body" value="text"></km-editor>
+
+    <span id="ext-label">External heading</span>
+    <km-editor id="byref" aria-labelledby="ext-label" value="text"></km-editor>
+
+    <km-editor id="ro" readonly value="read only text"></km-editor>
+    <km-editor id="dis" disabled value="disabled text"></km-editor>
+
+    <km-editor id="split" view-mode="split" value="split **text**"></km-editor>
+
+    <script type="module">
+        import '/src/index.ts';
+        window.fixtureReady = true;
+    </script>
+</body>
+</html>

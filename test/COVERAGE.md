@@ -128,6 +128,12 @@ script-built `DataTransfer` arrives empty in a synthetic paste event), the liste
 | Global registration: define, `window.components` (version / config / getInstances), re-import, the element module alone defines nothing (core `registerComponent()` in the entry) | ✓ | `registration.spec.ts` | `registration.html` |
 | Invalid enum attributes → warn, keep the previous value (the default in markup), reflected attribute written back; invalid property rejected + warn; boolean `readonly` | ✓ | `inputs.spec.ts` | `inputs.html` |
 
+## 9. Accessibility
+
+| Feature | Status | Spec | Fixture |
+| --- | :-: | --- | --- |
+| Editing surface `role="textbox"` + `aria-multiline` + name (`ariaLabels.editor`, host `aria-label` / `aria-labelledby` / `<label for>` via `ariaLabelledByElements`), `aria-readonly` / `aria-disabled` following read-only / preview / disabled | ✓ | `a11y.spec.ts` | `a11y.html` |
+
 ## Not implemented (feature gaps — no tests)
 
 - paste / copy / idle pipeline triggers (PIPELINES.md §4)
