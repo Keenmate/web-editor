@@ -11,6 +11,12 @@ Target: **1.0.0-rc01** (first release).
 Pre-1.0, pre-publish. Everything below is the work to date; nothing has been
 released to a registry yet.
 
+### Docs — example pages fit a phone (check-pages 390 / 320 px, 2026-11-22)
+
+- `examples-pipelines.html`: the visualizer's fixed `1fr 460px` columns and its own controls row → the kit's
+  `.grid-2` / `.controls` (one column on a phone); was 667 px wide at 390 / 320.
+- `examples-playground.html`: the harness's hidden floating toolbars wrap within the viewport; was 517 px wide.
+
 ### Docs — full API in docs/usage.md, + examples / accessibility guides (readme-structure C-RS-3 / C-RS-10, 2026-11-22)
 
 - The README's Options / Labels / Forms / Responsive rules / Extending sections moved to **`docs/usage.md`**

@@ -7,7 +7,6 @@
   /* ── Visualizer (dark lanes — a deliberate "microscope" look) ──────────
      The two-column layout, the per-stage lane chips (green/gray/amber/red),
      the lock badge, the modal. Page chrome comes from the devkit examples kit. */
-  .pv-page { display: grid; grid-template-columns: 1fr 460px; gap: 20px; align-items: start; }
   .pv-col h3 { font-size: 18px; margin: 0 0 4px; display: block; }
   .pv-col .sub { color: #64748b; font-size: 12px; margin: 0 0 16px; }
   km-editor { display: block; transition: opacity .15s; }
@@ -17,7 +16,6 @@
   #pv-editor-col.pv-locked km-editor { opacity: .5; pointer-events: none; }
   #pv-editor-col.pv-locked .pv-lock-badge { display: inline; }
 
-  .pv-controls { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-bottom: 14px; font-size: 13px; color: #475569; }
   #pv-delay { width: 120px; vertical-align: middle; }
   #pv-simulate { padding: 6px 12px; border-radius: 7px; border: 1px solid #3a3a3a; background: #262626; color: #e6e6e6; cursor: pointer; font-size: 12px; }
   #pv-simulate:hover { background: #303030; border-color: #4a4a4a; }
@@ -124,7 +122,7 @@
   <h2>PV01 · Run Visualizer</h2>
   <p class="subtitle">An editor beside one lane per pipeline — each stage chip blinks green → gray → amber → red by state.</p>
 </div>
-<div class="pv-page">
+<div class="grid-2">
   <div class="pv-col" id="pv-editor-col">
     <h3>Editor <span class="pv-lock-badge">⏳ locked — pipeline running</span></h3>
     <p class="sub">Type here — the derive pipelines run off the <code>change</code> event (debounced). A gating async paste locks the editor until it finishes.</p>
@@ -141,7 +139,7 @@ Try typing the word secret to halt the policy step, or forbidden to error it."><
   <div class="pv-col">
     <h3>Pipelines</h3>
     <p class="sub">One lane per pipeline. Stages: <b>green</b>=running → fades gray=ok, <b>amber</b>=halt, <b>red</b>=error, dashed=skip, struck=aborted.</p>
-    <div class="pv-controls">
+    <div class="controls">
       <label>stage delay: <span id="pv-delay-label">900</span>ms
         <input type="range" id="pv-delay" min="0" max="3000" step="100" value="900" />
       </label>
