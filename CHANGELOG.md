@@ -4,12 +4,11 @@ All notable changes to `@keenmate/web-editor` are documented here. The format is
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0-rc01] - 2026-11-22
 
-Target: **1.0.0-rc01** (first release).
-
-Pre-1.0, pre-publish. Everything below is the work to date; nothing has been
-released to a registry yet.
+The first release — nothing has been published to npm before it. Everything below is the work to date; the
+BREAKING entries record changes made during development and only matter to code written against an unpublished
+build (a `file:` link or a git checkout).
 
 ### Added — accessibility (2026-11-22)
 
@@ -79,6 +78,14 @@ released to a registry yet.
 - Assigning `window.components.renderIconCallback` after the editor rendered repaints the toolbar / selection-toolbar
   item icons in place (core `iconsChanged()`, rulebook C-CA-40) — the document, selection, focus, undo history and an
   open menu are kept. `EditorEngine` renders no icons (your own UI draws them), so it has no icon refresh method.
+
+### Internal — the Custom Elements Manifest lists the public API only (core 1.0.0-rc25, 2026-11-21)
+
+- `custom-elements.json` is regenerated through core's `blissAnalyzerConfig` public-API filter: private / protected /
+  `#` / `_` members and modules that `src/index.ts` does not re-export (the internal `src/ui/*` chrome, `src/inputs.ts`,
+  `src/dialogs.ts`, `src/predicates.ts`, …) are dropped. The element's attributes, properties, events and public
+  methods, and every export of the package entry, are unchanged; `web-types.json` /
+  `vscode.html-custom-data.json` follow.
 
 ### Changed — BREAKING: `EditorEngine` takes settings one way (rulebook C-CA-39)
 
