@@ -106,9 +106,10 @@ window.components.locale = {
         <code>{ component, key, template, params, locale }</code> — <code>key</code> is the full
         <code>km-editor.&lt;elementType&gt;.&lt;name&gt;</code> — and returns the text, or <code>null</code> = not mine.
         The element's own <code>translateCallback</code> is asked first (German, only <code>ariaLabels.bold</code> and
-        <code>labels.words</code> here); its <code>null</code> passes the key on to the page-wide one (a small Slovak
-        i18next-like lookup with <code>{{count}}</code>). A key the instance <code>labels</code> set (the second editor's
-        <code>labels.words</code>) is never sent to any callback.
+        <code>labels.words</code> here); its <code>null</code> passes the key on to the page-wide one — the app's i18next
+        (Slovak, with plural forms: the bridge hands i18next <code>params.ctx.count</code> as its <code>count</code>). The page
+        itself runs without i18next: the same forms are picked with <code>Intl.PluralRules('sk')</code>. A key the instance
+        <code>labels</code> set (the second editor's <code>labels.words</code>) is never sent to any callback.
     </p>
     <div class="controls">
         <label><input type="checkbox" id="lo03-page"> page-wide <code>translateCallback</code> (Slovak)</label>
@@ -128,17 +129,33 @@ window.components.locale = {
         </div>
         <div class="output"><div class="output-label">rendered strings (read from the shadow root)</div><pre id="lo03-out"></pre></div>
     </div>
-    <div class="code-block" data-language="js" data-kmwc-snippet><pre><code>// an i18next-like lookup: a dictionary + t(key, params)
-const sk = {
-  'km-editor.ariaLabels.bold': 'Tučné',
-  'km-editor.ariaLabels.italic': 'Kurzíva',
-  'km-editor.labels.words': 'Slová: {{count}}',
-  'km-editor.labels.chars': 'Znaky: {{count}}',
-};
-const t = (key, params) =&gt; sk[key].replace(/\{\{(\w+)\}\}/g, (_, p) =&gt; params?.[p] ?? '');
+    <div class="code-block" data-language="js" data-kmwc-snippet><pre><code>// the app's own i18next — its JSON, plural forms as i18next's _one / _few / _other suffixes
+i18next.init({
+  lng: 'sk',
+  interpolation: { escapeValue: false },   // every editor label is set as text
+  resources: { sk: { translation: {
+    'km-editor': {
+      ariaLabels: { bold: 'Tučné', italic: 'Kurzíva' },
+      labels: {
+        words_one: '{{count}} slovo',
+        words_few: '{{count}} slová',
+        words_other: '{{count}} slov',
+        chars_one: '{{count}} znak',
+        chars_few: '{{count}} znaky',
+        chars_other: '{{count}} znakov',
+      },
+    },
+  } } },
+});
 
-// page-wide — every component on the page
-window.components.locale = { translateCallback: ({ key, params }) =&gt; (key in sk ? t(key, { ...params, count: params.ctx?.count }) : null) };
+// page-wide — ONE generic bridge for every key of every component. params.ctx = the label's context;
+// ctx.count = the number the text's noun agrees with → i18next's `count` (exists() needs it too)
+window.components.locale = {
+  translateCallback: ({ key, params }) =&gt; {
+    const options = { ...params, count: params.ctx?.count };
+    return i18next.exists(key, options) ? i18next.t(key, options) : null;   // null = not mine
+  },
+};
 
 // one element — asked BEFORE the page-wide callback; null = not mine
 el.translateCallback = ({ key, params }) =&gt; {
@@ -221,6 +238,41 @@ el.locale = 'de';</code></pre></div>
     </p>
 </div>
 
+<!-- ============================================================= -->
+<!-- LO07 · Status bar in Czech (plural rules)                      -->
+<!-- ============================================================= -->
+<div class="card">
+    <h2>LO07 · Status bar in Czech (plural rules)</h2>
+    <p>
+        The status bar's real word / character count, translated by the element's own <code>translateCallback</code>.
+        <code>params.ctx.count</code> is the number the noun agrees with, so <code>Intl.PluralRules('cs')</code> picks the
+        form: "1 slovo / 3 slova / 5 slov". Pick a text — the editor's content changes and the count with it. No i18n
+        library needed; with i18next it is the generic bridge of LO03 (<code>labels.words_one</code> / <code>_few</code> /
+        <code>_other</code> in the app's JSON).
+    </p>
+    <div class="controls"><strong class="muted">content</strong>
+        <label><input type="radio" name="lo07-words" value="1" checked> 1 word</label>
+        <label><input type="radio" name="lo07-words" value="3"> 3 words</label>
+        <label><input type="radio" name="lo07-words" value="5"> 5 words</label>
+    </div>
+    <div class="demo-area">
+        <km-editor id="lo07" view-mode="edit" statusbar="bottom" value="slovo"></km-editor>
+        <div class="output"><div class="output-label">status bar</div><pre id="lo07-out"></pre></div>
+    </div>
+    <div class="code-block" data-language="js" data-kmwc-snippet><pre><code>const plural = new Intl.PluralRules('cs');
+const forms = {
+  'km-editor.labels.words': { one: 'slovo', few: 'slova', many: 'slova', other: 'slov' },
+  'km-editor.labels.chars': { one: 'znak', few: 'znaky', many: 'znaku', other: 'znaků' },
+};
+
+el.translateCallback = ({ key, params }) =&gt;
+  key in forms
+    ? `${params.ctx.count} ${forms[key][plural.select(params.ctx.count)]}`
+    : null;   // null = not mine → the next layer / English
+
+// with i18next: the one generic bridge of LO03 (labels.words_one / _few / _other in the app's JSON)</code></pre></div>
+</div>
+
 <script type="module">
     const $ = (id) => document.getElementById(id);
 
@@ -267,6 +319,7 @@ el.locale = 'de';</code></pre></div>
             `bold aria-label:       ${aria('lo04', 'bold')}`,
         ]);
         write('lo05-out', [`${status('lo05', 'words')} / ${status('lo05', 'chars')}`]);
+        write('lo07-out', [`${status('lo07', 'words')} / ${status('lo07', 'chars')}`]);
     }
 
     // ── LO01 · instance labels.
@@ -294,14 +347,21 @@ el.locale = 'de';</code></pre></div>
     $('lo02-dict').addEventListener('change', (e) => { page.labels = e.target.checked ? CS : null; applyPage(); });
 
     // ── LO03 · translateCallback.
-    const sk = {
+    // The snippet's i18next setup without loading i18next: the same Slovak forms, picked with Intl.PluralRules.
+    const skPlural = new Intl.PluralRules('sk');
+    const SK = {
         'km-editor.ariaLabels.bold': 'Tučné',
         'km-editor.ariaLabels.italic': 'Kurzíva',
-        'km-editor.labels.words': 'Slová: {{count}}',
-        'km-editor.labels.chars': 'Znaky: {{count}}',
+        'km-editor.labels.words': { one: '{n} slovo', few: '{n} slová', other: '{n} slov' },
+        'km-editor.labels.chars': { one: '{n} znak', few: '{n} znaky', other: '{n} znakov' },
     };
-    const t = (key, params) => sk[key].replace(/\{\{(\w+)\}\}/g, (_, p) => String(params?.[p] ?? ''));
-    const pageTranslate = ({ key, params }) => (key in sk ? t(key, { ...params, count: params.ctx?.count }) : null);
+    const pageTranslate = ({ key, params }) => {
+        const entry = SK[key];
+        if (entry === undefined) return null;   // not mine
+        if (typeof entry === 'string') return entry;
+        const n = params.ctx?.count;
+        return (entry[skPlural.select(n)] ?? entry.other).replace('{n}', String(n));
+    };
     const ownTranslate = ({ key, params }) => {
         if (key === 'km-editor.ariaLabels.bold') return 'Fett';
         if (key === 'km-editor.labels.words') return `Wörter: ${params.ctx.count}`;
@@ -327,6 +387,20 @@ el.locale = 'de';</code></pre></div>
     }
     for (const radio of document.querySelectorAll('input[name="lo05-locale"]')) {
         radio.addEventListener('change', (e) => { page.locale = e.target.value; applyPage(); });
+    }
+
+    // ── LO07 · Czech plural forms on the real word count (the element's own translateCallback).
+    const csPlural = new Intl.PluralRules('cs');
+    const csForms = {
+        'km-editor.labels.words': { one: 'slovo', few: 'slova', many: 'slova', other: 'slov' },
+        'km-editor.labels.chars': { one: 'znak', few: 'znaky', many: 'znaku', other: 'znaků' },
+    };
+    // With i18next: the generic bridge shown in LO03.
+    $('lo07').translateCallback = ({ key, params }) =>
+        key in csForms ? `${params.ctx.count} ${csForms[key][csPlural.select(params.ctx.count)]}` : null;
+    const LO07_TEXT = { 1: 'slovo', 3: 'jedna dvě tři', 5: 'jedna dvě tři čtyři pět' };
+    for (const radio of document.querySelectorAll('input[name="lo07-words"]')) {
+        radio.addEventListener('change', (e) => { $('lo07').value = LO07_TEXT[e.target.value]; refreshAll(); });
     }
 
     refreshAll();

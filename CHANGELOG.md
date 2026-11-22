@@ -26,6 +26,10 @@ build (a `file:` link or a git checkout).
   `ctx.label(key, { ctx: { count } }, 'English: {ctx.count}')`.
 - The editor's `labels.ts` already delegated to core `/locale` (`createLabels` / `formatLabel`), so dotted paths
   and locale number formatting come from core — no private copy to change.
+- Docs: `examples-localization.html` LO03 shows the real i18next setup (`labels.words_one` / `_few` / `_other`) and the
+  generic bridge (`const options = { ...params, count: params.ctx?.count }; i18next.exists(key, options) ? i18next.t(key, options) : null`);
+  new LO07 renders the status bar's real word count in Czech via `translateCallback` + `Intl.PluralRules('cs')`
+  ("1 slovo / 3 slova / 5 slov").
 
 ### Added — `required` through core validity (rulebook C-CA-41, core 1.0.0-rc25, 2026-11-22)
 

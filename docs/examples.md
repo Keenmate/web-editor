@@ -50,10 +50,11 @@ test, an issue or a doc can point at it. The full API is in [usage.md](./usage.m
 
 - **LO01 · Instance `labels`** — short and full keys on one element.
 - **LO02 · Page-wide dictionary** — one flat `window.components.locale.labels` translates every editor.
-- **LO03 · `translateCallback`** — an app's own i18n answers the keys.
+- **LO03 · `translateCallback`** — an app's own i18n answers the keys (the generic i18next bridge, `_one` / `_few` / `_other` plural keys).
 - **LO04 · Screen-reader name / tooltip follow** — an unset `ariaLabels.x` / `tooltips.x` follows its customized twin.
 - **LO05 · `locale` + formatting** — the status-bar counts formatted per locale.
 - **LO06 · `shouldEscapeLabels`** — not applicable: every editor label is text.
+- **LO07 · Status bar in Czech (plural rules)** — the real word count through `translateCallback` + `Intl.PluralRules('cs')`: 1 slovo / 3 slova / 5 slov.
 
 **Playground** — `examples-playground.html`
 

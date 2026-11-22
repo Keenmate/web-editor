@@ -53,10 +53,10 @@ test('examples-localization.html: every toggle changes the shown text', async ({
 
     // LO03 — page callback, then the element's own first; instance labels still win.
     await page.locator('#lo03-page').check();
-    await expect(out('lo03-out')).toContainText('#lo03a  bold: Tučné   italic: Kurzíva   status: Slová: 3 / Znaky: 17');
+    await expect(out('lo03-out')).toContainText('#lo03a  bold: Tučné   italic: Kurzíva   status: 3 slová / 17 znakov');
     await expect(out('lo03-out')).toContainText('#lo03b  bold: Tučné   italic: Kurzíva   status: Instance wins: 3');
     await page.locator('#lo03-own').check();
-    await expect(out('lo03-out')).toContainText('#lo03a  bold: Fett   italic: Kurzíva   status: Wörter: 3 / Znaky: 17');
+    await expect(out('lo03-out')).toContainText('#lo03a  bold: Fett   italic: Kurzíva   status: Wörter: 3 / 17 znakov');
     await page.locator('#lo03-page').uncheck();
     await page.locator('#lo03-own').uncheck();
     await expect(out('lo03-out')).toContainText('#lo03a  bold: Bold   italic: Italic   status: Words: 3');
@@ -76,5 +76,12 @@ test('examples-localization.html: every toggle changes the shown text', async ({
     await expect(out('lo05-out')).toHaveText('Words: 1.234 / Chars: 2.467');
     await page.locator('input[name="lo05-own"][value=""]').check();
     await expect(out('lo05-out')).toHaveText('Words: 1,234 / Chars: 2,467');
+
+    // LO07 — the real word count picks the Czech plural form (own translateCallback + Intl.PluralRules('cs')).
+    await expect(out('lo07-out')).toHaveText('1 slovo / 5 znaků');
+    await page.locator('input[name="lo07-words"][value="3"]').check();
+    await expect(out('lo07-out')).toHaveText('3 slova / 13 znaků');
+    await page.locator('input[name="lo07-words"][value="5"]').check();
+    await expect(out('lo07-out')).toHaveText('5 slov / 23 znaků');
     expect(errors).toEqual([]);
 });
