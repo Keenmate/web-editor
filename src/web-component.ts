@@ -266,6 +266,14 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     });
     // `el.value = …` assigned before upgrade: core lifts it off and replays it through
     // the `value` setter before the first build (core rc20) — a pre-build `setValue()`.
+    // A click aimed at the host itself — a `<label for>` / wrapping `<label>` activation (the browser
+    // re-targets it to the labelled form-associated element) — focuses the editing surface, like a native
+    // control. Clicks inside the shadow (toolbar, text) target their own nodes and are left alone.
+    // Not `delegatesFocus`: that would focus the first toolbar button and steal focus on chrome clicks.
+    this.addEventListener('click', (e) => {
+      if (e.composedPath()[0] !== this || this.isEffectivelyDisabled) return;
+      this.focus();
+    });
   }
 
   // ── core lifecycle hooks ──────────────────────────────────────────────────

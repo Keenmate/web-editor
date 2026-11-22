@@ -33,6 +33,11 @@ build (a `file:` link or a git checkout).
   status-bar counts are deliberately not a live region (no announcement per keystroke) — docs/accessibility.md →
   Announcements lists what is and isn't announced.
 
+### Fixed — small accessibility items (2026-11-22)
+
+- Clicking the element's `<label for>` / a wrapping `<label>` focuses the editing surface (it did nothing — the
+  browser sends the label's click to the host, which isn't focusable). Not while disabled.
+
 ### Fixed — accessibility / doctor (2026-11-22)
 
 - The pending loader keeps spinning under `motion="none"` and OS reduced motion — by design (core SPEC §12.16:

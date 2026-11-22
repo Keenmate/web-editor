@@ -33,6 +33,19 @@ test.describe('a11y — editing surface', () => {
         await expect(editor(page, 'labelled').getByRole('textbox', { name: 'Release notes' })).toHaveCount(1);
     });
 
+    test('clicking the <label for> focuses the editing surface; a disabled editor stays unfocused', async ({ page }) => {
+        await page.click('label[for="labelled"]');
+        await expect(pm(page, 'labelled')).toBeFocused();
+        await page.evaluate(() => {
+            const label = document.createElement('label');
+            label.htmlFor = 'dis';
+            label.textContent = 'Disabled one';
+            document.body.append(label);
+        });
+        await page.click('label[for="dis"]');
+        await expect(pm(page, 'dis')).not.toBeFocused();
+    });
+
     test('the host aria-label / aria-labelledby name the surface', async ({ page }) => {
         await expect(pm(page, 'named')).toHaveAttribute('aria-label', 'Comment body');
         await expect(pm(page, 'byref')).toHaveAttribute('aria-label', 'External heading');

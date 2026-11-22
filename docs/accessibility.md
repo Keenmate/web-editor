@@ -139,6 +139,8 @@ edit; the selected output tab is conveyed by `aria-selected`. A running pipeline
 ## Focus management
 
 - `el.focus()` / `controller.focus()` focus the editing surface (after applying pending writes).
+- Clicking the element's `<label for>` (or a wrapping `<label>`) focuses the editing surface, like a native
+  control's label (not while disabled).
 - Toolbar and selection-toolbar buttons don't take focus on mouse press, so a click keeps the editor's
   focus and selection; every command refocuses the editor afterwards.
 - A prompt returns focus to the editor (applied or cancelled); so does closing the context menu.
