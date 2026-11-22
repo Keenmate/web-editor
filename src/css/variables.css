@@ -69,6 +69,12 @@
   --we-link-color: var(--base-primary-text-color, light-dark(color-mix(in srgb, black 45%, var(--we-accent)), color-mix(in srgb, white 25%, var(--we-accent))));
   --we-link-color-hover: light-dark(color-mix(in srgb, black 25%, var(--we-link-color)), color-mix(in srgb, white 25%, var(--we-link-color)));
 
+  /* Keyboard focus ring (:focus-visible only) of the toolbar / selection-toolbar buttons, the split view's output
+     tabs and its output panel — the suite's shared --base-focused-outline. Drawn just outside a button (so it
+     shows on a toggled, accent-filled one) and inside the output panel (a scroller clips an outer ring). */
+  --we-focus-outline: var(--base-focused-outline, var(--base-outline-width, 1px) solid var(--we-accent));
+  --we-focus-outline-offset: 1px;
+
   /* Selected node (image, horizontal rule, …), selected table cells, column-resize handle */
   --we-selected-outline-color: var(--we-accent);
   --we-selected-cell-bg: var(--base-selected-bg, light-dark(color-mix(in srgb, var(--we-accent) 10%, transparent), color-mix(in srgb, var(--we-accent) 20%, transparent)));

@@ -111,7 +111,12 @@ export class EditorChrome {
     const onSurfaceKeydown = (event: KeyboardEvent): void => {
       if (event.defaultPrevented || event.isComposing) return;
       if (matchesShortcut(event, 'Alt+F10')) {
-        if (this.#selection.focus() || this.#toolbar.focus()) event.preventDefault();
+        const bar = this.#selection.focus() ? this.#selection.element : this.#toolbar.focus() ? this.#toolbar.el : null;
+        if (!bar) return;
+        event.preventDefault();
+        // Chromium doesn't count a modified key (Alt+…) as keyboard interaction for `:focus-visible`, so the
+        // landing button would show no ring: mark the bar until focus leaves it or the pointer is used there.
+        bar.toggleAttribute('data-keyboard-focus', true);
       } else if (matchesShortcut(event, 'Shift+F10') || matchesShortcut(event, 'ContextMenu')) {
         if (this.#menu.openAtCaret()) event.preventDefault();
       }
@@ -123,13 +128,24 @@ export class EditorChrome {
       event.preventDefault();
       view.focus();
     };
+    const onBarFocusOut = (event: FocusEvent): void => {
+      const bar = event.currentTarget as HTMLElement;
+      if (!bar.contains(event.relatedTarget as Node | null)) bar.removeAttribute('data-keyboard-focus');
+    };
+    const onBarPointerDown = (event: PointerEvent): void => (event.currentTarget as HTMLElement).removeAttribute('data-keyboard-focus');
     view.dom.addEventListener('keydown', onSurfaceKeydown);
-    this.#toolbar.el.addEventListener('keydown', onToolbarKeydown);
-    this.#selection.element.addEventListener('keydown', onToolbarKeydown);
+    for (const bar of [this.#toolbar.el, this.#selection.element]) {
+      bar.addEventListener('keydown', onToolbarKeydown);
+      bar.addEventListener('focusout', onBarFocusOut);
+      bar.addEventListener('pointerdown', onBarPointerDown);
+    }
     this.#unsubscribe.push(() => {
       view.dom.removeEventListener('keydown', onSurfaceKeydown);
-      this.#toolbar.el.removeEventListener('keydown', onToolbarKeydown);
-      this.#selection.element.removeEventListener('keydown', onToolbarKeydown);
+      for (const bar of [this.#toolbar.el, this.#selection.element]) {
+        bar.removeEventListener('keydown', onToolbarKeydown);
+        bar.removeEventListener('focusout', onBarFocusOut);
+        bar.removeEventListener('pointerdown', onBarPointerDown);
+      }
     });
 
     this.#unsubscribe.push(engine.events.on('selection-change', () => this.refresh()));

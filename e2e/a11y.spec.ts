@@ -224,6 +224,37 @@ test.describe('a11y — split view tabs', () => {
     });
 });
 
+test.describe('a11y — focus ring', () => {
+    test.beforeEach(async ({ page }) => load(page, 'a11y.html', { flag: 'fixtureReady' }));
+
+    const outline = (loc: import('@playwright/test').Locator) =>
+        loc.evaluate((el) => { const s = getComputedStyle(el); return `${s.outlineStyle} ${s.outlineColor}`; });
+
+    test('keyboard focus draws --we-focus-outline (base focused outline) on buttons, tabs, the output panel', async ({ page }) => {
+        await page.evaluate(() => document.getElementById('subject')!.style.setProperty('--we-focus-outline', '2px solid rgb(255, 0, 0)'));
+        await pm(page).click();
+        await page.keyboard.press('Alt+F10');
+        const button = page.locator('km-editor#subject .we-toolbar-zone button:focus');
+        await expect(button).toHaveCount(1);
+        expect(await outline(button)).toBe('solid rgb(255, 0, 0)');
+
+        const tabs = page.locator('km-editor#split .we-output-tabs');
+        await tabs.locator('[aria-selected="true"]').focus();
+        await page.keyboard.press('ArrowRight');
+        expect(await outline(tabs.locator('[aria-selected="true"]'))).toMatch(/^solid /);
+        await page.keyboard.press('Tab');
+        await expect(page.locator('km-editor#split .we-output-pre')).toBeFocused();
+        expect(await outline(page.locator('km-editor#split .we-output-pre'))).toMatch(/^solid /);
+    });
+
+    test('a mouse click on a tab draws no ring (:focus-visible only)', async ({ page }) => {
+        const json = page.locator('km-editor#split .we-output-tabs [data-format="json"]');
+        await json.click();
+        await expect(json).toBeFocused();
+        expect(await outline(json)).toMatch(/^none /);
+    });
+});
+
 test.describe('a11y — announcements', () => {
     test.beforeEach(async ({ page }) => load(page, 'a11y.html', { flag: 'fixtureReady' }));
 

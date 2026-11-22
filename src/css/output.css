@@ -35,10 +35,20 @@
   background: var(--we-hover-bg);
 }
 
+.we-output-tabs button:focus-visible {
+  outline: var(--we-focus-outline);
+  outline-offset: var(--we-focus-outline-offset);
+}
+
 .we-output-tabs button.active {
   background: var(--we-bg);
   border-color: var(--we-border);
   font-weight: 600;
+}
+
+.we-output-pre:focus-visible {
+  outline: var(--we-focus-outline);
+  outline-offset: calc(-1 * var(--base-outline-width, 1px));
 }
 
 .we-output-pre {

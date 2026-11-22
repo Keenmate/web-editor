@@ -39,6 +39,11 @@ build (a `file:` link or a git checkout).
   browser sends the label's click to the host, which isn't focusable). Not while disabled.
 - A `<label for>` added, reworded or removed after the editor connected now names the editing surface: the name
   is re-read whenever the surface takes focus (before: only on connect / a `labels` change).
+- Visible keyboard focus ring: toolbar / selection-toolbar buttons, the split view's output tabs and its output
+  panel draw the new **`--we-focus-outline`** (default the shared `--base-focused-outline`) /
+  **`--we-focus-outline-offset`** on `:focus-visible` only (before: the browser default outline) — including the
+  button Alt+F10 lands on (Chromium doesn't count Alt+… as keyboard interaction; the bar is marked
+  `data-keyboard-focus` until focus leaves it). The manifest lists both + `--base-focused-outline` / `--base-outline-width`.
 
 ### Fixed — accessibility / doctor (2026-11-22)
 

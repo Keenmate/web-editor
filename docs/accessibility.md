@@ -147,6 +147,10 @@ edit; the selected output tab is conveyed by `aria-selected`. A running pipeline
 - Switching the view mode keeps the document, selection and undo history (the editing surface is
   re-parented, not rebuilt).
 - Disabled removes the editor from the focus order (`inert`); read-only keeps it there.
+- Keyboard focus is visible: toolbar / selection-toolbar buttons, the output tabs and the output panel draw
+  `--we-focus-outline` (the shared `--base-focused-outline`) on `:focus-visible` only — also on the button
+  Alt+F10 lands on — never after a mouse press. The editing surface shows its caret; context-menu items and
+  dialogs use core's styles.
 
 ## Motion
 

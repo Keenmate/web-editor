@@ -113,6 +113,13 @@
   border-color: var(--we-accent);
   color: var(--we-text-on-accent);
 }
+/* Keyboard focus (Tab, arrows; Alt+F10 marks its bar `data-keyboard-focus` — Chromium doesn't count a modified
+   key for :focus-visible) — never on a mouse press. */
+.we-cmd:focus-visible,
+[data-keyboard-focus] .we-cmd:focus {
+  outline: var(--we-focus-outline);
+  outline-offset: var(--we-focus-outline-offset);
+}
 
 /* Selection toolbar's inner flat bar. */
 .we-command-bar {
