@@ -71,7 +71,7 @@
 
   /* Keyboard focus ring (:focus-visible only) of the toolbar / selection-toolbar buttons, the split view's output
      tabs and its output panel — the suite's shared --base-focused-outline. Drawn just outside a button (so it
-     shows on a toggled, accent-filled one) and inside the output panel (a scroller clips an outer ring). */
+     shows on a toggled, accent-filled one) and as far inside the output panel (a scroller clips an outer ring). */
   --we-focus-outline: var(--base-focused-outline, var(--base-outline-width, 1px) solid var(--we-accent));
   --we-focus-outline-offset: 1px;
 

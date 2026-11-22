@@ -61,7 +61,7 @@ The editor's own classes and custom properties use the `we-` prefix (`--we-bg`,
 `--we-border`, `--we-accent`, …). Disabled commands fade by `--we-disabled-opacity`
 (default `var(--base-disabled-opacity, 0.65)`). Keyboard focus on a toolbar button, an output tab or the
 output panel draws `--we-focus-outline` (default the suite's `--base-focused-outline`, `:focus-visible` only —
-never on a mouse press); `--we-focus-outline-offset` moves it (default `1px` outside a button). While a deferred pipeline outlives its threshold a
+never on a mouse press); `--we-focus-outline-offset` moves it (default `1px` outside a button; the output panel draws it that far inside). While a deferred pipeline outlives its threshold a
 loader shows in the body's top-end corner (`::part(loader)`, `role="status"`, label `loading`): the
 shared Keenmate loader, drawn from `--we-loader-icon` / `--we-loader-rotate` / `--we-loader-duration`
 / `--we-loader-size` (each chained to `--base-loader-*`, so one page-level change restyles every

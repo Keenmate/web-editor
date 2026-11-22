@@ -4950,7 +4950,7 @@
             },
             {
               "name": "--we-focus-outline-offset",
-              "description": "Offset of the focus ring around a button / output tab (the output panel's is inset)"
+              "description": "Offset of the focus ring outside a button / output tab; the output panel draws it inset by the same amount"
             },
             {
               "name": "--we-selected-outline-color",

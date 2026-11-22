@@ -48,7 +48,7 @@
 
 .we-output-pre:focus-visible {
   outline: var(--we-focus-outline);
-  outline-offset: calc(-1 * var(--base-outline-width, 1px));
+  outline-offset: calc(-1 * var(--we-focus-outline-offset));
 }
 
 .we-output-pre {
