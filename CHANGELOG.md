@@ -10,6 +10,13 @@ The first release — nothing has been published to npm before it. Everything be
 BREAKING entries record changes made during development and only matter to code written against an unpublished
 build (a `file:` link or a git checkout).
 
+### Internal — the keyboard context menu's native `contextmenu` is core's (core 1.0.0-rc26, 2026-11-24)
+
+- The context menu's own "swallow the browser's `contextmenu` for a second after Shift+F10 / the ContextMenu key"
+  patch (a document capture listener + timer) is gone: core `openMenu` now prevents the keyboard-initiated native
+  `contextmenu` while its menu is open. Same behaviour — no browser menu over ours, a right-click still opens the
+  editor menu at the pointer. New e2e records the trusted event.
+
 ### Added — icons by name: the `icons` map (core 1.0.0-rc26, rulebook C-CA-42, 2026-11-24)
 
 - New **`icons`** input (property object or JSON attribute, applies live): icon overrides by name

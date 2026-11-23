@@ -55,7 +55,7 @@ Same keys as the static toolbar: one tab stop (`role="toolbar"`, roving `tabinde
 
 Opens on right click (the browser's `contextmenu` event over the editing surface) at the pointer, and on
 <kbd>Shift</kbd>+<kbd>F10</kbd> / the <kbd>ContextMenu</kbd> key at the caret with its first item focused — the
-editor handles those keys itself (the `contextmenu` event a browser may raise right after is swallowed, so the
+editor handles those keys itself (the `contextmenu` event a browser may raise right after is swallowed by core `openMenu`, so the
 native menu never shows over it). Core `/menu`:
 
 | Key | Action |

@@ -74,8 +74,9 @@ export class ContextMenu {
 
   /**
    * Open the menu from the keyboard (Shift+F10 / the ContextMenu key) at the caret, its first item focused.
-   * The browser may raise its own `contextmenu` right after (on key-up) — swallowed, so the native menu
-   * never shows over ours. `false` when the menu is off (read-only / preview) or has nothing to show.
+   * The browser may raise its own `contextmenu` right after (on key-up) — core `openMenu` swallows that
+   * keyboard-initiated one while the menu is open, so the native menu never shows over ours. `false` when the
+   * menu is off (read-only / preview) or has nothing to show.
    */
   openAtCaret(): boolean {
     if (!this.#enabled) return false;
@@ -88,9 +89,7 @@ export class ContextMenu {
       at = { x: r.left, y: r.top };
     }
     this.#open(at.x, at.y, true);
-    if (!this.#menu) return false;
-    this.#swallowNativeMenu();
-    return true;
+    return this.#menu !== null;
   }
 
   /** Close the menu (and drop its document listeners) if it is open. */
@@ -102,32 +101,10 @@ export class ContextMenu {
 
   destroy(): void {
     this.#view.dom.removeEventListener('contextmenu', this.#onContextMenu);
-    this.#stopSwallowing?.();
     this.close();
   }
 
   // ── internals ─────────────────────────────────────────────────────────────
-
-  #stopSwallowing?: () => void;
-
-  /** Cancel the one browser `contextmenu` a keyboard open may be followed by (within a second). */
-  #swallowNativeMenu(): void {
-    this.#stopSwallowing?.();
-    const doc = (this.#view.dom as HTMLElement).ownerDocument;
-    const onNative = (event: Event): void => {
-      event.preventDefault();
-      event.stopPropagation();
-      stop();
-    };
-    const timer = setTimeout(() => stop(), 1000);
-    const stop = (): void => {
-      clearTimeout(timer);
-      doc.removeEventListener('contextmenu', onNative, true);
-      if (this.#stopSwallowing === stop) this.#stopSwallowing = undefined;
-    };
-    doc.addEventListener('contextmenu', onNative, true);
-    this.#stopSwallowing = stop;
-  }
 
   #open(x: number, y: number, isKeyboard = false): void {
     this.close();

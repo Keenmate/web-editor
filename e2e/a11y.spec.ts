@@ -154,13 +154,55 @@ test.describe('a11y — keyboard openers', () => {
             expect(Math.abs(m.x - caret.x)).toBeLessThan(40);
             expect(Math.abs(m.y - caret.y)).toBeLessThan(40);
         }
-        // The browser's own keyboard `contextmenu` right after is swallowed (no native menu, ours stays).
+        // The browser's own keyboard `contextmenu` right after is swallowed by core openMenu (no native menu, ours stays).
         const isPrevented = await pm(page).evaluate((dom) => !dom.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, composed: true, cancelable: true })));
         expect(isPrevented).toBe(true);
         await expect(menu(page)).toBeVisible();
         await page.keyboard.press('Escape');
         await expect(menu(page)).toBeHidden();
         await expect(pm(page)).toBeFocused();
+    });
+
+    test('the native keyboard contextmenu is swallowed by core openMenu; a right-click still opens the menu (G21)', async ({ page }) => {
+        // Record every native contextmenu at the window (capture: before core's document listener decides).
+        await page.evaluate(() => {
+            const w = window as any;
+            w.nativeMenus = [];
+            window.addEventListener('contextmenu', (e) => w.nativeMenus.push(e), true);
+        });
+        const native = () =>
+            page.evaluate(() => (window as any).nativeMenus.map((e: MouseEvent) => ({ button: e.button, isPrevented: e.defaultPrevented })));
+        // The ContextMenu key: Chromium raises its trusted `contextmenu` (button -1) on KEYUP, after our keydown opened the menu.
+        await caretAfter(page, 'plain');
+        await page.keyboard.press('ContextMenu');
+        await expect(menu(page)).toBeVisible();
+        await expect(menu(page).locator('[role^="menuitem"]').first()).toBeFocused();
+        await expect.poll(native).toEqual([{ button: -1, isPrevented: true }]);
+        await expect(menu(page)).toBeVisible(); // not re-opened at the pointer, focus kept on the first item
+        await expect(menu(page).locator('[role^="menuitem"]').first()).toBeFocused();
+        await page.keyboard.press('Escape');
+        await expect(menu(page)).toBeHidden();
+
+        // Shift+F10: our keydown handler opens the menu (and prevents the key, so Chromium raises none); any that
+        // comes is prevented.
+        await page.evaluate(() => ((window as any).nativeMenus.length = 0));
+        await caretAfter(page, 'plain');
+        await page.keyboard.press('Shift+F10');
+        await expect(menu(page)).toBeVisible();
+        expect((await native()).every((e: { isPrevented: boolean }) => e.isPrevented)).toBe(true);
+
+        // A right-click while it is open: a pointer menu — the editor opens its menu there (the native one prevented).
+        await page.evaluate(() => ((window as any).nativeMenus.length = 0));
+        const box = (await pm(page).locator('p').first().boundingBox())!;
+        const before = (await menu(page).boundingBox())!;
+        const px = box.x + box.width - 4;
+        await page.mouse.click(px, box.y + box.height / 2, { button: 'right' });
+        await expect.poll(native).toEqual([{ button: 2, isPrevented: true }]);
+        await expect(menu(page)).toBeVisible();
+        const m = (await menu(page).boundingBox())!;
+        // Re-opened at the pointer (far right of the line, away from the caret): one of its edges is at the click.
+        expect(Math.min(Math.abs(m.x - px), Math.abs(m.x + m.width - px))).toBeLessThan(40);
+        expect(Math.abs(m.x - before.x)).toBeGreaterThan(100);
     });
 
     test('the ContextMenu key opens it too; read-only does not', async ({ page }) => {

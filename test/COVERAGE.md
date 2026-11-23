@@ -135,7 +135,7 @@ script-built `DataTransfer` arrives empty in a synthetic paste event), the liste
 | --- | :-: | --- | --- |
 | Editing surface `role="textbox"` + `aria-multiline` + name (`ariaLabels.editor`, host `aria-label` / `aria-labelledby` / `<label for>` via `ariaLabelledByElements`), `aria-readonly` / `aria-disabled` following read-only / preview / disabled | ✓ | `a11y.spec.ts` | `a11y.html` |
 | Alt+F10 → selection toolbar (shown) else static toolbar; arrows rove; Enter runs; Escape → back to the text with the selection kept (a shown tooltip takes the first Escape) | ✓ | `a11y.spec.ts` | `a11y.html` |
-| Shift+F10 / ContextMenu key → context menu at the caret, first item focused; the following native `contextmenu` swallowed; off in read-only | ✓ | `a11y.spec.ts` | `a11y.html` |
+| Shift+F10 / ContextMenu key → context menu at the caret, first item focused; the following native `contextmenu` swallowed (core openMenu, G21: the trusted ContextMenu-key one recorded prevented; a right-click re-opens at the pointer); off in read-only | ✓ | `a11y.spec.ts` | `a11y.html` |
 | Split view output tabs: `tablist` / `tab` / `tabpanel` (`aria-selected`, `aria-controls`, `aria-labelledby`, name `ariaLabels.outputTabs`), one tab stop, arrows / Home / End select (wrapping), click selects | ✓ | `a11y.spec.ts` | `a11y.html` |
 | Announcements (core `announce()`): a view-mode switch with an event (toolbar, `setViewMode()`) is announced, a plain `viewMode` assignment is not; `labels` reword / `''` silences; the status bar is no live region, typing announces nothing | ✓ | `a11y.spec.ts` | `a11y.html` |
 
