@@ -113,4 +113,20 @@ test.describe('toolbar', () => {
         await page.keyboard.type('X');
         await expect(pm(page).locator('h1').nth(1)).toHaveText('plainX words here');
     });
+
+    test('Escape with a focus-shown tooltip: the first hides it and stays in the toolbar, the second returns to the text', async ({ page }) => {
+        const shown = page.locator('km-editor#subject .we-tooltip--visible');
+        await caretAfter(page, 'plain');
+        await page.keyboard.press('Alt+F10');
+        const button = zone(page).locator('button:not(:disabled)').first();
+        await expect(button).toBeFocused();
+        await expect(shown).toHaveCount(1);
+        await page.keyboard.press('Escape');
+        await expect(shown).toHaveCount(0);
+        await expect(button).toBeFocused();
+        await page.keyboard.press('Escape');
+        await expect(pm(page)).toBeFocused();
+        await page.keyboard.type('Y');
+        await expect(pm(page)).toContainText('plainY words here');
+    });
 });

@@ -122,9 +122,9 @@ export class EditorChrome {
       }
     };
     const onToolbarKeydown = (event: KeyboardEvent): void => {
+      // A tooltip shown by keyboard focus takes the first Escape (core createTooltip hides it and
+      // preventDefault()s, WCAG 1.4.13); the next one leaves. A hover-shown one doesn't hold it.
       if (event.key !== 'Escape' || event.defaultPrevented) return;
-      // A shown tooltip takes the first Escape (core createTooltip hides it, WCAG 1.4.13); the next one leaves.
-      if (this.#tooltip.isVisible) return;
       event.preventDefault();
       view.focus();
     };

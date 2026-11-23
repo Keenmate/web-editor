@@ -39,7 +39,7 @@ The static toolbar is **one tab stop** (roving `tabindex`) for all its groups:
 | <kbd>↑</kbd> / <kbd>↓</kbd> (`toolbar="start"` / `"end"`) | Previous / next button |
 | <kbd>Home</kbd> / <kbd>End</kbd> | First / last button |
 | <kbd>Enter</kbd> / <kbd>Space</kbd> | Activate the button |
-| <kbd>Escape</kbd> | Back to the editing surface, the selection kept (a tooltip shown on the focused button takes the first <kbd>Escape</kbd>) |
+| <kbd>Escape</kbd> | Back to the editing surface, the selection kept (a tooltip that keyboard focus showed takes the first <kbd>Escape</kbd>; a hover tooltip does not) |
 
 Focus does not wrap at the ends; disabled buttons are skipped. Activating a command returns focus to
 the editing surface. <kbd>Alt</kbd>+<kbd>F10</kbd> from the text lands on the toolbar's current tab stop.

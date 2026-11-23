@@ -10,6 +10,13 @@ The first release — nothing has been published to npm before it. Everything be
 BREAKING entries record changes made during development and only matter to code written against an unpublished
 build (a `file:` link or a git checkout).
 
+### Internal — toolbar Escape leaves the tooltip to core (core 1.0.0-rc26, 2026-11-23)
+
+- The toolbar's own "a shown tooltip takes the first Escape" guard is gone: core `createTooltip` now claims that
+  Escape itself (hides + `preventDefault()`) when keyboard focus showed the tooltip, and the toolbar already skips
+  a prevented Escape. Same behaviour — first Escape hides the tooltip and stays on the button, the second returns
+  to the text; a hover-shown tooltip doesn't hold the Escape. New e2e covers it.
+
 ### Changed — core 1.0.0-rc26, the final v1 names (2026-11-23)
 
 - `@keenmate/web-components-core` → `^1.0.0-rc26`. The batch write the element inherits from core is now
