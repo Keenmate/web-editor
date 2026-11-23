@@ -477,7 +477,8 @@
               "kind": "field",
               "name": "events",
               "readonly": true,
-              "default": "new EventEmitter<EngineEventMap>()"
+              "default": "new EventEmitter<EngineEventMap>(() => this.#options.host?.element ?? null)",
+              "description": "The engine events. A throwing handler is logged against the host element (core `notifyListeners`) and skipped."
             },
             {
               "kind": "field",

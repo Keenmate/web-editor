@@ -422,3 +422,6 @@ engine.events.on('change', () => save(engine.getMarkdown()));
 refresh();
 // later: engine.setOptions({ isReadonly: true }); engine.destroy();
 ```
+
+A handler of `engine.events` / `engine.pipelines.on()` that throws is logged (the host element's `UI` logger,
+core's logger for a standalone engine) and skipped — the other handlers still run and the edit goes through.

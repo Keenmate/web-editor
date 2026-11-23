@@ -183,7 +183,8 @@ export interface EngineEventMap {
 export class EditorEngine {
   readonly schema: Schema;
   readonly commands: CommandRegistry;
-  readonly events = new EventEmitter<EngineEventMap>();
+  /** The engine events. A throwing handler is logged against the host element (core `notifyListeners`) and skipped. */
+  readonly events = new EventEmitter<EngineEventMap>(() => this.#options.host?.element ?? null);
   /** Assembled presenter lists (core + plugin), consumed by the chrome. */
   readonly toolbarGroups: ToolGroup[];
   /** Flattened toolbar commands (groups → items), for consumers wanting a flat list. */
@@ -293,6 +294,7 @@ export class EditorEngine {
         request: (ctx) => this.#interactionHost.request(this.createContext(ctx)),
       }),
       setLock: (locked) => this.#setLock(locked),
+      getLogSource: () => host?.element ?? null,
       label,
       ...(setViewModeForPlugin ? { setViewMode: setViewModeForPlugin } : {}),
     });

@@ -10,6 +10,14 @@ The first release — nothing has been published to npm before it. Everything be
 BREAKING entries record changes made during development and only matter to code written against an unpublished
 build (a `file:` link or a git checkout).
 
+### Changed — engine events delivered by core `notifyListeners` (core 1.0.0-rc26, Q14, 2026-11-24)
+
+- `engine.events` (`EventEmitter`) and the pipeline run events (`engine.pipelines.on()` / `onAny()`) deliver through
+  core `notifyListeners`: a throwing handler is logged (the host element's `UI` logger; core's logger for a
+  standalone engine) and skipped — the other handlers still run, and the transaction / run that emitted goes on
+  (before, the throw escaped into `dispatchTransaction` / the pipeline run and starved the later handlers). Same
+  public API (`on` / `off` / `emit` / `clear`; `EventEmitter` takes an optional log-source getter). Unit tests.
+
 ### Added — callback ctx carries `labels` / `isReadonly` / `isDisabled`, re-run in place (2026-11-24)
 
 - Every callback ctx (`EditorRenderContext`, the web-treeview / web-multiselect shape) — item callbacks

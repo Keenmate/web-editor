@@ -16,6 +16,7 @@
  * progress UI). The engine stays headless — the host provides the modal UI and
  * the lock implementation through the injected deps.
  */
+import { notifyListeners } from '@keenmate/web-components-core';
 import { confirmText, dialogLabels } from '../../dialogs';
 import type { LabelResolver } from '../../labels';
 import { PendingGate, runStages, runStagesSync, type RunResult } from './runner';
@@ -41,6 +42,8 @@ export interface PipelineRegistryDeps {
   label?: StageServices['label'];
   /** View-mode switch handed to stages as `rt.setViewMode` (hosted engines only). */
   setViewMode?: StageServices['setViewMode'];
+  /** The element a throwing run-event listener is logged against (its instance logger); absent → core's logger. */
+  getLogSource?: () => unknown;
 }
 
 /** The default host: an interactive request becomes a core `/dialog` confirmation (resolve on OK, cancel
@@ -101,9 +104,12 @@ export class PipelineRegistry {
     return () => this.#anyListeners.delete(listener);
   }
 
+  /** Deliver a run event (core `notifyListeners`: a throwing listener is logged and skipped, the rest still hear it). */
   #emit(name: string, event: PipelineEvent): void {
-    this.#listeners.get(name)?.forEach((fn) => fn(event));
-    this.#anyListeners.forEach((fn) => fn(name, event));
+    const log = { source: this.#deps.getLogSource?.() ?? null, category: 'UI', coreCategory: 'ELEMENT' as const, message: `pipeline "${name}" listener threw` };
+    const listeners = this.#listeners.get(name);
+    if (listeners?.size) notifyListeners(listeners, event, log);
+    if (this.#anyListeners.size) notifyListeners([...this.#anyListeners].map((fn) => (e: PipelineEvent) => fn(name, e)), event, log);
   }
 
   /** The doc write port handed to every stage of an engine-run pipeline. */

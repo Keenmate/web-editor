@@ -19,6 +19,43 @@ describe('EditorEngine', () => {
     engine.destroy();
   });
 
+  it('a throwing event handler is logged and skipped — the other handlers still run (core notifyListeners)', () => {
+    const engine = new EditorEngine(mount());
+    const errors: unknown[] = [];
+    const original = console.error;
+    console.error = (...args: unknown[]) => void errors.push(args);
+    let after = 0;
+    engine.events.on('change', () => { throw new Error('boom'); });
+    engine.events.on('change', () => (after += 1));
+    try {
+      expect(() => engine.setMarkdown('text')).not.toThrow();
+    } finally {
+      console.error = original;
+    }
+    expect(after).toBe(1);
+    expect(errors.length).toBeGreaterThan(0);
+    engine.destroy();
+  });
+
+  it('a throwing pipeline run-event listener is logged and skipped — the run and the other listeners go on', () => {
+    const engine = new EditorEngine(mount(), { markdown: 'text' });
+    const original = console.error;
+    console.error = () => {};
+    const seen: string[] = [];
+    engine.pipelines.on('undo', () => { throw new Error('boom'); });
+    engine.pipelines.on('undo', (e) => seen.push(e.type));
+    engine.pipelines.onAny(() => { throw new Error('boom'); });
+    engine.pipelines.onAny((_n, e) => seen.push(`any:${e.type}`));
+    try {
+      expect(() => engine.run('undo')).not.toThrow();
+    } finally {
+      console.error = original;
+    }
+    expect(seen).toContain('start');
+    expect(seen).toContain('any:start');
+    engine.destroy();
+  });
+
   it('replaces content via setMarkdown and emits change', () => {
     const engine = new EditorEngine(mount());
     let changes = 0;
