@@ -10,6 +10,19 @@ The first release — nothing has been published to npm before it. Everything be
 BREAKING entries record changes made during development and only matter to code written against an unpublished
 build (a `file:` link or a git checkout).
 
+### Added — callback ctx carries `labels` / `isReadonly` / `isDisabled`, re-run in place (2026-11-24)
+
+- Every callback ctx (`EditorRenderContext`, the web-treeview / web-multiselect shape) — item callbacks
+  (`getTextCallback`, `getIsVisibleCallback`, …), command predicates, status items' `render`,
+  `getValueFormatCallback`, `getCustomStylesCallback`, the action detail — carries `labels` (core
+  `createLabelsView`: `ctx.labels.text(key, params)` / `.html(…)`), `isReadonly` (`readonly` or previewing) and
+  `isDisabled` (the effective state, a disabled `<fieldset>` included). Non-enumerable and read live, like
+  `controller` / `element`. A standalone `EditorEngine`: `isReadonly` = its option, `isDisabled` = `false`.
+- A change of `labels`, `locale`, `translateCallback`, the page-wide locale, `readonly` / `view-mode` or the
+  disabled state re-runs them in place (the chrome already did; now also `getValueFormatCallback` and
+  `getCustomStylesCallback`) — no rebuild: document, selection and undo history kept. New types
+  `EditorRenderContext`, `EditorStylesContext`, `EditorLabelsView`. e2e `render-context.spec.ts`.
+
 ### Internal — the keyboard context menu's native `contextmenu` is core's (core 1.0.0-rc26, 2026-11-24)
 
 - The context menu's own "swallow the browser's `contextmenu` for a second after Shift+F10 / the ContextMenu key"

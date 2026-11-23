@@ -1,4 +1,4 @@
-import { createLabels, createLabelsView, formatLabel as formatCoreLabel, type TranslateCallback } from '@keenmate/web-components-core/locale';
+import { createLabels, createLabelsView, formatLabel as formatCoreLabel, type LabelsView, type TranslateCallback } from '@keenmate/web-components-core/locale';
 
 /**
  * UI strings (rulebook D-NC-24, core `/locale` SPEC §12.24): one `labels` object
@@ -163,13 +163,33 @@ export function createLabelResolver(
   getTranslateCallback?: () => TranslateCallback | null | undefined,
   getLocale?: () => string | null | undefined,
 ): LabelResolver {
-  const labels = createLabels<Record<string, string>>(host ?? null, DEFAULT_LABELS, () => getLabels() as Record<string, string> | null, {
+  return createEditorLabels(getLabels, host, getTranslateCallback, getLocale).label;
+}
+
+/**
+ * The editor's labels as a callback ctx carries them (`ctx.labels`, core `createLabelsView`): `text(key, params,
+ * { fallback })` / `html(…)` over the same chain as the built-in texts.
+ */
+export type EditorLabelsView = LabelsView<EditorLabels>;
+
+/**
+ * {@link createLabelResolver}'s chain as both shapes: `label` (the resolver the editor's own texts use) and
+ * `labels` (the core `LabelsView` a callback ctx carries — `ctx.labels.text(key, params)`). One chain, read live.
+ */
+export function createEditorLabels(
+  getLabels: () => EditorLabels | null | undefined,
+  host?: Element | null,
+  getTranslateCallback?: () => TranslateCallback | null | undefined,
+  getLocale?: () => string | null | undefined,
+): { label: LabelResolver; labels: EditorLabelsView } {
+  const chain = createLabels<Record<string, string>>(host ?? null, DEFAULT_LABELS, () => getLabels() as Record<string, string> | null, {
     tag: TAG,
     ...(getTranslateCallback ? { getTranslateCallback } : {}),
     ...(getLocale ? { getLocale } : {}),
   });
-  const view = createLabelsView(labels);
+  const view = createLabelsView(chain);
   // A derived key (command, group) has no built-in default: the caller's fallback is its default, per call.
-  return (key, params, fallback) =>
+  const label: LabelResolver = (key, params, fallback) =>
     isBuiltInLabel(key) || fallback === undefined ? view.text(key, params) : view.text(key, params, { fallback });
+  return { label, labels: view as EditorLabelsView };
 }

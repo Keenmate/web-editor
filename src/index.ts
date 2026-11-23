@@ -31,6 +31,8 @@ export type {
   EditorController,
   EditorComponentContext,
   EditorLabelContext,
+  EditorRenderContext,
+  EditorStylesContext,
   EditorStateContext,
   EditorActionContext,
   CommandContext,
@@ -55,7 +57,7 @@ export { createMenuDivider } from '@keenmate/web-components-core/actions';
 export { DEFAULT_LABELS, labelKey, formatLabel } from './labels';
 /** The built-in toolbar icons (inline SVG strings) — reuse them on your own items. */
 export { EDITOR_ICONS, type EditorIconName, type EditorIcons } from './icons';
-export type { EditorLabels, EditorLabelKey, LabelParams, LabelResolver, StatusCountLabelContext, CodeLanguageLabelContext } from './labels';
+export type { EditorLabels, EditorLabelKey, EditorLabelsView, LabelParams, LabelResolver, StatusCountLabelContext, CodeLanguageLabelContext } from './labels';
 
 // Toolbar zones / tool groups / status items model. Override the core groups or
 // contribute via plugins to customise the zone toolbar, selection toolbar,

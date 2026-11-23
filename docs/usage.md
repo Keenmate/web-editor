@@ -41,11 +41,11 @@ removing the attribute) resets an input to its default.
 
 | Property               | Type | Description |
 | ---------------------- | ---- | ----------- |
-| `getValueFormatCallback` | `(ctx) => string` | Formats the value written into the hidden form input (e.g. sanitizing); `ctx` = `{ value, contentFormat }` + `controller` / `element`. Affects only the submitted value — see [Forms](#forms). |
+| `getValueFormatCallback` | `(ctx) => string` | Formats the value written into the hidden form input (e.g. sanitizing); `ctx` = `{ value, contentFormat }` + `controller` / `element` + `labels` / `isReadonly` / `isDisabled` ([callback ctx](#callback-ctx-labels--isreadonly--isdisabled)). Affects only the submitted value — see [Forms](#forms). |
 | `beforeActionCallback` | `(detail) => false \| void \| Promise<…>` | Runs first on every toolbar / selection-toolbar / context-menu activation; `false` cancels (no `onClick`, no `action` event, no command). |
 | `renderLoadingCallback` | `(ctx) => void \| cleanup` | Draws the pending loader (shown while a deferred pipeline's work — e.g. a cloud-image upload — outlives its threshold; not while a dialog waits for the user) instead of the default spinner; `ctx` = `{ component, context: 'pipeline', containerElement, element, label }`. Beats the page-wide `window.components.renderLoadingCallback`. See [Theming](./theming.md). |
 | `interactionHost`      | `{ request(ctx) }` | The modal bridge interactive pipeline stages call (`ctx` = request + `signal` + `controller` / `element`). Default: a core `/dialog` confirmation (OK / Cancel, closed when the run is superseded). Survives engine rebuilds. |
-| `getCustomStylesCallback` | `(ctx) => string \| null` | Computes the instance CSS (wins over `customStyles`); `ctx` = `controller` / `element`. See [Theming](./theming.md). |
+| `getCustomStylesCallback` | `(ctx) => string \| null` | Computes the instance CSS (wins over `customStyles`); `ctx` = `controller` / `element` + `labels` / `isReadonly` / `isDisabled` (re-run when one changes). See [Theming](./theming.md). |
 
 ## Events
 
@@ -162,6 +162,31 @@ dynamic text the same way: `ctx.label('labels.matches', { ctx: { count } }, 'Mat
 Plugin code resolves strings with `label(key, params?, fallback?)` — on the plugin
 builder ctx (`commands: ({ schema, label }) => …`), on every callback ctx (`ctx.label`)
 and on pipeline stages (`rt.label`). `DEFAULT_LABELS` and `labelKey()` are exported.
+
+### Callback ctx: `labels` / `isReadonly` / `isDisabled`
+
+Every callback ctx — toolbar / selection-toolbar / context-menu item callbacks (`getTextCallback`,
+`getIsVisibleCallback`, …), command predicates (`getIsEnabledCallback` / `getIsToggledCallback`), status items'
+`render`, `getValueFormatCallback`, `getCustomStylesCallback` — carries the component state (`EditorRenderContext`,
+the same fields as every Keenmate component's render ctx; non-enumerable and read live, like `controller` / `element`):
+
+- `labels` — the UI strings (core `createLabelsView`): `ctx.labels.text(key, params)` / `ctx.labels.html(key, params)`,
+  the chain above (instance `labels` → `translateCallback`s → page-wide labels → English).
+- `isReadonly` — the user can't change the content (`readonly`, or `view-mode="preview"`).
+- `isDisabled` — the effective disabled state (`disabled`, or a disabled `<fieldset>`).
+
+A change of `labels`, `locale`, `translateCallback`, the page-wide `window.components.locale`, `readonly` /
+`view-mode`, or the effective disabled state re-runs the rendered callbacks **in place** — no rebuild: the
+document, selection and undo history are kept. An unrelated input change doesn't re-run `getValueFormatCallback`
+/ `getCustomStylesCallback`.
+
+```js
+const plugin = definePlugin({
+  name: 'status',
+  statusItems: [{ id: 'mode', render: ({ labels, isReadonly, isDisabled }) =>
+    isDisabled ? '' : isReadonly ? labels.text('labels.readOnly', undefined, { fallback: 'Read-only' }) : '' }],
+});
+```
 
 ## Forms
 

@@ -69,7 +69,7 @@ export const INPUTS: readonly InputDef[] = [
     default: null,
     on: 'update',
     description:
-      'Property only. `(ctx) => string` — formats the value written into the hidden form input (`name`), e.g. to sanitize HTML. `ctx`: `{ value, contentFormat }` (the document in the active `contentFormat`) + `controller` / `element`. Affects ONLY the submitted form value: `el.value` and the `change` detail stay the document in `contentFormat`. Called on every sync of the form input (each change). A throw is logged (error), the hidden input gets an empty string, the host turns invalid (label `valueFormatError`) and `value-format-error` fires; the next successful format clears it.',
+      'Property only. `(ctx) => string` — formats the value written into the hidden form input (`name`), e.g. to sanitize HTML. `ctx`: `{ value, contentFormat }` (the document in the active `contentFormat`) + `controller` / `element` + `labels` / `isReadonly` / `isDisabled`. Affects ONLY the submitted form value: `el.value` and the `change` detail stay the document in `contentFormat`. Called on every sync of the form input (each change, and when `labels` / `locale` / `translateCallback` / the page-wide locale / read-only / disabled change). A throw is logged (error), the hidden input gets an empty string, the host turns invalid (label `valueFormatError`) and `value-format-error` fires; the next successful format clears it.',
   },
   {
     configKey: 'viewMode',
@@ -218,7 +218,7 @@ export const INPUTS: readonly InputDef[] = [
     converter: toFunction(),
     on: 'update',
     description:
-      'Property only. `(ctx) => string | null` — computes the instance CSS (wins over `customStyles`); `ctx` = `controller` / `element`. Called on every build and whenever `customStyles` / `getCustomStylesCallback` change.',
+      'Property only. `(ctx) => string | null` — computes the instance CSS (wins over `customStyles`); `ctx` = `controller` / `element` + `labels` / `isReadonly` / `isDisabled`. Called on every build and whenever `customStyles` / `getCustomStylesCallback` or a ctx value (labels / locale, read-only, disabled) change.',
   },
   // `menu-presentation` / `menu-side` — the context menu's presentation (core `/menu`
   // standard rows, SPEC §12.13), read at every open.

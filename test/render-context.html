@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>km-editor — render-callback ctx</title>
+</head>
+<body>
+    <!-- Targeted by e2e/render-context.spec.ts: every callback ctx carries labels / isReadonly / isDisabled
+         (EditorRenderContext) and a change of one re-runs the callbacks in place (no engine rebuild). -->
+    <form id="form">
+        <fieldset id="fs"></fieldset>
+    </form>
+    <script type="module">
+        import { defaultPlugins, definePlugin } from '/src/index.ts';
+
+        const show = (ctx) => `${ctx.labels.text('buttons.ok')}|${ctx.isReadonly}|${ctx.isDisabled}`;
+        window.rc = { calls: { status: 0, item: 0, command: 0, format: 0, styles: 0 } };
+
+        const probe = definePlugin({
+            name: 'rc-probe',
+            commands: () => [{
+                id: 'rc-noop',
+                run: () => true,
+                text: 'Noop',
+                icon: '✱',
+                getIsEnabledCallback: (ctx) => { window.rc.calls.command++; window.rc.command = show(ctx); return true; },
+            }],
+            toolbarGroups: [{
+                id: 'rc',
+                text: 'Render ctx',
+                items: [
+                    'rc-noop',
+                    {
+                        action: 'custom',
+                        id: 'rc-item',
+                        getTextCallback: (ctx) => { window.rc.calls.item++; return `item:${show(ctx)}`; },
+                    },
+                ],
+            }],
+            statusItems: [{ id: 'rc', render: (ctx) => { window.rc.calls.status++; return `status:${show(ctx)}`; } }],
+        });
+
+        const el = document.createElement('km-editor');
+        el.id = 'subject';
+        el.setAttribute('statusbar', 'bottom');
+        el.setAttribute('name', 'body');
+        el.setAttribute('value', 'Some plain text here.');
+        el.plugins = [...defaultPlugins(), probe];
+        el.getValueFormatCallback = (ctx) => { window.rc.calls.format++; return `format:${show(ctx)}:${ctx.value.trim()}`; };
+        el.getCustomStylesCallback = (ctx) => { window.rc.calls.styles++; window.rc.styles = show(ctx); return ''; };
+        document.getElementById('fs').appendChild(el);
+        window.fixtureReady = true;
+    </script>
+</body>
+</html>

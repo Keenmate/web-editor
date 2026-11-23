@@ -48,7 +48,7 @@ import {
 } from '../ui/items';
 import type { EditorController, EditorLabelContext, EditorToolbarEntry } from '../interaction';
 import type { EditorViewMode } from '../web-component';
-import { createLabelResolver, type EditorLabels, type LabelResolver } from '../labels';
+import { createEditorLabels, type EditorLabels, type LabelResolver } from '../labels';
 import type { TranslateCallback } from '@keenmate/web-components-core/locale';
 import { ENGINE_DEFAULTS, type EditorEngineDefaults } from '../inputs';
 import { initLogger } from '../logger';
@@ -109,6 +109,11 @@ export interface EditorEngineHost {
   getAccessibleName?(): string | null;
   /** Whether the host is (effectively) disabled — the surface then says `aria-disabled="true"`, not `aria-readonly`. */
   isDisabled?(): boolean;
+  /**
+   * The host's read-only state as callbacks see it (`ctx.isReadonly`: `readonly` or previewing — not disabled, that
+   * is `ctx.isDisabled`). Absent → the engine's `isReadonly` option.
+   */
+  isReadonly?(): boolean;
 }
 
 /** `new EditorEngine(mount, options)` — the element the view mounts into is the first argument, not an option. */
@@ -217,15 +222,19 @@ export class EditorEngine {
     for (const key of SETTING_KEYS) {
       if (kept[key] === undefined) (kept as Record<string, unknown>)[key] = ENGINE_DEFAULTS[key];
     }
-    const label = createLabelResolver(
+    const { label, labels } = createEditorLabels(
       () => this.#options.labels,
       host?.element,
       () => this.#options.translateCallback,
       () => this.#options.locale,
     );
     this.label = label;
+    // The render state every ctx carries (EditorRenderContext), read live — non-enumerable like `label`.
     this.#ctxProto = Object.create(Object.prototype, {
       label: { value: label, enumerable: false },
+      labels: { value: labels, enumerable: false },
+      isReadonly: { get: () => (host?.isReadonly ? host.isReadonly() : !!this.#options.isReadonly), enumerable: false },
+      isDisabled: { get: () => !!host?.isDisabled?.(), enumerable: false },
       ...(host
         ? {
             controller: { get: () => host.getController(), enumerable: false },
@@ -390,7 +399,8 @@ export class EditorEngine {
    * Build a callback ctx from `fields`. Hosted by `<km-editor>`, it carries
    * `controller` + `element` (inherited getters — non-enumerable, so
    * `JSON.stringify` / `Object.keys` see only the fields). Every ctx also
-   * inherits `label` ({@link label}), hosted or standalone.
+   * inherits `label` ({@link label}) and the render state `labels` / `isReadonly` / `isDisabled`
+   * (`EditorRenderContext`, read live), hosted or standalone.
    */
   createContext<T extends object>(fields: T): T & EditorLabelContext {
     return Object.assign(Object.create(this.#ctxProto), fields) as T & EditorLabelContext;

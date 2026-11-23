@@ -17,7 +17,7 @@ import type {
 } from '@keenmate/web-components-core/actions';
 import type { Command, EditorState } from 'prosemirror-state';
 import type { SerializationFormat } from './engine/serialization';
-import type { LabelResolver } from './labels';
+import type { EditorLabelsView, LabelResolver } from './labels';
 import type { EditorViewMode } from './web-component';
 
 // ============================================================================
@@ -88,8 +88,29 @@ export function createEditorController(getTarget: () => ControllerTarget): Edito
 /** The component context every editor ctx / detail carries. */
 export type EditorComponentContext = ComponentContext<EditorController, HTMLElement>;
 
-/** What every engine-built ctx inherits: the component context + `label`. */
-export interface EditorLabelContext extends EditorComponentContext {
+/**
+ * The component state every editor callback ctx carries (the Keenmate render-ctx shape, as web-treeview /
+ * web-multiselect): the UI strings and the effective read-only / disabled state. Non-enumerable and read live, like
+ * `controller` / `element` (`JSON.stringify` sees only the data). A change of any of them — `labels`, `locale`,
+ * `translateCallback`, the page-wide `window.components.locale`, `readonly` / `view-mode="preview"`, `disabled` (or a
+ * disabled `<fieldset>`) — re-runs the rendered callbacks in place (toolbar / selection-toolbar items, command
+ * predicates, status items, `getValueFormatCallback`, `getCustomStylesCallback`); the document, selection and
+ * undo history are kept.
+ */
+export interface EditorRenderContext {
+  /**
+   * The editor's UI strings (core `createLabelsView`): `ctx.labels.text(key, params)` / `ctx.labels.html(key, params)`
+   * — instance `labels` → own / page-wide `translateCallback` → page-wide labels → English, `{ctx.count}` locale-formatted.
+   */
+  readonly labels: EditorLabelsView;
+  /** Read-only: the user can't change the content (`readonly`, or `view-mode="preview"`; a standalone engine: its `isReadonly` option). */
+  readonly isReadonly: boolean;
+  /** The effective disabled state (`disabled`, or a disabled `<fieldset>`); always `false` for a standalone engine. */
+  readonly isDisabled: boolean;
+}
+
+/** What every engine-built ctx inherits: the component context + `label` + the render state ({@link EditorRenderContext}). */
+export interface EditorLabelContext extends EditorComponentContext, EditorRenderContext {
   /**
    * Resolve a UI string through the element's `labels` (non-enumerable):
    * `ctx.label('labels.words', { ctx: { count: 3 } })`. See `src/labels.ts` for the keys.
@@ -162,12 +183,15 @@ export interface ChangeEventDetail extends EditorComponentContext {
  * form input (e.g. sanitize HTML). Only the SUBMITTED value is affected; `el.value`
  * and the `change` detail stay the document in `contentFormat`.
  */
-export interface ValueFormatContext extends EditorComponentContext {
+export interface ValueFormatContext extends EditorComponentContext, EditorRenderContext {
   /** The live content serialized in the active `contentFormat` (same as `el.value`). */
   value: string;
   /** The active `contentFormat` (`markdown` | `html` | `json`). */
   contentFormat: SerializationFormat;
 }
+
+/** `ctx` of `getCustomStylesCallback` (and the page-wide one): the component context + the render state. */
+export interface EditorStylesContext extends EditorComponentContext, EditorRenderContext {}
 
 /** `value-format-error` — `getValueFormatCallback` threw; the field is invalid until the next successful format. */
 export interface ValueFormatErrorEventDetail extends EditorComponentContext {

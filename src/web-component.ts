@@ -54,6 +54,8 @@ import {
   createEditorController,
   type EditorController,
   type EditorComponentContext,
+  type EditorRenderContext,
+  type EditorStylesContext,
   type EditorEventMap,
   type EditorActionEventDetail,
   type ChangeEventDetail,
@@ -69,7 +71,7 @@ import { ViewLayout } from './ui/view-layout';
 import { EditorChrome } from './ui/chrome';
 import styles from './css/main.css?inline';
 import { initLogger, contentLogger } from './logger';
-import { createLabelResolver, type EditorLabels } from './labels';
+import { createEditorLabels, type EditorLabels } from './labels';
 import type { EditorIcons } from './icons';
 import {
   getMenuPresentationOptions,
@@ -116,7 +118,7 @@ export interface EditorConfig {
   renderIconCallback: RenderIconCallback | null;
   interactionHost: InteractionHost | null;
   customStyles: string | null;
-  getCustomStylesCallback: CustomStylesCallback<EditorComponentContext> | null;
+  getCustomStylesCallback: CustomStylesCallback<EditorStylesContext> | null;
   /** How the context menu opens (core `/menu`): `auto` (default) | `floating` | `sheet` | `drawer`. */
   menuPresentation: MenuPresentation;
   /** The edge a `drawer` context menu slides in from: `start` | `end` (default). */
@@ -226,12 +228,13 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   #removeLoader?: () => void;
   // The light-DOM hidden form input (only while `name` is set).
   /** UI strings (core `/locale`: instance `labels` → page-wide labels → English). */
-  #label = createLabelResolver(
+  #labels = createEditorLabels(
     () => this.config.labels as EditorLabels | null | undefined,
     this,
     undefined,
     () => this.config.locale as string | null | undefined,
   );
+  #label = this.#labels.label;
   /** The light-DOM hidden input (core `createFormInputs`, SPEC §12.21). */
   #formInputs = createFormInputs(this);
   /** Whether the host is currently invalid because of a throwing `getValueFormatCallback`. */
@@ -310,7 +313,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     if (this.#customStyles) return this.#customStyles.refresh();
     this.#customStyles = createCustomStyles(this, this.#shadow, {
       cssClass: 'we-custom-styles',
-      getContext: () => this.withContext({}),
+      getContext: () => this.#renderContext({}),
       getInstanceStyles: () => ({
         css: this.config.customStyles as string | null,
         callback: this.config.getCustomStylesCallback as CustomStylesCallback | null,
@@ -327,7 +330,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     this.#engine?.refreshAttributes(); // aria-disabled ↔ aria-readonly
     this.#layout.setInert(this.isEffectivelyDisabled);
     this.#applyChromeState();
-    this.#syncFormInput();
+    this.#rerunRenderCallbacks(); // the hidden form input (disabled ↔ submitted) + ctx.isDisabled
   }
 
   /**
@@ -365,8 +368,10 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     if ('labels' in partial || 'locale' in partial || 'translateCallback' in partial) this.#relabel();
     // Item icons are drawn on render: re-render the toolbars with the new hook.
     else if ('renderIconCallback' in partial) this.#chrome?.refresh();
-    if ('name' in partial || 'contentFormat' in partial || 'getValueFormatCallback' in partial) this.#syncFormInput();
-    if ('customStyles' in partial || 'getCustomStylesCallback' in partial) this.#customStyles?.refresh();
+    // A value the callbacks' ctx carries (labels / isReadonly) changed: the element-level callbacks re-run in place.
+    const isRenderCtxChanged = ['labels', 'locale', 'translateCallback', 'isReadonly', 'viewMode'].some((k) => k in partial);
+    if (isRenderCtxChanged || 'name' in partial || 'contentFormat' in partial || 'getValueFormatCallback' in partial) this.#syncFormInput();
+    if (isRenderCtxChanged || 'customStyles' in partial || 'getCustomStylesCallback' in partial) this.#customStyles?.refresh();
     // A showing pending loader re-renders with the new label / render hook.
     if (('labels' in partial || 'locale' in partial || 'translateCallback' in partial || 'renderLoadingCallback' in partial) && this.#removeLoader) {
       this.#setPendingLoader(false);
@@ -480,6 +485,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
         // The editing surface's ARIA (role="textbox"): the host's own name and disabled state.
         getAccessibleName: () => this.#accessibleName().text,
         isDisabled: () => this.isEffectivelyDisabled,
+        isReadonly: () => this.#isReadonlyForCallbacks(),
       },
     };
     this.#applyContentOption(options, this.#seed.format, this.#seed.content);
@@ -593,6 +599,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   /** A page-wide `window.components.locale` change (core `/locale`): the strings re-resolve. */
   protected override localeChanged(): void {
     this.#relabel();
+    this.#rerunRenderCallbacks(); // their ctx.labels read the page-wide locale too
     this.refreshRequired(); // the `errors.required` message re-resolves
     if (this.#removeLoader) {
       this.#setPendingLoader(false);
@@ -639,7 +646,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     }
     let formatted: string;
     try {
-      formatted = String(format(this.withContext({ value, contentFormat })) ?? '');
+      formatted = String(format(this.#renderContext({ value, contentFormat })) ?? '');
     } catch (error) {
       contentLogger.error('<km-editor> getValueFormatCallback threw; submitting an empty value and marking the field invalid', error);
       this.#hasFormatError = true;
@@ -711,6 +718,36 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     const isReadonly = this.config.isReadonly === true;
     const previewing = this.config.viewMode === 'preview';
     return !isReadonly && !previewing;
+  }
+
+  /** `ctx.isReadonly` of every callback: `readonly` or previewing (disabled is `ctx.isDisabled`, separately). */
+  #isReadonlyForCallbacks(): boolean {
+    return this.config.isReadonly === true || this.config.viewMode === 'preview';
+  }
+
+  /**
+   * An element-built callback ctx (`getValueFormatCallback`, `getCustomStylesCallback`): `fields` + the component
+   * context + the render state every editor ctx carries (`EditorRenderContext`: `labels`, `isReadonly`,
+   * `isDisabled` — non-enumerable, read live, like the engine-built ones).
+   */
+  #renderContext<T extends object>(fields: T): T & EditorComponentContext & EditorRenderContext {
+    const ctx = this.withContext(fields);
+    Object.defineProperties(ctx, {
+      labels: { value: this.#labels.labels, enumerable: false, configurable: true },
+      isReadonly: { get: () => this.#isReadonlyForCallbacks(), enumerable: false, configurable: true },
+      isDisabled: { get: () => this.isEffectivelyDisabled, enumerable: false, configurable: true },
+    });
+    return ctx as T & EditorComponentContext & EditorRenderContext;
+  }
+
+  /**
+   * A value the callbacks' ctx carries changed (labels / locale / translateCallback / the page-wide locale,
+   * read-only, disabled): re-run the element-level callbacks in place — `getValueFormatCallback` (the hidden form
+   * input) and `getCustomStylesCallback`. The chrome's callbacks re-run through its own refresh.
+   */
+  #rerunRenderCallbacks(): void {
+    this.#syncFormInput();
+    this.#customStyles?.refresh();
   }
 
   #format(): EditorFormat {

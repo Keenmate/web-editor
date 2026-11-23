@@ -66,6 +66,7 @@ script-built `DataTransfer` arrives empty in a synthetic paste event), the liste
 | Selection toolbar source | ✓ | `interaction-model.spec.ts` | `interaction.html` |
 | Keyboard shortcuts bypass the action event | ✓ | `interaction-model.spec.ts` | `interaction.html` |
 | `interactionHost.request(ctx)` + `lock-change` | ✓ | `interaction-model.spec.ts` | `interaction.html` |
+| Callback ctx `labels` / `isReadonly` / `isDisabled` + in-place re-run on change (no rebuild) | ✓ | `render-context.spec.ts` | `render-context.html` |
 
 ## 4. Editing
 
