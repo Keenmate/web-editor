@@ -2,8 +2,8 @@
  * The `<km-editor>` input table (core `static inputs`), in its own module so the public
  * `EditorEngine` reads the SAME defaults the element seeds — rulebook C-CA-37: every engine option
  * the element also has takes the element's default, from one source (this table).
- * {@link ENGINE_DEFAULTS} is derived from the rows with the resolution core's element uses
- * (`resolveFromAttribute(def, null)`, "absent == default").
+ * {@link ENGINE_DEFAULTS} is derived from the rows by core `getInputDefaults` (the resolution core's element
+ * uses, "absent == default"); every shared row resolves to a value (`null` = unset), none is left out.
  */
 import {
   toBool,
@@ -12,8 +12,7 @@ import {
   toFunction,
   toObject,
   toText,
-  resolveFromAttribute,
-  type AttrReader,
+  getInputDefaults,
   type InputDef,
   type RenderIconCallback,
 } from '@keenmate/web-components-core';
@@ -137,6 +136,8 @@ export const INPUTS: readonly InputDef[] = [
     configKey: 'labels',
     attribute: 'labels',
     converter: toObject<EditorLabels>({ validate: isLabels }),
+    // `null` = none set — `EditorEngine`'s `labels` option reads it through ENGINE_DEFAULTS.
+    default: null,
     on: 'update',
     description:
       'Every UI string (rulebook D-NC-24), a PARTIAL object over built-in English, `{ctx.*}` placeholders (a dynamic text passes its context as `{ ctx }`; `ctx.count` = the number its noun agrees with); an empty string = deliberately empty. Keys are flat `<elementType>.<name>`, short (`tooltips.bold`) or full (`km-editor.tooltips.bold`). `placeholders.document` (default empty = off) is shown while the document is empty. Command items (`<name>` = the camel-cased command id: `bold`, `insertLink`, `viewEdit`): `buttons.<name>` (a toolbar button with text), `ariaLabels.<name>` (an icon toolbar button), `menuItems.<name>` (the context menu), `tooltips.<name>`; toolbar groups `ariaLabels.<groupId>Group` (`ariaLabels.formatGroup`, …); status `labels.words` / `labels.chars` (`{ctx.count}`); prompt titles `headers.linkUrl`, `headers.imageUrl`, `headers.imageAlt`, `headers.codeLanguage` / `headers.codeLanguageChange` (`{ctx.languages}`, `{ctx.language}`); cloud image `ariaLabels.cloudImage`, `tooltips.cloudImage`, `menuItems.cloudImage`, `headers.cloudImagePicker`, `messages.cloudImagePicker`; context menu as a sheet / drawer `buttons.back`, `ariaLabels.close` (also the dialogs\' ✕); dialog buttons `buttons.ok`, `buttons.cancel`; split output tabs `buttons.markdownTab`, `buttons.htmlTab`, `buttons.jsonTab` and their tab list `ariaLabels.outputTabs`; `errors.valueFormat`; `errors.required` (a `required` editor left empty); the loader\'s `ariaLabels.loading`; the editing surface\'s name `ariaLabels.editor` (when the element has no `aria-labelledby` / `aria-label` / `<label for>`); screen-reader announcements of a view-mode switch `ariaLabels.viewModeEdit`, `ariaLabels.viewModeSplit`, `ariaLabels.viewModePreview`, `ariaLabels.viewModeInline` (an empty string silences one). Per key: these → the page-wide flat `window.components.locale.labels[\'km-editor.<key>\']` → English; the element\'s own `translateCallback`, then `window.components.locale.translateCallback`, translate the rest. Property (object) or JSON attribute (`labels=\'{"ariaLabels.bold":"Tučně"}\'`). Applies live (no rebuild).',
@@ -211,9 +212,6 @@ export const INPUTS: readonly InputDef[] = [
   ...createMenuPresentationInputs(),
 ];
 
-/** An element with no attributes — what the table's defaults resolve against. */
-const NO_ATTRIBUTES: AttrReader = { getAttribute: () => null, hasAttribute: () => false };
-
 /** The `<km-editor>` settings a standalone {@link EditorEngine} takes as options (same name, same meaning). */
 const ENGINE_KEYS = ['isReadonly', 'labels', 'locale', 'translateCallback', 'interactionHost'] as const;
 
@@ -231,10 +229,5 @@ export interface EditorEngineDefaults {
  * (or given as `undefined`) from it, so a standalone engine behaves like a bare element (C-CA-37).
  */
 export const ENGINE_DEFAULTS: Readonly<EditorEngineDefaults> = Object.freeze(
-  Object.fromEntries(
-    ENGINE_KEYS.map((key) => {
-      const def = INPUTS.find((row) => row.configKey === key)!;
-      return [key, resolveFromAttribute(def, null, NO_ATTRIBUTES).value ?? null] as const;
-    }),
-  ) as unknown as EditorEngineDefaults,
+  getInputDefaults(INPUTS, ENGINE_KEYS) as unknown as EditorEngineDefaults,
 );

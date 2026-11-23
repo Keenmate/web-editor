@@ -10,6 +10,12 @@ The first release — nothing has been published to npm before it. Everything be
 BREAKING entries record changes made during development and only matter to code written against an unpublished
 build (a `file:` link or a git checkout).
 
+### Internal — engine defaults from core `getInputDefaults` (core 1.0.0-rc26, 2026-11-24)
+
+- `ENGINE_DEFAULTS` (the `EditorEngine` option defaults, rulebook C-CA-37) is core `getInputDefaults(INPUTS, keys)`
+  instead of a private stubbed-attribute resolution. The `labels` row now declares `default: null` (the value it
+  already had as an engine default; the manifest shows it). Same values as before (unit test).
+
 ### Changed — command labels on core `{ fallback }` (core 1.0.0-rc26, 2026-11-24)
 
 - The label resolver no longer registers a command's English text in a private copy of the defaults per call:
