@@ -288,22 +288,41 @@ editor.beforeActionCallback = ({ action }) => (action === 'insert-image' ? false
 ```
 
 **Icons** (`icon` on an item or a command) follow core `renderIcon`, like every Keenmate component, in order:
-markup (starts with `<` — an `<svg>`, an `<img>`) is inserted as-is; a built-in name (`'check'`, `'close'`,
+markup (starts with `<` — an `<svg>`, an `<img>`) is inserted as-is; then the icon **maps by name** — the element's
+**`icons`** (`{ bold: 'fa-solid fa-bold' }`, property or JSON attribute), then the page-wide flat
+`window.components.icons` (`'km-editor.<name>'` before `'<name>'`); a core built-in name (`'check'`, `'close'`,
 `'settings'`, `'delete'`, … — core `BUILT_IN_ICON_NAMES`) is a glyph masked from the `--base-icon-<name>` token in
-`currentColor` (reserved: no hook sees it); then the element's own **`renderIconCallback(name, ctx)`** (property
-only), then the page-wide `window.components.renderIconCallback` — each returns markup, `''` = no icon,
-`null` / `undefined` = not mine (`ctx` = `{ component: 'km-editor', element, prefix: 'we', item }`); an ASCII
-class list (`'fa-solid fa-floppy-disk'`, `'bi-gear'`) is an icon font `<i class="we__icon fa-solid fa-floppy-disk"
-aria-hidden="true">`; anything else (an emoji, `'¶'`) is text. Changing `window.components.renderIconCallback`
-later repaints the icons. The icon font's CSS must reach the shadow root — load it through `customStyles` (or the
-page-wide `window.components['km-editor'].customStyles`); a stylesheet in the page `<head>` alone doesn't style it.
+`currentColor` (no hook sees it); then the element's own **`renderIconCallback(name, ctx)`** (property only), then the
+page-wide `window.components.renderIconCallback` — each returns markup, `''` = no icon, `null` / `undefined` = not
+mine (`ctx` = `{ component: 'km-editor', element, prefix: 'we', item }`); then **the editor's own icons**
+(`EDITOR_ICONS`, inline SVGs by name); an ASCII class list (`'fa-solid fa-floppy-disk'`, `'bi-gear'`) is an icon font
+`<i class="we__icon fa-solid fa-floppy-disk" aria-hidden="true">`; anything else (an emoji, `'¶'`) is text. Changing
+`icons`, `window.components.icons` or `window.components.renderIconCallback` later repaints the icons in place. The
+icon font's CSS must reach the shadow root — load it through `customStyles` (or the page-wide
+`window.components['km-editor'].customStyles`); a stylesheet in the page `<head>` alone doesn't style it.
+
+The built-in commands carry icon **names** (toolbar, selection toolbar and context menu alike):
+
+| Name | Command | | Name | Command |
+|---|---|---|---|---|
+| `bold` | Bold | | `codeBlock` | Code block |
+| `italic` | Italic | | `undo` | Undo |
+| `underline` | Underline | | `redo` | Redo |
+| `heading` | Heading | | `insertLink` | Insert link (`link` plugin) |
+| `paragraph` | Paragraph | | `image` | Insert image (`image` plugin) |
+| `bulletList` | Bullet list | | `cloud` | Cloud image (`imageBrowser` plugin) |
+| `orderedList` | Numbered list | | `table` | Insert table (`tables` plugin) |
 
 ```js
+editor.icons = { bold: 'fa-solid fa-bold', undo: '<svg …>…</svg>' };       // this editor
+window.components.icons = { 'km-editor.redo': 'fa-solid fa-rotate-right' }; // every editor on the page
 editor.renderIconCallback = (name) => (name === 'save' ? mySaveSvg : null); // null → the page-wide hook
 ```
 
- The built-in buttons use inline SVGs — `EDITOR_ICONS` (exported) has them for
-your own items. The button's accessible name is always the item `text` (an icon button's `aria-label`; a button without an icon shows the text itself).
+The names avoid core's built-in icon names on purpose (a built-in name draws the theme glyph before the editor's own
+SVG is asked) — so the link icon is `insertLink`, not `link`. A headless `EditorEngine` UI gets the name in a
+command's `icon`; `EDITOR_ICONS[name]` (exported) is the SVG, or pass `EDITOR_ICONS` as core `renderIcon`'s `defaults`
+for your own items. The button's accessible name is always the item `text` (an icon button's `aria-label`; a button without an icon shows the text itself).
 
 Writing plugins (schema nodes/marks, commands, keybindings, toolbar/menu items,
 the Markdown-serializer contract) and the content-pipeline layer are covered in

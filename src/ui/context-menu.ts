@@ -16,6 +16,7 @@ import type { EditorView } from 'prosemirror-view';
 import { normalizeActionItems } from '@keenmate/web-components-core/actions';
 import { openMenu, type MenuHandle, type OpenMenuOptions } from '@keenmate/web-components-core/menu';
 import { commandDefaults, type ActionSurfaceHost } from './actions';
+import { EDITOR_ICONS } from '../icons';
 import type { EditorAction, EditorActionContext, EditorActionItem, EditorToolbarEntry } from '../interaction';
 
 export interface ContextMenuOptions {
@@ -141,6 +142,8 @@ export class ContextMenu {
       shouldFocusFirst: isKeyboard,
       host: this.#container,
       cssClass: 'we-context-menu',
+      // Entries carry icon NAMES (`'bold'`); the editor's own SVGs answer them last (core `renderIcon` `defaults`).
+      iconDefaults: EDITOR_ICONS,
       returnFocusTo: this.#view.dom as HTMLElement,
       inheritThemeFrom: this.#view.dom as HTMLElement,
       defaults: (item) => commandDefaults(registry, item, host.label, 'menu'),

@@ -10,7 +10,6 @@ import type { LabelResolver } from '../labels';
 import type { CommandSpec } from '../engine/command-registry';
 import { imageNodeSpec } from '../schema';
 import { markdownDestination, markdownTitle } from '../engine/serialization/markdown';
-import { EDITOR_ICONS } from '../icons';
 
 /** Prompt for an image URL, then its alt text (core `/dialog`), then insert. Cancelling the alt text keeps `''`. */
 function promptForImage(schema: Schema, label: LabelResolver): Command {
@@ -52,7 +51,7 @@ export const imagePlugin = definePlugin({
       id: 'insert-image',
       run: promptForImage(schema, label),
       text: 'Insert image',
-      icon: EDITOR_ICONS.image,
+      icon: 'image',
       getIsEnabledCallback: () => true,
     },
   ],

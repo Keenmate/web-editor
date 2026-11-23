@@ -18,7 +18,6 @@ import type { LabelResolver } from '../labels';
 import type { EditorViewMode } from '../web-component';
 import { markActive, blockActive, ancestorActive, inCodeBlock } from '../predicates';
 import { promptForCodeBlock, changeCodeBlockLanguage } from '../commands';
-import { EDITOR_ICONS } from '../icons';
 
 /**
  * `text` / `tooltip` are the English defaults; an element's `labels` override them
@@ -30,7 +29,7 @@ export function registerCoreCommands(registry: CommandRegistry, schema: Schema, 
     run: toggleMark(schema.marks.bold),
     keys: ['Mod-b'],
     text: 'Bold',
-    icon: EDITOR_ICONS.bold,
+    icon: 'bold',
     getIsToggledCallback: ({ state }) => markActive(state, schema.marks.bold),
   });
   registry.register({
@@ -38,7 +37,7 @@ export function registerCoreCommands(registry: CommandRegistry, schema: Schema, 
     run: toggleMark(schema.marks.italic),
     keys: ['Mod-i'],
     text: 'Italic',
-    icon: EDITOR_ICONS.italic,
+    icon: 'italic',
     getIsToggledCallback: ({ state }) => markActive(state, schema.marks.italic),
   });
   registry.register({
@@ -46,14 +45,14 @@ export function registerCoreCommands(registry: CommandRegistry, schema: Schema, 
     run: toggleMark(schema.marks.underline),
     keys: ['Mod-u'],
     text: 'Underline',
-    icon: EDITOR_ICONS.underline,
+    icon: 'underline',
     getIsToggledCallback: ({ state }) => markActive(state, schema.marks.underline),
   });
   registry.register({
     id: 'heading',
     run: setBlockType(schema.nodes.heading, { level: 1 }),
     text: 'Heading',
-    icon: EDITOR_ICONS.heading,
+    icon: 'heading',
     tooltip: 'Heading 1',
     getIsToggledCallback: ({ state }) => blockActive(state, schema.nodes.heading, { level: 1 }),
   });
@@ -61,28 +60,28 @@ export function registerCoreCommands(registry: CommandRegistry, schema: Schema, 
     id: 'paragraph',
     run: setBlockType(schema.nodes.paragraph),
     text: 'Paragraph',
-    icon: EDITOR_ICONS.paragraph,
+    icon: 'paragraph',
     getIsToggledCallback: ({ state }) => blockActive(state, schema.nodes.paragraph),
   });
   registry.register({
     id: 'bullet-list',
     run: wrapInList(schema.nodes.bullet_list),
     text: 'Bullet list',
-    icon: EDITOR_ICONS.bulletList,
+    icon: 'bulletList',
     getIsToggledCallback: ({ state }) => ancestorActive(state, schema.nodes.bullet_list),
   });
   registry.register({
     id: 'ordered-list',
     run: wrapInList(schema.nodes.ordered_list),
     text: 'Ordered list',
-    icon: EDITOR_ICONS.orderedList,
+    icon: 'orderedList',
     getIsToggledCallback: ({ state }) => ancestorActive(state, schema.nodes.ordered_list),
   });
   registry.register({
     id: 'insert-code-block',
     run: promptForCodeBlock(label),
     text: 'Insert code block',
-    icon: EDITOR_ICONS.codeBlock,
+    icon: 'codeBlock',
     getIsEnabledCallback: () => true,
   });
   registry.register({
@@ -106,8 +105,8 @@ export function registerCoreCommands(registry: CommandRegistry, schema: Schema, 
     keys: ['Shift-Enter'],
     text: 'Line break',
   });
-  registry.register({ id: 'undo', run: undo, keys: ['Mod-z'], text: 'Undo', icon: EDITOR_ICONS.undo });
-  registry.register({ id: 'redo', run: redo, keys: ['Mod-y', 'Mod-Shift-z'], text: 'Redo', icon: EDITOR_ICONS.redo });
+  registry.register({ id: 'undo', run: undo, keys: ['Mod-z'], text: 'Undo', icon: 'undo' });
+  registry.register({ id: 'redo', run: redo, keys: ['Mod-y', 'Mod-Shift-z'], text: 'Redo', icon: 'redo' });
 }
 
 /** The view-mode port the view-mode commands drive (the hosting `<km-editor>`). */

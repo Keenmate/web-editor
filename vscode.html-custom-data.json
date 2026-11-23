@@ -87,6 +87,11 @@
           "values": []
         },
         {
+          "name": "icons",
+          "description": "Icon overrides by name (rulebook C-CA-42) — `{ <name>: <icon string> }`, the value is markup, a core built-in name, an icon-font class list (`'fa-solid fa-bold'`) or text. The editor's icon names: `bold`, `italic`, `underline`, `heading`, `paragraph`, `bulletList`, `orderedList`, `codeBlock`, `undo`, `redo`, `insertLink`, `image` (insert image), `cloud` (cloud image), `table` (insert table); an item's own `icon` name works too. Per name: these → the page-wide flat `window.components.icons` (`'km-editor.<name>'` before `'<name>'`) → a core built-in name → `renderIconCallback` → the page-wide one → the editor's inline SVGs (`EDITOR_ICONS`) (core `renderIcon`, SPEC §12.33). Toolbar, selection toolbar and context menu. Property (object) or JSON attribute (`icons='{\"bold\":\"fa-solid fa-bold\"}'`). Applies live (no rebuild).",
+          "values": [{ "name": "EditorIcons" }]
+        },
+        {
           "name": "custom-styles",
           "description": "CSS injected into the editor's shadow root (a `<style class=\"we-custom-styles\">` after the page-wide `window.components['km-editor'].customStyles` layer, so it overrides it). An `@import`ed font is also linked once in the document `<head>` (core). Raw CSS — never put untrusted input here.",
           "values": []

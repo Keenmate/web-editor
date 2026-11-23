@@ -104,7 +104,7 @@ script-built `DataTransfer` arrives empty in a synthetic paste event), the liste
 | --- | :-: | --- | --- |
 | `toolbar` edges (top/bottom/start/end/none) by bbox; group order; titles with shortcuts | ✓ | `toolbar.spec.ts` | `toolbar.html` |
 | Toolbar active state follows the caret; click keeps editor focus | ✓ | `toolbar.spec.ts`, `formatting.spec.ts` | `toolbar.html` |
-| Item icons: element `renderIconCallback` beats the page hook, `null` falls through, class list → `<i class="we__icon …">`, built-in names never reach a hook, live re-render; a context-menu item icon asks the element hook (`ctx.item`) | ✓ | `icons.spec.ts` | `icons.html` |
+| Item icons: element `renderIconCallback` beats the page hook, `null` falls through, class list → `<i class="we__icon …">`, built-in names never reach a hook, live re-render; a context-menu item icon asks the element hook (`ctx.item`); built-in commands = editor SVGs by name, `el.icons` (property / JSON attribute) and `window.components.icons` (`km-editor.<name>` first) replace them in the toolbar + context menu | ✓ | `icons.spec.ts` | `icons.html` |
 | `statusbar` Words/Chars live, edges top/bottom/both (split by `bar`), none, read-only | ✓ | `statusbar.spec.ts` | `statusbar.html` |
 | Selection toolbar show/hide rules (collapsed, code block, read-only, preview), items, DOM move | ✓ | `selection-toolbar.spec.ts` | `selection-toolbar.html` |
 | Context menu at pointer, dismiss (Escape / outside / activation), core rc20 scroll rule (a page scroll that moves the editor closes; a wheel that scrolls nothing doesn't), readonly | ✓ | `context-menu.spec.ts` | `context-menu.html` |

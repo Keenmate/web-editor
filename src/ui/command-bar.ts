@@ -22,6 +22,7 @@ import { createRovingFocus, type RovingFocus } from '@keenmate/web-components-co
 import type { EditorAction, EditorActionItem, EditorActionSource, EditorToolbarEntry } from '../interaction';
 import { commandDefaults, type ActionSurfaceHost } from './actions';
 import { renderIcon } from '@keenmate/web-components-core';
+import { EDITOR_ICONS } from '../icons';
 
 export interface CommandBarOptions {
   /** Override the wrapper class (e.g. `'we-group'` when used as a tool group). */
@@ -154,11 +155,14 @@ export class CommandBar {
     btn.className = ['we-cmd', r.cssClass, r.isToggled && 'toggled', r.isDanger && 'we-danger']
       .filter(Boolean)
       .join(' ');
-    // An icon string follows core `renderIcon` (markup raw / built-in name = `--base-icon-<name>` mask / the
-    // element's `renderIconCallback` → the page-wide one / class list = icon-font `<i class="we__icon …">` /
-    // else text); an icon button's name is its `aria-label`. No icon → the text, which names the button itself
-    // (one text, one key — D-NC-24: no `aria-label` twin on a text button).
-    if (r.icon) btn.innerHTML = renderIcon(r.icon, { prefix: 'we', host: this.#host.element ?? null, context: { item } });
+    // An icon string follows core `renderIcon` (markup raw / `el.icons` → `window.components.icons` / built-in
+    // name = `--base-icon-<name>` mask / the element's `renderIconCallback` → the page-wide one / the editor's own
+    // icons by name (`EDITOR_ICONS`) / class list = icon-font `<i class="we__icon …">` / else text); an icon
+    // button's name is its `aria-label`. No icon → the text, which names the button itself (one text, one key —
+    // D-NC-24: no `aria-label` twin on a text button).
+    if (r.icon) {
+      btn.innerHTML = renderIcon(r.icon, { prefix: 'we', host: this.#host.element ?? null, context: { item }, defaults: EDITOR_ICONS });
+    }
     else btn.textContent = r.text;
     if (r.isToggled) btn.setAttribute('aria-pressed', 'true');
     else btn.removeAttribute('aria-pressed');

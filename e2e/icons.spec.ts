@@ -1,5 +1,7 @@
 import { test, expect, load, editor, pm, selectText, markdown, toolbarButton } from './fixtures';
 
+const menu = (page: any) => page.locator('km-editor#subject .we-context-menu');
+
 // Item icons through core renderIcon (SPEC §12.33): the element's own `renderIconCallback` beats the page-wide
 // `window.components.renderIconCallback`; `null` falls through to it; an ASCII class list is an icon-font
 // `<i class="we__icon …">`; a reserved built-in name is never sent to a hook. Fixture: test/icons.html.
@@ -84,5 +86,64 @@ test.describe('icons', () => {
         await expect(toolbarButton(page, 'undo')).toBeEnabled();
 
         await page.evaluate(() => { (window as any).components.renderIconCallback = null; });
+    });
+
+    // Icons by name (rulebook C-CA-42): the built-in commands carry NAMES (`bold`, `insertLink`, …), answered last by the
+    // editor's own SVGs (core renderIcon `defaults` / openMenu `iconDefaults`); `el.icons` and the page-wide
+    // `window.components.icons` replace one by name — toolbar and context menu alike.
+    test('the built-in command icons are the editor SVGs by name (no core built-in glyph)', async ({ page }) => {
+        for (const action of ['bold', 'undo', 'insert-link', 'insert-table']) {
+            await expect(toolbarButton(page, action).locator('svg')).toHaveCount(1);
+            await expect(toolbarButton(page, action).locator('.km-icon')).toHaveCount(0);
+        }
+        await pm(page).locator('p').click({ button: 'right' });
+        await expect(menu(page).locator('[data-action="bold"] svg')).toHaveCount(1);
+        await expect(menu(page).locator('[data-action="insert-link"] svg')).toHaveCount(1);
+    });
+
+    test('el.icons replaces an editor icon by name, live, in the toolbar and the context menu', async ({ page }) => {
+        await editor(page).evaluate(async (el: any) => {
+            el.icons = { bold: '<b class="mapped">B</b>', italic: 'fa-solid fa-italic' };
+            await el.whenSettled();
+        });
+        await expect(toolbarButton(page, 'bold').locator('b.mapped')).toHaveText('B');
+        await expect(toolbarButton(page, 'bold').locator('svg')).toHaveCount(0);
+        await expect(toolbarButton(page, 'italic').locator('i.we__icon')).toHaveClass('we__icon fa-solid fa-italic');
+        await expect(toolbarButton(page, 'underline').locator('svg')).toHaveCount(1); // unmapped → the default
+        await pm(page).locator('p').click({ button: 'right' });
+        await expect(menu(page).locator('[data-action="bold"] b.mapped')).toHaveText('B');
+        await page.keyboard.press('Escape');
+
+        // Removing the map (the JSON attribute path too) restores the defaults.
+        await editor(page).evaluate(async (el: any) => {
+            el.setAttribute('icons', '{"redo":"<b class=\\"attr\\">R</b>"}');
+            await el.whenSettled();
+        });
+        await expect(toolbarButton(page, 'redo').locator('b.attr')).toHaveText('R');
+        await expect(toolbarButton(page, 'bold').locator('svg')).toHaveCount(1);
+    });
+
+    test('window.components.icons ("km-editor.<name>" before "<name>") replaces an icon; el.icons wins over it', async ({ page }) => {
+        await page.evaluate(() => {
+            (window as any).components.icons = {
+                'km-editor.undo': '<b class="page-tag">U</b>',
+                undo: '<b class="page-flat">u</b>',
+                redo: '<b class="page-flat">r</b>',
+                bold: '<b class="page-flat">b</b>',
+            };
+        });
+        await expect(toolbarButton(page, 'undo').locator('b.page-tag')).toHaveText('U');
+        await expect(toolbarButton(page, 'redo').locator('b.page-flat')).toHaveText('r');
+        await editor(page).evaluate(async (el: any) => {
+            el.icons = { bold: '<b class="own">B</b>' };
+            await el.whenSettled();
+        });
+        await expect(toolbarButton(page, 'bold').locator('b.own')).toHaveText('B');
+        await pm(page).locator('p').click({ button: 'right' });
+        await expect(menu(page).locator('[data-action="undo"] b.page-tag')).toHaveText('U');
+        await expect(menu(page).locator('[data-action="bold"] b.own')).toHaveText('B');
+        await page.keyboard.press('Escape');
+        await page.evaluate(() => { (window as any).components.icons = undefined; });
+        await expect(toolbarButton(page, 'undo').locator('svg')).toHaveCount(1);
     });
 });

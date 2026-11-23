@@ -1,8 +1,10 @@
 /**
- * The built-in toolbar icons — inline SVG markup (1em, `currentColor`, hidden from assistive tech: the button's
- * `aria-label` names it). Every item `icon` goes through core `renderIcon` (SPEC §12.33, rulebook C-CA-33):
- * markup (starts with `<`) is inserted raw, a built-in name a `--base-icon-<name>` mask, then the element's /
- * page-wide `renderIconCallback`, an ASCII class list an icon-font `<i class="we__icon …">`, anything else text.
+ * The editor's own icons by NAME — inline SVG markup (1em, `currentColor`, hidden from assistive tech: the button's
+ * `aria-label` names it). The built-in commands carry the NAME as their `icon` (`'bold'`); core `renderIcon` gets
+ * this table as its `defaults` (toolbar, selection toolbar, context menu via `openMenu`'s `iconDefaults`), so the
+ * page replaces one by name through `el.icons` / `window.components.icons` (`'km-editor.<name>'` before `'<name>'`)
+ * or a `renderIconCallback` (SPEC §12.33, rulebook C-CA-42). The names avoid core's built-in icon names
+ * (`BUILT_IN_ICON_NAMES`: those draw the theme glyph before `defaults` is asked) — the link icon is `insertLink`.
  */
 const svg = (body: string): string =>
   `<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false">${body}</svg>`;
@@ -18,8 +20,17 @@ export const EDITOR_ICONS = {
   codeBlock: svg('<path d="M8.6 6.6 3.2 12l5.4 5.4 1.4-1.4L6 12l4-4-1.4-1.4zm6.8 0L14 8l4 4-4 4 1.4 1.4 5.4-5.4-5.4-5.4z"/>'),
   undo: svg('<path d="M8 7V3L2 9l6 6v-4h6a4 4 0 0 1 0 8h-3v2h3a6 6 0 0 0 0-12H8z"/>'),
   redo: svg('<path d="M16 7V3l6 6-6 6v-4h-6a4 4 0 0 0 0 8h3v2h-3a6 6 0 0 1 0-12h6z"/>'),
-  link: svg('<path d="M10.6 13.4a1 1 0 0 0 1.4 0l4.6-4.6a3 3 0 0 0-4.2-4.2l-2 2 1.4 1.4 2-2a1 1 0 0 1 1.4 1.4L10.6 12a1 1 0 0 0 0 1.4zm2.8-2.8a1 1 0 0 0-1.4 0l-4.6 4.6a3 3 0 0 0 4.2 4.2l2-2-1.4-1.4-2 2a1 1 0 0 1-1.4-1.4l4.6-4.6a1 1 0 0 0 0-1.4z"/>'),
+  insertLink: svg('<path d="M10.6 13.4a1 1 0 0 0 1.4 0l4.6-4.6a3 3 0 0 0-4.2-4.2l-2 2 1.4 1.4 2-2a1 1 0 0 1 1.4 1.4L10.6 12a1 1 0 0 0 0 1.4zm2.8-2.8a1 1 0 0 0-1.4 0l-4.6 4.6a3 3 0 0 0 4.2 4.2l2-2-1.4-1.4-2 2a1 1 0 0 1-1.4-1.4l4.6-4.6a1 1 0 0 0 0-1.4z"/>'),
   image: svg('<path d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm1 2v8.6l4-4 3 3 2-2 5 5V7H5zm11 1.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/>'),
   cloud: svg('<path d="M7 19a5 5 0 0 1-.9-9.92A6 6 0 0 1 17.7 8.1 4.5 4.5 0 0 1 17.5 19H7z"/>'),
   table: svg('<path d="M3 4h18v16H3V4zm2 2v3h6V6H5zm8 0v3h6V6h-6zm-8 5v3h6v-3H5zm8 0v3h6v-3h-6zm-8 5v2h6v-2H5zm8 0v2h6v-2h-6z"/>'),
 } as const;
+
+/** An editor icon name — a key of {@link EDITOR_ICONS}. */
+export type EditorIconName = keyof typeof EDITOR_ICONS;
+
+/**
+ * The `icons` input: icon overrides by name (an {@link EditorIconName}, or any name an item `icon` carries) →
+ * an icon string (markup, a core built-in name, an icon-font class list, text).
+ */
+export type EditorIcons = Partial<Record<EditorIconName, string>> & Record<string, string>;

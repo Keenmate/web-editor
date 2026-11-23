@@ -70,6 +70,7 @@ import { EditorChrome } from './ui/chrome';
 import styles from './css/main.css?inline';
 import { initLogger, contentLogger } from './logger';
 import { createLabelResolver, type EditorLabels } from './labels';
+import type { EditorIcons } from './icons';
 import {
   getMenuPresentationOptions,
   type MenuDrawerSide,
@@ -111,6 +112,7 @@ export interface EditorConfig {
   translateCallback: TranslateCallback | null;
   beforeActionCallback: ((detail: EditorActionEventDetail) => unknown) | null;
   renderLoadingCallback: RenderLoadingCallback | null;
+  icons: EditorIcons | null;
   renderIconCallback: RenderIconCallback | null;
   interactionHost: InteractionHost | null;
   customStyles: string | null;
@@ -599,7 +601,8 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   }
 
   /**
-   * A page-wide `window.components.renderIconCallback` change (core, rulebook C-CA-40): the item icons
+   * An icon source changed — the page-wide `window.components.renderIconCallback` / `window.components.icons`
+   * (rulebook C-CA-40) or this element's `icons` (core calls it after the flush, C-CA-42): the item icons
    * (toolbar, selection toolbar) re-render in place through the chrome's state refresh — the document,
    * selection, focus, undo history and an open menu stay. A menu renders its icons on open.
    */

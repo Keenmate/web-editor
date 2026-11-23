@@ -13,6 +13,7 @@ import {
   toObject,
   toText,
   getInputDefaults,
+  isIconMap,
   type InputDef,
   type RenderIconCallback,
 } from '@keenmate/web-components-core';
@@ -20,6 +21,7 @@ import { createMenuPresentationInputs } from '@keenmate/web-components-core/menu
 import type { TranslateCallback } from '@keenmate/web-components-core/locale';
 import type { InteractionHost } from './engine/pipeline/types';
 import type { EditorLabels } from './labels';
+import type { EditorIcons } from './icons';
 
 const VIEW_MODES = ['edit', 'split', 'preview', 'inline'] as const;
 const FORMATS = ['markdown', 'html', 'json'] as const;
@@ -169,12 +171,23 @@ export const INPUTS: readonly InputDef[] = [
       'Property only. `(detail) => false | void` (may be async) — runs first on every toolbar / selection-toolbar / context-menu activation, with the `action` event detail. Return `false` to cancel: no `onClick`, no `action` event, no command. Keyboard shortcuts do not pass through it.',
   },
   {
+    configKey: 'icons',
+    attribute: 'icons',
+    converter: toObject<EditorIcons>({ validate: isIconMap }),
+    default: null,
+    // Core calls `iconsChanged()` after a batch that changed it (the icons repaint in place).
+    on: 'update',
+    type: 'EditorIcons',
+    description:
+      "Icon overrides by name (rulebook C-CA-42) — `{ <name>: <icon string> }`, the value is markup, a core built-in name, an icon-font class list (`'fa-solid fa-bold'`) or text. The editor's icon names: `bold`, `italic`, `underline`, `heading`, `paragraph`, `bulletList`, `orderedList`, `codeBlock`, `undo`, `redo`, `insertLink`, `image` (insert image), `cloud` (cloud image), `table` (insert table); an item's own `icon` name works too. Per name: these → the page-wide flat `window.components.icons` (`'km-editor.<name>'` before `'<name>'`) → a core built-in name → `renderIconCallback` → the page-wide one → the editor's inline SVGs (`EDITOR_ICONS`) (core `renderIcon`, SPEC §12.33). Toolbar, selection toolbar and context menu. Property (object) or JSON attribute (`icons='{\"bold\":\"fa-solid fa-bold\"}'`). Applies live (no rebuild).",
+  },
+  {
     configKey: 'renderIconCallback',
     converter: toFunction<RenderIconCallback>(),
     default: null,
     on: 'update',
     description:
-      "Property only. `(name, ctx) => string | null | undefined` — draws an item `icon` string (toolbar / selection toolbar) this element's way: return markup, `''` = no icon, `null` / `undefined` = not mine (the page-wide `window.components.renderIconCallback` decides, then the built-in rules). Asked AFTER markup (a string starting with `<`) and the reserved built-in names (`check`, `close`, …, never sent to a hook), BEFORE the page-wide hook (core `renderIcon`, SPEC §12.33). `ctx` = `{ component: 'km-editor', element, prefix: 'we', item }`. Applies live.",
+      "Property only. `(name, ctx) => string | null | undefined` — draws an item `icon` string (toolbar / selection toolbar) this element's way: return markup, `''` = no icon, `null` / `undefined` = not mine (the page-wide `window.components.renderIconCallback` decides, then the built-in rules). Asked AFTER markup (a string starting with `<`), the `icons` maps and the reserved built-in names (`check`, `close`, …, never sent to a hook), BEFORE the page-wide hook and the editor's own icons (core `renderIcon`, SPEC §12.33). `ctx` = `{ component: 'km-editor', element, prefix: 'we', item }`. Applies live.",
   },
   {
     configKey: 'renderLoadingCallback',

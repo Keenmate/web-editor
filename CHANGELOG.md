@@ -10,6 +10,20 @@ The first release — nothing has been published to npm before it. Everything be
 BREAKING entries record changes made during development and only matter to code written against an unpublished
 build (a `file:` link or a git checkout).
 
+### Added — icons by name: the `icons` map (core 1.0.0-rc26, rulebook C-CA-42, 2026-11-24)
+
+- New **`icons`** input (property object or JSON attribute, applies live): icon overrides by name
+  (`{ bold: 'fa-solid fa-bold' }`). The page-wide flat `window.components.icons` (`'km-editor.<name>'` before
+  `'<name>'`) works too; both come right after markup in core `renderIcon`'s order and repaint in place.
+- The built-in commands carry icon **names** (`bold`, `italic`, `underline`, `heading`, `paragraph`, `bulletList`,
+  `orderedList`, `codeBlock`, `undo`, `redo`, `insertLink`, `image`, `cloud`, `table`); `EDITOR_ICONS` answers them
+  last (core `renderIcon` `defaults`, the context menu through `openMenu`'s `iconDefaults`), so a
+  `renderIconCallback` now also sees these names (return `null` to keep the default). New types `EditorIconName`,
+  `EditorIcons`.
+- BREAKING (unpublished builds): a command's `icon` is the name, not the SVG markup — a headless `EditorEngine` UI
+  looks it up in `EDITOR_ICONS`. `EDITOR_ICONS.link` is now **`EDITOR_ICONS.insertLink`**: `link` is a core built-in
+  icon name (it would draw the theme glyph before the editor's own SVG is asked).
+
 ### Internal — engine defaults from core `getInputDefaults` (core 1.0.0-rc26, 2026-11-24)
 
 - `ENGINE_DEFAULTS` (the `EditorEngine` option defaults, rulebook C-CA-37) is core `getInputDefaults(INPUTS, keys)`

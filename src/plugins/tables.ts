@@ -30,7 +30,6 @@ import { definePlugin } from '../engine/plugin';
 import type { CommandSpec } from '../engine/command-registry';
 import { tableNodeSpecs } from '../schema';
 import { nodeToHTML } from '../engine/serialization/markdown';
-import { EDITOR_ICONS } from '../icons';
 
 /** Insert a `rows × cols` table (first row is a header row). */
 function insertTable(schema: Schema, rows = 3, cols = 3): Command {
@@ -75,7 +74,7 @@ export const tablePlugin = definePlugin({
       id: 'insert-table',
       run: insertTable(schema),
       text: 'Insert table',
-      icon: EDITOR_ICONS.table,
+      icon: 'table',
       getIsEnabledCallback: () => true,
     },
     { id: 'add-column-before', run: addColumnBefore },

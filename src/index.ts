@@ -54,7 +54,7 @@ export { createMenuDivider } from '@keenmate/web-components-core/actions';
 // UI strings (`labels`, rulebook D-NC-24): built-in English + the key helpers.
 export { DEFAULT_LABELS, labelKey, formatLabel } from './labels';
 /** The built-in toolbar icons (inline SVG strings) — reuse them on your own items. */
-export { EDITOR_ICONS } from './icons';
+export { EDITOR_ICONS, type EditorIconName, type EditorIcons } from './icons';
 export type { EditorLabels, EditorLabelKey, LabelParams, LabelResolver, StatusCountLabelContext, CodeLanguageLabelContext } from './labels';
 
 // Toolbar zones / tool groups / status items model. Override the core groups or
