@@ -14,7 +14,7 @@ import {
   type ResolvedActionItem,
 } from '@keenmate/web-components-core/actions';
 import type { CommandRegistry } from '../engine/command-registry';
-import { labelKey, type LabelResolver } from '../labels';
+import { isBuiltInLabel, labelKey, type LabelResolver } from '../labels';
 import type { EditorEngine } from '../engine/editor-engine';
 import type {
   EditorAction,
@@ -112,10 +112,12 @@ export function commandDefaults(
   if (!spec) return { text: label(textKey, undefined, name), isDisabled: true };
   const shortcut = registry.shortcut(name);
   const tooltipKey = `tooltips.${key}`;
-  // The text twins with the tooltip (same `<name>`): an unset `ariaLabels.x` takes a customized `tooltips.x`
-  // (core `/locale`). The tooltip resolves on its own — without one, it is the text (already translated) +
-  // the shortcut.
-  const text = label(textKey, undefined, spec.text ?? name, { [tooltipKey]: spec.tooltip ?? '' });
+  // The text twins with the tooltip (same `<name>`): an unset `ariaLabels.x` takes a customized `tooltips.x` —
+  // the customized tooltip (`''` = none) is the text's fallback, ahead of the command's English text. A built-in
+  // tooltip key already twins through core `/locale`. The tooltip resolves on its own — without one, it is the
+  // text (already translated) + the shortcut.
+  const customTooltip = isBuiltInLabel(tooltipKey) ? '' : label(tooltipKey, undefined, '');
+  const text = label(textKey, undefined, customTooltip || spec.text || name);
   const shown = item.text ?? text;
   const tooltip = label(tooltipKey, undefined, spec.tooltip ?? '');
   return {

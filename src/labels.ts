@@ -1,4 +1,4 @@
-import { createLabels, formatLabel as formatCoreLabel, type TranslateCallback } from '@keenmate/web-components-core/locale';
+import { createLabels, createLabelsView, formatLabel as formatCoreLabel, type TranslateCallback } from '@keenmate/web-components-core/locale';
 
 /**
  * UI strings (rulebook D-NC-24, core `/locale` SPEC §12.24): one `labels` object
@@ -122,13 +122,17 @@ export interface CodeLanguageLabelContext {
 }
 
 /**
- * Resolve a label: `(key, params?, fallback?, twins?) => string`. The `fallback` is the
- * English default for keys outside {@link DEFAULT_LABELS} (command / group texts). `twins` = the English
- * defaults of the same element's other derived keys (`{ 'tooltips.bold': '' }`): an `ariaLabels.x` /
- * `tooltips.x` nobody set takes a customized twin with the same `<name>` (core `/locale`), and a derived key
- * counts as a twin only for the call that names it.
+ * Resolve a label: `(key, params?, fallback?) => string`. The `fallback` is the English default for keys outside
+ * {@link DEFAULT_LABELS} (command / group texts) — core `/locale` `{ fallback }`: it stands where a built-in default
+ * would be (a `translateCallback` gets it as `template`); a built-in key keeps its own default. Without either, the
+ * key itself is shown.
  */
-export type LabelResolver = (key: string, params?: LabelParams, fallback?: string, twins?: Record<string, string>) => string;
+export type LabelResolver = (key: string, params?: LabelParams, fallback?: string) => string;
+
+/** Whether `key` has a built-in English default in {@link DEFAULT_LABELS}. */
+export function isBuiltInLabel(key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(DEFAULT_LABELS, key);
+}
 
 /** `'insert-link'` → `'insertLink'`, `'image:browser:pick'` → `'imageBrowserPick'`. */
 export function labelKey(id: string): string {
@@ -159,23 +163,13 @@ export function createLabelResolver(
   getTranslateCallback?: () => TranslateCallback | null | undefined,
   getLocale?: () => string | null | undefined,
 ): LabelResolver {
-  // Derived keys (commands, groups) have no built-in default: the caller's fallback is theirs (per call).
-  const defaults: Record<string, string> = { ...DEFAULT_LABELS };
-  const labels = createLabels<Record<string, string>>(host ?? null, defaults, () => getLabels() as Record<string, string> | null, {
+  const labels = createLabels<Record<string, string>>(host ?? null, DEFAULT_LABELS, () => getLabels() as Record<string, string> | null, {
     tag: TAG,
     ...(getTranslateCallback ? { getTranslateCallback } : {}),
     ...(getLocale ? { getLocale } : {}),
   });
-  const isBuiltIn = (key: string): boolean => Object.prototype.hasOwnProperty.call(DEFAULT_LABELS, key);
-  return (key, params, fallback, twins) => {
-    // Derived keys are registered only for this call: whether a twin exists must not depend on what
-    // rendered before.
-    const derived = [key, ...Object.keys(twins ?? {})].filter((k) => !isBuiltIn(k));
-    for (const k of derived) defaults[k] = k === key ? (fallback ?? key) : twins![k];
-    try {
-      return labels.text(key, params);
-    } finally {
-      for (const k of derived) delete defaults[k];
-    }
-  };
+  const view = createLabelsView(labels);
+  // A derived key (command, group) has no built-in default: the caller's fallback is its default, per call.
+  return (key, params, fallback) =>
+    isBuiltInLabel(key) || fallback === undefined ? view.text(key, params) : view.text(key, params, { fallback });
 }

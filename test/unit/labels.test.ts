@@ -45,6 +45,7 @@ describe('label helpers', () => {
     expect(label('headers.codeLanguage', { ctx: { languages: 'css, sql' } })).toBe('Enter language (css, sql)');
     expect(label('ariaLabels.insertLink', undefined, 'Insert link')).toBe('Insert link');
     expect(label('nope')).toBe('nope');
+    expect(label('ariaLabels.formatGroup', undefined, '')).toBe('Format'); // a built-in key keeps its own default
   });
 
   it('standalone resolver: instance labels → own translateCallback → page-wide one (null = not mine) → built-in', () => {
@@ -67,6 +68,7 @@ describe('label helpers', () => {
       const throwing = createLabelResolver(() => null, null, () => () => { throw new Error('boom'); });
       reg.locale = { translateCallback: ({ template }: { template: string }) => `P:${template}` };
       expect(throwing('buttons.ok')).toBe('P:OK');
+      expect(throwing('ariaLabels.insertLink', undefined, 'Insert link')).toBe('P:Insert link'); // the fallback is the template
     } finally {
       reg.locale = null;
     }
@@ -139,6 +141,27 @@ describe('<km-editor> labels', () => {
     expect(cmd(el, 'italic').dataset.tooltip).toBe('Kurzíva (Ctrl+I)'); // the text + shortcut, as in English
   });
 
+  it("twins through a translateCallback: an unanswered ariaLabels.x gets the answered tooltips.x as its template", async () => {
+    const el = await mount({ value: 'x' });
+    const reg = (window as any).components;
+    const seen: Array<[string, string]> = [];
+    try {
+      reg.locale = {
+        translateCallback: ({ key, template }: { key: string; template: string }) => {
+          seen.push([key, template]);
+          return key === 'km-editor.tooltips.bold' ? 'Tučné písmo' : null;
+        },
+      };
+      expect(cmd(el, 'bold').getAttribute('aria-label')).toBe('Tučné písmo');
+      expect(cmd(el, 'bold').dataset.tooltip).toBe('Tučné písmo');
+      expect(seen).toContainEqual(['km-editor.ariaLabels.bold', 'Tučné písmo']); // the fallback is the template
+      expect(seen).toContainEqual(['km-editor.ariaLabels.italic', 'Italic']); // no tooltip answered: the English text
+      expect(cmd(el, 'italic').getAttribute('aria-label')).toBe('Italic');
+    } finally {
+      reg.locale = null;
+    }
+  });
+
   it('a property change applies live, without rebuilding the engine', async () => {
     const el = await mount({ value: 'one', statusbar: 'bottom' });
     const engine = getEditorEngine(el);
@@ -186,7 +209,8 @@ describe('<km-editor> labels', () => {
     const el = await mount({ value: 'x', labels: JSON.stringify({ 'ariaLabels.italic': 'Kurzíva' }) });
     const reg = (window as any).components;
     try {
-      reg.locale = { translateCallback: ({ template }: { template: string }) => `page:${template}` };
+      // `''` = the tooltip-twin probe (`tooltips.bold` with an empty fallback): a real i18n answers only keys it has.
+      reg.locale = { translateCallback: ({ template }: { template: string }) => (template ? `page:${template}` : null) };
       expect(cmd(el, 'bold').getAttribute('aria-label')).toBe('page:Bold');
       el.translateCallback = ({ key, template }) => (key === 'km-editor.ariaLabels.bold' ? `own:${template}` : null);
       await el.whenSettled();

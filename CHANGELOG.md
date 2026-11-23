@@ -10,6 +10,16 @@ The first release — nothing has been published to npm before it. Everything be
 BREAKING entries record changes made during development and only matter to code written against an unpublished
 build (a `file:` link or a git checkout).
 
+### Changed — command labels on core `{ fallback }` (core 1.0.0-rc26, 2026-11-24)
+
+- The label resolver no longer registers a command's English text in a private copy of the defaults per call:
+  it passes it as core `/locale`'s per-call `{ fallback }` (a `translateCallback` still gets it as `template`; a
+  built-in key keeps its own default). The resolver is built over core `createLabelsView`.
+- The tooltip twin is two plain calls: the customized `tooltips.<name>` (`''` when none) is the fallback of an
+  unset `ariaLabels.<name>` / `buttons.<name>` / `menuItems.<name>`, ahead of the command's English text. With a
+  `translateCallback`, the text key's callback call gets that tooltip as its `template`.
+- BREAKING (`LabelResolver` type, `ctx.label`): the 4th `twins` argument is gone — `(key, params?, fallback?)`.
+
 ### Internal — toolbar Escape leaves the tooltip to core (core 1.0.0-rc26, 2026-11-23)
 
 - The toolbar's own "a shown tooltip takes the first Escape" guard is gone: core `createTooltip` now claims that
