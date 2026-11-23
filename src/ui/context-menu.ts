@@ -27,7 +27,7 @@ export interface ContextMenuOptions {
   container: HTMLElement;
   /**
    * The host's menu presentation, read at every open — inside `<km-editor>`:
-   * core `menuPresentationOptions(this.config)` (`menu-presentation` / `menu-side`,
+   * core `getMenuPresentationOptions(this.config)` (`menu-presentation` / `menu-side`,
    * effective config). Absent → core's default (`auto`).
    */
   getPresentation?: () => Partial<Pick<OpenMenuOptions<EditorActionContext, EditorAction>, 'presentation' | 'side'>>;
@@ -146,7 +146,7 @@ export class ContextMenu {
       defaults: (item) => commandDefaults(registry, item, host.label, 'menu'),
       runAction: (item, { triggerElement, sourceEvent }) =>
         host.activate(item, 'context-menu', sourceEvent, triggerElement),
-      onClose: () => {
+      closeCallback: () => {
         if (this.#menu === menu) this.#menu = null;
       },
     });

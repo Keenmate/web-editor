@@ -209,7 +209,7 @@ export class DeferredRunner {
     this.runner = createAsyncRunner({
       debounceMs: () => this.pipeline.policy?.debounceMs ?? 1000,
       // A superseded run never gets here (core drops it); an abort is never an error.
-      onError: (error) => {
+      errorCallback: (error) => {
         this.gate?.stop();
         this.deps.onStatus({ phase: 'error', error });
       },

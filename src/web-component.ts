@@ -38,7 +38,7 @@ import {
   type CustomStylesCallback,
   type CustomStylesHandle,
   type EventDef,
-  type RenderLoaderCallback,
+  type RenderLoadingCallback,
   type RenderIconCallback,
   type ResponsiveCallback,
   type ResponsiveMap,
@@ -71,7 +71,7 @@ import styles from './css/main.css?inline';
 import { initLogger, contentLogger } from './logger';
 import { createLabelResolver, type EditorLabels } from './labels';
 import {
-  menuPresentationOptions,
+  getMenuPresentationOptions,
   type MenuDrawerSide,
   type MenuPresentation,
 } from '@keenmate/web-components-core/menu';
@@ -110,7 +110,7 @@ export interface EditorConfig {
   locale: string | null;
   translateCallback: TranslateCallback | null;
   beforeActionCallback: ((detail: EditorActionEventDetail) => unknown) | null;
-  renderLoadingCallback: RenderLoaderCallback | null;
+  renderLoadingCallback: RenderLoadingCallback | null;
   renderIconCallback: RenderIconCallback | null;
   interactionHost: InteractionHost | null;
   customStyles: string | null;
@@ -535,7 +535,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
         emitAction: (detail) => this.emit('action', detail),
       }),
       // `menu-presentation` / `menu-side` (effective config), read at every open.
-      getMenuPresentation: () => menuPresentationOptions(this.config),
+      getMenuPresentation: () => getMenuPresentationOptions(this.config),
     });
     this.#applyChromeState();
 

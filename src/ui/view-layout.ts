@@ -269,7 +269,7 @@ export class ViewLayout {
       orientation: 'horizontal',
       isWrapping: true,
       // Automatic activation (APG tabs): the output re-serializes at once.
-      onFocusItem: (item) => this.#selectOutput(item.dataset.format as SerializationFormat),
+      focusItemCallback: (item) => this.#selectOutput(item.dataset.format as SerializationFormat),
     });
     this.#outputRoving.focusItem(items().find((b) => b.dataset.format === this.#outputFormat) ?? 0, { shouldFocus: false });
     return panel;

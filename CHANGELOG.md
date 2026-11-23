@@ -10,6 +10,15 @@ The first release — nothing has been published to npm before it. Everything be
 BREAKING entries record changes made during development and only matter to code written against an unpublished
 build (a `file:` link or a git checkout).
 
+### Changed — core 1.0.0-rc26, the final v1 names (2026-11-23)
+
+- `@keenmate/web-components-core` → `^1.0.0-rc26`. The batch write the element inherits from core is now
+  **`el.setProperties(props)`** (was `el.setAttributes(props)`, no alias) — the manifest / IDE data follow.
+- Internal: core's renamed API — `RenderLoadingCallback` type, `createMenuPresentationInputs()` /
+  `getMenuPresentationOptions()`, and the option fields the editor passes follow core's `*Callback` naming
+  (`createAsyncRunner` `errorCallback`, floating-toolbar anchor `placedCallback`, context menu `closeCallback`,
+  output-format tabs `focusItemCallback`). No behaviour change.
+
 ### Changed — BREAKING — labels read the spot's context, `{ctx.*}` (rulebook D-NC-24, 2026-11-23)
 
 - **A dynamic label passes its values as `{ ctx }`**, so the templates read dotted paths: `labels.words` /

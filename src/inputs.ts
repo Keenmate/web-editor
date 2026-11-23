@@ -17,7 +17,7 @@ import {
   type InputDef,
   type RenderIconCallback,
 } from '@keenmate/web-components-core';
-import { menuPresentationInputs } from '@keenmate/web-components-core/menu';
+import { createMenuPresentationInputs } from '@keenmate/web-components-core/menu';
 import type { TranslateCallback } from '@keenmate/web-components-core/locale';
 import type { InteractionHost } from './engine/pipeline/types';
 import type { EditorLabels } from './labels';
@@ -208,7 +208,7 @@ export const INPUTS: readonly InputDef[] = [
   },
   // `menu-presentation` / `menu-side` — the context menu's presentation (core `/menu`
   // standard rows, SPEC §12.13), read at every open.
-  ...menuPresentationInputs(),
+  ...createMenuPresentationInputs(),
 ];
 
 /** An element with no attributes — what the table's defaults resolve against. */

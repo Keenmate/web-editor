@@ -114,7 +114,7 @@ export function createFloatingToolbarPlugin(schema: Schema): Plugin {
         fallbackPlacements,
         shift: 8,
         arrow: { element: arrowEl },
-        onPlaced: (side) => {
+        placedCallback: (side) => {
           arrowEl.style.transform = side.startsWith('top') ? '' : 'rotate(180deg)';
         },
       });
