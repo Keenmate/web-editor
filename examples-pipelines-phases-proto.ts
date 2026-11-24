@@ -3,7 +3,7 @@
  * configuration — phases, the propose/dispose ladder, the config cell").
  *
  * A standalone prototype of the phase-based assembly + config-cell model we
- * designed. It deliberately lives in `src/dev` and does NOT touch the shipped
+ * designed. It deliberately lives with the example pages and does NOT touch the shipped
  * engine (`engine/pipeline/{types,assemble,runner}.ts`) — the plan is to prove the
  * shape here first, then promote it. It mirrors the shipped `assemble.ts` spine
  * (collect stages → fold contributions, in dependency-ordered plugin order) and

@@ -1,7 +1,7 @@
 /**
- * PHASES + CONFIG-CELL PROTOTYPE — visual driver (dev-only; examples-phases.html).
+ * PHASES + CONFIG-CELL PROTOTYPE — visual driver (dev-only; examples-pipelines.html).
  *
- * Exercises `phases-proto.ts` against the four use cases from PIPELINES.md so we
+ * Exercises `examples-pipelines-phases-proto.ts` against the four use cases from PIPELINES.md so we
  * can see the assembly actually resolve: the config cell (one crop plugin, two
  * pipelines → two behaviours), phase ordering of independent plugins (compress
  * before base64, watermark after compress — automatic), the owner override + soft
@@ -14,7 +14,7 @@ import {
   type OwnerPipelineConfig,
   type PhasedStage,
   type ProtoPlugin,
-} from './phases-proto';
+} from './examples-pipelines-phases-proto';
 
 // ── tiny DOM helper ─────────────────────────────────────────────────────────────
 

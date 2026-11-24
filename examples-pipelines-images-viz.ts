@@ -1,7 +1,7 @@
 /**
- * IMAGE USE-CASE PROTOTYPE — visual driver (dev-only; examples-image-cases.html).
+ * IMAGE USE-CASE PROTOTYPE — visual driver (dev-only; examples-pipelines.html).
  *
- * Runs the two image pipelines from `images-proto.ts` behind a real modal host, so
+ * Runs the two image pipelines from `examples-pipelines-images-proto.ts` behind a real modal host, so
  * the use cases are clickable: pick a cloud image → (A) crop it in a dialog, or
  * (B1) turn on the planner and watch crop run headless; then build a gallery from
  * several images via a pipeline-unaware processor wrapped for batch + a shape
@@ -15,7 +15,7 @@ import {
   type ProtoInteractionHost,
   type ProtoInteractionResult,
   type ProtoPlugin,
-} from './phases-proto';
+} from './examples-pipelines-phases-proto';
 import {
   GALLERY_PIPELINE,
   PICK_PIPELINE,
@@ -26,7 +26,7 @@ import {
   pickOwnerConfig,
   pickPipelinePlugins,
   type ImageAsset,
-} from './images-proto';
+} from './examples-pipelines-images-proto';
 
 // ── tiny DOM helper ─────────────────────────────────────────────────────────────
 

@@ -93,7 +93,7 @@ status items layer by id.
 
 ## Phases & the config cell (design-stage)
 
-> **Not yet in the engine.** The following is prototyped in `src/dev`
+> **Not yet in the engine.** The following is prototyped in the example-page scripts (`examples-pipelines-*.ts`)
 > (the *Phases & Config Cell* and *Image Pipeline Use Cases* example pages) and
 > specified in full in the root [`PIPELINES.md`](../../PIPELINES.md). It's included
 > here so the intended extension model is visible alongside the shipped anchors.

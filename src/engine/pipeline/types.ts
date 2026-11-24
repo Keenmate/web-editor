@@ -4,7 +4,7 @@
  * A pipeline is a named, trigger-bound, ordered chain of async stages that thread
  * a context `{ doc, extra }`. Stages never mutate in place — each returns an
  * outcome (merge a patch into `extra`, halt the chain, or skip). This file is the
- * reusable core; the demo (`src/dev/pipeline-demo.ts`) drives it against the
+ * reusable core; the demo (`examples-pipelines-viz.ts`) drives it against the
  * engine's `change` event without any engine surgery.
  *
  * PM types are kept loose (`any`) where importing them would leak ProseMirror

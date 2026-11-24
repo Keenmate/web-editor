@@ -2,7 +2,7 @@
  * IMAGE USE-CASE PROTOTYPE (dev-only; see PIPELINES.md §"Interactive vs
  * automated, data currency, planner/executor, plugin-API wrappers").
  *
- * Builds on `phases-proto.ts` to run the cloud-image use cases end to end "just
+ * Builds on `examples-pipelines-phases-proto.ts` to run the cloud-image use cases end to end "just
  * to see what we missed," with REAL `Blob`s (tiny canvas swatches) so the
  * blob-as-currency claim is actually exercised — every stage reads a `Blob` from
  * `extra`, transforms the bytes, and writes a `Blob` back; serialization to a data
@@ -17,7 +17,7 @@
  *        `reformat` adapter bridges the shape mismatch; `gallery-maker` builds the
  *        gallery via its own public API. No plugin imports another.
  */
-import type { OwnerPipelineConfig, PhasedStage, ProtoPlugin } from './phases-proto';
+import type { OwnerPipelineConfig, PhasedStage, ProtoPlugin } from './examples-pipelines-phases-proto';
 
 // ── a real-blob image asset + canvas ops (blob is the working currency) ──────────
 

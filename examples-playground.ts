@@ -7,16 +7,16 @@
  * to avoid a first-paint FOUC on reload. The library path (src/index.ts) still
  * imports it, so packaged consumers get the CSS bundled as before.
  */
-import { EditorEngine } from '../engine/editor-engine';
-import { schema } from '../schema';
-import { createDefaultDoc } from '../editor';
-import { createFloatingToolbarPlugin } from '../plugins/floating-toolbar';
-import { createDebugPlugins, updateDebugPanel } from '../plugins/debug';
-import type { SerializationFormat } from '../engine/serialization';
+import { EditorEngine } from './src/engine/editor-engine';
+import { schema } from './src/schema';
+import { createDefaultDoc } from './src/editor';
+import { createFloatingToolbarPlugin } from './src/plugins/floating-toolbar';
+import { createDebugPlugins, updateDebugPanel } from './src/plugins/debug';
+import type { SerializationFormat } from './src/engine/serialization';
 // Registers <km-editor> (side-effect import — must NOT be type-only, or esbuild
 // elides it and the element is never defined). Types come separately.
-import '../index';
-import type { KmEditorElement, EditorViewMode } from '../index';
+import './src/index';
+import type { KmEditorElement, EditorViewMode } from './src/index';
 
 // ── <km-editor> element showcase (Phase 2–3) ──────────────────────────────
 const km = document.querySelector('#km') as KmEditorElement | null;

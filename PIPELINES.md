@@ -668,7 +668,7 @@ doesn't; it's a loop inside one stage honoring one `rt.signal`.
 ## Demo slice (build this first)
 
 Goal: prove the **deferred** machinery end-to-end with **no backend and no engine
-surgery** — live only in the dev playground (`src/dev`, excluded from the shipped
+surgery** — live only in the example pages (`examples-pipelines-*.ts`, outside `src/`, never in the shipped
 build). If this feels right, we promote the core into the engine as Phase 7.
 
 ### Scope
@@ -680,7 +680,7 @@ build). If this feels right, we promote the core into the engine as Phase 7.
   - `runner.ts` — `runStages()` (sequential outcome handling, optional per-stage
     reporter) + `DeferredRunner` (debounce + generation token + loader threshold +
     abort, with `onStart`/`onStage` observability hooks).
-- A dedicated visual test page — `pipelines.html` + `src/dev/pipeline-viz.ts`:
+- A dedicated visual test page — `examples-pipelines.html` + `examples-pipelines-viz.ts`:
   the editor on the left, one **lane per pipeline** on the right. Each stage chip
   blinks green while running, fades to gray on success, goes amber on halt, red on
   error, dashed on skip, struck-through on abort — driven by the runner's real

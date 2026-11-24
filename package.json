@@ -68,7 +68,6 @@
           "src"
         ],
         "exclude": [
-          "src/dev",
           "test"
         ]
       }

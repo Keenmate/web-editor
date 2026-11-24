@@ -48,7 +48,7 @@ TypeScript modules with **behaviour unchanged**. No new features.
 - POC split into: `schema.ts`, `commands.ts`, `editor.ts`,
   `plugins/syntax-highlight.ts`, and provisional playground-only
   `plugins/floating-toolbar.ts` + `plugins/debug.ts`.
-- `src/dev/main.ts` + `index.html`: the playground, running exactly like the POC.
+- `src/dev/main.ts` (now `examples-playground.ts`) + `index.html`: the playground, running exactly like the POC.
 - Smoke unit test for schema/state assembly.
 
 > Provisional code: `floating-toolbar.ts` and `debug.ts` are DOM-id-coupled

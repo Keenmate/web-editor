@@ -12,20 +12,20 @@
  */
 import { DOMParser as PMDOMParser } from 'prosemirror-model';
 import { escapeHtml } from '@keenmate/web-components-core';
-import { DeferredRunner, runStages, runStagesSync, type RunResult } from '../engine/pipeline/runner';
+import { DeferredRunner, runStages, runStagesSync, type RunResult } from './src/engine/pipeline/runner';
 import type {
   InteractionHost,
   Pipeline,
   PipelineContext,
   RunStatus,
   StageReport,
-} from '../engine/pipeline/types';
-import '../index';
-import type { KmEditorElement } from '../index';
-import { getEditorEngine } from '../web-component';
-import { defaultPlugins } from '../engine/default-plugins';
-import { imageBrowserPlugin } from '../plugins/image-browser';
-import { imageBase64Plugin } from '../plugins/image-base64';
+} from './src/engine/pipeline/types';
+import './src/index';
+import type { KmEditorElement } from './src/index';
+import { getEditorEngine } from './src/web-component';
+import { defaultPlugins } from './src/engine/default-plugins';
+import { imageBrowserPlugin } from './src/plugins/image-browser';
+import { imageBase64Plugin } from './src/plugins/image-base64';
 
 function delay(ms: number, signal: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -574,7 +574,7 @@ function pluginSet() {
 }
 
 /** Rebuild the editor on the current plugin set, re-inject the host, and re-wire. */
-function applyPlugins() {
+function installPluginSet() {
   if (!km) return;
   km.interactionHost = ui; // public input — survives the rebuild below
   km.plugins = pluginSet(); // rebuilds the engine synchronously, preserving content
@@ -607,26 +607,26 @@ function wireControlsOnce() {
   const base64Toggle = document.querySelector('#pv-base64') as HTMLInputElement | null;
   base64Toggle?.addEventListener('change', () => {
     base64.on = base64Toggle.checked;
-    applyPlugins(); // rebuild with / without the base64 stage
+    installPluginSet(); // rebuild with / without the base64 stage
   });
 
   // Delay slider — scales every async stage so you can watch them pulse.
   const delayInput = document.querySelector('#pv-delay') as HTMLInputElement | null;
   const delayLabel = document.querySelector('#pv-delay-label') as HTMLElement | null;
   if (delayInput) {
-    const syncDelay = () => {
+    const reconcileDelay = () => {
       settings.delayMs = Number(delayInput.value);
       if (delayLabel) delayLabel.textContent = String(settings.delayMs);
       activeRunners.forEach((r) => r.schedule()); // re-run so the new delay shows
     };
-    delayInput.addEventListener('input', syncDelay);
-    syncDelay();
+    delayInput.addEventListener('input', reconcileDelay);
+    reconcileDelay();
   }
 }
 
 function start() {
   wireControlsOnce();
-  applyPlugins();
+  installPluginSet();
 }
 
 if (km) {
