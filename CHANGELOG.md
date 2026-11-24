@@ -10,6 +10,17 @@ The first release — nothing has been published to npm before it. Everything be
 BREAKING entries record changes made during development and only matter to code written against an unpublished
 build (a `file:` link or a git checkout).
 
+### Internal — leftovers core now covers removed; output scroll kept across a move (core 1.0.0-rc26, 2026-11-24)
+
+- The engine no longer writes `aria-required` on the editing surface: core marks the validity anchor (this surface,
+  `role="textbox"`) of a `required` host itself. Same attribute, one writer (e2e `required.spec.ts` unchanged).
+- The selection toolbar's `#safely()` try/catch around the popover calls is gone — its virtual reference already
+  answers a 0×0 rect when ProseMirror can't map the selection.
+- `setCategoryLevel()` passes the category straight to core (which strips the `EDITOR:` namespace itself); its
+  parameter is typed as the editor's categories (`'UI'` / `'EDITOR:UI'`, …).
+- **Fixed:** the split view's output panel keeps its scroll position across a DOM move (core
+  `keepScrollAcrossMove`, rulebook C-CA-31) — before, a move kept the panel but reset it to the top. New e2e.
+
 ### Changed — engine events delivered by core `notifyListeners` (core 1.0.0-rc26, Q14, 2026-11-24)
 
 - `engine.events` (`EventEmitter`) and the pipeline run events (`engine.pipelines.on()` / `onAny()`) deliver through

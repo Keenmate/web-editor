@@ -3483,7 +3483,7 @@
             {
               "name": "category",
               "type": {
-                "text": "string"
+                "text": "Category | `EDITOR:${Category}`"
               }
             },
             {
@@ -3493,7 +3493,7 @@
               }
             }
           ],
-          "description": "Set the level of one category (accepts `EDITOR:UI` or the bare `UI`)."
+          "description": "Set the level of one category (accepts `EDITOR:UI` or the bare `UI` — core strips the namespace)."
         }
       ],
       "exports": [

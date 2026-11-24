@@ -156,6 +156,28 @@ test.describe('lifecycle', () => {
         expect(count).toEqual({ ready: 1, isReady: true, md: '# Two' });
     });
 
+    test('DOM move keeps the split output panel scroll position (core keepScrollAcrossMove)', async ({ page }) => {
+        const top = await page.evaluate(async () => {
+            const el = document.getElementById('subject') as any;
+            // An app-capped output panel (`::part(output-content)`) — the `<pre>` scrolls on its own.
+            const style = document.createElement('style');
+            style.textContent = 'km-editor::part(output-content) { max-height: 200px; }';
+            document.head.append(style);
+            el.value = Array.from({ length: 80 }, (_, i) => `Line ${i}`).join('\n\n');
+            el.viewMode = 'split';
+            await el.whenSettled();
+            const pre = el.shadowRoot.querySelector('.we-output-pre') as HTMLElement;
+            pre.scrollTop = 300;
+            await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+            return pre.scrollTop;
+        });
+        expect(top).toBeGreaterThan(100);
+        await page.evaluate(() => (window as any).move('b'));
+        await expect
+            .poll(() => page.evaluate(() => (document.getElementById('subject') as any).shadowRoot.querySelector('.we-output-pre').scrollTop))
+            .toBe(top);
+    });
+
     test('a move does not fire change', async ({ page }) => {
         await clearLog(page, 'lifecycle');
         await move(page);

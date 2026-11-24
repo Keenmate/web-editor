@@ -55,6 +55,11 @@ export class ViewLayout {
   #serialize: (format: SerializationFormat) => string;
   #label: LabelResolver;
 
+  /** The split view's output `<pre>` (its own scroller), while the split view shows — for core `keepScrollAcrossMove`. */
+  get outputScroller(): HTMLPreElement | undefined {
+    return this.#outputPre;
+  }
+
   #root?: HTMLDivElement;
   #outputTabs?: HTMLDivElement;
   #outputPre?: HTMLPreElement;

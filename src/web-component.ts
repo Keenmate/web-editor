@@ -35,6 +35,7 @@ import {
   renderLoader,
   createFormInputs,
   announce,
+  keepScrollAcrossMove,
   type CustomStylesCallback,
   type CustomStylesHandle,
   type EventDef,
@@ -272,6 +273,9 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
       serialize: (fmt) => (this.#engine ? this.#engine.serialize(fmt) : ''),
       label: (key, params, fallback) => this.#label(key, params, fallback),
     });
+    // The split view's output `<pre>` keeps its scroll position across a DOM move (core, rulebook C-CA-31) —
+    // the move keeps the panel (no rebuild), but a detached scroller reads 0.
+    keepScrollAcrossMove(this, () => [this.#layout.outputScroller]);
     // `el.value = …` assigned before upgrade: core lifts it off and replays it through
     // the `value` setter before the first build (core rc20) — a pre-build `setValue()`.
     // A click aimed at the host itself — a `<label for>` / wrapping `<label>` activation (the browser
@@ -359,8 +363,6 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     if ('isReadonly' in partial || 'viewMode' in partial || 'toolbar' in partial || 'statusbar' in partial) {
       this.#applyChromeState();
     }
-    // `required` → the surface's `aria-required` (core handles validity, `:state(required)`, the host's ARIA).
-    if ('isRequired' in partial) this.#engine?.refreshAttributes();
     // Assigning `viewMode` / `contentFormat` (property or attribute) is silent — like a
     // native `input.value`, state assignment never fires events (suite rule).
     // UI strings are resolved on render: re-render the chrome (and the empty-document

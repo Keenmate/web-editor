@@ -15,7 +15,6 @@ import { CommandBar } from './command-bar';
 import { domRect } from './virtual';
 import type { ActionSurfaceHost } from './actions';
 import type { EditorToolbarEntry } from '../interaction';
-import { uiLogger } from '../logger';
 
 export interface SelectionToolbarOptions {
   view: EditorView;
@@ -91,7 +90,7 @@ export class SelectionToolbar {
   }
 
   destroy(): void {
-    this.#safely(() => this.#popover.destroy());
+    this.#popover.destroy();
     this.#bar.destroy();
     this.#panel.remove();
     this.#open = false;
@@ -101,16 +100,15 @@ export class SelectionToolbar {
 
   #show(): void {
     this.#bar.refresh();
-    this.#safely(() => {
-      if (!this.#popover.isOpen) this.#popover.open();
-      else this.#popover.update();
-    });
+    // The virtual reference never throws (`#selectionRect` answers a 0×0 rect when PM can't map the selection).
+    if (!this.#popover.isOpen) this.#popover.open();
+    else this.#popover.update();
     this.#open = true;
   }
 
   #hide(): void {
     if (!this.#open && !this.#popover.isOpen) return;
-    this.#safely(() => this.#popover.close());
+    this.#popover.close();
     this.#open = false;
   }
 
@@ -134,14 +132,6 @@ export class SelectionToolbar {
       return domRect(left, top, right - left, bottom - top);
     } catch {
       return domRect(0, 0, 0, 0);
-    }
-  }
-
-  #safely(fn: () => void): void {
-    try {
-      fn();
-    } catch (err) {
-      uiLogger.warn('selection toolbar positioning failed', err);
     }
   }
 }

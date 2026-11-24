@@ -47,8 +47,7 @@ export function setLogLevel(level: LogLevelDesc): void {
   logging.setLogLevel(level);
 }
 
-/** Set the level of one category (accepts `EDITOR:UI` or the bare `UI`). */
-export function setCategoryLevel(category: string, level: LogLevelDesc): void {
-  const bare = (category.includes(':') ? category.split(':').pop()! : category) as Category;
-  logging.setCategoryLevel(bare, level);
+/** Set the level of one category (accepts `EDITOR:UI` or the bare `UI` — core strips the namespace). */
+export function setCategoryLevel(category: Category | `EDITOR:${Category}`, level: LogLevelDesc): void {
+  logging.setCategoryLevel(category, level);
 }

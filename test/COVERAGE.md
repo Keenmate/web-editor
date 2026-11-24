@@ -44,6 +44,7 @@ script-built `DataTransfer` arrives empty in a synthetic paste event), the liste
 | --- | :-: | --- | --- |
 | DOM move keeps content incl. tables (ED-1, fixed) | ✓ | `lifecycle.spec.ts` | `lifecycle.html` |
 | DOM move keeps undo history + selection (ED-2, fixed) | ✓ | `lifecycle.spec.ts` | `lifecycle.html` |
+| DOM move keeps the split output panel scroll position (core `keepScrollAcrossMove`) | ✓ | `lifecycle.spec.ts` | `lifecycle.html` |
 | `plugins` reassignment preserves content (incl. tables) | ✓ | `lifecycle.spec.ts` | `lifecycle.html` |
 | `setValue()` before first connect (ED-3, fixed) | ✓ | `lifecycle.spec.ts` | `lifecycle.html` |
 | `format` change while detached (ED-4, fixed) | ✓ | `lifecycle.spec.ts` | `lifecycle.html` |
