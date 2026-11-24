@@ -43,7 +43,7 @@ function clonePipeline(p: Pipeline): Pipeline {
   return { ...p, stages: [...p.stages] };
 }
 
-function applyContributions(
+function processContributions(
   pipe: Pipeline,
   contribs: readonly StageContribution[],
   pluginName: string
@@ -106,7 +106,7 @@ export function assemblePipelines(
           `Plugin "${plugin.name}" contributes stages to unknown pipeline "${name}".`
         );
       }
-      applyContributions(pipe, contribs, plugin.name);
+      processContributions(pipe, contribs, plugin.name);
     }
   }
 

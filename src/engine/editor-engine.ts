@@ -460,7 +460,7 @@ export class EditorEngine {
       changed.add(key);
     }
     if (changed.has('interactionHost')) this.#interactionHost = this.#options.interactionHost ?? defaultInteractionHost();
-    if (changed.has('isReadonly')) this.#applyEditable();
+    if (changed.has('isReadonly')) this.#reconcileEditable();
     if (changed.has('labels') || changed.has('locale') || changed.has('translateCallback')) this.refreshView();
   }
 
@@ -478,7 +478,7 @@ export class EditorEngine {
   #setLock(isLocked: boolean): void {
     if (isLocked !== this.#isLocked) {
       this.#isLocked = isLocked;
-      this.#applyEditable();
+      this.#reconcileEditable();
     }
     this.events.emit('lock', { engine: this, isLocked });
   }
@@ -567,7 +567,7 @@ export class EditorEngine {
   }
 
   /** Re-evaluate the view's `editable` prop in place. */
-  #applyEditable(): void {
+  #reconcileEditable(): void {
     this.view.setProps({ editable: () => this.isEditable() });
     this.#keepInactive();
   }

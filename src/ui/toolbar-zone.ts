@@ -67,12 +67,12 @@ export class ToolbarZone {
       else bar.el.removeAttribute('aria-label');
       bar.refresh();
     });
-    this.#applyVisibility();
-    this.#syncKeyboard();
+    this.#reconcileVisibility();
+    this.#reconcileKeyboard();
   }
 
   /** Roving focus along the docked edge; re-created when the zone moves between a row and a column. */
-  #syncKeyboard(): void {
+  #reconcileKeyboard(): void {
     const surface = this.el.closest('.we-surface');
     const orientation = surface?.classList.contains('we-tb-start') || surface?.classList.contains('we-tb-end') ? 'vertical' : 'horizontal';
     if (orientation === this.#orientation && this.#roving) {
@@ -95,11 +95,11 @@ export class ToolbarZone {
   setVisible(isWanted: boolean, isEditable = true): void {
     this.#isWanted = isWanted;
     this.#isEditable = isEditable;
-    this.#applyVisibility();
+    this.#reconcileVisibility();
   }
 
   /** Show the groups that pass the editable filter and have a visible item; dividers only between shown groups; hide an empty zone. */
-  #applyVisibility(): void {
+  #reconcileVisibility(): void {
     let shown = 0;
     this.#groups.forEach((bar, i) => {
       const isShown =
@@ -117,7 +117,7 @@ export class ToolbarZone {
   /** Focus the zone's tab stop (Alt+F10); `false` when the zone is hidden or has no enabled button. */
   focus(): boolean {
     if (this.el.hidden || !this.el.isConnected) return false;
-    this.#syncKeyboard();
+    this.#reconcileKeyboard();
     const roving = this.#roving!;
     const target = roving.current ?? this.#groups.flatMap((bar) => bar.focusableButtons())[0];
     if (!target) return false;

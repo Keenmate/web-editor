@@ -290,7 +290,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     // `<label for>` added / changed / removed after connect (or a changed host `id`) is picked up without a
     // document-wide MutationObserver. Focus moves inside the chrome (toolbar, tabs) don't re-read it.
     this.addEventListener('focusin', (e) => {
-      if (this.#engine && e.composedPath()[0] === this.#engine.view.dom) this.#syncSurfaceName();
+      if (this.#engine && e.composedPath()[0] === this.#engine.view.dom) this.#reconcileSurfaceName();
     });
   }
 
@@ -309,11 +309,11 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
         ? { content: pending.value, format: pending.format }
         : { content: (this.config.defaultValue as string | null) ?? null, format: this.#format() };
     if (this.isConnected) this.#rebuildEngine();
-    this.#applyCustomStyles();
+    this.#reconcileCustomStyles();
   }
 
   /** Custom CSS, the canonical core adoption (core usage.md → "Style injection", rulebook C-CA-15). */
-  #applyCustomStyles(): void {
+  #reconcileCustomStyles(): void {
     if (this.#customStyles) return this.#customStyles.refresh();
     this.#customStyles = createCustomStyles(this, this.#shadow, {
       cssClass: 'we-custom-styles',
@@ -333,7 +333,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     this.#engine?.setOptions({ isReadonly: !this.#resolveEditable() });
     this.#engine?.refreshAttributes(); // aria-disabled ↔ aria-readonly
     this.#layout.setInert(this.isEffectivelyDisabled);
-    this.#applyChromeState();
+    this.#reconcileChromeState();
     this.#rerunRenderCallbacks(); // the hidden form input (disabled ↔ submitted) + ctx.isDisabled
   }
 
@@ -357,11 +357,11 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     // Structural view-mode / anchor change: re-arrange the shadow layout in place
     // (the persistent mount is re-parented, so the live document survives).
     if ('viewMode' in partial || 'anchor' in partial || 'toolbar' in partial || 'statusbar' in partial) {
-      this.#applyLayout();
+      this.#renderLayout();
     }
     // Editing availability or the toolbar / status-bar toggle changed.
     if ('isReadonly' in partial || 'viewMode' in partial || 'toolbar' in partial || 'statusbar' in partial) {
-      this.#applyChromeState();
+      this.#reconcileChromeState();
     }
     // Assigning `viewMode` / `contentFormat` (property or attribute) is silent — like a
     // native `input.value`, state assignment never fires events (suite rule).
@@ -372,7 +372,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     else if ('renderIconCallback' in partial) this.#chrome?.refresh();
     // A value the callbacks' ctx carries (labels / isReadonly) changed: the element-level callbacks re-run in place.
     const isRenderCtxChanged = ['labels', 'locale', 'translateCallback', 'isReadonly', 'viewMode'].some((k) => k in partial);
-    if (isRenderCtxChanged || 'name' in partial || 'contentFormat' in partial || 'getValueFormatCallback' in partial) this.#syncFormInput();
+    if (isRenderCtxChanged || 'name' in partial || 'contentFormat' in partial || 'getValueFormatCallback' in partial) this.#reconcileFormInput();
     if (isRenderCtxChanged || 'customStyles' in partial || 'getCustomStylesCallback' in partial) this.#customStyles?.refresh();
     // A showing pending loader re-renders with the new label / render hook.
     if (('labels' in partial || 'locale' in partial || 'translateCallback' in partial || 'renderLoadingCallback' in partial) && this.#removeLoader) {
@@ -392,7 +392,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     this.#engine.activate();
     this.#layout.activate();
     this.#chrome?.refresh();
-    this.#syncSurfaceName();
+    this.#reconcileSurfaceName();
   }
 
   /**
@@ -419,7 +419,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
    * attribute) names the surface everywhere else. Re-read on connect, on a labels change and when the surface
    * takes focus (a label added after connect).
    */
-  #syncSurfaceName(): void {
+  #reconcileSurfaceName(): void {
     const engine = this.#engine;
     if (!engine) return;
     const dom = engine.view.dom as HTMLElement & { ariaLabelledByElements?: Element[] | null };
@@ -469,7 +469,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     // Seed the split output lens to the I/O format, then lay out the shadow so the
     // persistent mount is attached before the view measures itself.
     this.#layout.setDefaultOutputFormat(format);
-    this.#applyLayout();
+    this.#renderLayout();
 
     const options: EditorEngineOptions = {
       ...this.#engineSettings(null),
@@ -490,7 +490,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
         isReadonly: () => this.#isReadonlyForCallbacks(),
       },
     };
-    this.#applyContentOption(options, this.#seed.format, this.#seed.content);
+    this.#setContentOption(options, this.#seed.format, this.#seed.content);
 
     const mount = this.#layout.mount;
     const before = new Set(Array.from(mount.childNodes));
@@ -514,7 +514,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     // Bridge engine → outward events, and keep the split output panel live.
     const offChange = engine.events.on('change', () => {
       this.#layout.refreshOutput();
-      this.#syncFormInput();
+      this.#reconcileFormInput();
       this.refreshRequired(); // `required`: the content changed (user, setValue, value property, form reset)
       if (!this.#isSilentChange) this.emit('change', this.#changeDetail());
     });
@@ -526,7 +526,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
       offPending();
     };
     this.#layout.refreshOutput(); // initial fill (engine now exists)
-    this.#syncFormInput();
+    this.#reconcileFormInput();
     // A `plugins` swap rebuilds outside a flush: re-point `valueMissing` at the new surface (the old one is gone).
     this.refreshRequired();
 
@@ -547,7 +547,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
       // `menu-presentation` / `menu-side` (effective config), read at every open.
       getMenuPresentation: () => getMenuPresentationOptions(this.config),
     });
-    this.#applyChromeState();
+    this.#reconcileChromeState();
 
     initLogger.debug(`<km-editor> engine built (format=${format}, editable=${engine.isEditable()}) v${
       typeof __VERSION__ !== 'undefined' ? __VERSION__ : 'dev'
@@ -595,7 +595,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
     this.#chrome?.refresh();
     this.#engine?.refreshView();
     this.#layout.relabel();
-    this.#syncSurfaceName();
+    this.#reconcileSurfaceName();
   }
 
   /** A page-wide `window.components.locale` change (core `/locale`): the strings re-resolve. */
@@ -625,7 +625,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
    * never calls `setFormValue`. No `name` → no input. Disabled (not submitted)
    * while the editor is effectively disabled.
    */
-  #syncFormInput(): void {
+  #reconcileFormInput(): void {
     const name = this.config.name as string | null;
     if (!name) this.#clearFormatError();
     this.#formInputs.write(name, name && this.#engine ? this.#formValue() : '', { isDisabled: this.isEffectivelyDisabled });
@@ -683,7 +683,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   }
 
   /** (Re)arrange the shadow layout for the current view mode + anchor + toolbar + status side. */
-  #applyLayout(): void {
+  #renderLayout(): void {
     this.#layout.render(
       this.config.viewMode as EditorViewMode,
       (this.config.anchor as string | null) ?? null,
@@ -694,7 +694,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   }
 
   /** Push the current editable + toolbar + status-bar settings into the chrome. */
-  #applyChromeState(): void {
+  #reconcileChromeState(): void {
     this.#chrome?.setState({
       isEditable: this.#resolveEditable(),
       isDisabled: this.isEffectivelyDisabled,
@@ -704,7 +704,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
   }
 
   /** Map a content string + format onto the matching engine option. */
-  #applyContentOption(options: EditorEngineOptions, format: EditorFormat, content: string | null): void {
+  #setContentOption(options: EditorEngineOptions, format: EditorFormat, content: string | null): void {
     if (content == null || content === '') return; // engine starts with an empty document
     try {
       if (format === 'json') options.json = JSON.parse(content);
@@ -748,7 +748,7 @@ export class KmEditorElement extends BlissElement<EditorEventMap, EditorControll
    * input) and `getCustomStylesCallback`. The chrome's callbacks re-run through its own refresh.
    */
   #rerunRenderCallbacks(): void {
-    this.#syncFormInput();
+    this.#reconcileFormInput();
     this.#customStyles?.refresh();
   }
 

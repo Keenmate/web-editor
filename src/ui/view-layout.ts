@@ -267,7 +267,7 @@ export class ViewLayout {
     panel.append(tabs, pre);
     this.#outputTabs = tabs;
     this.#outputPre = pre;
-    this.#applyOutputTabs();
+    this.#reconcileOutputTabs();
     const items = () => [...tabs.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
     this.#outputRoving = createRovingFocus(tabs, {
       getItems: items,
@@ -281,7 +281,7 @@ export class ViewLayout {
   }
 
   /** Mark the selected tab (`aria-selected`, `.active`) and name the panel by it. */
-  #applyOutputTabs(): void {
+  #reconcileOutputTabs(): void {
     if (!this.#outputTabs) return;
     for (const tab of Array.from(this.#outputTabs.children) as HTMLElement[]) {
       const isSelected = tab.dataset.format === this.#outputFormat;
@@ -294,7 +294,7 @@ export class ViewLayout {
   #selectOutput(format: SerializationFormat): void {
     if (format === this.#outputFormat && this.#outputTabs?.querySelector(`[data-format="${format}"][aria-selected="true"]`)) return;
     this.#outputFormat = format;
-    this.#applyOutputTabs();
+    this.#reconcileOutputTabs();
     this.refreshOutput();
   }
 
