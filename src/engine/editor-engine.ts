@@ -305,7 +305,7 @@ export class EditorEngine {
       if (event.status.phase === 'pending') this.#pendingNames.add(name);
       else this.#pendingNames.delete(name);
       const isPending = this.#pendingNames.size > 0;
-      if (isPending !== wasPending) this.events.emit('pending', { engine: this, isPending });
+      if (isPending !== wasPending) this.events.dispatch('pending', { engine: this, isPending });
     });
 
     // Presenter lists: core-leading + plugin + core-trailing.
@@ -357,9 +357,9 @@ export class EditorEngine {
         const newState = this.view.state.apply(tr);
         this.view.updateState(newState);
         this.#keepInactive();
-        this.events.emit('transaction', { tr, engine: this });
-        if (tr.docChanged) this.events.emit('change', this);
-        if (tr.selectionSet || tr.docChanged) this.events.emit('selection-change', this);
+        this.events.dispatch('transaction', { tr, engine: this });
+        if (tr.docChanged) this.events.dispatch('change', this);
+        if (tr.selectionSet || tr.docChanged) this.events.dispatch('selection-change', this);
       },
     });
 
@@ -381,7 +381,7 @@ export class EditorEngine {
       throw err;
     }
 
-    this.events.emit('ready', this);
+    this.events.dispatch('ready', this);
   }
 
   private resolveInitialDoc(options: EditorEngineOptions, schema: Schema): PMNode {
@@ -480,7 +480,7 @@ export class EditorEngine {
       this.#isLocked = isLocked;
       this.#reconcileEditable();
     }
-    this.events.emit('lock', { engine: this, isLocked });
+    this.events.dispatch('lock', { engine: this, isLocked });
   }
 
   // ── Serialization (read) ──────────────────────────────────────────────
@@ -529,7 +529,7 @@ export class EditorEngine {
     });
     this.view.updateState(state);
     this.#keepInactive();
-    this.events.emit('change', this);
+    this.events.dispatch('change', this);
   }
 
   focus(): void {
@@ -608,7 +608,7 @@ export class EditorEngine {
   }
 
   destroy(): void {
-    this.events.emit('destroy', this);
+    this.events.dispatch('destroy', this);
     this.#pipelines.dispose();
     for (const plugin of this.#plugins) plugin.destroy?.();
     this.view.destroy();

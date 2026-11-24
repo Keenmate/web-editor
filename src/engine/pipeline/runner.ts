@@ -130,7 +130,7 @@ export class PendingGate {
 
   constructor(
     private readonly thresholdMs: number,
-    private readonly emit: (status: RunStatus) => void,
+    private readonly dispatchStatus: (status: RunStatus) => void,
     /** Whether the run is still the latest (a superseded run reports nothing). */
     private readonly isCurrent: () => boolean
   ) {}
@@ -140,7 +140,7 @@ export class PendingGate {
     clearTimeout(this.#timer);
     if (this.#isStopped || this.#openRequests > 0) return;
     this.#timer = setTimeout(() => {
-      if (!this.#isStopped && this.#openRequests === 0 && this.isCurrent()) this.emit({ phase: 'pending' });
+      if (!this.#isStopped && this.#openRequests === 0 && this.isCurrent()) this.dispatchStatus({ phase: 'pending' });
     }, this.thresholdMs);
   }
 
@@ -156,7 +156,7 @@ export class PendingGate {
       request: (ctx) => {
         this.#openRequests++;
         clearTimeout(this.#timer);
-        if (!this.#isStopped && this.isCurrent()) this.emit({ phase: 'waiting' });
+        if (!this.#isStopped && this.isCurrent()) this.dispatchStatus({ phase: 'waiting' });
         const settle = (): void => {
           this.#openRequests--;
           this.start();
@@ -219,7 +219,7 @@ export class DeferredRunner {
   /** Debounce a run. Later calls within the window reset the timer; a newer run supersedes a running one. */
   schedule(): void {
     this.runner.run(
-      (signal) => this.fire(signal),
+      (signal) => this.runOnce(signal),
       (result) => {
         if (result.halted) {
           this.deps.onStatus({ phase: 'halted', reason: result.reason });
@@ -231,7 +231,7 @@ export class DeferredRunner {
     );
   }
 
-  private async fire(signal: AbortSignal): Promise<RunResult> {
+  private async runOnce(signal: AbortSignal): Promise<RunResult> {
     // The previous run was aborted by the runner (its fetches / dialog close); retire its gate.
     this.gate?.stop();
     const generation = ++this.generation;

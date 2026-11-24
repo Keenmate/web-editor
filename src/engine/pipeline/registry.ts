@@ -105,7 +105,7 @@ export class PipelineRegistry {
   }
 
   /** Deliver a run event (core `notifyListeners`: a throwing listener is logged and skipped, the rest still hear it). */
-  #emit(name: string, event: PipelineEvent): void {
+  #dispatch(name: string, event: PipelineEvent): void {
     const log = { source: this.#deps.getLogSource?.() ?? null, category: 'UI', coreCategory: 'ELEMENT' as const, message: `pipeline "${name}" listener threw` };
     const listeners = this.#listeners.get(name);
     if (listeners?.size) notifyListeners(listeners, event, log);
@@ -136,24 +136,24 @@ export class PipelineRegistry {
       void this.#runDeferred(name, pipeline);
       return true;
     }
-    this.#emit(name, { type: 'start', generation: ++this.#generation });
+    this.#dispatch(name, { type: 'start', generation: ++this.#generation });
     let result: RunResult;
     try {
       result = runStagesSync(
         pipeline,
         this.#deps.getContext(),
-        (report) => this.#emit(name, { type: 'stage', report }),
+        (report) => this.#dispatch(name, { type: 'stage', report }),
         this.#services()
       );
     } catch (err) {
-      this.#emit(name, { type: 'status', status: { phase: 'error', error: err } });
+      this.#dispatch(name, { type: 'status', status: { phase: 'error', error: err } });
       throw err;
     }
-    this.#emit(name, {
+    this.#dispatch(name, {
       type: 'status',
       status: result.halted ? { phase: 'halted', reason: result.reason } : { phase: 'ready' },
     });
-    this.#emit(name, { type: 'result', context: result.context });
+    this.#dispatch(name, { type: 'result', context: result.context });
     return !result.halted;
   }
 
@@ -162,7 +162,7 @@ export class PipelineRegistry {
     const ac = new AbortController();
     this.#running.set(name, ac);
     const generation = ++this.#generation;
-    this.#emit(name, { type: 'start', generation });
+    this.#dispatch(name, { type: 'start', generation });
 
     const lock = pipeline.policy?.shouldLock === true;
     if (lock) this.#deps.setLock(true);
@@ -171,7 +171,7 @@ export class PipelineRegistry {
     // for the user (`waiting`), restarted when it closes.
     const gate = new PendingGate(
       pipeline.policy?.thresholdMs ?? 200,
-      (status) => this.#emit(name, { type: 'status', status }),
+      (status) => this.#dispatch(name, { type: 'status', status }),
       () => this.#running.get(name) === ac
     );
     gate.start();
@@ -181,19 +181,19 @@ export class PipelineRegistry {
         pipeline,
         this.#deps.getContext(),
         { signal: ac.signal, ui: gate.wrap(this.#deps.getInteractionHost()), generation, ...this.#services() },
-        (report) => this.#emit(name, { type: 'stage', report })
+        (report) => this.#dispatch(name, { type: 'stage', report })
       );
       gate.stop();
       if (this.#running.get(name) !== ac) return; // superseded — drop silently
-      this.#emit(name, {
+      this.#dispatch(name, {
         type: 'status',
         status: result.halted ? { phase: 'halted', reason: result.reason } : { phase: 'ready' },
       });
-      this.#emit(name, { type: 'result', context: result.context });
+      this.#dispatch(name, { type: 'result', context: result.context });
     } catch (err) {
       gate.stop();
       if (this.#running.get(name) === ac && !ac.signal.aborted) {
-        this.#emit(name, { type: 'status', status: { phase: 'error', error: err } });
+        this.#dispatch(name, { type: 'status', status: { phase: 'error', error: err } });
       }
     } finally {
       const stillCurrent = this.#running.get(name) === ac;

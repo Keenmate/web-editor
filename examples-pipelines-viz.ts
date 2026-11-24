@@ -497,15 +497,15 @@ function wire(engine: any) {
   // Paste lanes. Sync rides transformPastedHTML (clean inline, insert immediately).
   // Async intercepts via handlePaste: cancels the native paste, awaits (modal),
   // then inserts via a transaction. Real Ctrl+V uses whichever the mode selects.
-  const syncPasteLane = buildLane(pastePipeline);
-  lanesHost.appendChild(syncPasteLane.root);
-  const asyncPasteLane = buildLane(asyncPastePipeline);
-  lanesHost.appendChild(asyncPasteLane.root);
-  laneRefs.sync = syncPasteLane;
-  laneRefs.async = asyncPasteLane;
+  const pasteLaneSync = buildLane(pastePipeline);
+  lanesHost.appendChild(pasteLaneSync.root);
+  const apasteLaneSync = buildLane(asyncPastePipeline);
+  lanesHost.appendChild(apasteLaneSync.root);
+  laneRefs.sync = pasteLaneSync;
+  laneRefs.async = apasteLaneSync;
 
   engine.view.setProps({
-    transformPastedHTML: (html: string) => runPaste(engine, syncPasteLane, html),
+    transformPastedHTML: (html: string) => runPaste(engine, pasteLaneSync, html),
     handlePaste: (_view: any, event: ClipboardEvent) => {
       if (pasteMode.mode !== 'async') return false; // let the sync path handle it
       const html = toHtml(
@@ -513,7 +513,7 @@ function wire(engine: any) {
         event.clipboardData?.getData('text/plain') ?? ''
       );
       if (!html) return false;
-      void runAsyncPaste(engine, asyncPasteLane, html, ui);
+      void runAsyncPaste(engine, apasteLaneSync, html, ui);
       return true; // cancel native insertion — we insert ourselves when it resolves
     },
   });

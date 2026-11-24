@@ -10,6 +10,11 @@ The first release — nothing has been published to npm before it. Everything be
 BREAKING entries record changes made during development and only matter to code written against an unpublished
 build (a `file:` link or a git checkout).
 
+### Changed — BREAKING (renames, no aliases) — internal verbs per rulebook D-NC-30 (2026-11-25)
+
+- `EventEmitter.emit(event, payload)` → `EventEmitter.dispatch(event, payload)` (also on `engine.events`): firing an
+  event is `dispatch*`, never `emit*` (C-NC-16). Same behaviour.
+
 ### Internal — leftovers core now covers removed; output scroll kept across a move (core 1.0.0-rc26, 2026-11-24)
 
 - The engine no longer writes `aria-required` on the editing surface: core marks the validity anchor (this surface,
@@ -27,7 +32,7 @@ build (a `file:` link or a git checkout).
   core `notifyListeners`: a throwing handler is logged (the host element's `UI` logger; core's logger for a
   standalone engine) and skipped — the other handlers still run, and the transaction / run that emitted goes on
   (before, the throw escaped into `dispatchTransaction` / the pipeline run and starved the later handlers). Same
-  public API (`on` / `off` / `emit` / `clear`; `EventEmitter` takes an optional log-source getter). Unit tests.
+  public API (`on` / `off` / `dispatch` / `clear`; `EventEmitter` takes an optional log-source getter). Unit tests.
 
 ### Added — callback ctx carries `labels` / `isReadonly` / `isDisabled`, re-run in place (2026-11-24)
 

@@ -64,19 +64,19 @@ export async function confirmText(
 
 /**
  * A command that asks first: `ask(view)` runs only on a real run (not a dry "is it enabled?" run), and
- * `apply(answer, state)` builds the edit against the view's state at answer time (`null` = do nothing).
+ * `buildTransaction(answer, state)` builds the edit against the view's state at answer time (`null` = do nothing).
  * Without a view (a headless `run`) the command can't ask, so it does nothing.
  */
 export function whenPrompted<T>(
   ask: (view: EditorView) => Promise<T | null>,
-  apply: (answer: T, state: EditorState) => Transaction | null,
+  buildTransaction: (answer: T, state: EditorState) => Transaction | null,
 ): Command {
   return (_state, dispatch, view) => {
     if (!dispatch) return true;
     if (!view) return false;
     void ask(view).then((answer) => {
       if (answer === null || (view as EditorView & { isDestroyed?: boolean }).isDestroyed) return;
-      const tr = apply(answer, view.state);
+      const tr = buildTransaction(answer, view.state);
       if (tr) view.dispatch(tr);
       view.focus();
     });

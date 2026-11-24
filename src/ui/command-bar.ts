@@ -91,7 +91,7 @@ export class CommandBar {
       );
     }
     for (const r of resolved) {
-      if (r.kind === 'item') this.#apply(this.#button(r.item), r.item, r.resolved);
+      if (r.kind === 'item') this.#renderButton(this.#button(r.item), r.item, r.resolved);
     }
     this.#roving?.refresh();
   }
@@ -148,7 +148,7 @@ export class CommandBar {
     return btn;
   }
 
-  #apply(btn: HTMLButtonElement, item: EditorActionItem, r: ResolvedActionItem<EditorAction>): void {
+  #renderButton(btn: HTMLButtonElement, item: EditorActionItem, r: ResolvedActionItem<EditorAction>): void {
     btn.dataset.action = r.action;
     if (r.id !== undefined) btn.dataset.id = r.id;
     else delete btn.dataset.id;

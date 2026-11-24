@@ -16,7 +16,7 @@ export class EventEmitter<Events extends Record<string, any>> {
 
   /**
    * @param getLogSource The element a handler's throw is logged against (its instance logger), read per
-   * emit; absent / `null` → core's own logger.
+   * dispatch; absent / `null` → core's own logger.
    */
   constructor(private readonly getLogSource?: () => unknown) {}
 
@@ -30,7 +30,7 @@ export class EventEmitter<Events extends Record<string, any>> {
     this.handlers[event]?.delete(handler);
   }
 
-  emit<K extends keyof Events>(event: K, payload: Events[K]): void {
+  dispatch<K extends keyof Events>(event: K, payload: Events[K]): void {
     const handlers = this.handlers[event];
     if (!handlers?.size) return;
     notifyListeners(handlers, payload, {
